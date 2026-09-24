@@ -1,6 +1,9 @@
 import SlidingPuzzle.Bridge.Words
 import Zhong.Algorithm.Strip2
 
+/-! A coarse `502*n³` solver obtained from the row-by-row words of the Zhong
+library. It is only used for small residual boards and boundary columns. -/
+
 namespace SlidingPuzzle
 
 variable {n : ℕ} [NeZero n]

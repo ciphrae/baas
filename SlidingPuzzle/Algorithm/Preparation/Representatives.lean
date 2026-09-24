@@ -90,8 +90,6 @@ theorem representativeStagingCells_capacity {k : ℕ} (hk : 2 ≤ k)
       card_stagingCells hk rfl]
     exact card_targetGroup_ge_corridor_quota_add_one_of_ne_last hk rfl i hi
 
-/- Simultaneously stage all corridor tiles and one spare per nonfinal group,
-with the blank below and to the right of the entire prefix. -/
 /-- The final representative positions, kept explicit for subsequent translations. -/
 def representativeDestination {k : ℕ} (hk : 2 ≤ k) (i : GroupIndex k) : Cell (k^4) :=
   (⟨k^4-3, by have := preparation_geometry hk; omega⟩,

@@ -2,16 +2,20 @@ import SlidingPuzzle.Statistics
 import SlidingPuzzle.Manhattan
 import SlidingPuzzle.Asymptotics
 
-/-! Conditional assembly of Proposition 9. The approximation algorithm and the
-Manhattan statistical estimates remain explicit hypotheses. This file does not
-claim an unconditional solution of those mathematical obligations. -/
+/-! # Proposition 9 from a boardwise approximation
+
+`UniformApproximation` is the boardwise statement supplied by the algorithm:
+`OPT(B) ≤ M(B) + C*n^(11/4)` for every reachable board of every large size.
+Combined with Manhattan lower bounds and with `O(n²)` estimates for the mean
+and maximum Manhattan distance over the orbit, it gives both asymptotic
+conclusions of Proposition 9. -/
 
 open Filter Asymptotics
 
 namespace SlidingPuzzle
 
-/-- The algorithmic obligation: a single additive constant and size threshold
-work for every reachable board of every sufficiently large valid dimension. -/
+/-- The boardwise bound: a single additive constant and size threshold work for
+every reachable board of every sufficiently large valid dimension. -/
 def UniformApproximation : Prop :=
   ∃ C : ℝ, 0 ≤ C ∧ ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∀ (hn : 2 ≤ n),
     letI : NeZero n := ⟨by omega⟩
@@ -38,9 +42,9 @@ theorem uniform_approximation_statistics (happrox : UniformApproximation) :
     exact_mod_cast manhattan_le_optimalLength B
   · exact hN n hn hn2
 
-/-- Conditional average statement. Its two inputs are the uniform algorithmic
-bound and a quadratic error estimate for the mean Manhattan distance. -/
-theorem conditional_average_optimal_length (happrox : UniformApproximation)
+/-- The average statement from the boardwise bound and a quadratic error
+estimate for the mean Manhattan distance. -/
+theorem average_optimal_length_of_approximation (happrox : UniformApproximation)
     (hmean : ∃ C : ℝ, 0 ≤ C ∧ ∀ᶠ n : ℕ in atTop,
       |averageManhattan n - (2 / 3 : ℝ) * (n : ℝ) ^ 3| ≤ C * (n : ℝ) ^ 2) :
     (fun n : ℕ => averageOptimalLength n - (2 / 3 : ℝ) * (n : ℝ) ^ 3)
@@ -55,9 +59,9 @@ theorem conditional_average_optimal_length (happrox : UniformApproximation)
   apply abs_le.mpr
   constructor <;> linarith [hs.1.1, hs.1.2]
 
-/-- Conditional maximum statement. In particular its Manhattan hypothesis is
-about reachable boards, as required by the definition of `maximumManhattan`. -/
-theorem conditional_gods_number (happrox : UniformApproximation)
+/-- The maximum statement from the boardwise bound and a quadratic error
+estimate for the maximum Manhattan distance over reachable boards. -/
+theorem gods_number_of_approximation (happrox : UniformApproximation)
     (hmax : ∃ C : ℝ, 0 ≤ C ∧ ∀ᶠ n : ℕ in atTop,
       |maximumManhattan n - (n : ℝ) ^ 3| ≤ C * (n : ℝ) ^ 2) :
     (fun n : ℕ => godsNumber n - (n : ℝ) ^ 3)

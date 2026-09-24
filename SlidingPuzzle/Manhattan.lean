@@ -1,5 +1,9 @@
 import SlidingPuzzle.Paths
 
+/-! The Manhattan potential under legal moves. Each move changes it by exactly
+one, so `length + M(end) = M(start) + 2*inefficientMoves` for every path, and
+`M(B) ≤ OPT(B)`. -/
+
 namespace SlidingPuzzle
 
 /-- Moving one grid unit changes distance to a fixed cell by exactly one. -/

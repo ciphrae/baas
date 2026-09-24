@@ -2,7 +2,8 @@ import SlidingPuzzle.Manhattan
 import SlidingPuzzle.DistanceEstimates
 import SlidingPuzzle.Statistics
 
-/-! Unconditional statistical consequences of the proved boardwise bounds. -/
+/-! Orbit statistics: Manhattan lower bounds for the mean and maximum optimal
+length, and the cubic upper bound on the maximum Manhattan distance. -/
 namespace SlidingPuzzle
 
 /-- Manhattan distance lower-bounds the mean solution length at every size. -/
@@ -33,7 +34,7 @@ theorem maximumManhattan_le_cube (n : ℕ) : maximumManhattan n ≤ (n : ℝ) ^ 
   · rw [maximumManhattan_of_lt_two (by omega : n < 2)]
     positivity
 
-/-- Only the reachable lower bound remains to prove the maximum distance error. -/
+/-- A lower bound on the maximum Manhattan distance bounds its error from `n³`. -/
 theorem maximumManhattan_abs_error_le {n : ℕ} {E : ℝ}
     (hlo : (n : ℝ) ^ 3 - E ≤ maximumManhattan n) :
     |maximumManhattan n - (n : ℝ) ^ 3| ≤ E := by

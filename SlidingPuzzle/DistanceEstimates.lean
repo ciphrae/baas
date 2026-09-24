@@ -1,5 +1,8 @@
 import SlidingPuzzle.Basic
 
+/-! The universal upper bound `manhattan B ≤ n³`: every tile is within the sum of
+its distances to the board's midpoint and its target's distance to the midpoint. -/
+
 namespace SlidingPuzzle
 
 /-- Sum of distances from the integer midpoint of a row. -/

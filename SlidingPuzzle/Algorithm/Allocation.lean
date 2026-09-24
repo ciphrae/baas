@@ -118,7 +118,5 @@ theorem exists_board_with_group_assignment {k : ℕ} (hk : 2 ≤ k)
   rw [hfT c]
   exact hmem c
 
-/- Place prescribed groups in an outer prefix using only the finite capacity
-inequalities. The completed target board is constructed inside this theorem. -/
 end
 end SlidingPuzzle

@@ -1,5 +1,8 @@
 import SlidingPuzzle.Basic
 
+/-! Legal paths, reachability from the target, and the optimal solution length
+`optimalLength` with a shortest witness. -/
+
 namespace SlidingPuzzle
 
 variable {n : ℕ} [NeZero n]

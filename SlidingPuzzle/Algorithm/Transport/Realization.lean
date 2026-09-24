@@ -2,14 +2,14 @@ import SlidingPuzzle.Algorithm.PhaseStates
 import SlidingPuzzle.Algorithm.Accounting
 
 /-! Lifting Algorithm 4's count run to legal board paths. The local construction
-is an explicit parameter, instantiated in `Transport.lean`: it restores Clear,
+is an explicit parameter (`TransportStepBound`), instantiated in `Step.lean`: it restores Clear,
 implements the exact matrix update, moves the blank to the source reservoir,
 and pays for its moves. It need not realize a transposition of two specific cells. -/
 namespace SlidingPuzzle.Partition
 noncomputable section
 
-/-- The one-iteration specification. A uniform construction of these
-paths with budget `C*k³` is sufficient for the full Transport contract. -/
+/-- One transfer of the count algorithm, realized by a legal path with at most
+`E` inefficient moves. -/
 def TransportStepBound {n k : ℕ} [NeZero n] (hk : 2 ≤ k) (E : ℕ) : Prop :=
   ∀ B : Board n, Clear (k := k) B → ∀ i j : Fin (k*k-1+1),
     reservoir (transportIndex k hk i) (blank B) →

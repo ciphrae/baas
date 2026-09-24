@@ -1,5 +1,8 @@
 import SlidingPuzzle.Paths
 
+/-! Single moves as paths, and `Executes`: an explicit list of blank
+destinations with its legality, length, and preservation of unvisited cells. -/
+
 namespace SlidingPuzzle
 
 variable {n : ℕ} [NeZero n]

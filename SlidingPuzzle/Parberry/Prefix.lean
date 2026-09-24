@@ -1,8 +1,7 @@
 import SlidingPuzzle.Parberry.Solver
 
-/-! The constructed layer gives unconditional protected-prefix paths, including
-arbitrary target labels. The explicit polynomial is retained before bounding it
-by a uniform coefficient for the existing phase interfaces. -/
+/-! Solving the outer `d` layers (rows and columns) of a board, at cost
+`(15*n²+3002*n+1)*d`. Used to reduce arbitrary sides to fourth powers. -/
 namespace SlidingPuzzle.Parberry
 variable {n : ℕ} [NeZero n]
 

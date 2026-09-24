@@ -128,7 +128,5 @@ theorem exists_horizontal_preparation_path {k : ℕ} (hk : 2 ≤ k)
     change horizontalDestination k j < k^4-3
     omega
 
-/- A legal preparation prefix now stages all vertical quotas, clears every
-horizontal corridor, and installs last-reservoir representatives. -/
 end
 end SlidingPuzzle.Partition

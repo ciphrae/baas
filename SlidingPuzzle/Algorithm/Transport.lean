@@ -1,8 +1,8 @@
 import SlidingPuzzle.Algorithm.Transport.VerticalSchedule
 import SlidingPuzzle.Algorithm.Transport.Step
 
-/-! Concrete vertical transport in both directions and the completed Transport
-contract. Only the initial good interval can incur inefficient ordinary slides;
+/-! Phase II (Transport): vertical travel in both directions, and the complete
+transport phase. Only the initial good interval can incur inefficient ordinary slides;
 the intervening horizontal bands are crossed by bounded group-preserving jumps. -/
 
 namespace SlidingPuzzle.Partition

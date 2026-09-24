@@ -2,10 +2,10 @@ import SlidingPuzzle.Moves.Carry
 import SlidingPuzzle.Algorithm.Transport.ReservoirSlide
 import SlidingPuzzle.Algorithm.Transport.Exit
 
-/-! A cheaper exit from a vertical corridor into the source reservoir.
-Instead of one long restoring jump to the selected tile, the blank enters the
-reservoir by a short jump, walks to the tile, and carries it to the reservoir's
-corridor side. Three short jumps then exchange it into the corridor. Only the
+/-! The exit from a vertical corridor into the source reservoir. Instead of one
+long restoring jump to the selected tile (cost `25` per cell), the blank enters
+the reservoir by a short jump, walks to the tile, and carries it to the
+reservoir's corridor side (cost `6` per cell). Three short jumps then exchange it into the corridor. Only the
 reservoir's counts are tracked; its cells may be permuted. -/
 namespace SlidingPuzzle.Partition
 noncomputable section

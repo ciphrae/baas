@@ -4,13 +4,24 @@ import SlidingPuzzle.Algorithm.ResidualPotential
 import SlidingPuzzle.Algorithm.FourthPower
 import SlidingPuzzle.Parberry.Prefix
 
-/-! Leading-term accounting for arbitrary dimensions. The single lower-order
-remainder is absorbed only when passing to the eventual Proposition 9 interface. -/
+/-! # Arbitrary board sides
+
+For `k⁴ ≤ n < (k+1)⁴`, solve the outer `d = n-k⁴` rows and columns with the
+Parberry prefix and the remaining `k⁴ × k⁴` square with
+`exists_fourth_power_solution`. Since `d ≤ 4*n^(3/4)`, the prefix contributes
+`60*n^(11/4) + O(n^(7/4))` (`outer_layers_budget`), giving for every `n ≥ 16`
+
+```text
+inefficiency ≤ 95*n^(11/4) + 21527*n^(5/2)      (exists_solution_explicit)
+```
+
+The remainder is absorbed only in `uniformApproximation`, at an unoptimized
+threshold. -/
 namespace SlidingPuzzle.Algorithm
 
-/-- The size-reduction prefix has leading inefficiency coefficient sixty.
-Its boundary costs have strictly smaller exponents. -/
-theorem parberry_reduction_budget {n k : ℕ} (hlo : k^4 ≤ n) (hhi : n < (k+1)^4) :
+/-- The prefix cost for `d = n-k⁴` outer layers is `60*n^(11/4)` plus lower
+order. -/
+theorem outer_layers_budget {n k : ℕ} (hlo : k^4 ≤ n) (hhi : n < (k+1)^4) :
     ((15*n^2+3002*n+1)*(n-k^4) : ℕ) ≤
       (60*Real.rpow (n : ℝ) (11/4 : ℝ)+
         12008*Real.rpow (n : ℝ) (7/4 : ℝ)+4*Real.rpow (n : ℝ) (3/4 : ℝ) : ℝ) := by
@@ -31,8 +42,8 @@ theorem parberry_reduction_budget {n k : ℕ} (hlo : k^4 ≤ n) (hhi : n < (k+1)
   nlinarith [h1,h2]
 
 
-/-- Retain both coefficients while lifting a fourth-power solution. -/
-theorem optimalLength_le_leading_reduction {n k : ℕ} [NeZero n]
+/-- Prefix and residual combined: an OPT bound in terms of `k` and `n`. -/
+theorem optimalLength_le_of_fourth_power {n k : ℕ} [NeZero n]
     (B : ReachableBoard n) (hk : 2 ≤ k) (hlo : k^4 ≤ n) :
     optimalLength B ≤ manhattan B.val + 70*k^11+19030*k^10 +
       2*((15*n^2+3002*n+1)*(n-k^4)) := by
@@ -46,12 +57,12 @@ theorem optimalLength_le_leading_reduction {n k : ℕ} [NeZero n]
     exact ⟨r.append p⟩
   have hreachA : Reachable A :=
     residual_reachable (by omega : 2 ≤ k^4) (n-k^4) hd C hC A hA hreachC
-  obtain ⟨q,_,hq⟩ := exists_fourth_power_solution_leading k hk A hreachA
+  obtain ⟨q,_,hq⟩ := exists_fourth_power_solution k hk A hreachA
   have hq' : q.length ≤ manhattan A+(70*k^11+19030*k^10) := by omega
   have h := optimalLength_le_prefix_residual_solution B (n-k^4) hd C p hC A hA q hq'
   omega
 
-/-- Convert the lower-order envelope without absorbing it into the leading term. -/
+/-- `k¹⁰ ≤ n^(5/2)` when `k⁴ ≤ n`. -/
 theorem pow_ten_le_rpow_of_fourth_power_le {k n : ℕ} (hkn : k^4 ≤ n) :
     (k : ℝ)^10 ≤ Real.rpow (n : ℝ) (5/2 : ℝ) := by
   have hkn' : (k : ℝ)^4 ≤ (n : ℝ) := by exact_mod_cast hkn
@@ -62,18 +73,17 @@ theorem pow_ten_le_rpow_of_fourth_power_le {k n : ℕ} (hkn : k^4 ≤ n) :
     _ ≤ Real.rpow (n : ℝ) (5/2 : ℝ) :=
       Real.rpow_le_rpow (by positivity) hkn' (by norm_num)
 
-/-- An explicit two-term bound uniform in the input board. The remainder is
-intentionally loose, but cannot inflate the leading coefficient. -/
-theorem optimalLength_le_leading {n : ℕ} [NeZero n]
+/-- An explicit two-term bound on OPT, uniform in the input board. -/
+theorem optimalLength_le_explicit {n : ℕ} [NeZero n]
     (hn : 16 ≤ n) (B : ReachableBoard n) :
     (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ)+
       190*Real.rpow (n : ℝ) (11/4 : ℝ)+43054*Real.rpow (n : ℝ) (5/2 : ℝ) := by
   obtain ⟨k,hk,hlo,hhi,_⟩ := exists_fourth_power_dimension hn
-  have hnat := optimalLength_le_leading_reduction B hk hlo
+  have hnat := optimalLength_le_of_fourth_power B hk hlo
   have hreal : (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ)+
       70*(k : ℝ)^11+19030*(k : ℝ)^10+
       2*(((15*n^2+3002*n+1)*(n-k^4) : ℕ) : ℝ) := by exact_mod_cast hnat
-  have hbudget := parberry_reduction_budget hlo hhi
+  have hbudget := outer_layers_budget hlo hhi
   have hscale := pow_eleven_le_rpow_of_fourth_power_le hlo
   have hsmall := pow_ten_le_rpow_of_fourth_power_le hlo
   have hn1 : (1 : ℝ) ≤ n := by exact_mod_cast (show 1 ≤ n by omega)
@@ -82,8 +92,9 @@ theorem optimalLength_le_leading {n : ℕ} [NeZero n]
   norm_num at hreal hbudget hscale hsmall h7 h3 ⊢
   linarith
 
-/-- Leading inefficiency 95, with all lower-order work in one envelope. -/
-theorem exists_solution_with_leading_bound {n : ℕ} [NeZero n]
+/-- The explicit bound as a legal solution: inefficiency at most
+`95*n^(11/4) + 21527*n^(5/2)` for every `n ≥ 16`. -/
+theorem exists_solution_explicit {n : ℕ} [NeZero n]
     (hn : 16 ≤ n) (B : ReachableBoard n) :
     ∃ p : Path B.val (target n),
       (p.inefficientMoves : ℝ) ≤ 95*Real.rpow (n : ℝ) (11/4 : ℝ)+
@@ -91,15 +102,14 @@ theorem exists_solution_with_leading_bound {n : ℕ} [NeZero n]
       (p.length : ℝ) ≤ (manhattan B.val : ℝ)+190*Real.rpow (n : ℝ) (11/4 : ℝ)+
         43054*Real.rpow (n : ℝ) (5/2 : ℝ) := by
   obtain ⟨p,hp⟩ := shortest_witness B
-  have hlength := optimalLength_le_leading hn B
+  have hlength := optimalLength_le_explicit hn B
   rw [← hp] at hlength
   refine ⟨p,?_,hlength⟩
   have hbalance : (p.length : ℝ)=(manhattan B.val : ℝ)+2*(p.inefficientMoves : ℝ) := by
     exact_mod_cast p.solution_length
   linarith
 
-/-- A quarter-power gap absorbs any fixed remainder at a sufficiently large
-size. This is applied once, after adding all phase remainders. -/
+/-- `R*n^(5/2) ≤ n^(11/4)` once `R⁴ ≤ n`. -/
 theorem quarter_gap_absorb (R n : ℕ) (hn : R^4 ≤ n) :
     (R : ℝ)*Real.rpow (n : ℝ) (5/2 : ℝ) ≤ Real.rpow (n : ℝ) (11/4 : ℝ) := by
   have hroot : (R : ℝ) ≤ Real.rpow (n : ℝ) (1/4 : ℝ) := by
@@ -117,23 +127,21 @@ theorem quarter_gap_absorb (R n : ℕ) (hn : R^4 ≤ n) :
       convert (Real.rpow_add_of_nonneg (Nat.cast_nonneg n)
         (by norm_num : (0 : ℝ) ≤ 1/4) (by norm_num : (0 : ℝ) ≤ 5/2)).symm using 1 <;> norm_num
 
-/-- Only the final asymptotic adapter spends one extra unit of additive length.
-The threshold is deliberately not optimized. -/
-theorem optimalLength_le_leading_eventually {n : ℕ} [NeZero n]
+/-- For large `n`, `OPT ≤ M + 191*n^(11/4)`. The threshold is not optimized. -/
+theorem optimalLength_le_eventually {n : ℕ} [NeZero n]
     (hn : max 16 (43054^4) ≤ n) (B : ReachableBoard n) :
     (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ)+191*Real.rpow (n : ℝ) (11/4 : ℝ) := by
-  have h := optimalLength_le_leading (le_trans (le_max_left _ _) hn) B
+  have h := optimalLength_le_explicit (le_trans (le_max_left _ _) hn) B
   have hr := quarter_gap_absorb 43054 n (le_trans (le_max_right _ _) hn)
   norm_num only [Nat.cast_ofNat] at hr
   linarith
 
-/-- Proposition 9 already permits an eventual bound: small boards impose no
-restriction on the leading-term accounting. -/
-theorem uniformApproximation_leading : UniformApproximation := by
+/-- The boardwise bound required by Proposition 9. -/
+theorem uniformApproximation : UniformApproximation := by
   refine ⟨191,by norm_num,max 16 (43054^4),?_⟩
   intro n hn hn2
   letI : NeZero n := ⟨by omega⟩
   intro B
-  exact optimalLength_le_leading_eventually hn B
+  exact optimalLength_le_eventually hn B
 
 end SlidingPuzzle.Algorithm

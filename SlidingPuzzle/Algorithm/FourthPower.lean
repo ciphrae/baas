@@ -4,25 +4,44 @@ import SlidingPuzzle.Algorithm.Arrangement
 import SlidingPuzzle.Algorithm.Finish
 import SlidingPuzzle.Algorithm.Transport
 
-/-! Leading coefficients and deliberately loose lower-order budgets. No
-remainder is absorbed into the leading term during phase composition. -/
+/-! # The algorithm on boards of side `k⁴`
+
+Composes the four phases of Section 4 into a solution of every reachable
+`k⁴ × k⁴` board. Costs are tracked as `A*k¹¹ + B*k¹⁰` (`LeadingBudget`); the
+leading coefficient `A` is the quantity of interest and `B` is a deliberately
+loose envelope for all lower-order terms.
+
+Preparation and Transport are charged by inefficient moves (`CostedPhase`
+bounds *twice* that count, so half-integer coefficients are exact).
+Arrangement and Finish end at the target, so they are charged by length and
+halved once at the end (`CostedPhase.exists_solution`).
+
+| phase | bound | leading inefficiency |
+| --- | --- | --- |
+| Preparation | `2*ineff ≤ 23*k¹¹ + 700*k¹⁰` | 11.5 |
+| Transport | `2*ineff ≤ 18*k¹¹ + 380*k¹⁰` | 9 |
+| Arrangement | `length ≤ 24*k¹¹ + 786*k¹⁰` | 12 |
+| Finish | `length ≤ 5*k¹¹ + 17164*k¹⁰` | 2.5 |
+
+Total: `2*ineff ≤ 70*k¹¹ + 19030*k¹⁰` (`exists_fourth_power_solution`). -/
 namespace SlidingPuzzle.Algorithm
 open SlidingPuzzle.Partition
 
-/-- A phase budget retaining one lower-order envelope. -/
+/-- A budget `leading*k¹¹ + remainder*k¹⁰`. -/
 structure LeadingBudget where
   leading : ℕ
   remainder : ℕ
 
+/-- The value of a budget at `k`. -/
 def LeadingBudget.eval (b : LeadingBudget) (k : ℕ) : ℕ :=
   b.leading*k^11+b.remainder*k^10
 
+/-- Budgets add coefficientwise. -/
 def LeadingBudget.add (a b : LeadingBudget) : LeadingBudget :=
   ⟨a.leading+b.leading,a.remainder+b.remainder⟩
 
-/-- Actual legal paths, uniformly over boards, with a separate remainder. The
-budget bounds twice the inefficient moves, so half-integer leading
-coefficients are retained exactly. -/
+/-- A phase from boards satisfying `pre` to boards satisfying `post`, realized
+by legal paths whose inefficient moves, doubled, fit in `budget`. -/
 def CostedPhase {n : ℕ} [NeZero n] (k : ℕ) (budget : LeadingBudget)
     (pre post : Board n → Prop) : Prop :=
   ∀ B, pre B → ∃ C : Board n, ∃ p : Path B C,
@@ -40,8 +59,9 @@ theorem CostedPhase.comp {n k : ℕ} [NeZero n] {a b : LeadingBudget}
   dsimp [LeadingBudget.eval,LeadingBudget.add] at *
   nlinarith
 
-/-- Halve the entire solving suffix, retaining odd leading coefficients exactly
-by stating the conclusion for twice the inefficient-move count. -/
+/-- Append a solving suffix of bounded length. A path ending at the target has
+at most half of its moves inefficient, so the suffix is charged at half its
+length. -/
 theorem CostedPhase.exists_solution {n k : ℕ} [NeZero n] {a b : LeadingBudget}
     {pre mid : Board n → Prop} (h : CostedPhase k a pre mid)
     (hfinish : ∀ C, mid C → ∃ q : Path C (target n), q.length ≤ b.eval k)
@@ -62,7 +82,7 @@ theorem CostedPhase.exists_solution {n k : ℕ} [NeZero n] {a b : LeadingBudget}
 /-- The mixed-prefix staging has leading length `7.5*k¹¹` and vertical spreading
 `4*k¹¹`, so twice the inefficiency is at most `23*k¹¹` plus lower order.
 Representative access and horizontal spreading are lower order. -/
-theorem preparation_leading (k : ℕ) (hk : 2 ≤ k) [NeZero (k^4)] :
+theorem preparation_phase (k : ℕ) (hk : 2 ≤ k) [NeZero (k^4)] :
     CostedPhase (n := k^4) k ⟨23,700⟩ Reachable (Prepared hk) := by
   intro B hB
   obtain ⟨C,p,hp,hclear,hrep⟩ := exists_preparation_path hk (representativeStaging_mixed hk) B
@@ -94,7 +114,7 @@ theorem preparation_leading (k : ℕ) (hk : 2 ≤ k) [NeZero (k^4)] :
 starts from the top of the reservoir and the exit carries the source tile, so
 each transfer has leading cost `9*k³`: one unit each for the reservoir slide,
 horizontal and vertical travel, and six for the exit walk and carry. -/
-theorem transport_leading (k : ℕ) (hk : 2 ≤ k) [NeZero (k^4)] :
+theorem transport_phase (k : ℕ) (hk : 2 ≤ k) [NeZero (k^4)] :
     CostedPhase (n := k^4) k ⟨18,380⟩ (Prepared hk) (Transported hk) := by
   intro B hB
   have hstep := transportStepBound_of_vertical_bound hk rfl (verticalTransportBound hk rfl)
@@ -115,8 +135,8 @@ theorem transport_leading (k : ℕ) (hk : 2 ≤ k) [NeZero (k^4)] :
   have hexp : (k^4)^2*(9*k^3+95*k^2+91*k+163) = 9*k^11+95*k^10+91*k^9+163*k^8 := by ring
   nlinarith
 
-/-- Keep the order-ten arrangement term outside its leading coefficient. -/
-theorem arrangement_leading (k : ℕ) (hk : 2 ≤ k) [NeZero (k^4)]
+/-- Arrangement: two exchange schedules of total length `24*k¹¹ + O(k¹⁰)`. -/
+theorem arrangement_bound (k : ℕ) (hk : 2 ≤ k) [NeZero (k^4)]
     (B : Board (k^4)) (hB : Transported hk B) :
     ∃ C : Board (k^4), ∃ p : Path B C, Arranged hk C ∧
       p.length ≤ (LeadingBudget.mk 24 786).eval k := by
@@ -134,9 +154,9 @@ theorem arrangement_leading (k : ℕ) (hk : 2 ≤ k) [NeZero (k^4)]
   dsimp [LeadingBudget.eval]
   nlinarith only [h8,h7]
 
-/-- Across k² blocks of side k³, the quadratic local remainder is only order
-k⁸. All access and parity-repair costs are also below order k¹¹. -/
-theorem finish_leading (k : ℕ) (hk : 2 ≤ k) [NeZero (k^4)]
+/-- Finish: `k²` local solves of side `k³` with the Parberry solver,
+`5*k¹¹ + O(k¹⁰)` moves including access and parity repair. -/
+theorem finish_bound (k : ℕ) (hk : 2 ≤ k) [NeZero (k^4)]
     (B : Board (k^4)) (hB : Arranged hk B) :
     ∃ p : Path B (target (k^4)), p.length ≤ (LeadingBudget.mk 5 17164).eval k := by
   obtain ⟨p,hp⟩ := exists_finish_path parberrySolverCost hk B hB
@@ -148,22 +168,22 @@ theorem finish_leading (k : ℕ) (hk : 2 ≤ k) [NeZero (k^4)]
   dsimp [LeadingBudget.eval] at *
   nlinarith
 
-/-- The fourth-power leading inefficiency coefficient is 70/2 = 35. All remainders
-are carried separately, uniformly for k≥2 and every reachable input board. -/
-theorem exists_fourth_power_solution_leading (k : ℕ) (hk : 2 ≤ k) [NeZero (k^4)]
+/-- Every reachable `k⁴ × k⁴` board, `k ≥ 2`, has a solution with at most
+`35*k¹¹ + 9515*k¹⁰` inefficient moves. -/
+theorem exists_fourth_power_solution (k : ℕ) (hk : 2 ≤ k) [NeZero (k^4)]
     (B : Board (k^4)) (hB : Reachable B) :
     ∃ p : Path B (target (k^4)),
       2*p.inefficientMoves ≤ 70*k^11+19030*k^10 ∧
       p.length ≤ manhattan B+70*k^11+19030*k^10 := by
   have hfinish (C : Board (k^4)) (hC : Transported hk C) :
       ∃ q : Path C (target (k^4)), q.length ≤ (LeadingBudget.mk 29 17950).eval k := by
-    obtain ⟨D,p,hD,hp⟩ := arrangement_leading k hk C hC
-    obtain ⟨q,hq⟩ := finish_leading k hk D hD
+    obtain ⟨D,p,hD,hp⟩ := arrangement_bound k hk C hC
+    obtain ⟨q,hq⟩ := finish_bound k hk D hD
     refine ⟨p.append q,?_⟩
     rw [Path.length_append]
     dsimp [LeadingBudget.eval] at *
     omega
-  obtain ⟨p,hi,hl⟩ := ((preparation_leading k hk).comp (transport_leading k hk)).exists_solution
+  obtain ⟨p,hi,hl⟩ := ((preparation_phase k hk).comp (transport_phase k hk)).exists_solution
     hfinish B hB
   refine ⟨p,?_,?_⟩ <;> dsimp [LeadingBudget.eval,LeadingBudget.add] at * <;> omega
 

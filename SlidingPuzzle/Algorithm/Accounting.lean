@@ -1,7 +1,7 @@
 import SlidingPuzzle.Manhattan
 
-/-! Finite accounting for the phase decomposition and the general-size prefix.
-These lemmas do not assume or assert the existence of the paper's algorithm. -/
+/-! Accounting for inefficient moves: additivity, the half-length bound for
+solutions, restoring blank/tile swaps, and prefix-plus-solution bounds. -/
 namespace SlidingPuzzle
 namespace Path
 

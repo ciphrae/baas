@@ -4,8 +4,8 @@ import SlidingPuzzle.Parberry.MixedPrefix
 
 /-! Staging with a mixed prefix. The compressed staging quotas lie in the first
 `k³` columns or the first `k²` rows, and the representatives lie in row `k²`.
-Solving `k³` columns and `k²+1` rows costs about `7.5*k¹¹` moves, half of the
-`k³` complete layers used before. -/
+Solving `k³` columns and `k²+1` rows costs about `7.5*k¹¹` moves; solving `k³`
+complete layers would cost twice as much. -/
 namespace SlidingPuzzle
 noncomputable section
 open Classical

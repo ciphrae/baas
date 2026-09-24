@@ -2,8 +2,10 @@ import SlidingPuzzle.Algorithm.Transport.Entry
 import SlidingPuzzle.Algorithm.Transport.Realization
 import SlidingPuzzle.Algorithm.Transport.Carry
 
-/-! Assemble entry, horizontal, and exit paths around a vertical routing bound.
-The concrete vertical construction is supplied in `Transport.lean`. -/
+/-! One transfer of Algorithm 4: slide the blank to the top of its reservoir,
+enter the horizontal corridor, travel to the vertical corridor, travel
+vertically (an explicit parameter, supplied in `Transport.lean`), and exit into
+the source reservoir. -/
 namespace SlidingPuzzle.Partition
 noncomputable section
 

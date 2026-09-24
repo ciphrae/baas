@@ -4,8 +4,8 @@ import SlidingPuzzle.Parberry.RowSolve
 import SlidingPuzzle.Algorithm.ResidualReachability
 
 /-! A constructed Parberry solver with leading coefficient five.
-The boundary routines give an explicit quadratic remainder. This theorem is
-unconditional and does not use the stronger, still separate `LayerPathBound`.
+The boundary routines give an explicit quadratic remainder:
+`length ≤ 5*n³ + 1509*n² + 1505*n + 4796` for `n ≥ 4`.
 -/
 namespace SlidingPuzzle.Parberry
 

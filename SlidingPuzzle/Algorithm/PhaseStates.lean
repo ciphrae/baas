@@ -1,10 +1,10 @@
 import SlidingPuzzle.OrbitParity
 import SlidingPuzzle.Algorithm.Transport.Postcondition
 
-/-! Contracts for the four global states used by the partition algorithm.
+/-! The states between the four phases: `Prepared`, `Transported`, `Arranged`.
 
 The size equation `n = k^4` is deliberately kept out of these definitions:
-it belongs to the transition and counting arguments that use the contracts. -/
+it belongs to the transition and counting arguments that use these states. -/
 namespace SlidingPuzzle.Partition
 
 variable {n k : ℕ} [NeZero n]
@@ -32,7 +32,7 @@ structure Transported (hk : 2 ≤ k) (B : Board n) : Prop where
   sorted : ReservoirSorted (k := k) B
   blank_last : reservoir (lastGroup k hk) (blank B)
 
-/-- The input contract for the finishing phase. -/
+/-- The state before Finish: every tile lies in its own square. -/
 structure Arranged (hk : 2 ≤ k) (B : Board n) : Prop where
   reachable : Reachable B
   sorted : SquaresSorted (k := k) B
@@ -61,8 +61,8 @@ theorem Transported.of_path {B C : Board n} {hk : 2 ≤ k}
   exact ⟨⟨q.append p⟩,hclear,hsorted,
     clear_reservoirSorted_blank_in_lastReservoir hk hn C hclear hsorted⟩
 
-/-- To use the count abstraction, a transport implementation must still supply
-an actual path and a clear endpoint whose own matrix is sorted. -/
+/-- A clear endpoint reached from a prepared board, whose count matrix has no
+off-diagonal mass, is transported. -/
 theorem Transported.of_count_endpoint {B C : Board n} {hk : 2 ≤ k}
     (hn : n=k^4) (hB : Prepared hk B) (p : Path B C)
     (hclear : Clear (k := k) C)
