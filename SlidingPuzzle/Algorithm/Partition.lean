@@ -120,9 +120,9 @@ theorem horizontal_mod {n k : ℕ} (hk : 2 ≤ k) {i : GroupIndex k} {c : Cell n
   have hb : (groupCol i).val < k^3 := (groupCol i).isLt.trans_le (cube_ge k hk).1
   rw [horizontal] at h
   rw [h]
-  simpa [Nat.add_mod, Nat.mod_eq_of_lt hb] using (groupCol i).isLt
+  simp [Nat.add_mod, Nat.mod_eq_of_lt hb]
 
-private theorem row_div {n k : ℕ} (hk : 2 ≤ k) {i : GroupIndex k} {c : Cell n}
+private theorem row_div {n k : ℕ} (_hk : 2 ≤ k) {i : GroupIndex k} {c : Cell n}
     (hl : (groupRow i).val * k^3 ≤ c.1.val)
     (hu : c.1.val < ((groupRow i).val + 1) * k^3) :
     c.1.val / k^3 = (groupRow i).val :=
@@ -144,7 +144,7 @@ theorem vertical_row_mod {n k : ℕ} (hk : 2 ≤ k) {i j : GroupIndex k} {c : Ce
 
 theorem vertical_col_mod {n k : ℕ} (hk : 2 ≤ k) {i j : GroupIndex k} {c : Cell n}
     (h : vertical i j c) : c.2.val % k^3 < k^2 := by
-  have hj : j.val < k^2 := by simpa [pow_two] using j.isLt
+  have hj : j.val < k^2 := by simp [pow_two]
   have hj3 := hj.trans_le (cube_ge k hk).2
   rw [h.2.2]
   simpa [Nat.add_mod, Nat.mod_eq_of_lt hj3] using hj

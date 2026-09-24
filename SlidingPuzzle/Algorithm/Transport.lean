@@ -124,7 +124,7 @@ theorem verticalTransportBound {n k : ℕ} [NeZero n] (hk : 2 ≤ k) (hn : n = k
   let u : Cell n := ((blank B).1, uc)
   have huadj : gridDistance (blank B) u = 1 := by
     dsimp [u, uc, gridDistance, column]
-    split_ifs <;> simp only [Nat.dist_self, Nat.zero_add, Nat.dist] <;> omega
+    split_ifs <;> simp only [Nat.dist] <;> omega
   have hune : u ≠ blank B := by
     intro h; rw [h, gridDistance_self] at huadj; omega
   have huH : horizontal i u := hH

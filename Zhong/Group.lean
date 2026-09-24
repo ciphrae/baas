@@ -284,7 +284,7 @@ theorem traceSet_append (p : Cell n m) (σ₁ σ₂ : List Dir) :
 theorem permOf_apply_of_not_mem_traceSet {p x : Cell n m} {σ : List Dir}
     (h : x ∉ traceSet p σ) : permOf p σ x = x := by
   induction σ generalizing p with
-  | nil => simpa using h
+  | nil => simp
   | cons δ σ ih =>
       cases hδ : neighbor? p δ with
       | none =>

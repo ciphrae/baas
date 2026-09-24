@@ -142,14 +142,14 @@ theorem placeStepFromNormal (r : ℕ) (hr : r + 1 < n) (hr2 : r + 2 < n) (hm : 4
     have h1 : B a = 0 := by rw [h]; exact Equiv.apply_symm_apply B 0
     rw [hBa] at h1
     exact hT0 h1
-  have hstrip0 : hStrip (m := m) r hr (d(1,y0)) = c(r+1,y0) := by simp [hStrip, bot]
-  have hstripc : hStrip (m := m) r hr (d(0,yc)) = c(r,yc) := by simp [hStrip, top]
+  have hstrip0 : hStrip (m := m) r hr (d(1,y0)) = c(r+1,y0) := by simp [hStrip]
+  have hstripc : hStrip (m := m) r hr (d(0,yc)) = c(r,yc) := by simp [hStrip]
   have halo : lo ≤ a.2.val := by
     by_contra h
     have h1 : B a = target n m a := hcol a.1 a.2 (by omega)
     have h3 : a = c(r,yc) := (target n m).injective (h1.symm.trans hBa)
     have := congrArg (fun w : Cell n m => w.2.val) h3
-    simp only [Fin.val_mk] at this
+    simp only at this
     omega
   by_cases hsame : a = c(r,yc)
   · refine ⟨[], ?_, ?_, ?_, ?_, by simp⟩
@@ -173,7 +173,7 @@ theorem placeStepFromNormal (r : ℕ) (hr : r + 1 < n) (hr2 : r + 2 < n) (hm : 4
         rw [ha_eq]; exact hleft a.2 (by omega)
       have h3 : a = c(r,yc) := (target n m).injective (h1.symm.trans hBa)
       have := congrArg (fun w : Cell n m => w.2.val) h3
-      simp only [Fin.val_mk] at this
+      simp only at this
       omega
     rcases (by omega : a.1.val ≥ r + 2 ∨ a.1.val = r + 1 ∨ a.1.val = r) with har2 | har1 | har0
     · -- tile strictly below the strip: raise it into the strip, then place
@@ -188,9 +188,9 @@ theorem placeStepFromNormal (r : ℕ) (hr : r + 1 < n) (hr2 : r + 2 < n) (hm : 4
             obtain ⟨h1, _⟩ := hcolr z hz
             omega)
         have hstripq : hStrip (m := m) r hr (d(1, a.2.val + 1)) = c(r+1, a.2.val+1) := by
-          simp [hStrip, bot]
+          simp [hStrip]
         have hstripA : hStrip (m := m) r hr (d(1, a.2.val)) = c(r+1, a.2.val) := by
-          simp [hStrip, bot]
+          simp [hStrip]
         have hblank' : blank (actSeq B σr) = hStrip (m := m) r hr (d(1, a.2.val + 1)) := by
           rw [blank_actSeq, hblank, htrr, hstripq]
         have htile' : (actSeq B σr) (hStrip (m := m) r hr (d(1, a.2.val))) = T := by
@@ -198,21 +198,21 @@ theorem placeStepFromNormal (r : ℕ) (hr : r + 1 < n) (hr2 : r + 2 < n) (hm : 4
           simpa using hBa
         have hpne : d(1, a.2.val + 1) ≠ d(1, a.2.val) := by
           intro h; have := congrArg (fun w : Cell 2 m => w.2.val) h
-          simp only [Fin.val_mk] at this; omega
+          simp only at this; omega
         have hac' : d(1, a.2.val) ≠ d(0, yc) := by
           intro h; have := congrArg (fun w : Cell 2 m => w.1.val) h
-          simp only [Fin.val_mk] at this; omega
+          simp only at this; omega
         obtain ⟨σp, hapσp, heffσp, hfix1, hfix2, hfix3, hlenp⟩ :=
           stripPlaceBoard hr hm lo hlo hblank' htile' (by simp) (by simp) hpne hac'
-            (by intro h; simp only [Prod.fst, Fin.val_mk] at h; omega)
-            (by simp only [Fin.val_mk]; omega) (by simp only [Fin.val_mk]; omega)
-            (by simp only [Fin.val_mk]; omega)
+            (by intro h; simp only at h; omega)
+            (by simp only; omega) (by simp only; omega)
+            (by simp only; omega)
         refine ⟨σr ++ σp, ?_, ?_, ?_, ?_, by rw [List.length_append]; omega⟩
         · rw [actSeq_append, ← hstripc]; exact heffσp
         · intro x y hx
           rw [actSeq_append, hfix1 (x,y) hx,
             actSeq_eq_permOf, hblank, Equiv.trans_apply,
-            hfixr (x,y) (by simp only [Fin.val_mk]; omega)]
+            hfixr (x,y) (by simp only; omega)]
           exact habove x y hx
         · intro x y hy
           rw [actSeq_append, hfix3 (x,y) hy,
@@ -221,7 +221,7 @@ theorem placeStepFromNormal (r : ℕ) (hr : r + 1 < n) (hr2 : r + 2 < n) (hm : 4
         · intro y hy
           rw [actSeq_append, hfix2 ((⟨r, by omega⟩ : Fin n), y) rfl hy,
             actSeq_eq_permOf, hblank, Equiv.trans_apply,
-            hfixr ((⟨r, by omega⟩ : Fin n), y) (by simp only [Fin.val_mk]; omega)]
+            hfixr ((⟨r, by omega⟩ : Fin n), y) (by simp only; omega)]
           exact hleft y hy
       · have hya2lo : lo ≤ a.2.val - 1 := by omega
         have hypos : 0 < a.2.val := by omega
@@ -229,9 +229,9 @@ theorem placeStepFromNormal (r : ℕ) (hr : r + 1 < n) (hr2 : r + 2 < n) (hm : 4
           raiseTileLeft r (r+1) y0 a.1.val a.2.val hxa hr hya hy0 (by omega) hypos
             har2 (le_rfl) (by intro h; omega) lo hy0lo hya2lo
         have hstripq : hStrip (m := m) r hr (d(1, a.2.val - 1)) = c(r+1, a.2.val-1) := by
-          simp [hStrip, bot]
+          simp [hStrip]
         have hstripA : hStrip (m := m) r hr (d(1, a.2.val)) = c(r+1, a.2.val) := by
-          simp [hStrip, bot]
+          simp [hStrip]
         have hblank' : blank (actSeq B σr) = hStrip (m := m) r hr (d(1, a.2.val - 1)) := by
           rw [blank_actSeq, hblank, htrr, hstripq]
         have htile' : (actSeq B σr) (hStrip (m := m) r hr (d(1, a.2.val))) = T := by
@@ -239,22 +239,22 @@ theorem placeStepFromNormal (r : ℕ) (hr : r + 1 < n) (hr2 : r + 2 < n) (hm : 4
           simpa using hBa
         have hpne : d(1, a.2.val - 1) ≠ d(1, a.2.val) := by
           intro h; have := congrArg (fun w : Cell 2 m => w.2.val) h
-          simp only [Fin.val_mk] at this; omega
+          simp only at this; omega
         have hac' : d(1, a.2.val) ≠ d(0, yc) := by
           intro h; have := congrArg (fun w : Cell 2 m => w.1.val) h
-          simp only [Fin.val_mk] at this; omega
+          simp only at this; omega
         obtain ⟨σp, hapσp, heffσp, hfix1, hfix2, hfix3, hlenp⟩ :=
           stripPlaceBoard hr hm lo hlo hblank' htile' (by simp) (by simp) hpne hac'
-            (by intro h; simp only [Prod.fst, Fin.val_mk] at h; omega)
-            (by simp only [Fin.val_mk]; exact hya2lo)
-            (by simp only [Fin.val_mk]; exact halo)
-            (by simp only [Fin.val_mk]; exact hyclo)
+            (by intro h; simp only at h; omega)
+            (by simp only; exact hya2lo)
+            (by simp only; exact halo)
+            (by simp only; exact hyclo)
         refine ⟨σr ++ σp, ?_, ?_, ?_, ?_, by rw [List.length_append]; omega⟩
         · rw [actSeq_append, ← hstripc]; exact heffσp
         · intro x y hx
           rw [actSeq_append, hfix1 (x,y) hx,
             actSeq_eq_permOf, hblank, Equiv.trans_apply,
-            hfixr (x,y) (by simp only [Fin.val_mk]; omega)]
+            hfixr (x,y) (by simp only; omega)]
           exact habove x y hx
         · intro x y hy
           rw [actSeq_append, hfix3 (x,y) hy,
@@ -263,18 +263,18 @@ theorem placeStepFromNormal (r : ℕ) (hr : r + 1 < n) (hr2 : r + 2 < n) (hm : 4
         · intro y hy
           rw [actSeq_append, hfix2 ((⟨r, by omega⟩ : Fin n), y) rfl hy,
             actSeq_eq_permOf, hblank, Equiv.trans_apply,
-            hfixr ((⟨r, by omega⟩ : Fin n), y) (by simp only [Fin.val_mk]; omega)]
+            hfixr ((⟨r, by omega⟩ : Fin n), y) (by simp only; omega)]
           exact hleft y hy
     · -- tile in the lower row of the strip
       have hstripA : hStrip (m := m) r hr (d(1, a.2.val)) = a := by
         apply Prod.ext
-        · apply Fin.ext; simp only [hStrip, Prod.fst, Fin.val_mk]; omega
+        · apply Fin.ext; simp only [hStrip, Fin.val_mk]; omega
         · rfl
       have hblank' : blank B = hStrip (m := m) r hr (d(1,y0)) := by rw [hblank, hstrip0]
       have htile' : B (hStrip (m := m) r hr (d(1, a.2.val))) = T := by rw [hstripA]; exact hBa
       have hpne : d(1,y0) ≠ d(1, a.2.val) := by
         intro h; have := congrArg (fun w : Cell 2 m => w.2.val) h
-        simp only [Fin.val_mk] at this
+        simp only at this
         exact hane (by
           rw [hblank]
           apply Prod.ext
@@ -282,10 +282,10 @@ theorem placeStepFromNormal (r : ℕ) (hr : r + 1 < n) (hr2 : r + 2 < n) (hm : 4
           · exact Fin.ext this.symm)
       have hac' : d(1, a.2.val) ≠ d(0, yc) := by
         intro h; have := congrArg (fun w : Cell 2 m => w.1.val) h
-        simp only [Fin.val_mk] at this; omega
+        simp only at this; omega
       obtain ⟨σ, hapσ, heffσ, hfix1, hfix2, hfix3, hlen⟩ :=
         stripPlaceBoard hr hm lo hlo hblank' htile' (by simp) (by simp) hpne hac'
-          (by intro h; simp only [Prod.fst, Fin.val_mk] at h; omega) (by simp only [Fin.val_mk]; exact hy0lo) (by simp only [Fin.val_mk]; exact halo) (by simp only [Fin.val_mk]; exact hyclo)
+          (by intro h; simp only at h; omega) (by simp only; exact hy0lo) (by simp only; exact halo) (by simp only; exact hyclo)
       refine ⟨σ, ?_, ?_, ?_, ?_, by omega⟩
       · rw [← hstripc]; exact heffσ
       · intro x y hx
@@ -300,16 +300,16 @@ theorem placeStepFromNormal (r : ℕ) (hr : r + 1 < n) (hr2 : r + 2 < n) (hm : 4
     · -- tile in the upper row of the strip
       have hstripA : hStrip (m := m) r hr (d(0, a.2.val)) = a := by
         apply Prod.ext
-        · apply Fin.ext; simp only [hStrip, Prod.fst, Fin.val_mk]; omega
+        · apply Fin.ext; simp only [hStrip, Fin.val_mk]; omega
         · rfl
       have hblank' : blank B = hStrip (m := m) r hr (d(1,y0)) := by rw [hblank, hstrip0]
       have htile' : B (hStrip (m := m) r hr (d(0, a.2.val))) = T := by rw [hstripA]; exact hBa
       have hpne : d(1,y0) ≠ d(0, a.2.val) := by
         intro h; have := congrArg (fun w : Cell 2 m => w.1.val) h
-        simp only [Fin.val_mk] at this; omega
+        simp only at this; omega
       have hac' : d(0, a.2.val) ≠ d(0, yc) := by
         intro h; have := congrArg (fun w : Cell 2 m => w.2.val) h
-        simp only [Fin.val_mk] at this
+        simp only at this
         exact hsame (by
           apply Prod.ext
           · exact Fin.ext (by omega)
@@ -317,7 +317,7 @@ theorem placeStepFromNormal (r : ℕ) (hr : r + 1 < n) (hr2 : r + 2 < n) (hm : 4
       have hrow : (d(0, a.2.val)).1.val = 0 → yc ≤ a.2.val := by
         intro _; exact ha_col har0
       obtain ⟨σ, hapσ, heffσ, hfix1, hfix2, hfix3, hlen⟩ :=
-        stripPlaceBoard hr hm lo hlo hblank' htile' (by simp) (by simp) hpne hac' hrow (by simp only [Fin.val_mk]; exact hy0lo) (by simp only [Fin.val_mk]; exact halo) (by simp only [Fin.val_mk]; exact hyclo)
+        stripPlaceBoard hr hm lo hlo hblank' htile' (by simp) (by simp) hpne hac' hrow (by simp only; exact hy0lo) (by simp only; exact halo) (by simp only; exact hyclo)
       refine ⟨σ, ?_, ?_, ?_, ?_, by omega⟩
       · rw [← hstripc]; exact heffσ
       · intro x y hx
@@ -367,7 +367,7 @@ theorem placeStep (r : ℕ) (hr : r + 1 < n) (hr2 : r + 2 < n) (hm : 4 ≤ m)
     have hcell : p0 = (((⟨n-1, by omega⟩ : Fin n), (⟨m-1, by omega⟩ : Fin m)) : Cell n m) :=
       (target n m).injective (h3.trans hlast.symm)
     have := congrArg (fun w : Cell n m => w.2.val) hcell
-    simp only [Fin.val_mk] at this
+    simp only at this
     omega
   set σ0 : List Dir := moveXWord p0.1.val (r+1) with hσ0
   have happ0 : ApplicableFrom p0 σ0 := by

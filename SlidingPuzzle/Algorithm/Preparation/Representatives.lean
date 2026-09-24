@@ -33,7 +33,7 @@ def representativeSource {k : ℕ} (hk : 2 ≤ k) (i : GroupIndex k) : Cell (k^4
   (⟨k^2, by have := preparation_geometry hk; omega⟩,
    ⟨k^4-k^2+i.val, by
      have := preparation_geometry hk
-     have hi : i.val < k^2 := by simpa [pow_two] using i.isLt
+     have hi : i.val < k^2 := by simp [pow_two]
      omega⟩)
 
 private theorem representativeSource_not_staging {k : ℕ} (hk : 2 ≤ k)
@@ -102,7 +102,7 @@ theorem representative_destination_in_last_reservoir {k : ℕ} (hk : 2 ≤ k)
     (i : GroupIndex k) :
     reservoir (lastGroup k hk) (representativeDestination hk i) := by
   have hg := preparation_geometry hk
-  have hi : i.val < k^2 := by simpa [pow_two] using i.isLt
+  have hi : i.val < k^2 := by simp [pow_two]
   have he : (k-1)*k^3 + k^3 = k^4 := by
     calc
       (k-1)*k^3 + k^3 = (k-1+1)*k^3 := by ring

@@ -22,15 +22,15 @@ theorem diagonalWord_spec (a b : ℕ) (ha : a+2 < n) (hb : b+1 < m) :
   have h1 : neighbor? c(a+1,b+1) Dir.U = some c(a+2,b+1) := by
     simpa using (nb_U (n := n) (m := m) (a+1) (b+1) (by omega) hb)
   have h2 : neighbor? c(a+2,b+1) Dir.R = some c(a+2,b) := by
-    simpa using (nb_R (n := n) (m := m) (a+2) (b+1) (by omega) ha hb)
+    simp
   have h3 : neighbor? c(a+2,b) Dir.D = some c(a+1,b) := by
-    simpa using (nb_D (n := n) (m := m) (a+2) b (by omega) ha (by omega))
+    simp
   have h4 : neighbor? c(a+1,b) Dir.L = some c(a+1,b+1) :=
     nb_L (a+1) b hb (by omega)
   have h5 : neighbor? c(a+1,b+1) Dir.D = some c(a,b+1) := by
-    simpa using (nb_D (n := n) (m := m) (a+1) (b+1) (by omega) (by omega) hb)
+    simp
   have h6 : neighbor? c(a,b+1) Dir.R = some c(a,b) := by
-    simpa using (nb_R (n := n) (m := m) a (b+1) (by omega) (by omega) hb)
+    simp
   refine ⟨?_,?_,?_,?_⟩
   · simp only [diagonalWord, applicableFrom_cons_of_neighbor? h1,
       applicableFrom_cons_of_neighbor? h2, applicableFrom_cons_of_neighbor? h3,
@@ -43,14 +43,14 @@ theorem diagonalWord_spec (a b : ℕ) (ha : a+2 < n) (hb : b+1 < m) :
   · simp only [diagonalWord, permOf_cons_of_neighbor? h1, permOf_cons_of_neighbor? h2,
       permOf_cons_of_neighbor? h3, permOf_cons_of_neighbor? h4,
       permOf_cons_of_neighbor? h5, permOf_cons_of_neighbor? h6, permOf_nil,
-      Equiv.Perm.mul_apply, Equiv.refl_apply]
+      Equiv.Perm.mul_apply]
     simp [Equiv.swap_apply_def, Prod.ext_iff, Fin.ext_iff]
   · intro z hz
     simp only [diagonalWord, traceSet_cons_of_neighbor? h1, traceSet_cons_of_neighbor? h2,
       traceSet_cons_of_neighbor? h3, traceSet_cons_of_neighbor? h4,
       traceSet_cons_of_neighbor? h5, traceSet_cons_of_neighbor? h6,
       traceSet_nil, Finset.mem_insert, Finset.mem_singleton] at hz
-    rcases hz with rfl | rfl | rfl | rfl | rfl | rfl | rfl <;> simp <;> omega
+    rcases hz with rfl | rfl | rfl | rfl | rfl | rfl | rfl <;> simp
 
 /-- Repeat diagonal transport without routing the blank afresh. -/
 def diagonalRun : ℕ → List Dir

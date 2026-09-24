@@ -26,7 +26,7 @@ theorem skipPlacementWord_spec (a b : ℕ) (ha : a+1 < n) (hb : b+1 < m) :
     intro hmem
     simp only [traceSet_cons_of_neighbor? hs,traceSet_nil,
       Finset.mem_insert,Finset.mem_singleton] at hmem
-    rcases hmem with rfl | rfl <;> simp only [Fin.val_mk] at hz <;> omega
+    rcases hmem with rfl | rfl <;> simp only at hz <;> omega
 
 /-- Every tile on or to the right of its destination admits a complete bounded
 row-placement step. The two-row margin is used only by the adjacent-below case. -/
@@ -130,18 +130,18 @@ theorem exists_placementWord (a b : ℕ) (x : Fin n) (y : Fin m) (hm : m ≤ n)
   · obtain ⟨σ,hlen,hs⟩ := exists_rightPlacementWord a b (x.val-a) (y.val-b-1) hm
       (by omega : a+(x.val-a) < n) (by omega : b+(y.val-b-1)+1 < m) ha2 hb2
     have he : (c(a+(x.val-a),b+(y.val-b-1)+1) : Zhong.Cell n m)=(x,y) := by
-      apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_mk] <;> omega
+      apply Prod.ext <;> apply Fin.ext <;> simp only <;> omega
     refine ⟨σ,?_,?_⟩
     · have := min_le_left (b+1) (n-(b+1)); omega
     · simpa only [he] using hs
   · have hni : x.val-a≠1 ∨ b-y.val≠0 := by
       by_contra hh
       apply hne
-      apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_mk] <;> omega
+      apply Prod.ext <;> apply Fin.ext <;> simp only <;> omega
     obtain ⟨σ,hlen,hs⟩ := exists_leftPlacementWord a b (x.val-a) (b-y.val) hm
       (by omega : a+(x.val-a) < n) (by omega) (by omega) ha2 hb2 hni
     have he : (c(a+(x.val-a),b-(b-y.val)) : Zhong.Cell n m)=(x,y) := by
-      apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_mk] <;> omega
+      apply Prod.ext <;> apply Fin.ext <;> simp only <;> omega
     refine ⟨σ,?_,?_⟩
     · have := min_le_right (b+1) (n-(b+1)); omega
     · simpa only [he] using hs

@@ -444,7 +444,7 @@ theorem mem_Wins_row_succ (hm : 3 ≤ m) (i : Fin n) (hi : i.1 + 1 < n) (y : Fin
     rw [mem_window_iff]
     refine Or.inr (Or.inr (Or.inr (Or.inr ?_)))
     rw [win_four]
-    ext <;> simp only [Fin.val_mk] <;> omega
+    ext <;> simp only; omega
   · have hyv : y.val ≤ 1 := by omega
     have hjlt : 0 < m - 2 := by omega
     have hj2 : 0 + 2 < m := by omega
@@ -453,10 +453,10 @@ theorem mem_Wins_row_succ (hm : 3 ≤ m) (i : Fin n) (hi : i.1 + 1 < n) (y : Fin
     rcases Nat.le_one_iff_eq_zero_or_eq_one.mp hyv with h0 | h1
     · refine Or.inr (Or.inl ?_)
       rw [win_one]
-      ext <;> simp only [Fin.val_mk] <;> omega
+      ext <;> simp only; omega
     · refine Or.inl ?_
       rw [win_zero]
-      ext <;> simp only [Fin.val_mk] <;> omega
+      ext <;> simp only; omega
 
 /-- A cell `(i, y)` with `y ≠ 0` lies in the union of the windows of row `i`. -/
 theorem mem_Wins_row (hm : 3 ≤ m) (i : Fin n) (hi : i.1 + 1 < n) {y : Fin m}
@@ -469,14 +469,14 @@ theorem mem_Wins_row (hm : 3 ≤ m) (i : Fin n) (hi : i.1 + 1 < n) {y : Fin m}
     rw [mem_window_iff]
     refine Or.inr (Or.inr (Or.inr (Or.inl ?_)))
     rw [win_three]
-    ext <;> simp only [Fin.val_mk] <;> omega
+    ext <;> simp only; omega
   · have hylt : y.val - 1 < m - 2 := by omega
     have hj2 : y.val - 1 + 2 < m := by omega
     refine window_subset_winsPrefix i hi (j := y.val - 1) (t := m - 2) hylt hj2 ?_
     rw [mem_window_iff]
     refine Or.inr (Or.inr (Or.inl ?_))
     rw [win_two]
-    ext <;> simp only [Fin.val_mk] <;> omega
+    ext <;> simp only; omega
 
 /-- The base cell `(0, 0)` of the board. -/
 abbrev p0 : Cell n m :=
@@ -511,17 +511,17 @@ theorem altOn_winsPrefix_le (i : Fin n) (hi : i.1 + 1 < n) :
           · have ht1 : t - 1 + 2 < m := by omega
             have hlt : t - 1 < t := by omega
             exact window_subset_winsPrefix i hi hlt ht1
-              (by rw [mem_window_iff]; left; rw [win_zero]; ext <;> simp only [Fin.val_mk] <;> omega)
+              (by rw [mem_window_iff]; left; rw [win_zero]; ext <;> simp only; omega)
           · have ht1 : t - 1 + 2 < m := by omega
             have hlt : t - 1 < t := by omega
             exact window_subset_winsPrefix i hi hlt ht1
               (by rw [mem_window_iff]; refine Or.inr (Or.inr (Or.inr (Or.inr ?_)));
-                  rw [win_four]; ext <;> simp only [Fin.val_mk] <;> omega)
+                  rw [win_four]; ext <;> simp only; omega)
           · rw [mem_window_iff]; exact Or.inr (Or.inl (by rw [win_one]))
           · rw [mem_window_iff]; exact Or.inl (by rw [win_zero])
           · intro hh
             have := congrArg (fun x : Cell n m => x.2.val) hh
-            simp only [Fin.val_mk] at this
+            simp only at this
             omega
       · rw [winsPrefix_succ_of_not i hi t h]; exact ih
 
@@ -546,7 +546,7 @@ theorem altOn_region_one_le (hm : 3 ≤ m) (hn : 2 ≤ n) :
       have hc_eq : c = ((⟨0, by omega⟩ : Fin n), c.2) := Prod.ext hc1 rfl
       rwa [hc_eq]
     · have hc1 : c.1 = (⟨(⟨0, by omega⟩ : Fin n).val + 1, hi⟩ : Fin n) :=
-        Fin.ext (by simp only [Fin.val_mk]; omega)
+        Fin.ext (by simp only; omega)
       have hmem := mem_Wins_row_succ (n := n) (m := m) hm (⟨0, by omega⟩ : Fin n) hi c.2
       have hc_eq : c = ((⟨(⟨0, by omega⟩ : Fin n).val + 1, hi⟩ : Fin n), c.2) := Prod.ext hc1 rfl
       rwa [hc_eq]
@@ -562,14 +562,14 @@ theorem altOn_region_succ_le (hm : 3 ≤ m) (i : Fin n) (hi : i.1 + 1 < n) (hi1 
     refine ⟨⟨Finset.mem_univ _, by simp⟩, ?_⟩
     intro h
     have := congrArg (fun x : Cell n m => x.1.val) h
-    simp only [p0, Fin.val_mk] at this
+    simp only at this
     omega
   have hbReg : (i, (⟨2, by omega⟩ : Fin m)) ∈ Region (n := n) (m := m) i.val := by
     rw [Region, Finset.mem_sdiff, Finset.mem_filter, Finset.mem_singleton]
     refine ⟨⟨Finset.mem_univ _, by simp⟩, ?_⟩
     intro h
     have := congrArg (fun x : Cell n m => x.1.val) h
-    simp only [p0, Fin.val_mk] at this
+    simp only at this
     omega
   have haWin : (i, (⟨1, by omega⟩ : Fin m)) ∈ Wins i hi := mem_Wins_row hm i hi (by simp)
   have hbWin : (i, (⟨2, by omega⟩ : Fin m)) ∈ Wins i hi := mem_Wins_row hm i hi (by simp)
@@ -583,7 +583,7 @@ theorem altOn_region_succ_le (hm : 3 ≤ m) (i : Fin n) (hi : i.1 + 1 < n) (hi1 
     by_cases hlt : c.1.val ≤ i.val
     · exact Or.inl ⟨⟨Finset.mem_univ _, hlt⟩, hne⟩
     · right
-      have hc1 : c.1 = (⟨i.val + 1, hi⟩ : Fin n) := Fin.ext (by simp only [Fin.val_mk]; omega)
+      have hc1 : c.1 = (⟨i.val + 1, hi⟩ : Fin n) := Fin.ext (by simp only; omega)
       have hmem := mem_Wins_row_succ (n := n) (m := m) hm i hi c.2
       have hc_eq : c = ((⟨i.val + 1, hi⟩ : Fin n), c.2) := Prod.ext hc1 rfl
       rwa [hc_eq]
@@ -602,9 +602,9 @@ theorem altOn_region_le (hm : 3 ≤ m) (hn : 2 ≤ n) :
       have hih : altOn (Region (n := n) (m := m) (k - 1)) ≤ closedGroup (p0 : Cell n m) :=
         ih (k - 1) (by omega) hkm1 (by omega)
       have hstep := altOn_region_succ_le (n := n) (m := m) hm
-        (⟨k - 1, by omega⟩ : Fin n) (by simp only [Fin.val_mk]; omega)
-        (by simp only [Fin.val_mk]; omega) hih
-      rwa [show (⟨k - 1, by omega⟩ : Fin n).val + 1 = k from by simp only [Fin.val_mk]; omega] at hstep
+        (⟨k - 1, by omega⟩ : Fin n) (by simp only; omega)
+        (by simp only; omega) hih
+      rwa [show (⟨k - 1, by omega⟩ : Fin n).val + 1 = k from by simp only; omega] at hstep
 
 /-- **The converse of Proposition 3 (group form).**  For `m ≥ 3` and `n ≥ 2`, the
 closed-walk group at `(0, 0)` contains the alternating group on all the other cells. -/

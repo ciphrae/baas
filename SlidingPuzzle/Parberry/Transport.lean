@@ -76,7 +76,7 @@ theorem southeastWord_spec (a b d v : ℕ)
   have hc : a+(v+1)+d=a+v+d+1 := by omega
   have hy : b+1+d=b+d+1 := by omega
   have hx : a+(v+1)+d+1=a+v+d+2 := by omega
-  simp only [hx,hc,hy] at htp
+  simp only [hc,hy] at htp
   simp only [hc,hy] at hta htt htfix
   refine ⟨?_,?_,?_,?_⟩
   · rw [southeastWord,applicableFrom_append,hnt]
@@ -98,16 +98,16 @@ theorem parkWord_spec (a b : ℕ) (ha : a+1 < n) (hb : b+2 < m) :
       permOf c(a,b+2) parkWord z=z := by
   have h1 : neighbor? c(a,b+2) Dir.U=some c(a+1,b+2) := nb_U a (b+2) ha hb
   have h2 : neighbor? c(a+1,b+2) Dir.R=some c(a+1,b+1) := by
-    simpa using (nb_R (n := n) (m := m) (a+1) (b+2) (by omega) ha hb)
+    simp
   refine ⟨?_,?_,?_⟩
   · simp only [parkWord,applicableFrom_cons_of_neighbor? h1,
       applicableFrom_cons_of_neighbor? h2]
     trivial
   · simp only [parkWord,trace_cons_of_neighbor? h1,trace_cons_of_neighbor? h2,trace_nil]
   · intro z hz
-    have hz0 : z≠c(a,b+2) := by intro he; subst z; simp only [Fin.val_mk] at hz; omega
-    have hz1 : z≠c(a+1,b+2) := by intro he; subst z; simp only [Fin.val_mk] at hz; omega
-    have hz2 : z≠c(a+1,b+1) := by intro he; subst z; simp only [Fin.val_mk] at hz; omega
+    have hz0 : z≠c(a,b+2) := by intro he; subst z; simp only at hz; omega
+    have hz1 : z≠c(a+1,b+2) := by intro he; subst z; simp only at hz; omega
+    have hz2 : z≠c(a+1,b+1) := by intro he; subst z; simp only at hz; omega
     simp only [parkWord,permOf_cons_of_neighbor? h1,permOf_cons_of_neighbor? h2,
       permOf_nil,Equiv.Perm.mul_apply,Equiv.Perm.one_apply,
       Equiv.swap_apply_of_ne_of_ne hz1 hz2,Equiv.swap_apply_of_ne_of_ne hz0 hz1]

@@ -22,7 +22,7 @@ theorem exists_row_start (B : Board n) (a : ℕ) (ha2 : a+2 < n)
     have hzero : target n s=0 := (hfixed s (by omega)).symm.trans (B.apply_symm_apply 0)
     have he := (target n).injective (hzero.trans (target_bottomRight n).symm)
     have hx := congrArg (fun z : Cell n => z.1.val) he
-    simp only [Fin.val_mk] at hx
+    simp only at hx
     omega
   let w := Zhong.moveToWord s.1.val s.2.val (a+1) 0
   have hlen : w.length ≤ 2*n := by
@@ -40,7 +40,7 @@ theorem exists_row_start (B : Board n) (a : ℕ) (ha2 : a+2 < n)
     · have hh := Zhong.moveXWord_traceSet s.1.val s.2.val (a+1)
         (by omega : a+1 < n) s.1.isLt s.2.isLt z hmem
       have hc := congrArg Fin.val hh.1
-      simp only [Fin.val_mk] at hc
+      simp only at hc
       omega
     · have ht := Zhong.trace_moveXWord s.1.val s.2.val (a+1)
         (by omega : a+1 < n) s.1.isLt s.2.isLt
@@ -49,7 +49,7 @@ theorem exists_row_start (B : Board n) (a : ℕ) (ha2 : a+2 < n)
       have hh := Zhong.moveYWord_traceSet (a+1) s.2.val 0
         (by omega : 0 < n) (by omega : a+1 < n) s.2.isLt z hmem
       have hr := congrArg Fin.val hh
-      simp only [Fin.val_mk] at hr
+      simp only at hr
       omega
   obtain ⟨p,hp⟩ := path_of_zhong_word B w
   refine ⟨Zhong.actSeq B w,p,hp.trans hlen,?_,?_⟩
@@ -78,14 +78,14 @@ theorem exists_complete_row (B : Board n) (a : ℕ) (ha2 : a+2 < n) (hn : 4 ≤ 
     rcases hz with hz | ⟨hx,hy⟩
     · exact haboveW z.1 z.2 hz
     · have he : z=c(a,0) := by
-        apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_mk] <;> omega
+        apply Prod.ext <;> apply Fin.ext <;> simp only <;> omega
       rw [he]; exact hw
   obtain ⟨D,q,hq,hblankD,hD⟩ := exists_row_start (Zhong.actSeq B w) a ha2 hfirst
   obtain ⟨E,r,hr,hblankE,hE⟩ := exists_row_prefix_quadratic D a (n-3) ha2 (by omega) hblankD hD
   obtain ⟨v,haboveV,_,hrowV,hlenV⟩ := Zhong.solveRowAux a (by omega) ha2 hn 0 (by omega)
     2 (n-2) (by omega) (by omega) (by omega) E
     (fun x y hx => hE (x,y) (Or.inl hx)) (by intros; omega)
-    (fun y hy => hE (⟨a,by omega⟩,y) (Or.inr ⟨rfl,by simp only [Fin.val_mk]; omega⟩))
+    (fun y hy => hE (⟨a,by omega⟩,y) (Or.inr ⟨rfl,by simp only; omega⟩))
   obtain ⟨s,hs⟩ := path_of_zhong_word E v
   refine ⟨Zhong.actSeq E v,((p.append q).append r).append s,?_,?_,hrowV⟩
   · simp only [Path.length_append]

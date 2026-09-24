@@ -45,7 +45,7 @@ theorem exists_relabeled {P : ℕ → Prop} {R : Cell n → Prop}
     simp [blank,position]
   have hes : e.symm 0=0 := by
     apply e.injective
-    simpa [he] using e.apply_symm_apply 0
+    simp [he]
   obtain ⟨D,p,hp,hD⟩ := h (relabel B e)
   have hq : ∃ q : Path B (relabel D e.symm), q.length=p.length := by
     have hh : ∃ q : Path (relabel (relabel B e) e.symm) (relabel D e.symm),
@@ -99,9 +99,11 @@ def shiftEmbedding (d m : ℕ) (hm : d+m=n) : Zhong.Cell n m ↪ SlidingPuzzle.C
     simp only at hr hc
     exact Prod.ext hr (Fin.ext (by omega))
 
+omit [NeZero n] in
 @[simp] theorem shiftEmbedding_apply {d m : ℕ} (hm : d+m=n) (z : Zhong.Cell n m) :
     shiftEmbedding d m hm z=(z.1,⟨z.2.val+d,by have := z.2.isLt; omega⟩) := rfl
 
+omit [NeZero n] in
 theorem shiftEmbedding_range {d m : ℕ} (hm : d+m=n) (z : SlidingPuzzle.Cell n) :
     z ∈ Set.range (shiftEmbedding d m hm) ↔ d ≤ z.2.val := by
   constructor
@@ -114,6 +116,7 @@ theorem shiftEmbedding_range {d m : ℕ} (hm : d+m=n) (z : SlidingPuzzle.Cell n)
     · rfl
     · apply Fin.ext; change z.2.val-d+d=z.2.val; omega
 
+omit [NeZero n] in
 theorem shiftEmbedding_neighbor {d m : ℕ} (hm : d+m=n) (z : Zhong.Cell n m) (δ : Dir)
     (z' : Zhong.Cell n m) (h : neighbor? z δ=some z') :
     neighbor? (shiftEmbedding d m hm z) δ=some (shiftEmbedding d m hm z') := by

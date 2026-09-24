@@ -28,17 +28,17 @@ theorem topPlacementWord_spec (a b v : ℕ) (ha : a+1 < n) (hb : b+v+2 < m) :
   have hnfix := moveToWord_fixes_of_row_lt (lo := a+1) ha
     (by omega : b+v+1 < m) ha (by omega : b < m) (by omega) (by omega)
   have hstep : neighbor? c(a+1,b+v+1) Dir.D=some c(a,b+v+1) := by
-    simpa using (nb_D (n := n) (m := m) (a+1) (b+v+1) (by omega) ha (by omega))
+    simp
   obtain ⟨hta,htt,htp,htfix⟩ := horizontalWord_spec (n := n) (m := m)
     a (b+1) 0 v (by omega) ha (by omega)
   have hy : b+1+v=b+v+1 := by omega
   have hy1 : b+1+v+1=b+v+2 := by omega
-  simp only [Nat.add_zero,hy,hy1] at hta htt htp htfix
+  simp only [Nat.add_zero,hy] at hta htt htp htfix
   have htfix' : ∀ z : Zhong.Cell n m, z.1.val<a ∨ (z.1.val=a ∧ z.2.val<b+1) →
       Equiv.swap c(a+1,b+v+1) c(a,b+v+1) z=z := by
     intro z hz
     apply Equiv.swap_apply_of_ne_of_ne <;> intro he <;> subst z <;>
-      simp only [Fin.val_mk] at hz <;> omega
+      simp only at hz <;> omega
   have htilet : Equiv.swap c(a+1,b+v+1) c(a,b+v+1) c(a,b+v+2)=c(a,b+v+2) := by
     simp [Equiv.swap_apply_def,Prod.ext_iff,Fin.ext_iff]
   refine ⟨?_,?_,?_,?_⟩

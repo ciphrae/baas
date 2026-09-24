@@ -50,18 +50,18 @@ theorem exists_placementWord (a b : ℕ) (x y : Fin n)
   · obtain ⟨σ,hlen,hs⟩ := exists_rightPlacementWord a b (x.val-a) (y.val-b-1)
       (by omega : a+(x.val-a) < n) (by omega : b+(y.val-b-1)+1 < n) ha2 hb2
     have he : (c(a+(x.val-a),b+(y.val-b-1)+1) : Zhong.Cell n n)=(x,y) := by
-      apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_mk] <;> omega
+      apply Prod.ext <;> apply Fin.ext <;> simp only <;> omega
     refine ⟨σ,?_,?_⟩
     · have := min_le_left (b+1) (n-(b+1)); omega
     · simpa only [he] using hs
   · have hni : x.val-a≠1 ∨ b-y.val≠0 := by
       by_contra hh
       apply hne
-      apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_mk] <;> omega
+      apply Prod.ext <;> apply Fin.ext <;> simp only <;> omega
     obtain ⟨σ,hlen,hs⟩ := exists_leftPlacementWord a b (x.val-a) (b-y.val)
       (by omega : a+(x.val-a) < n) (by omega) (by omega) ha2 hb2 hni
     have he : (c(a+(x.val-a),b-(b-y.val)) : Zhong.Cell n n)=(x,y) := by
-      apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_mk] <;> omega
+      apply Prod.ext <;> apply Fin.ext <;> simp only <;> omega
     refine ⟨σ,?_,?_⟩
     · have := min_le_right (b+1) (n-(b+1)); omega
     · simpa only [he] using hs

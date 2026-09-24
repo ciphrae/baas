@@ -57,7 +57,7 @@ theorem exists_staging_representative_row_path {k : ℕ}
       · exact Or.inr (Or.inr (Or.inl (by omega)))
   have hErep (i : GroupIndex k) (hi : i ≠ lastGroup k hk) :
       E (⟨k^4-3,by omega⟩,(representativeSource hk i).2) ∈ targetGroup i := by
-    have hil : i.val < k^2 := by simpa [pow_two] using i.isLt
+    have hil : i.val < k^2 := by simp [pow_two]
     have hh := hrow ⟨i.val,hil⟩
     have hroweq : k^2 + (k^4-3-k^2) = k^4-3 := by omega
     simp only [hroweq] at hh
@@ -273,7 +273,7 @@ theorem exists_vertical_preparation_path {k : ℕ} (hk : 2 ≤ k) [NeZero (k^4)]
       omega))]
     exact hH i c hc
   · intro j i c hc
-    have hi : i.val < k^2 := by simpa [pow_two] using i.isLt
+    have hi : i.val < k^2 := by simp [pow_two]
     have hcol := (groupCol j).isLt
     have hsource : (groupCol j).val*k^2+i.val < k^3 := by
       have hh := Nat.mul_le_mul_right (k^2) hcol

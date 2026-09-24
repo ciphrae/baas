@@ -26,7 +26,7 @@ theorem skipPlacementWord_spec (a b : ℕ) (ha : a+1 < n) (hb : b+1 < n) :
     intro hmem
     simp only [traceSet_cons_of_neighbor? hs,traceSet_nil,
       Finset.mem_insert,Finset.mem_singleton] at hmem
-    rcases hmem with rfl | rfl <;> simp only [Fin.val_mk] at hz <;> omega
+    rcases hmem with rfl | rfl <;> simp only at hz <;> omega
 
 /-- Every tile on or to the right of its destination admits a complete bounded
 row-placement step. The two-row margin is used only by the adjacent-below case. -/

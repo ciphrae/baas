@@ -162,7 +162,7 @@ theorem card_square {n k : ℕ} (hn : n=k^4) (i : GroupIndex k) :
   have h := card_rectangle (n := n) ((groupRow i).val*k^3) (((groupRow i).val+1)*k^3)
     ((groupCol i).val*k^3) (((groupCol i).val+1)*k^3)
     (block_end_le hn (groupRow i)) (block_end_le hn (groupCol i))
-  convert h using 1 <;> simp [Nat.add_mul] <;> ring
+  convert h using 1 <;> simp [Nat.add_mul]; ring
 
 /-- Target groups are exactly the square's labels, with the blank removed. -/
 theorem targetGroup_eq_image_erase {n k : ℕ} [NeZero n] (i : GroupIndex k) :
@@ -172,7 +172,7 @@ theorem targetGroup_eq_image_erase {n k : ℕ} [NeZero n] (i : GroupIndex k) :
   simp only [mem_targetGroup, Finset.mem_erase, Finset.mem_image]
   constructor
   · rintro ⟨ht,hs⟩
-    refine ⟨by intro h; apply ht; simpa [h], position (target n) t, ?_, ?_⟩
+    refine ⟨by intro h; apply ht; simp [h], position (target n) t, ?_, ?_⟩
     · exact (mem_squareCells i _).mpr hs
     · exact (target n).apply_symm_apply t
   · rintro ⟨ht,c,hc,rfl⟩

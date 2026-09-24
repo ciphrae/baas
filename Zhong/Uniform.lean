@@ -134,8 +134,8 @@ noncomputable def hFiber (p y z : Cell n m) : Finset (Equiv.Perm (Cell n m)) :=
 
 /-- The number of elements of `H` sending `y` to `z` is independent of `y` (as long as
 `y, y', z` differ from the base point). -/
-theorem hFiber_card_eq {p y y' z : Cell n m} (hy : y ≠ p) (hy' : y' ≠ p)
-    (hz : z ≠ p) (h : SameOrbit p y' y) :
+theorem hFiber_card_eq {p y y' z : Cell n m} (_hy : y ≠ p) (_hy' : y' ≠ p)
+    (_hz : z ≠ p) (h : SameOrbit p y' y) :
     (hFiber p y z).card = (hFiber p y' z).card := by
   obtain ⟨k, hk, hky'⟩ := h
   refine Finset.card_bij (fun a _ => a * k) ?_ ?_ ?_

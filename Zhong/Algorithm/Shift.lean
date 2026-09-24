@@ -60,7 +60,7 @@ The block `R U L D R` starting at `(0, j)` (with `0 < j`) is the four-cycle
 `(0,j) → (1,j-1) → (1,j) → (0,j-1) → (0,j)`. -/
 
 /-- The predecessor column. -/
-theorem fin_pred_lt {m j : ℕ} (hj : 0 < j) (hjm : j < m) : j - 1 < m :=
+theorem fin_pred_lt {m j : ℕ} (_hj : 0 < j) (hjm : j < m) : j - 1 < m :=
   Nat.lt_of_le_of_lt (Nat.sub_le _ _) hjm
 
 /-- The product of the five transpositions of the sweep block. -/
@@ -80,7 +80,7 @@ theorem permOf_sweepBlock_eq {m : ℕ} (j : Fin m) (hj : 0 < j.val) :
   have hL : neighbor? ((1 : Fin 3), ⟨j.val - 1, fin_pred_lt hj j.isLt⟩) Dir.L
       = some ((1 : Fin 3), j) := by
     have hlt : (⟨j.val - 1, fin_pred_lt hj j.isLt⟩ : Fin m).val + 1 < m := by
-      simp only [Fin.val_mk]; omega
+      simp only; omega
     have hfin : (⟨(⟨j.val - 1, fin_pred_lt hj j.isLt⟩ : Fin m).val + 1, hlt⟩ : Fin m) = j := by
       apply Fin.ext
       change (⟨j.val - 1, fin_pred_lt hj j.isLt⟩ : Fin m).val + 1 = j.val
@@ -150,7 +150,7 @@ theorem sweepBlock_cells_ne {m : ℕ} (j : Fin m) (hj : 0 < j.val) :
   refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩ <;>
     (intro h
      have h2 := congrArg (fun x : Cell 3 m => (x.1.val, x.2.val)) h
-     simp only [Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at h2
+     simp only [Prod.mk.injEq] at h2
      omega)
 
 /-- The block fixes cells outside its `2 × 2` support. -/
@@ -169,7 +169,7 @@ theorem permOf_sweepBlock_of_not_mem {m : ℕ} (j : Fin m) (hj : 0 < j.val)
   have hL : neighbor? ((1 : Fin 3), ⟨j.val - 1, fin_pred_lt hj j.isLt⟩) Dir.L
       = some ((1 : Fin 3), j) := by
     have hlt : (⟨j.val - 1, fin_pred_lt hj j.isLt⟩ : Fin m).val + 1 < m := by
-      simp only [Fin.val_mk]; omega
+      simp only; omega
     have hfin : (⟨(⟨j.val - 1, fin_pred_lt hj j.isLt⟩ : Fin m).val + 1, hlt⟩ : Fin m) = j := by
       apply Fin.ext
       change (⟨j.val - 1, fin_pred_lt hj j.isLt⟩ : Fin m).val + 1 = j.val
@@ -270,7 +270,7 @@ theorem trace_sweepBlock {m : ℕ} (j : Fin m) (hj : 0 < j.val) :
   have hL : neighbor? ((1 : Fin 3), ⟨j.val - 1, fin_pred_lt hj j.isLt⟩) Dir.L
       = some ((1 : Fin 3), j) := by
     have hlt : (⟨j.val - 1, fin_pred_lt hj j.isLt⟩ : Fin m).val + 1 < m := by
-      simp only [Fin.val_mk]; omega
+      simp only; omega
     have hfin : (⟨(⟨j.val - 1, fin_pred_lt hj j.isLt⟩ : Fin m).val + 1, hlt⟩ : Fin m) = j := by
       apply Fin.ext
       change (⟨j.val - 1, fin_pred_lt hj j.isLt⟩ : Fin m).val + 1 = j.val
@@ -503,7 +503,7 @@ theorem sweepFun_block {m : ℕ} (lo hi : ℕ) (hhi : hi < m) (hle : lo ≤ hi) 
 
 /-- The action of the sweep word is `sweepFun`. -/
 theorem permOf_sweepWord {m : ℕ} (k : ℕ) :
-    ∀ (start : ℕ) (hk : k ≤ start) (hstart : start < m) (x : Cell 3 m),
+    ∀ (start : ℕ) (_hk : k ≤ start) (hstart : start < m) (x : Cell 3 m),
       permOf ((0 : Fin 3), (⟨start, hstart⟩ : Fin m)) (sweepWord k) x
         = sweepFun m (start - k) start hstart x := by
   induction k with
@@ -525,16 +525,16 @@ theorem permOf_sweepWord {m : ℕ} (k : ℕ) :
 
 /-- A four-edge path induces the five-cycle `a → b → c → d → e → a`. -/
 theorem fiveCycle_apply_a {α : Type*} [DecidableEq α] {a b c d e : α}
-    (hab : a ≠ b) (hac : a ≠ c) (had : a ≠ d) (hae : a ≠ e) (hbc : b ≠ c)
-    (hbd : b ≠ d) (hbe : b ≠ e) (hcd : c ≠ d) (hce : c ≠ e) (hde : d ≠ e) :
+    (hab : a ≠ b) (hac : a ≠ c) (had : a ≠ d) (hae : a ≠ e) (_hbc : b ≠ c)
+    (_hbd : b ≠ d) (_hbe : b ≠ e) (_hcd : c ≠ d) (_hce : c ≠ e) (_hde : d ≠ e) :
     (Equiv.swap a b * Equiv.swap b c * Equiv.swap c d * Equiv.swap d e) a = b := by
   change Equiv.swap a b (Equiv.swap b c (Equiv.swap c d (Equiv.swap d e a))) = b
   rw [Equiv.swap_apply_of_ne_of_ne had hae, Equiv.swap_apply_of_ne_of_ne hac had,
       Equiv.swap_apply_of_ne_of_ne hab hac, Equiv.swap_apply_left]
 
 theorem fiveCycle_apply_d {α : Type*} [DecidableEq α] {a b c d e : α}
-    (hab : a ≠ b) (hac : a ≠ c) (had : a ≠ d) (hae : a ≠ e) (hbc : b ≠ c)
-    (hbd : b ≠ d) (hbe : b ≠ e) (hcd : c ≠ d) (hce : c ≠ e) (hde : d ≠ e) :
+    (_hab : a ≠ b) (_hac : a ≠ c) (_had : a ≠ d) (hae : a ≠ e) (_hbc : b ≠ c)
+    (_hbd : b ≠ d) (hbe : b ≠ e) (_hcd : c ≠ d) (hce : c ≠ e) (hde : d ≠ e) :
     (Equiv.swap a b * Equiv.swap b c * Equiv.swap c d * Equiv.swap d e) d = e := by
   change Equiv.swap a b (Equiv.swap b c (Equiv.swap c d (Equiv.swap d e d))) = e
   rw [Equiv.swap_apply_left, Equiv.swap_apply_of_ne_of_ne hce.symm hde.symm,
@@ -542,8 +542,8 @@ theorem fiveCycle_apply_d {α : Type*} [DecidableEq α] {a b c d e : α}
       Equiv.swap_apply_of_ne_of_ne hae.symm hbe.symm]
 
 theorem fiveCycle_apply_e {α : Type*} [DecidableEq α] {a b c d e : α}
-    (hab : a ≠ b) (hac : a ≠ c) (had : a ≠ d) (hae : a ≠ e) (hbc : b ≠ c)
-    (hbd : b ≠ d) (hbe : b ≠ e) (hcd : c ≠ d) (hce : c ≠ e) (hde : d ≠ e) :
+    (_hab : a ≠ b) (_hac : a ≠ c) (_had : a ≠ d) (_hae : a ≠ e) (_hbc : b ≠ c)
+    (_hbd : b ≠ d) (_hbe : b ≠ e) (_hcd : c ≠ d) (_hce : c ≠ e) (_hde : d ≠ e) :
     (Equiv.swap a b * Equiv.swap b c * Equiv.swap c d * Equiv.swap d e) e = a := by
   change Equiv.swap a b (Equiv.swap b c (Equiv.swap c d (Equiv.swap d e e))) = a
   rw [Equiv.swap_apply_right, Equiv.swap_apply_right, Equiv.swap_apply_right,
@@ -582,7 +582,7 @@ theorem permOf_replicate_L {m : ℕ} (k : ℕ) :
         have h := neighbor?_mk_L (x := (0 : Fin 3)) (y := c) hlt
         rw [h]
       have hk1 : (⟨c.val + 1, by omega⟩ : Fin m).val + k < m := by
-        simp only [Fin.val_mk]; omega
+        simp only; omega
       obtain ⟨ih1, ih2, ih3⟩ := ih (⟨c.val + 1, by omega⟩ : Fin m) hk1
       have hstep : ∀ x : Cell 3 m,
           permOf ((0 : Fin 3), c) (List.replicate (k + 1) Dir.L) x
@@ -604,7 +604,7 @@ theorem permOf_replicate_L {m : ℕ} (k : ℕ) :
         · have hcell : ((0 : Fin 3), (⟨c.val + i, by omega⟩ : Fin m))
               = ((0 : Fin 3), (⟨(⟨c.val + 1, by omega⟩ : Fin m).val + (i - 1),
                   by omega⟩ : Fin m)) :=
-            Prod.ext rfl (Fin.ext (by simp only [Fin.val_mk]; omega))
+            Prod.ext rfl (Fin.ext (by simp only; omega))
           rw [hcell]
           have h := ih1 (i - 1) (by omega)
           rw [h]
@@ -612,23 +612,23 @@ theorem permOf_replicate_L {m : ℕ} (k : ℕ) :
               by omega⟩ : Fin m)) ≠ ((0 : Fin 3), c) := by
             intro hcon
             have := congrArg (fun x : Cell 3 m => (x.1.val, x.2.val)) hcon
-            simp only [Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at this
+            simp only [Prod.mk.injEq] at this
             omega
           have hne2 : ((0 : Fin 3), (⟨(⟨c.val + 1, by omega⟩ : Fin m).val + (i - 1) + 1,
               by omega⟩ : Fin m)) ≠ ((0 : Fin 3), (⟨c.val + 1, by omega⟩ : Fin m)) := by
             intro hcon
             have := congrArg (fun x : Cell 3 m => (x.1.val, x.2.val)) hcon
-            simp only [Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at this
+            simp only [Prod.mk.injEq] at this
             omega
           rw [Equiv.swap_apply_of_ne_of_ne hne1 hne2]
           congr 1
           apply Fin.ext
-          simp only [Fin.val_mk]
+          simp only
           omega
       · rw [hstep]
         have hcell : ((0 : Fin 3), (⟨c.val + (k + 1), by omega⟩ : Fin m))
             = ((0 : Fin 3), (⟨(⟨c.val + 1, by omega⟩ : Fin m).val + k, by omega⟩ : Fin m)) :=
-          Prod.ext rfl (Fin.ext (by simp only [Fin.val_mk]; omega))
+          Prod.ext rfl (Fin.ext (by simp only; omega))
         rw [hcell]
         have h := ih2
         rw [h, Equiv.swap_apply_right]
@@ -647,20 +647,20 @@ theorem permOf_replicate_L {m : ℕ} (k : ℕ) :
           rcases hx with h | h | h
           · exact h (by simp [hcon])
           · rw [hcon] at h
-            simp only [Prod.snd, Fin.val_mk] at h
+            simp only at h
             omega
           · rw [hcon] at h
-            simp only [Prod.snd, Fin.val_mk] at h
+            simp only at h
             omega
         have hne2 : x ≠ ((0 : Fin 3), (⟨c.val + 1, by omega⟩ : Fin m)) := by
           intro hcon
           rcases hx with h | h | h
           · exact h (by simp [hcon])
           · rw [hcon] at h
-            simp only [Prod.snd, Fin.val_mk] at h
+            simp only at h
             omega
           · rw [hcon] at h
-            simp only [Prod.snd, Fin.val_mk] at h
+            simp only at h
             omega
         rw [Equiv.swap_apply_of_ne_of_ne hne1 hne2]
 /-! ### The head `L D R D L^{m-1}` -/
@@ -681,8 +681,8 @@ theorem trace_replicate_L {m : ℕ} (k : ℕ) :
           = some ((0 : Fin 3), (⟨c.val + 1, hlt⟩ : Fin m)) :=
         neighbor?_mk_L (x := (0 : Fin 3)) (y := c) hlt
       rw [List.replicate_succ, trace_cons_of_neighbor? hL]
-      rw [ih (⟨c.val + 1, hlt⟩ : Fin m) (by simp only [Fin.val_mk]; omega)]
-      exact Prod.ext rfl (Fin.ext (by simp only [Fin.val_mk]; omega))
+      rw [ih (⟨c.val + 1, hlt⟩ : Fin m) (by simp only; omega)]
+      exact Prod.ext rfl (Fin.ext (by simp only; omega))
 
 theorem trace_LDRD {m : ℕ} (hm : 1 < m) :
     trace ((2 : Fin 3), (⟨0, by omega⟩ : Fin m)) [Dir.L, Dir.D, Dir.R, Dir.D]
@@ -709,7 +709,7 @@ theorem trace_headWord {m : ℕ} (hm : 1 < m) :
       = ((0 : Fin 3), (⟨m - 1, by omega⟩ : Fin m)) := by
   unfold headWord
   rw [trace_append, trace_LDRD hm]
-  rw [trace_replicate_L (m - 1) (⟨0, by omega⟩ : Fin m) (by simp only [Fin.val_mk]; omega)]
+  rw [trace_replicate_L (m - 1) (⟨0, by omega⟩ : Fin m) (by simp only; omega)]
   exact Prod.ext rfl (Fin.ext (by simp))
 
 /-- The product of the four transpositions of the head. -/
@@ -795,7 +795,7 @@ theorem LDRD_cells_ne {m : ℕ} (hm : 1 < m) :
   refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;>
     (intro h
      have h2 := congrArg (fun x : Cell 3 m => (x.1.val, x.2.val)) h
-     simp only [Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at h2
+     simp only [Prod.mk.injEq] at h2
      omega)
 
 /-- The head sends `(1,0)` to `(0,0)`. -/
@@ -832,15 +832,15 @@ theorem permOf_LDRD_fix_0 {m : ℕ} (hm : 1 < m) {j : ℕ} (hj : j < m) (hj1 : 1
       = ((0 : Fin 3), (⟨j, hj⟩ : Fin m)) := by
   apply permOf_LDRD_of_not_mem hm
   · intro h; have := congrArg (fun x : Cell 3 m => (x.1.val, x.2.val)) h
-    simp only [Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at this; omega
+    simp only [Prod.mk.injEq] at this; omega
   · intro h; have := congrArg (fun x : Cell 3 m => (x.1.val, x.2.val)) h
-    simp only [Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at this; omega
+    simp only [Prod.mk.injEq] at this; omega
   · intro h; have := congrArg (fun x : Cell 3 m => (x.1.val, x.2.val)) h
-    simp only [Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at this; omega
+    simp only [Prod.mk.injEq] at this; omega
   · intro h; have := congrArg (fun x : Cell 3 m => (x.1.val, x.2.val)) h
-    simp only [Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at this; omega
+    simp only [Prod.mk.injEq] at this; omega
   · intro h; have := congrArg (fun x : Cell 3 m => (x.1.val, x.2.val)) h
-    simp only [Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at this; omega
+    simp only [Prod.mk.injEq] at this; omega
 
 /-- The head fixes `(2,c)` for `c ≥ 2`. -/
 theorem permOf_LDRD_fix_2 {m : ℕ} (hm : 1 < m) {c : ℕ} (hc : c < m) (hc2 : 2 ≤ c) :
@@ -849,15 +849,15 @@ theorem permOf_LDRD_fix_2 {m : ℕ} (hm : 1 < m) {c : ℕ} (hc : c < m) (hc2 : 2
       = ((2 : Fin 3), (⟨c, hc⟩ : Fin m)) := by
   apply permOf_LDRD_of_not_mem hm
   · intro h; have := congrArg (fun x : Cell 3 m => (x.1.val, x.2.val)) h
-    simp only [Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at this; omega
+    simp only [Prod.mk.injEq] at this; omega
   · intro h; have := congrArg (fun x : Cell 3 m => (x.1.val, x.2.val)) h
-    simp only [Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at this; omega
+    simp only [Prod.mk.injEq] at this; omega
   · intro h; have := congrArg (fun x : Cell 3 m => (x.1.val, x.2.val)) h
-    simp only [Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at this; omega
+    simp only [Prod.mk.injEq] at this; omega
   · intro h; have := congrArg (fun x : Cell 3 m => (x.1.val, x.2.val)) h
-    simp only [Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at this; omega
+    simp only [Prod.mk.injEq] at this; omega
   · intro h; have := congrArg (fun x : Cell 3 m => (x.1.val, x.2.val)) h
-    simp only [Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at this; omega
+    simp only [Prod.mk.injEq] at this; omega
 
 /-- The action of the head as `eps ∘ λ`. -/
 theorem permOf_headWord_eq {m : ℕ} (hm : 1 < m) :
@@ -879,7 +879,7 @@ theorem permOf_headWord_0 {m : ℕ} (hm : 1 < m) (j : ℕ) (hj : j + 1 < m) :
         ((0 : Fin 3), (⟨j, by omega⟩ : Fin m)))
     = ((0 : Fin 3), (⟨j + 1, hj⟩ : Fin m))
   have hlam := (permOf_replicate_L (m - 1) (⟨0, by omega⟩ : Fin m)
-    (by simp only [Fin.val_mk]; omega)).1 j (by omega)
+    (by simp only; omega)).1 j (by omega)
   rw [show ((0 : Fin 3), (⟨j, by omega⟩ : Fin m))
         = ((0 : Fin 3), (⟨(0 : ℕ) + j, by omega⟩ : Fin m)) from Prod.ext rfl (Fin.ext (by simp))]
   rw [hlam]
@@ -900,7 +900,7 @@ theorem permOf_headWord_0_last {m : ℕ} (hm : 1 < m) :
         ((0 : Fin 3), (⟨m - 1, by omega⟩ : Fin m)))
     = ((2 : Fin 3), (⟨0, by omega⟩ : Fin m))
   have hlam := (permOf_replicate_L (m - 1) (⟨0, by omega⟩ : Fin m)
-    (by simp only [Fin.val_mk]; omega)).2.1
+    (by simp only; omega)).2.1
   rw [show ((0 : Fin 3), (⟨m - 1, by omega⟩ : Fin m))
         = ((0 : Fin 3), (⟨(0 : ℕ) + (m - 1), by omega⟩ : Fin m)) from
         Prod.ext rfl (Fin.ext (by simp))]
@@ -920,7 +920,7 @@ theorem permOf_headWord_10 {m : ℕ} (hm : 1 < m) :
         ((1 : Fin 3), (⟨0, by omega⟩ : Fin m)))
     = ((0 : Fin 3), (⟨0, by omega⟩ : Fin m))
   have hlam := (permOf_replicate_L (m - 1) (⟨0, by omega⟩ : Fin m)
-    (by simp only [Fin.val_mk]; omega)).2.2 ((1 : Fin 3), (⟨0, by omega⟩ : Fin m)) (Or.inl (by simp))
+    (by simp only; omega)).2.2 ((1 : Fin 3), (⟨0, by omega⟩ : Fin m)) (Or.inl (by simp))
   rw [hlam, permOf_LDRD_d hm]
 
 /-- The head sends `(2,0)` to `(2,1)`. -/
@@ -934,7 +934,7 @@ theorem permOf_headWord_20 {m : ℕ} (hm : 1 < m) :
         ((2 : Fin 3), (⟨0, by omega⟩ : Fin m)))
     = ((2 : Fin 3), (⟨1, hm⟩ : Fin m))
   have hlam := (permOf_replicate_L (m - 1) (⟨0, by omega⟩ : Fin m)
-    (by simp only [Fin.val_mk]; omega)).2.2 ((2 : Fin 3), (⟨0, by omega⟩ : Fin m)) (Or.inl (by simp))
+    (by simp only; omega)).2.2 ((2 : Fin 3), (⟨0, by omega⟩ : Fin m)) (Or.inl (by simp))
   rw [hlam, permOf_LDRD_a hm]
 
 /-- The head fixes `(2,c)` for `c ≥ 2`. -/
@@ -948,7 +948,7 @@ theorem permOf_headWord_2 {m : ℕ} (hm : 1 < m) {c : ℕ} (hc : c < m) (hc2 : 2
         ((2 : Fin 3), (⟨c, hc⟩ : Fin m)))
     = ((2 : Fin 3), (⟨c, hc⟩ : Fin m))
   have hlam := (permOf_replicate_L (m - 1) (⟨0, by omega⟩ : Fin m)
-    (by simp only [Fin.val_mk]; omega)).2.2 ((2 : Fin 3), (⟨c, hc⟩ : Fin m)) (Or.inl (by simp))
+    (by simp only; omega)).2.2 ((2 : Fin 3), (⟨c, hc⟩ : Fin m)) (Or.inl (by simp))
   rw [hlam, permOf_LDRD_fix_2 hm hc hc2]
 
 /-! ### The tail `U U R D D L U R U` -/
@@ -969,7 +969,7 @@ theorem trace_tail_RDD {m : ℕ} (hm : 1 < m) :
       = ((0 : Fin 3), (⟨0, by omega⟩ : Fin m)) := by
   have h1 : neighbor? ((2 : Fin 3), (⟨1, hm⟩ : Fin m)) Dir.R
       = some ((2 : Fin 3), (⟨0, by omega⟩ : Fin m)) := by
-    simpa using (neighbor?_mk_R (x := (2 : Fin 3)) (y := (⟨1, hm⟩ : Fin m)) (by simp))
+    simp
   have h2 : neighbor? ((2 : Fin 3), (⟨0, by omega⟩ : Fin m)) Dir.D
       = some ((1 : Fin 3), (⟨0, by omega⟩ : Fin m)) :=
     neighbor?_mk_D (x := (2 : Fin 3)) (y := (⟨0, by omega⟩ : Fin m)) (by decide)
@@ -1008,7 +1008,7 @@ theorem tail_RDD_eq {m : ℕ} (hm : 1 < m) :
         * Equiv.swap ((1 : Fin 3), (⟨0, by omega⟩ : Fin m)) ((0 : Fin 3), (⟨0, by omega⟩ : Fin m)) := by
   have h1 : neighbor? ((2 : Fin 3), (⟨1, hm⟩ : Fin m)) Dir.R
       = some ((2 : Fin 3), (⟨0, by omega⟩ : Fin m)) := by
-    simpa using (neighbor?_mk_R (x := (2 : Fin 3)) (y := (⟨1, hm⟩ : Fin m)) (by simp))
+    simp
   have h2 : neighbor? ((2 : Fin 3), (⟨0, by omega⟩ : Fin m)) Dir.D
       = some ((1 : Fin 3), (⟨0, by omega⟩ : Fin m)) :=
     neighbor?_mk_D (x := (2 : Fin 3)) (y := (⟨0, by omega⟩ : Fin m)) (by decide)
@@ -1034,7 +1034,7 @@ theorem tail_LURU_eq {m : ℕ} (hm : 1 < m) :
     neighbor?_mk_U (x := (0 : Fin 3)) (y := (⟨1, hm⟩ : Fin m)) (by decide)
   have h3 : neighbor? ((1 : Fin 3), (⟨1, hm⟩ : Fin m)) Dir.R
       = some ((1 : Fin 3), (⟨0, by omega⟩ : Fin m)) := by
-    simpa using (neighbor?_mk_R (x := (1 : Fin 3)) (y := (⟨1, hm⟩ : Fin m)) (by simp))
+    simp
   have h4 : neighbor? ((1 : Fin 3), (⟨0, by omega⟩ : Fin m)) Dir.U
       = some ((2 : Fin 3), (⟨0, by omega⟩ : Fin m)) :=
     neighbor?_mk_U (x := (1 : Fin 3)) (y := (⟨0, by omega⟩ : Fin m)) (by decide)
@@ -1093,7 +1093,7 @@ theorem traceSet_tailWord_subset {m : ℕ} (hm : 1 < m) :
       traceSet_cons_of_neighbor? h9, traceSet_nil] at hy
   simp only [Finset.mem_insert, Finset.mem_singleton] at hy
   rcases hy with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
-  all_goals (simp only [Prod.snd, Fin.val_mk]; omega)
+  all_goals (simp only; omega)
 
 theorem tail_cells_ne {m : ℕ} (hm : 1 < m) :
     (((0 : Fin 3), (⟨1, hm⟩ : Fin m))) ≠ (((1 : Fin 3), (⟨1, hm⟩ : Fin m))) ∧
@@ -1114,7 +1114,7 @@ theorem tail_cells_ne {m : ℕ} (hm : 1 < m) :
   refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;>
     (intro h
      have := congrArg (fun x : Cell 3 m => (x.1.val, x.2.val)) h
-     simp only [Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at this
+     simp only [Prod.mk.injEq] at this
      omega)
 
 theorem tail_1_0 {m : ℕ} (hm : 1 < m) :
@@ -1139,7 +1139,7 @@ theorem tail_1_c {m : ℕ} (hm : 1 < m) {c : ℕ} (hc : c < m) (hc2 : 2 ≤ c) :
   apply permOf_apply_of_not_mem_traceSet
   intro hmem
   have h := traceSet_tailWord_subset hm _ hmem
-  simp only [Prod.snd, Fin.val_mk] at h
+  simp only at h
   omega
 
 theorem tail_2_0 {m : ℕ} (hm : 1 < m) :
@@ -1164,7 +1164,7 @@ theorem tail_2_c {m : ℕ} (hm : 1 < m) {c : ℕ} (hc : c < m) (hc2 : 2 ≤ c) :
   apply permOf_apply_of_not_mem_traceSet
   intro hmem
   have h := traceSet_tailWord_subset hm _ hmem
-  simp only [Prod.snd, Fin.val_mk] at h
+  simp only at h
   omega
 
 /-- The shift word sends the first row to the second row. -/
@@ -1177,7 +1177,7 @@ theorem permOf_shiftWord_row1 {m : ℕ} (hm : 1 < m) (c : Fin m) :
     rw [trace_sweepWord (m - 2) (m - 1) (by omega) hsm]
     congr 1
     apply Fin.ext
-    simp only [Fin.val_mk]
+    simp only
     omega
   rw [shiftWord, List.append_assoc, permOf_append, trace_headWord hm, permOf_append, htrace2]
   change permOf ((2 : Fin 3), (⟨0, by omega⟩ : Fin m)) (headWord m)
@@ -1213,7 +1213,7 @@ theorem permOf_shiftWord_row1 {m : ℕ} (hm : 1 < m) (c : Fin m) :
               (by omega) (by omega)]
       have hhead := permOf_headWord_0 hm (c.val - 1) (by omega)
       rw [show ((0 : Fin 3), (⟨(c.val - 1) + 1, by omega⟩ : Fin m)) = ((0 : Fin 3), c)
-            from Prod.ext rfl (Fin.ext (by simp only [Fin.val_mk]; omega))] at hhead
+            from Prod.ext rfl (Fin.ext (by simp only; omega))] at hhead
       rw [hhead]
 
 /-- The shift word fixes the third row. -/
@@ -1226,7 +1226,7 @@ theorem permOf_shiftWord_row2 {m : ℕ} (hm : 1 < m) (c : Fin m) :
     rw [trace_sweepWord (m - 2) (m - 1) (by omega) hsm]
     congr 1
     apply Fin.ext
-    simp only [Fin.val_mk]
+    simp only
     omega
   rw [shiftWord, List.append_assoc, permOf_append, trace_headWord hm, permOf_append, htrace2]
   change permOf ((2 : Fin 3), (⟨0, by omega⟩ : Fin m)) (headWord m)
@@ -1326,7 +1326,7 @@ theorem applicableFrom_sweepBlock {m : ℕ} (j : Fin m) (hj : 0 < j.val) :
   have hL : neighbor? ((1 : Fin 3), ⟨j.val - 1, fin_pred_lt hj j.isLt⟩) Dir.L
       = some ((1 : Fin 3), j) := by
     have hlt : (⟨j.val - 1, fin_pred_lt hj j.isLt⟩ : Fin m).val + 1 < m := by
-      simp only [Fin.val_mk]; omega
+      simp only; omega
     have hfin : (⟨(⟨j.val - 1, fin_pred_lt hj j.isLt⟩ : Fin m).val + 1, hlt⟩ : Fin m) = j := by
       apply Fin.ext
       change (⟨j.val - 1, fin_pred_lt hj j.isLt⟩ : Fin m).val + 1 = j.val
@@ -1404,7 +1404,7 @@ theorem applicableFrom_shiftWord {m : ℕ} (hm : 1 < m) :
     rw [trace_sweepWord (m - 2) (m - 1) (by omega) hsm]
     congr 1
     apply Fin.ext
-    simp only [Fin.val_mk]
+    simp only
     omega
   unfold shiftWord
   rw [List.append_assoc, applicableFrom_append, trace_headWord hm]

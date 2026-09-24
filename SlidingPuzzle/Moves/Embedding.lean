@@ -4,6 +4,7 @@ import SlidingPuzzle.Moves.Local
 namespace SlidingPuzzle
 variable {m n : ℕ} [NeZero m] [NeZero n]
 
+omit [NeZero m] in
 private theorem swap_embedding (ι : Cell m ↪ Cell n) (a b c : Cell m) :
     Equiv.swap (ι a) (ι b) (ι c)=ι (Equiv.swap a b c) := by
   by_cases ha : c=a

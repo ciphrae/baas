@@ -35,7 +35,7 @@ theorem westTallWord_spec (a b d v : ℕ) (ha : a+v+d+3 < n)
   have hx : a+1+v+(d+1)=a+v+d+2 := by omega
   have hx1 : a+1+v+(d+1)+1=a+v+d+3 := by omega
   have hy : b+1-(d+1)=b-d := by omega
-  simp only [hx,hx1,hy,Nat.add_sub_cancel] at hta htt htp htfix
+  simp only [hx,hy,Nat.add_sub_cancel] at hta htt htp htfix
   obtain ⟨hea,het,hep,hefix⟩ := adjacentBelowWord_spec (n := n) (m := m) a b (by omega) hb
   refine ⟨?_,?_,?_,?_⟩
   · simp only [westTallWord,applicableFrom_append,trace_append,hnt,htt]
@@ -83,7 +83,7 @@ theorem westWideWord_spec (a b d v : ℕ) (ha : a+d+1 < n) (ha2 : a+2 < n)
     intro hmem
     have hh := moveToWord_traceSet_col (a+1) b (a+d+1) (b+1-v-d)
       ha (by omega : b+1-v-d < m) (by omega) (by omega) _ hmem
-    simp only [Fin.val_mk] at hh
+    simp only at hh
     omega
   have hnfix := moveToWord_fixes_of_row_lt (lo := a+1) ha
     (by omega : b+1-v-d < m) (by omega : a+1 < n) (by omega : b < m)
@@ -137,7 +137,7 @@ theorem westNearWord_spec (a b d : ℕ) (ha : a+d+2 < n)
     d (a+1) b (by omega) (by omega) hd
   have hx : a+1+d=a+d+1 := by omega
   have hx1 : a+1+d+1=a+d+2 := by omega
-  simp only [hx,hx1] at hda hdt hdp hdfix
+  simp only [hx] at hda hdt hdp hdfix
   obtain ⟨hea,het,hep,hefix⟩ := adjacentWestWord_spec (n := n) (m := m) a b (by omega) hb
   refine ⟨?_,?_,?_,?_⟩
   · simp only [westNearWord,applicableFrom_append,trace_append,hnt,hdt]

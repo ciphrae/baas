@@ -63,7 +63,7 @@ theorem widePlacementWord_spec (a b d v : ℕ)
     intro hmem
     have hh := moveToWord_traceSet_col (a+1) b (a+d+1) (b+v+d+2)
       ha (by omega : b+v+d+2 < m) (by omega) (by omega) _ hmem
-    simp only [Fin.val_mk] at hh
+    simp only at hh
     omega
   have hnfix := moveToWord_fixes_of_row_lt (lo := a+1) ha
     (by omega : b+v+d+2 < m) (by omega : a+1 < n) (by omega : b < m)
@@ -73,7 +73,7 @@ theorem widePlacementWord_spec (a b d v : ℕ)
   have hx : a+(d+1)=a+d+1 := by omega
   have hy : b+1+v+(d+1)=b+v+d+2 := by omega
   have hy1 : b+1+v+(d+1)+1=b+v+d+3 := by omega
-  simp only [hx,hy,hy1] at hta htt htp htfix
+  simp only [hx,hy] at hta htt htp htfix
   refine ⟨?_,?_,?_,?_⟩
   · rw [widePlacementWord,applicableFrom_append,hnt]
     exact ⟨hna,hta⟩

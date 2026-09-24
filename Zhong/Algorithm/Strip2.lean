@@ -39,11 +39,11 @@ theorem blk_injective (hn : 2 ≤ n) (hm : 2 ≤ m) : Function.Injective (blk (n
   intro c1 c2 h
   have h1 : c1.1.val = c2.1.val := by
     have := congrArg (fun w : Cell n m => w.1.val) h
-    simp only [blk, Prod.fst, Fin.val_mk] at this
+    simp only [blk, Fin.val_mk] at this
     omega
   have h2 : c1.2.val = c2.2.val := by
     have := congrArg (fun w : Cell n m => w.2.val) h
-    simp only [blk, Prod.snd, Fin.val_mk] at this
+    simp only [blk, Fin.val_mk] at this
     omega
   exact Prod.ext (Fin.ext h1) (Fin.ext h2)
 
@@ -59,14 +59,14 @@ theorem mem_range_blk (hn : 2 ≤ n) (hm : 2 ≤ m) {z : Cell n m} :
     z ∈ Set.range (blk (n := n) (m := m) hn hm) ↔ n - 2 ≤ z.1.val ∧ m - 2 ≤ z.2.val := by
   constructor
   · rintro ⟨c, rfl⟩
-    simp only [blk, Prod.fst, Prod.snd, Fin.val_mk]
+    simp only [blk, Fin.val_mk]
     constructor <;> omega
   · intro hz
     refine ⟨((⟨z.1.val - (n - 2), by omega⟩ : Fin 2),
       (⟨z.2.val - (m - 2), by omega⟩ : Fin 2)), ?_⟩
     apply Prod.ext
-    · apply Fin.ext; simp only [blk, Prod.fst, Fin.val_mk]; omega
-    · apply Fin.ext; simp only [blk, Prod.snd, Fin.val_mk]; omega
+    · apply Fin.ext; simp only [blk, Fin.val_mk]; omega
+    · apply Fin.ext; simp only [blk, Fin.val_mk]; omega
 
 /-! ### Horizontal-first navigation -/
 
@@ -100,7 +100,7 @@ theorem hStrip_sCell (r : ℕ) (hr : r + 1 < n) {z : Cell n m} (h1 : r ≤ z.1.v
     (h2 : z.1.val ≤ r + 1) :
     hStrip r hr ((⟨z.1.val - r, by omega⟩ : Fin 2), z.2) = z := by
   apply Prod.ext
-  · apply Fin.ext; simp only [hStrip, Prod.fst, Fin.val_mk]; omega
+  · apply Fin.ext; simp only [hStrip, Fin.val_mk]; omega
   · rfl
 
 /-! ### The trailing `2 × 2` block solver -/
@@ -208,7 +208,7 @@ theorem solveBlock22 (B : Board n m) [NeZero (n * m)] (hn : 2 ≤ n) (hm : 4 ≤
       exact (target_last (n := 2) (m := 2) (by norm_num) (by norm_num) (by norm_num)).symm
     rw [h0]
     apply Prod.ext <;> apply Fin.ext <;>
-      simp only [b, blk, Prod.fst, Prod.snd, Fin.val_mk] <;> omega
+      simp only [b, blk, Fin.val_mk] <;> omega
   have hρ0 : ρfun 0 = 0 := by
     simp only [ρfun]
     rw [show (target 2 2).symm (0 : Fin 4) = blank (target 2 2) from rfl, hb0]
@@ -229,7 +229,7 @@ theorem solveBlock22 (B : Board n m) [NeZero (n * m)] (hn : 2 ≤ n) (hm : 4 ≤
     intro c
     unfold cellParity
     have hsum : (b c).1.1 + (b c).2.1 = (n + m - 4) + (c.1.1 + c.2.1) := by
-      simp only [b, blk, Prod.fst, Prod.snd, Fin.val_mk]; omega
+      simp only [b, blk, Fin.val_mk]; omega
     rw [hsum, pow_add]
   have hpar : Equiv.Perm.sign (relPerm B22 (target 2 2))
       = cellParity (blank B22) * cellParity (blank (target 2 2)) := by
@@ -318,11 +318,11 @@ theorem placeColumn2 (r : ℕ) (hr : r + 1 < n) (hr2 : r + 2 = n) (hm : 4 ≤ m)
   have hjlt : j < m := by omega
   have hj1lt : j + 1 < m := by omega
   have hstrip_top : hStrip (m := m) r hr (d(0,j)) = c(r,j) := by
-    apply Prod.ext <;> apply Fin.ext <;> simp only [hStrip, Prod.fst, Prod.snd, Fin.val_mk] <;> omega
+    apply Prod.ext <;> apply Fin.ext <;> simp only [hStrip, Fin.val_mk]; omega
   have hstrip_bot : hStrip (m := m) r hr (d(1,j)) = c(r+1,j) := by
-    apply Prod.ext <;> apply Fin.ext <;> simp only [hStrip, Prod.fst, Prod.snd, Fin.val_mk] <;> omega
+    apply Prod.ext <;> apply Fin.ext <;> simp only [hStrip, Fin.val_mk]
   have hstrip_p : hStrip (m := m) r hr (d(0,j+1)) = c(r,j+1) := by
-    apply Prod.ext <;> apply Fin.ext <;> simp only [hStrip, Prod.fst, Prod.snd, Fin.val_mk] <;> omega
+    apply Prod.ext <;> apply Fin.ext <;> simp only [hStrip, Fin.val_mk]; omega
   -- ### blank facts
   set p0 : Cell n m := blank B with hp0
   have hp0row : r ≤ p0.1.val := by
@@ -341,7 +341,7 @@ theorem placeColumn2 (r : ℕ) (hr : r + 1 < n) (hr2 : r + 2 = n) (hm : 4 ≤ m)
     have hcell : p0 = (((⟨n-1, by omega⟩ : Fin n), (⟨m-1, by omega⟩ : Fin m)) : Cell n m) :=
       (target n m).injective (h3.trans hlast.symm)
     have := congrArg (fun w : Cell n m => w.2.val) hcell
-    simp only [Fin.val_mk] at this
+    simp only at this
     omega
   -- ### step 1: normalise the blank to `(r+1,j)`
   set σ0 : List Dir := moveToWord p0.1.val p0.2.val (r+1) j with hσ0
@@ -399,14 +399,14 @@ theorem placeColumn2 (r : ℕ) (hr : r + 1 < n) (hr2 : r + 2 = n) (hm : 4 ≤ m)
     have h1 : B0 a1 = target n m a1 := habove0 a1.1 a1.2 (by omega)
     have h2 : a1 = c(r,j) := (target n m).injective (h1.symm.trans hB0a1)
     have := congrArg (fun w : Cell n m => w.1.val) h2
-    simp only [Fin.val_mk] at this; omega
+    simp only at this; omega
   have ha1row2 : a1.1.val ≤ r + 1 := by have := a1.1.isLt; omega
   have ha1col : j ≤ a1.2.val := by
     by_contra h
     have h1 : B0 a1 = target n m a1 := hcol0 a1.1 a1.2 (by omega)
     have h2 : a1 = c(r,j) := (target n m).injective (h1.symm.trans hB0a1)
     have := congrArg (fun w : Cell n m => w.2.val) h2
-    simp only [Fin.val_mk] at this; omega
+    simp only at this; omega
   set a1s : Cell 2 m := ((⟨a1.1.val - r, by omega⟩ : Fin 2), a1.2) with ha1s
   have hstrip_a1s : hStrip (m := m) r hr a1s = a1 := by
     rw [ha1s]; exact hStrip_sCell r hr ha1row ha1row2
@@ -505,9 +505,9 @@ theorem placeColumn2 (r : ℕ) (hr : r + 1 < n) (hr2 : r + 2 = n) (hm : 4 ≤ m)
       have hcol := moveYWord_traceSet_col (blank B1).1.val (blank B1).2.val (j+1)
         (by omega) (by omega) (blank B1).2.isLt c(r,j) hmem
       have h1v : r = (blank B1).1.val := by
-        have := congrArg Fin.val hrow; simp only [Fin.val_mk] at this; omega
+        have := congrArg Fin.val hrow; simp only at this; omega
       have hbcj : (blank B1).2.val = j := by
-        have := hcol.1; simp only [Fin.val_mk] at this; omega
+        have := hcol.1; simp only at this; omega
       refine hblank1_ne ?_
       apply Prod.ext
       · apply Fin.ext; exact h1v.symm
@@ -517,7 +517,7 @@ theorem placeColumn2 (r : ℕ) (hr : r + 1 < n) (hr2 : r + 2 = n) (hm : 4 ≤ m)
       have hres := moveXWord_traceSet (blank B1).1.val (j+1) r (by omega) (by omega)
         (by omega) c(r,j) hmem
       have h2v : j = j + 1 := by
-        have := congrArg Fin.val hres.1; simp only [Fin.val_mk] at this; omega
+        have := congrArg Fin.val hres.1; simp only at this; omega
       exact absurd h2v (by omega)
   set B2 : Board n m := actSeq B1 σ2 with hB2
   have hblank2 : blank B2 = c(r,j+1) := by rw [hB2, blank_actSeq, htr2]
@@ -555,7 +555,7 @@ theorem placeColumn2 (r : ℕ) (hr : r + 1 < n) (hr2 : r + 2 = n) (hm : 4 ≤ m)
         = (((⟨n-1, by omega⟩ : Fin n), (⟨m-1, by omega⟩ : Fin m)) : Cell n m) :=
       (target n m).injective (h0.trans hlast.symm)
     have := congrArg (fun w : Cell n m => w.2.val) hcell
-    simp only [Fin.val_mk] at this
+    simp only at this
     omega
   set a2 : Cell n m := B2.symm T2 with ha2
   have hB2a2 : B2 a2 = T2 := Equiv.apply_symm_apply B2 T2
@@ -564,14 +564,14 @@ theorem placeColumn2 (r : ℕ) (hr : r + 1 < n) (hr2 : r + 2 = n) (hm : 4 ≤ m)
     have h1 : B2 a2 = target n m a2 := habove2 a2.1 a2.2 (by omega)
     have h2 : a2 = c(r+1,j) := (target n m).injective (h1.symm.trans hB2a2)
     have := congrArg (fun w : Cell n m => w.1.val) h2
-    simp only [Fin.val_mk] at this; omega
+    simp only at this; omega
   have ha2row2 : a2.1.val ≤ r + 1 := by have := a2.1.isLt; omega
   have ha2col : j ≤ a2.2.val := by
     by_contra h
     have h1 : B2 a2 = target n m a2 := hcol2 a2.1 a2.2 (by omega)
     have h2 : a2 = c(r+1,j) := (target n m).injective (h1.symm.trans hB2a2)
     have := congrArg (fun w : Cell n m => w.2.val) h2
-    simp only [Fin.val_mk] at this; omega
+    simp only at this; omega
   set a2s : Cell 2 m := ((⟨a2.1.val - r, by omega⟩ : Fin 2), a2.2) with ha2s
   have hstrip_a2s : hStrip (m := m) r hr a2s = a2 := by
     rw [ha2s]; exact hStrip_sCell r hr ha2row ha2row2
@@ -601,17 +601,17 @@ theorem placeColumn2 (r : ℕ) (hr : r + 1 < n) (hr2 : r + 2 = n) (hm : 4 ≤ m)
         exact hT2ne h0
       have hJp : d(0,j) ≠ d(0,j+1) := by
         intro h; have := congrArg (fun w : Cell 2 m => w.2.val) h
-        simp only [Fin.val_mk] at this; omega
+        simp only at this; omega
       have hJa : d(0,j) ≠ a2s := by
         intro h
         have h' : c(r,j) = a2 := by rw [← hstrip_top, h, hstrip_a2s]
         have h2 : c(r+1,j) = c(r,j) := (target n m).injective (by
           rw [← hT2, ← hT1, ← hB2a2, ← h', hcell2, ← hT1])
         have := congrArg (fun w : Cell n m => w.1.val) h2
-        simp only [Fin.val_mk] at this; omega
+        simp only at this; omega
       have hJc : d(0,j) ≠ d(1,j) := by
         intro h; have := congrArg (fun w : Cell 2 m => w.1.val) h
-        simp only [Fin.val_mk] at this; omega
+        simp only at this; omega
       obtain ⟨σ3, happ3, heff3, hfix3r, hfix3low, hfix3c, hfix3J, hlen3⟩ :=
         stripPlaceFlip2Board (r := r) hr hm j hj (J := d(0,j)) (p := d(0,j+1)) (a := a2s)
           (c := d(1,j)) (T := T2) (by rfl) (by rw [hblank2, hstrip_p])

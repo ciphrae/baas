@@ -9,6 +9,7 @@ open Zhong
 variable {n m : ℕ} [NeZero (n*m)]
 local notation "c(" a "," b ")" => ((⟨a, by omega⟩ : Fin n), (⟨b, by omega⟩ : Fin m))
 
+omit [NeZero (n * m)] in
 /-- Delete inactive moves without increasing length or changing the action. -/
 theorem exists_applicable_word (p : Zhong.Cell n m) (σ : List Dir) :
     ∃ τ : List Dir, τ.length ≤ σ.length ∧ ApplicableFrom p τ ∧ permOf p τ=permOf p σ := by

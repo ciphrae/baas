@@ -33,14 +33,14 @@ theorem exists_correct_placement (B : Board n) (a b : ℕ)
     have he : s=c(a,b+1) := (target n).injective (hfixeds.symm.trans hs)
     have hx := congrArg (fun z : Cell n => z.1.val) he
     have hy := congrArg (fun z : Cell n => z.2.val) he
-    simp only [Fin.val_mk] at hx hy
+    simp only at hx hy
     omega
   have hne : s≠blank B := by
     intro he
     have hzero : target n c(a,b+1)=0 := by rw [← hs,he]; exact B.apply_symm_apply 0
     have ht := (target n).injective (hzero.trans (target_bottomRight n).symm)
     have hx := congrArg (fun z : Cell n => z.1.val) ht
-    simp only [Fin.val_mk] at hx
+    simp only at hx
     omega
   obtain ⟨C,p,hp,hblankC,hC,hfix⟩ := exists_placement B a b s.1 s.2 hfree hne ha2 hb2 hblank
   refine ⟨C,p,?_,hblankC,?_⟩
@@ -49,7 +49,7 @@ theorem exists_correct_placement (B : Board n) (a b : ℕ)
     by_cases hprev : z.1.val<a ∨ (z.1.val=a ∧ z.2.val<b+1)
     · exact (hfix z hprev).trans (hfixed z hprev)
     · have he : z=c(a,b+1) := by
-        apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_mk] <;> omega
+        apply Prod.ext <;> apply Fin.ext <;> simp only <;> omega
       rw [he,hC,hs]
 
 /-- Starting with the first tile placed, construct the next `d` placements.

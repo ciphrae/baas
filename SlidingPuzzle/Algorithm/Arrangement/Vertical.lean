@@ -5,6 +5,7 @@ import SlidingPuzzle.Moves.BulkExchangeSchedule
 namespace SlidingPuzzle.Partition
 variable {k : ℕ} [NeZero (k^4)]
 
+omit [NeZero (k ^ 4)] in
 /-- The diagonal group pairs already belong to their containing square. -/
 theorem card_vertical_active :
     ((Finset.univ : Finset (GroupIndex k × GroupIndex k)).filter

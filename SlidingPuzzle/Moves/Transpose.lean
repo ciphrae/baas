@@ -6,12 +6,14 @@ variable {n : ℕ} [NeZero n]
 
 def transposeBoard (B : Board n) : Board n := (Equiv.prodComm _ _).trans B
 
+omit [NeZero n] in
 @[simp] theorem transposeBoard_apply (B : Board n) (c : Cell n) :
     transposeBoard B c = B c.swap := rfl
 
 @[simp] theorem blank_transposeBoard (B : Board n) :
     blank (transposeBoard B) = (blank B).swap := rfl
 
+omit [NeZero n] in
 @[simp] theorem transposeBoard_transposeBoard (B : Board n) :
     transposeBoard (transposeBoard B) = B := by ext x; rfl
 

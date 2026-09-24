@@ -17,9 +17,9 @@ theorem diagonalEndWord_spec (a b : ℕ) (ha : a+1 < n) (hb : b+1 < m) :
       permOf c(a,b+1) diagonalEndWord z=z := by
   have h1 : neighbor? c(a,b+1) Dir.U=some c(a+1,b+1) := nb_U a (b+1) ha hb
   have h2 : neighbor? c(a+1,b+1) Dir.R=some c(a+1,b) := by
-    simpa using (nb_R (n := n) (m := m) (a+1) (b+1) (by omega) ha hb)
+    simp
   have h3 : neighbor? c(a+1,b) Dir.D=some c(a,b) := by
-    simpa using (nb_D (n := n) (m := m) (a+1) b (by omega) ha (by omega))
+    simp
   have h4 : neighbor? c(a,b) Dir.L=some c(a,b+1) := nb_L a b hb (by omega)
   refine ⟨?_,?_,?_,?_⟩
   · simp only [diagonalEndWord,applicableFrom_cons_of_neighbor? h1,
@@ -38,7 +38,7 @@ theorem diagonalEndWord_spec (a b : ℕ) (ha : a+1 < n) (hb : b+1 < m) :
       traceSet_cons_of_neighbor? h3,traceSet_cons_of_neighbor? h4,
       traceSet_nil,Finset.mem_insert,Finset.mem_singleton] at hmem
     rcases hmem with rfl | rfl | rfl | rfl | rfl | rfl | rfl <;>
-      simp only [Fin.val_mk] at hz <;> omega
+      simp only at hz <;> omega
 
 /-- Initial routing and a diagonal run, including the special last unit. -/
 def equalPlacementWord (a b d : ℕ) : List Dir :=
@@ -67,7 +67,7 @@ theorem equalPlacementWord_spec (a b d : ℕ)
   have hx : a+(d+1)=a+d+1 := by omega
   have hx1 : a+(d+1)+1=a+d+2 := by omega
   have hy : b+2+(d+1)=b+d+3 := by omega
-  simp only [hx,hx1,hy] at hda hdt hdp hds
+  simp only [hx,hy] at hda hdt hdp hds
   obtain ⟨hea,het,hep,hefix⟩ := diagonalEndWord_spec (n := n) (m := m) a (b+1) (by omega) (by omega)
   have hy1 : b+1+1=b+2 := by omega
   simp only [hy1] at hea het hep hefix
@@ -114,7 +114,7 @@ theorem nearPlacementWord_spec (a b d : ℕ)
   have hx1 : a+(d+1)+1=a+d+2 := by omega
   have hy : b+1+(d+1)=b+d+2 := by omega
   have hy1 : b+1+1=b+2 := by omega
-  simp only [Nat.add_zero,hx,hx1,hy,hy1] at hta htt htp htfix
+  simp only [Nat.add_zero,hx,hy,hy1] at hta htt htp htfix
   obtain ⟨hpa,hpt,hpfix⟩ := parkWord_spec (n := n) (m := m) a b (by omega) (by omega)
   refine ⟨?_,?_,?_,?_⟩
   · simp only [nearPlacementWord,applicableFrom_append,trace_append,hnt,htt]

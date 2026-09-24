@@ -42,7 +42,7 @@ theorem exists_transport_exit_cell {n k : ℕ} (hk : 2 ≤ k) (hn : n = k^4)
   · dsimp [c, r]; split_ifs <;> omega
   · have hv := congrArg Fin.val hrow
     dsimp [c, Nat.dist] at *; omega
-  · have hiLt : i.val < k^2 := by simpa [pow_two] using i.isLt
+  · have hiLt : i.val < k^2 := by simp [pow_two]
     have hac := ha.2.2
     have hblo := hb.2.2.1
     have hbhi := hb.2.2.2

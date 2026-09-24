@@ -36,7 +36,7 @@ theorem trace_replicate_down (r i c : ℕ) (hir : i ≤ r) (hr : r < n) (hc : c 
           = some (((⟨r - 1, by omega⟩ : Fin n), (⟨c, hc⟩ : Fin m)) : Cell n m) := by
         simp only [neighbor?]; rw [if_pos hr0]
       rw [List.replicate_succ, trace_cons_of_neighbor? hstep, ih (r := r - 1) (by omega) (by omega)]
-      ext <;> simp <;> omega
+      ext <;> simp; omega
 
 /-- Move the blank right (`L`) by `i` columns. -/
 theorem trace_replicate_left (r i c : ℕ) (hci : c + i < m) (hr : r < n) :
@@ -50,7 +50,7 @@ theorem trace_replicate_left (r i c : ℕ) (hci : c + i < m) (hr : r < n) :
           = some (((⟨r, hr⟩ : Fin n), (⟨c + 1, hc1⟩ : Fin m)) : Cell n m) := by
         simp only [neighbor?]; rw [dif_pos (by simpa using hc1)]
       rw [List.replicate_succ, trace_cons_of_neighbor? hstep, ih (c := c + 1) (by omega)]
-      ext <;> simp <;> omega
+      ext <;> simp; omega
 
 /-- Move the blank left (`R`) by `i` columns. -/
 theorem trace_replicate_right (r i c : ℕ) (hic : i ≤ c) (hr : r < n) (hc : c < m) :
@@ -64,7 +64,7 @@ theorem trace_replicate_right (r i c : ℕ) (hic : i ≤ c) (hr : r < n) (hc : c
           = some (((⟨r, hr⟩ : Fin n), (⟨c - 1, by omega⟩ : Fin m)) : Cell n m) := by
         simp only [neighbor?]; rw [if_pos hc0]
       rw [List.replicate_succ, trace_cons_of_neighbor? hstep, ih (c := c - 1) (by omega) (by omega)]
-      ext <;> simp <;> omega
+      ext <;> simp; omega
 
 theorem applicableFrom_replicate_down (r i c : ℕ) (hir : i ≤ r) (hr : r < n) (hc : c < m) :
     ApplicableFrom (((⟨r, hr⟩ : Fin n), (⟨c, hc⟩ : Fin m)) : Cell n m)
@@ -123,9 +123,9 @@ theorem trace_moveXWord (r c x : ℕ) (hx : x < n) (hr : r < n) (hc : c < m) :
   unfold moveXWord
   by_cases h : x < r
   · rw [if_pos h, trace_replicate_down r (r - x) c (by omega) hr hc]
-    ext <;> simp <;> omega
+    ext <;> simp; omega
   · rw [if_neg h, trace_replicate_U r (x - r) c (by omega) hc]
-    ext <;> simp <;> omega
+    ext <;> simp; omega
 
 /-- `moveYWord` moves the blank to the requested column. -/
 theorem trace_moveYWord (r c y : ℕ) (hr : r < n) (hc : c < m) (hy : y < m) :
@@ -134,9 +134,9 @@ theorem trace_moveYWord (r c y : ℕ) (hr : r < n) (hc : c < m) (hy : y < m) :
   unfold moveYWord
   by_cases h : y < c
   · rw [if_pos h, trace_replicate_right r (c - y) c (by omega) hr hc]
-    ext <;> simp <;> omega
+    ext <;> simp; omega
   · rw [if_neg h, trace_replicate_left r (y - c) c (by omega) hr]
-    ext <;> simp <;> omega
+    ext <;> simp; omega
 
 theorem applicableFrom_moveXWord (r c x : ℕ) (hx : x < n) (hr : r < n) (hc : c < m) :
     ApplicableFrom (((⟨r, hr⟩ : Fin n), (⟨c, hc⟩ : Fin m)) : Cell n m) (moveXWord r x) := by

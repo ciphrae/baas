@@ -12,6 +12,7 @@ variable {r c n : ℕ} [NeZero n]
 def labels (ι : Zhong.Cell r c ↪ SlidingPuzzle.Cell n) : Fin (r*c) ↪ Tile n :=
   (Zhong.target r c).symm.toEmbedding.trans (ι.trans (SlidingPuzzle.target n).toEmbedding)
 
+omit [NeZero n] in
 @[simp] theorem labels_target (ι : Zhong.Cell r c ↪ SlidingPuzzle.Cell n) (z : Zhong.Cell r c) :
     labels ι (Zhong.target r c z)=SlidingPuzzle.target n (ι z) := by
   simp [labels]

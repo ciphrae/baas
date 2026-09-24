@@ -117,7 +117,7 @@ theorem card_stagingB {n k : ℕ} (hk : 2 ≤ k) (hn : n = k^4) (i : GroupIndex 
   have hrow : i.val+1 ≤ n := by
     have hi : i.val+1 ≤ k^2 := by
       have : i.val+1 ≤ k*k := by omega
-      simpa [pow_two] using this
+      simp [pow_two]
     exact hi.trans ((square_le_cube k hk).trans hcube)
   have he : stagingB (n := n) i = Finset.univ.filter fun c : Cell n =>
       i.val ≤ c.1.val ∧ c.1.val < i.val+1 ∧ k^3 ≤ c.2.val ∧ c.2.val < n := by
@@ -139,7 +139,7 @@ theorem card_stagingC {n k : ℕ} (hk : 2 ≤ k) (hn : n = k^4)
       have hb : (groupCol j).val+1 ≤ k := by omega
       have hi : i.val+1 ≤ k^2 := by
         have : i.val+1 ≤ k*k := by omega
-        simpa [pow_two] using this
+        simp [pow_two]
       nlinarith [Nat.mul_le_mul_right (k^2) hb]
     exact hbound.trans hcube
   have he : stagingC (n := n) j i = Finset.univ.filter fun c : Cell n =>
@@ -174,14 +174,14 @@ private theorem stagingC_row_mod {n k : ℕ} (hk : 2 ≤ k)
   have := h'.1
   omega
 
-private theorem stagingC_col_lt_cube {n k : ℕ} (hk : 2 ≤ k)
+private theorem stagingC_col_lt_cube {n k : ℕ} (_hk : 2 ≤ k)
     {j i : GroupIndex k} {c : Cell n} (h : c ∈ stagingC j i) : c.2.val < k^3 := by
   have h' := (mem_stagingC j i c).mp h
   rw [h'.2.2]
   have hb : (groupCol j).val+1 ≤ k := by omega
   have hi : i.val+1 ≤ k^2 := by
     have : i.val+1 ≤ k*k := by omega
-    simpa [pow_two] using this
+    simp [pow_two]
   nlinarith [Nat.mul_le_mul_right (k^2) hb]
 
 private theorem stagingC_col_div {n k : ℕ} {j i : GroupIndex k} {c : Cell n}
@@ -190,7 +190,7 @@ private theorem stagingC_col_div {n k : ℕ} {j i : GroupIndex k} {c : Cell n}
   rw [h'.2.2]
   apply Nat.div_eq_of_lt_le
   · omega
-  · have hi : i.val < k^2 := by simpa [pow_two] using i.isLt
+  · have hi : i.val < k^2 := by simp [pow_two]
     simp only [Nat.add_mul,Nat.one_mul]
     omega
 
@@ -345,7 +345,7 @@ theorem stagingCells_compressed {n k : ℕ} (hk : 2 ≤ k)
   · exact Or.inr (mem_stagingA i c |>.mp hA).2
   · left
     rw [(mem_stagingB i c |>.mp hB).1]
-    simpa [pow_two] using i.isLt
+    simp [pow_two]
   · exact Or.inr (stagingC_col_lt_cube hk hC)
 
 end

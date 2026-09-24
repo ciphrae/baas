@@ -194,7 +194,7 @@ theorem trace_replicate_U (r i c : ℕ) (hri : r + i < n) (hc : c < m) :
         simp only [neighbor?]; rw [dif_pos (by simpa using hr')]
       rw [List.replicate_succ, trace_cons_of_neighbor? hstep,
           ih (r := r + 1) (by omega)]
-      ext <;> simp <;> omega
+      ext <;> simp; omega
 
 theorem traceSet_replicate_U_subset (r i c : ℕ) (hri : r + i < n) (hc : c < m) :
     ∀ x ∈ traceSet (((⟨r, by omega⟩ : Fin n), (⟨c, hc⟩ : Fin m)) : Cell n m)
@@ -231,7 +231,7 @@ theorem trace_pathWord (i j c : ℕ) (hi : i < n) (hcj : c + j < m) :
           = some (((⟨0, by omega⟩ : Fin n), (⟨c + 1, hc1⟩ : Fin m)) : Cell n m) := by
         simp only [neighbor?]; rw [dif_pos (by simpa using hc1)]
       rw [pathWord_succ, trace_cons_of_neighbor? hstep, ih (c := c + 1) (by omega)]
-      ext <;> simp <;> omega
+      ext <;> simp; omega
 
 theorem traceSet_pathWord_subset (i j c : ℕ) (hi : i < n) (hcj : c + j < m) :
     ∀ x ∈ traceSet (((⟨0, by omega⟩ : Fin n), (⟨c, by omega⟩ : Fin m)) : Cell n m) (pathWord i j),
@@ -249,7 +249,7 @@ theorem traceSet_pathWord_subset (i j c : ℕ) (hi : i < n) (hcj : c + j < m) :
         simp only [neighbor?]; rw [dif_pos (by simpa using hc1)]
       rw [pathWord_succ, traceSet_cons_of_neighbor? hstep, Finset.mem_insert] at hx
       rcases hx with rfl | hx
-      · left; refine ⟨rfl, le_refl _, ?_⟩; simp only [Fin.val_mk]; omega
+      · left; refine ⟨rfl, le_refl _, ?_⟩; simp only; omega
       · have := ih (c := c + 1) (by omega) x hx
         omega
 
@@ -303,7 +303,7 @@ theorem squareCycle_eq (i : Fin n) (j : Fin m) (hi : i.1 + 1 < n) (hj : j.1 + 1 
     intro hmem
     have h := traceSet_pathWord_subset (n := n) (m := m) i.1 j.1 0 (by omega) (by omega)
       ((i, ⟨j.1 + 1, hj⟩) : Cell n m) hmem
-    simp only [Prod.fst, Prod.snd, Fin.val_mk] at h
+    simp only at h
     omega
   have hfixb : permOf p γ b = b := by
     apply permOf_apply_of_not_mem_traceSet
@@ -311,7 +311,7 @@ theorem squareCycle_eq (i : Fin n) (j : Fin m) (hi : i.1 + 1 < n) (hj : j.1 + 1 
     intro hmem
     have h := traceSet_pathWord_subset (n := n) (m := m) i.1 j.1 0 (by omega) (by omega)
       ((⟨i.1 + 1, hi⟩, ⟨j.1 + 1, hj⟩) : Cell n m) hmem
-    simp only [Prod.fst, Prod.snd, Fin.val_mk] at h
+    simp only at h
     omega
   have hfixd : permOf p γ d = d := by
     apply permOf_apply_of_not_mem_traceSet
@@ -319,7 +319,7 @@ theorem squareCycle_eq (i : Fin n) (j : Fin m) (hi : i.1 + 1 < n) (hj : j.1 + 1 
     intro hmem
     have h := traceSet_pathWord_subset (n := n) (m := m) i.1 j.1 0 (by omega) (by omega)
       ((⟨i.1 + 1, hi⟩, j) : Cell n m) hmem
-    simp only [Prod.fst, Prod.snd, Fin.val_mk] at h
+    simp only at h
     omega
   have hconj : permOf p γ * (Equiv.swap a b * Equiv.swap b d) * (permOf p γ)⁻¹
       = Equiv.swap a b * Equiv.swap b d := by
@@ -389,12 +389,12 @@ theorem swap_mul_swap_apply_left {α : Type*} [DecidableEq α] {a b d : α} (hab
   change Equiv.swap a b (Equiv.swap b d a) = b
   grind
 
-theorem swap_mul_swap_apply_mid {α : Type*} [DecidableEq α] {a b d : α} (hbd : b ≠ d) (hab : a ≠ b) (had : a ≠ d) :
+theorem swap_mul_swap_apply_mid {α : Type*} [DecidableEq α] {a b d : α} (hbd : b ≠ d) (_hab : a ≠ b) (had : a ≠ d) :
     (Equiv.swap a b * Equiv.swap b d) b = d := by
   change Equiv.swap a b (Equiv.swap b d b) = d
   grind
 
-theorem swap_mul_swap_apply_right {α : Type*} [DecidableEq α] {a b d : α} (had : a ≠ d) :
+theorem swap_mul_swap_apply_right {α : Type*} [DecidableEq α] {a b d : α} (_had : a ≠ d) :
     (Equiv.swap a b * Equiv.swap b d) d = a := by
   change Equiv.swap a b (Equiv.swap b d d) = a
   grind

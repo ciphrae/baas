@@ -103,7 +103,7 @@ theorem target_last [NeZero (n * m)] (hn : 0 < n) (hm : 0 < m) (hnm1 : 1 < n * m
       (((⟨n - 1, by omega⟩ : Fin n), (⟨m - 1, by omega⟩ : Fin m)) : Cell n m)
       = (⟨n * m - 1, by omega⟩ : Fin (n * m)) := by
     apply Fin.ext
-    simp only [finProdFinEquiv_val, Fin.val_mk]
+    simp only [finProdFinEquiv_val]
     rw [Nat.mul_comm n m]
     have h1 : m * (n - 1) = m * n - m := by rw [Nat.mul_sub_left_distrib]; ring
     rw [h1]
@@ -114,7 +114,7 @@ theorem target_last [NeZero (n * m)] (hn : 0 < n) (hm : 0 < m) (hnm1 : 1 < n * m
   have hrot : finRotate (n * m) (⟨n * m - 1, by omega⟩ : Fin (n * m)) = 0 := by
     rw [finRotate_apply]
     apply Fin.ext
-    simp only [Fin.val_add, Fin.val_zero, Fin.val_mk]
+    simp only [Fin.val_add, Fin.val_zero]
     rw [Fin.val_one', Nat.mod_eq_of_lt hnm1]
     rw [show n * m - 1 + 1 = n * m from by omega, Nat.mod_self]
   simp only [target, Equiv.trans_apply, hprod, hrot]
@@ -132,7 +132,7 @@ theorem target_ne_zero [NeZero (n * m)] (r : ℕ) (yc : ℕ) (hyc : yc < m) (hr 
     rw [hzero, hlast]
   have hcell := (target n m).injective heq
   have := congrArg (fun w : Cell n m => w.1.val) hcell
-  simp only [Fin.val_mk] at this
+  simp only at this
   omega
 
 /-! ### Basic lemmas -/

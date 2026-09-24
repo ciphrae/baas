@@ -22,20 +22,20 @@ lemma exists_low_color_lt {m : ℕ} (lo d : ℕ) (hd : d < 2) (hlo : lo + 4 ≤ 
     let u0 : Cell 2 m := ((1 : Fin 2), ⟨c, by omega⟩)
     let u1 : Cell 2 m := ((1 : Fin 2), ⟨c + 2, by omega⟩)
     have hc0 : (u0.1.val + u0.2.val) % 2 = d := by
-      simp only [u0, Prod.fst, Prod.snd, Fin.val_mk]; omega
+      simp only [u0]; omega
     have hc1 : (u1.1.val + u1.2.val) % 2 = d := by
-      simp only [u1, Prod.fst, Prod.snd, Fin.val_mk]; omega
+      simp only [u1]; omega
     have hne : u0 ≠ u1 := by
       intro h
       have := congrArg (fun w : Cell 2 m => w.2.val) h
-      simp only [u0, u1, Prod.snd, Fin.val_mk] at this
+      simp only [u0, u1] at this
       omega
-    have hb0 : u0.2.val < lo + 4 := by simp only [u0, Prod.snd, Fin.val_mk]; omega
-    have hb1 : u1.2.val < lo + 4 := by simp only [u1, Prod.snd, Fin.val_mk]; omega
+    have hb0 : u0.2.val < lo + 4 := by simp only [u0]; omega
+    have hb1 : u1.2.val < lo + 4 := by simp only [u1]; omega
     by_cases hx : u0 = x
-    · exact ⟨u1, by simp [u1], hc1, by simp only [u1, Prod.snd, Fin.val_mk]; omega, hb1,
+    · exact ⟨u1, by simp [u1], hc1, by simp only [u1]; omega, hb1,
         fun h => hne (hx.trans h.symm)⟩
-    · exact ⟨u0, by simp [u0], hc0, by simp only [u0, Prod.snd, Fin.val_mk]; omega, hb0, hx⟩
+    · exact ⟨u0, by simp [u0], hc0, by simp only [u0]; omega, hb0, hx⟩
   by_cases hpar : lo % 2 = (d + 1) % 2
   · exact key lo hpar le_rfl (by omega) (by omega)
   · exact key (lo + 1) (by omega) (by omega) (by omega) (by omega)
@@ -52,7 +52,7 @@ lemma exists_strip_color_from {m : ℕ} (lo d : ℕ) (hd : d < 2) (hlo : lo + 3 
       (u.1.val + u.2.val) % 2 = d ∧ u.2.val = c := by
     intro c hc hcm
     refine ⟨((⟨(d + c) % 2, by omega⟩ : Fin 2), ⟨c, hcm⟩), ?_, rfl⟩
-    simp only [Prod.fst, Prod.snd, Fin.val_mk]
+    simp only
     omega
   obtain ⟨u0, hc0, he0⟩ := key lo le_rfl (by omega)
   obtain ⟨u1, hc1, he1⟩ := key (lo + 1) (by omega) (by omega)
@@ -109,7 +109,7 @@ lemma fixes_of_support {r : ℕ} (hr : r + 1 < n) {p c : Cell 2 m} {σ : List Di
     intro hzmem
     rcases Finset.mem_image.mp hzmem with ⟨x, _, hxz⟩
     have := congrArg (fun w : Cell n m => w.1.val) hxz
-    simp only [hStrip, Prod.fst, Fin.val_mk] at this
+    simp only [hStrip, Fin.val_mk] at this
     omega
   · intro z hz hzc
     apply hfix
@@ -117,11 +117,11 @@ lemma fixes_of_support {r : ℕ} (hr : r + 1 < n) {p c : Cell 2 m} {σ : List Di
     rcases Finset.mem_image.mp hzmem with ⟨x, hxS, hxz⟩
     have hxrow : x.1.val = 0 := by
       have := congrArg (fun w : Cell n m => w.1.val) hxz
-      simp only [hStrip, Prod.fst, Fin.val_mk] at this
+      simp only [hStrip, Fin.val_mk] at this
       omega
     have hx2 : z.2.val = x.2.val := by
       have := congrArg (fun w : Cell n m => w.2.val) hxz
-      simp only [hStrip, Prod.snd, Fin.val_mk] at this
+      simp only [hStrip] at this
       omega
     rcases hS x hxS hxrow with h | h
     · rw [h] at hx2; omega
@@ -147,7 +147,7 @@ lemma stripPlace_fix_low {r : ℕ} (hr : r + 1 < n) {p a : Cell 2 m} {σ : List 
   have hx : x = (1, y) := hStrip_injective r hr hxz
   subst hx
   have hb := hS (1, y) hxS rfl hne_p hne_a
-  simp only [Prod.snd, Fin.val_mk] at hb
+  simp only at hb
   omega
 
 /-- The row-fix property for a placement whose target lies in the *lower* row: rows above the
@@ -167,7 +167,7 @@ lemma fixes_of_support_low {r : ℕ} (hr : r + 1 < n) {p c : Cell 2 m} {σ : Lis
     intro hzmem
     rcases Finset.mem_image.mp hzmem with ⟨x, _, hxz⟩
     have := congrArg (fun w : Cell n m => w.1.val) hxz
-    simp only [hStrip, Prod.fst, Fin.val_mk] at this
+    simp only [hStrip, Fin.val_mk] at this
     omega
   · intro z hz hzc
     apply hfix
@@ -175,11 +175,11 @@ lemma fixes_of_support_low {r : ℕ} (hr : r + 1 < n) {p c : Cell 2 m} {σ : Lis
     rcases Finset.mem_image.mp hzmem with ⟨x, hxS, hxz⟩
     have hxrow : x.1.val = 1 := by
       have := congrArg (fun w : Cell n m => w.1.val) hxz
-      simp only [hStrip, Prod.fst, Fin.val_mk] at this
+      simp only [hStrip, Fin.val_mk] at this
       omega
     have hx2 : z.2.val = x.2.val := by
       have := congrArg (fun w : Cell n m => w.2.val) hxz
-      simp only [hStrip, Prod.snd, Fin.val_mk] at this
+      simp only [hStrip] at this
       omega
     rcases hS x hxS hxrow with h | h
     · rw [h] at hx2; omega
@@ -197,12 +197,12 @@ lemma fixes_of_low {r : ℕ} (hr : r + 1 < n) {p : Cell 2 m} {σ : List Dir} {lo
   rcases Finset.mem_image.mp hzmem with ⟨x, hxS, hxz⟩
   have h2 : z.2.val = x.2.val := by
     have := congrArg (fun w : Cell n m => w.2.val) hxz
-    simp only [hStrip, Prod.snd] at this
+    simp only [hStrip] at this
     exact this.symm
   have := hS x hxS
   omega
 
-theorem stripPlace (r : ℕ) (hr : r + 1 < n) (hm : 4 ≤ m) (lo : ℕ) (hlo : lo + 4 ≤ m)
+theorem stripPlace (r : ℕ) (hr : r + 1 < n) (_hm : 4 ≤ m) (lo : ℕ) (hlo : lo + 4 ≤ m)
     {p a c : Cell 2 m}
     (hp : p.1.val = 1) (hc : c.1.val = 0) (hpa : p ≠ a) (hac : a ≠ c)
     (hrow : a.1.val = 0 → c.2.val ≤ a.2.val)
@@ -387,18 +387,18 @@ theorem stripPlace (r : ℕ) (hr : r + 1 < n) (hm : 4 ≤ m) (lo : ℕ) (hlo : l
         rw [hpermj]
         exact Equiv.swap_apply_of_ne_of_ne
           (by intro h; have := congrArg (fun w : Cell n m => w.1.val) h
-              simp only [hStrip, Prod.fst, Fin.val_mk] at this; omega)
+              simp only [hStrip, Fin.val_mk] at this; omega)
           (by intro h; have := congrArg (fun w : Cell n m => w.1.val) h
-              simp only [hStrip, Prod.fst, Fin.val_mk] at this; omega)
+              simp only [hStrip, Fin.val_mk] at this; omega)
       have hzfixjlo : ∀ {z : Cell n m}, z.2.val < lo →
           permOf (hStrip (m := m) r hr p) σj z = z := by
         intro z hz
         rw [hpermj]
         exact Equiv.swap_apply_of_ne_of_ne
           (by intro h; have := congrArg (fun w : Cell n m => w.2.val) h
-              simp only [hStrip, Prod.snd] at this; omega)
+              simp only [hStrip] at this; omega)
           (by intro h; have := congrArg (fun w : Cell n m => w.2.val) h
-              simp only [hStrip, Prod.snd] at this; omega)
+              simp only [hStrip] at this; omega)
       have hf4 : ∀ (y : Fin m), (y.val < lo ∨ lo + 4 ≤ y.val) →
           ((1, y) : Cell 2 m) ≠ p → ((1, y) : Cell 2 m) ≠ a →
           permOf (hStrip (m := m) r hr p) (σj ++ σc) (hStrip r hr (1, y))
@@ -407,7 +407,7 @@ theorem stripPlace (r : ℕ) (hr : r + 1 < n) (hm : 4 ≤ m) (lo : ℕ) (hlo : l
         have hne_q : ((1, y) : Cell 2 m) ≠ q := by
           intro h
           have := congrArg (fun w : Cell 2 m => w.2.val) h
-          simp only [Prod.snd, Fin.val_mk] at this
+          simp only at this
           omega
         have hzj : permOf (hStrip (m := m) r hr p) σj (hStrip r hr (1, y))
             = hStrip r hr (1, y) := by
@@ -442,7 +442,7 @@ to the right of the target. -/
 /-- Two-row placement, blank in the lower row.  Same as `stripPlace` but the auxiliaries may
 lie in either row, at columns `≥ c.2`, and one extra cell `J` (the cell just placed) is
 avoided. -/
-theorem stripPlace2 (r : ℕ) (hr : r + 1 < n) (hm : 4 ≤ m) (lo : ℕ) (hlo : lo + 3 ≤ m)
+theorem stripPlace2 (r : ℕ) (hr : r + 1 < n) (_hm : 4 ≤ m) (lo : ℕ) (hlo : lo + 3 ≤ m)
     {p a c J : Cell 2 m} (hlo_eq : c.2.val = lo)
     (hp : p.1.val = 1) (hc : c.1.val = 0) (hpa : p ≠ a) (hac : a ≠ c)
     (hrow : a.1.val = 0 → c.2.val ≤ a.2.val)
@@ -593,19 +593,19 @@ theorem stripPlace2 (r : ℕ) (hr : r + 1 < n) (hm : 4 ≤ m) (lo : ℕ) (hlo : 
         rw [hpermj]
         exact Equiv.swap_apply_of_ne_of_ne
           (by intro h; have := congrArg (fun w : Cell n m => w.1.val) h
-              simp only [hStrip, Prod.fst, Fin.val_mk] at this; omega)
+              simp only [hStrip, Fin.val_mk] at this; omega)
           (by intro h; have := congrArg (fun w : Cell n m => w.1.val) h
-              simp only [hStrip, Prod.fst, Fin.val_mk] at this; omega)
+              simp only [hStrip, Fin.val_mk] at this; omega)
       have hzfixj2 : ∀ {z : Cell n m}, z.1.val = r → z.2.val < c.2.val →
           permOf (hStrip (m := m) r hr p) σj z = z := by
         intro z hzr hzc
         rw [hpermj]
         exact Equiv.swap_apply_of_ne_of_ne
           (by intro h; have := congrArg (fun w : Cell n m => w.1.val) h
-              simp only [hStrip, Prod.fst, Fin.val_mk] at this; omega)
+              simp only [hStrip, Fin.val_mk] at this; omega)
           (by intro h
               have h2 := congrArg (fun w : Cell n m => w.2.val) h
-              simp only [hStrip, Prod.snd, Fin.val_mk] at h2
+              simp only [hStrip] at h2
               omega)
       have hzfixjlo : ∀ {z : Cell n m}, z.2.val < lo →
           permOf (hStrip (m := m) r hr p) σj z = z := by
@@ -613,9 +613,9 @@ theorem stripPlace2 (r : ℕ) (hr : r + 1 < n) (hm : 4 ≤ m) (lo : ℕ) (hlo : 
         rw [hpermj]
         exact Equiv.swap_apply_of_ne_of_ne
           (by intro h; have := congrArg (fun w : Cell n m => w.2.val) h
-              simp only [hStrip, Prod.snd] at this; omega)
+              simp only [hStrip] at this; omega)
           (by intro h; have := congrArg (fun w : Cell n m => w.2.val) h
-              simp only [hStrip, Prod.snd] at this; omega)
+              simp only [hStrip] at this; omega)
       refine ⟨σj ++ σc, ?_, ?_, ?_, ?_, ?_, by rw [List.length_append]; omega⟩
       · rw [applicableFrom_append, htracej]; exact ⟨hapj, hapσc⟩
       · rw [permOf_append, htracej, Equiv.Perm.mul_apply, hpermc, hpermj]
@@ -642,7 +642,7 @@ lemma fixes_of_support_cell {r : ℕ} (hr : r + 1 < n) {p : Cell 2 m} {σ : List
   exact hJ (hStrip_injective r hr hxJ ▸ hxS)
 
 /-- Two-row placement, blank in the upper row.  The row-swapped analogue of `stripPlace2`. -/
-theorem stripPlaceFlip2 (r : ℕ) (hr : r + 1 < n) (hm : 4 ≤ m) (lo : ℕ) (hlo : lo + 3 ≤ m)
+theorem stripPlaceFlip2 (r : ℕ) (hr : r + 1 < n) (_hm : 4 ≤ m) (lo : ℕ) (hlo : lo + 3 ≤ m)
     {p a c J : Cell 2 m} (hlo_eq : c.2.val = lo)
     (hp : p.1.val = 0) (hc : c.1.val = 1) (hpa : p ≠ a) (hac : a ≠ c)
     (hrow : a.1.val = 1 → c.2.val ≤ a.2.val)
@@ -804,19 +804,19 @@ theorem stripPlaceFlip2 (r : ℕ) (hr : r + 1 < n) (hm : 4 ≤ m) (lo : ℕ) (hl
         rw [hpermj]
         exact Equiv.swap_apply_of_ne_of_ne
           (by intro h; have := congrArg (fun w : Cell n m => w.1.val) h
-              simp only [hStrip, Prod.fst, Fin.val_mk] at this; omega)
+              simp only [hStrip, Fin.val_mk] at this; omega)
           (by intro h; have := congrArg (fun w : Cell n m => w.1.val) h
-              simp only [hStrip, Prod.fst, Fin.val_mk] at this; omega)
+              simp only [hStrip, Fin.val_mk] at this; omega)
       have hzfixj2 : ∀ {z : Cell n m}, z.1.val = r + 1 → z.2.val < c.2.val →
           permOf (hStrip (m := m) r hr p) σj z = z := by
         intro z hzr hzc
         rw [hpermj]
         exact Equiv.swap_apply_of_ne_of_ne
           (by intro h; have := congrArg (fun w : Cell n m => w.1.val) h
-              simp only [hStrip, Prod.fst, Fin.val_mk] at this; omega)
+              simp only [hStrip, Fin.val_mk] at this; omega)
           (by intro h
               have h2 := congrArg (fun w : Cell n m => w.2.val) h
-              simp only [hStrip, Prod.snd, Fin.val_mk] at h2
+              simp only [hStrip] at h2
               omega)
       have hzfixjlo : ∀ {z : Cell n m}, z.2.val < lo →
           permOf (hStrip (m := m) r hr p) σj z = z := by
@@ -824,9 +824,9 @@ theorem stripPlaceFlip2 (r : ℕ) (hr : r + 1 < n) (hm : 4 ≤ m) (lo : ℕ) (hl
         rw [hpermj]
         exact Equiv.swap_apply_of_ne_of_ne
           (by intro h; have := congrArg (fun w : Cell n m => w.2.val) h
-              simp only [hStrip, Prod.snd] at this; omega)
+              simp only [hStrip] at this; omega)
           (by intro h; have := congrArg (fun w : Cell n m => w.2.val) h
-              simp only [hStrip, Prod.snd] at this; omega)
+              simp only [hStrip] at this; omega)
       have hJfixc : permOf (hStrip (m := m) r hr q) σc (hStrip r hr J) = hStrip r hr J :=
         fixes_of_support_cell hr hfixc (by
           simp only [Finset.mem_insert, Finset.mem_singleton, not_or]

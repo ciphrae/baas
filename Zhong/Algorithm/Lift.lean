@@ -100,7 +100,7 @@ theorem traceSet_map_subset_range {n' m' : ℕ} {ι : Cell n' m' → Cell n m} {
 
 /-- The trace set of a transported word is exactly the image of the trace set. -/
 theorem traceSet_map_eq_image {n' m' : ℕ} {ι : Cell n' m' → Cell n m} {f : Dir → Dir}
-    (hinj : Function.Injective ι)
+    (_hinj : Function.Injective ι)
     (hstep : ∀ (c : Cell n' m') (δ : Dir) (c' : Cell n' m'),
       neighbor? c δ = some c' → neighbor? (ι c) (f δ) = some (ι c'))
     (p : Cell n' m') (σ : List Dir) (happ : ApplicableFrom p σ) :
@@ -185,7 +185,7 @@ theorem applicableFrom_jumpLoop {c : Fin m} (hc : c.val + 2 < m) :
       (neighbor?_mk_R (x := (1 : Fin 2)) (y := (⟨c.val + 1, hc1⟩ : Fin m))
         (by simp only [Fin.val_mk]; omega))
   have h3 : neighbor? (bot c) Dir.D = some (top c) := by
-    simpa [top, bot] using (neighbor?_mk_D (x := (1 : Fin 2)) (y := c) (by decide))
+    simp [top, bot]
   have h4 : neighbor? (top c) Dir.L = some (top (⟨c.val + 1, hc1⟩ : Fin m)) := by
     simpa [top] using (neighbor?_mk_L (x := (0 : Fin 2)) (y := c) hc1)
   unfold jumpLoop
@@ -206,7 +206,7 @@ theorem applicableFrom_jumpGadget {c : Fin m} (hc : c.val + 2 < m) :
     by simpa [trace_jumpHead hc] using applicableFrom_invWord (applicableFrom_jumpHead hc)⟩
 
 /-- The closed part of the jump word is applicable from its base. -/
-theorem applicableFrom_jumpClosed : ∀ (l : ℕ) (c : Fin m) (hc : c.val + 2 * l < m),
+theorem applicableFrom_jumpClosed : ∀ (l : ℕ) (c : Fin m) (_hc : c.val + 2 * l < m),
     ApplicableFrom (top c) (jumpClosed l) := by
   intro l
   induction l with
@@ -215,7 +215,7 @@ theorem applicableFrom_jumpClosed : ∀ (l : ℕ) (c : Fin m) (hc : c.val + 2 * 
       intro c hc
       have hc2 : c.val + 2 < m := by omega
       have hc2l : (⟨c.val + 2, hc2⟩ : Fin m).val + 2 * l < m := by
-        simp only [Fin.val_mk]; omega
+        simp only; omega
       rw [jumpClosed_succ,
         show [Dir.L, Dir.L] ++ jumpClosed l ++ [Dir.R, Dir.R] ++ jumpGadget
           = [Dir.L, Dir.L] ++ (jumpClosed l ++ ([Dir.R, Dir.R] ++ jumpGadget)) from by
@@ -232,7 +232,7 @@ theorem applicableFrom_jumpClosed : ∀ (l : ℕ) (c : Fin m) (hc : c.val + 2 * 
 theorem applicableFrom_jumpWord {c : Fin m} (l : ℕ) (hc : c.val + 2 * l < m) :
     ApplicableFrom (top c) (jumpWord l) := by
   have hU : neighbor? (top c) Dir.U = some (bot c) := by
-    simpa [top, bot] using (neighbor?_mk_U (x := (0 : Fin 2)) (y := c) (by decide))
+    simp [top, bot]
   rw [jumpWord,
     show jumpClosed l ++ [Dir.U] ++ List.replicate (2 * l) Dir.L
       = jumpClosed l ++ ([Dir.U] ++ List.replicate (2 * l) Dir.L) from by
@@ -264,7 +264,7 @@ theorem hStrip_neighbor (r : ℕ) (hr : r + 1 < n) :
     ∀ (c : Cell 2 m) (δ : Dir) (c' : Cell 2 m),
       neighbor? c δ = some c' → neighbor? (hStrip r hr c) δ = some (hStrip r hr c') := by
   rintro ⟨a, b⟩ δ ⟨a', b'⟩ h
-  fin_cases a <;> fin_cases a' <;> cases δ <;> simp_all [hStrip, neighbor?] <;> split_ifs <;> simp_all <;> omega
+  fin_cases a <;> fin_cases a' <;> cases δ <;> simp_all [hStrip, neighbor?]; split_ifs <;> simp_all
 
 /-! ### The two-column vertical strip -/
 
@@ -362,7 +362,7 @@ theorem applicableFrom_row0Loop {c : Fin m} (hc : c.val + 3 < m) :
   have h4 : neighbor? (bot (⟨c.val + 1, hc1⟩ : Fin m)) Dir.L
       = some (bot (⟨c.val + 2, hc2⟩ : Fin m)) := by
     simpa [bot] using (neighbor?_mk_L (x := (1 : Fin 2))
-      (y := (⟨c.val + 1, hc1⟩ : Fin m)) (by simp only [Fin.val_mk]; omega))
+      (y := (⟨c.val + 1, hc1⟩ : Fin m)) (by simp only; omega))
   unfold row0Loop
   refine ⟨top (⟨c.val + 2, hc2⟩ : Fin m), h1, ?_⟩
   rw [applicableFrom_cons_of_neighbor? h2]
@@ -381,7 +381,7 @@ theorem applicableFrom_row0Gadget {c : Fin m} (hc : c.val + 3 < m) :
     by simpa [trace_row0Head hc] using applicableFrom_invWord (applicableFrom_row0Head hc)⟩
 
 /-- The closed part of the same-row jump word is applicable from its base. -/
-theorem applicableFrom_row0Closed : ∀ (l : ℕ) (c : Fin m) (hc : c.val + 2 * l + 1 < m),
+theorem applicableFrom_row0Closed : ∀ (l : ℕ) (c : Fin m) (_hc : c.val + 2 * l + 1 < m),
     ApplicableFrom (top c) (row0Closed l) := by
   intro l
   induction l with
@@ -390,7 +390,7 @@ theorem applicableFrom_row0Closed : ∀ (l : ℕ) (c : Fin m) (hc : c.val + 2 * 
       intro c hc
       have hc2 : c.val + 2 < m := by omega
       have hc2l : (⟨c.val + 2, hc2⟩ : Fin m).val + 2 * l + 1 < m := by
-        simp only [Fin.val_mk]; omega
+        simp only; omega
       rw [row0Closed_succ,
         show [Dir.L, Dir.L] ++ row0Closed l ++ [Dir.R, Dir.R] ++ row0Gadget
           = [Dir.L, Dir.L] ++ (row0Closed l ++ ([Dir.R, Dir.R] ++ row0Gadget)) from by
@@ -438,7 +438,7 @@ theorem hStrip3_neighbor (r : ℕ) (hr : r + 2 < n) :
   fin_cases a <;> fin_cases a' <;> cases δ <;>
     simp_all [hStrip3, neighbor?] <;>
     (try omega) <;>
-    (try (split_ifs <;> simp_all <;> omega)) <;>
+    (try (split_ifs <;> simp_all)) <;>
     (try (rcases h with ⟨hb, hbb⟩; rw [dif_pos hb]; simp_all))
 
 /-- **Lemma 1 (Zhong 2023), lifted to a three-row strip.**  On an `n × m` board, if the
@@ -573,12 +573,12 @@ theorem permOf_downWord {N m t : ℕ} (hN : t + 2 < N) (hm : 1 < m) (c : Fin m) 
         apply permOf_U_fixes
         · intro h
           have := congrArg (fun y : Cell N m => y.1.val) h
-          simp only [Prod.fst, Fin.val_mk] at this
+          simp only at this
           omega
         · rw [neighbor_U_window t (by omega) (by omega)]
           intro h
           have := congrArg (fun y : Cell N m => y.1.val) (Option.some.inj h)
-          simp only [Prod.fst, Fin.val_mk] at this
+          simp only at this
           omega
       rw [hfix, permOf_append, trace_downWord (by omega) hm, Equiv.Perm.mul_apply,
           permOf_shiftWord_window t (by omega) hm c]
@@ -708,7 +708,7 @@ theorem blockStrip_neighbor {n H M ro co : ℕ} (hro : ro + H ≤ n) (hco : co +
         neighbor?_mk_U (x := (⟨ro + x.1, Nat.lt_of_succ_lt hb⟩ : Fin n))
           (y := (⟨co + y.1, by omega⟩ : Fin n)) hb, Option.some.injEq]
       apply Prod.ext
-      · apply Fin.ext; simp only [blockStrip]; exact Nat.add_assoc ro x.1 1
+      · apply Fin.ext; simp only; exact Nat.add_assoc ro x.1 1
       · rfl
   | D =>
       rw [neighbor?] at h
@@ -720,7 +720,7 @@ theorem blockStrip_neighbor {n H M ro co : ℕ} (hro : ro + H ≤ n) (hco : co +
         neighbor?_mk_D (x := (⟨ro + x.1, hb⟩ : Fin n))
           (y := (⟨co + y.1, by omega⟩ : Fin n)) hpos, Option.some.injEq]
       apply Prod.ext
-      · apply Fin.ext; simp only [rowStrip]
+      · apply Fin.ext; simp only
         have hx1 : 1 ≤ x.1 := hx
         omega
       · rfl
@@ -746,7 +746,7 @@ theorem blockStrip_neighbor {n H M ro co : ℕ} (hro : ro + H ≤ n) (hco : co +
           (y := (⟨co + y.1, hb⟩ : Fin n)) hpos, Option.some.injEq]
       apply Prod.ext
       · rfl
-      · apply Fin.ext; simp only [blockStrip]
+      · apply Fin.ext; simp only
         have hy1 : 1 ≤ y.1 := hy
         omega
 

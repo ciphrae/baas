@@ -75,7 +75,7 @@ theorem exists_carry (B : Board n) (R H : Fin n) (hRH : Nat.dist R.val H.val = 1
     have hRH' : R ≠ H := by intro h; subst h; simp [Nat.dist] at hRH
     have hRHv : R.val ≠ H.val := fun h => hRH' (Fin.ext h)
     have h₁ : gridDistance (blank B) c₁ = 1 := by
-      rw [hblank]; simp [gridDistance, c₁, Nat.dist] <;> omega
+      rw [hblank]; simp [gridDistance, c₁, Nat.dist]; omega
     let B₁ := swapCells B (blank B) c₁
     have hb₁ : blank B₁ = c₁ := blank_swapCells B c₁
     have hchain : List.IsChain (fun a b : Cell n => gridDistance a b = 1)
@@ -94,10 +94,10 @@ theorem exists_carry (B : Board n) (R H : Fin n) (hRH : Nat.dist R.val H.val = 1
           refine ⟨?_, ?_, ?_, ?_⟩ <;> intro h <;>
             have h1 := congrArg (fun x : Cell n => x.1.val) h <;>
             have h2 := congrArg (fun x : Cell n => x.2.val) h <;>
-            simp [c₂, c₃, c₄, c₅] at h1 h2 <;> omega)]
+            simp [c₂, c₃, c₄, c₅] at h1 h2; omega)]
       change swapCells B (blank B) c₁ _ = _
       have : ((R, ⟨w+m+1, by omega⟩) : Cell n) = blank B := by
-        rw [hblank]; ext <;> simp <;> omega
+        rw [hblank]; ext <;> simp; omega
       rw [this, swapCells_at_left]
     obtain ⟨C, cs, hC, hlen, hb, htC, hin⟩ := ih B₅ (by omega) (by rw [hb₅])
     refine ⟨C, (c₁ :: [c₂, c₃, c₄, c₅]) ++ cs, (Executes.cons h₁ h₅).append hC,

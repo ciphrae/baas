@@ -16,6 +16,7 @@ def cornerEmbedding (d : ℕ) (hd : d+m=n) : Cell m ↪ Cell n where
     simp only at h1 h2
     apply Prod.ext <;> apply Fin.ext <;> omega
 
+omit [NeZero m] in
 theorem cornerEmbedding_distance (d : ℕ) (hd : d+m=n) (a b : Cell m) :
     gridDistance (cornerEmbedding d hd a) (cornerEmbedding d hd b)=gridDistance a b := by
   change Nat.dist (d+a.1.val) (d+b.1.val) + Nat.dist (d+a.2.val) (d+b.2.val) = _
@@ -25,6 +26,7 @@ theorem cornerEmbedding_distance (d : ℕ) (hd : d+m=n) (a b : Cell m) :
 def cornerLabels (d : ℕ) (hd : d+m=n) : Tile m ↪ Tile n :=
   (target m).symm.toEmbedding.trans ((cornerEmbedding d hd).trans (target n).toEmbedding)
 
+omit [NeZero m] in
 @[simp] theorem cornerLabels_target (d : ℕ) (hd : d+m=n) (c : Cell m) :
     cornerLabels d hd (target m c)=target n (cornerEmbedding d hd c) := by
   simp [cornerLabels]
@@ -44,6 +46,7 @@ theorem cornerLabels_zero (d : ℕ) (hd : d+m=n) : cornerLabels d hd 0=0 := by
   rw [hc]
   exact target_bottomRight n
 
+omit [NeZero m] in
 /-- After a solved outer prefix, every remaining tile's target is in the remaining square. -/
 theorem residual_target_inside (d : ℕ) (hd : d+m=n) (B : Board n)
     (hB : ∀ x y : Fin n, x.val<d ∨ y.val<d → B (x,y)=target n (x,y))

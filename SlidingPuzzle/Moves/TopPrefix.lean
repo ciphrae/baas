@@ -44,7 +44,7 @@ theorem exists_top_prefix_path_relabel (B T : Board n) (hn : 4 ≤ n)
     simp [blank, position]
   have hes : e.symm 0 = 0 := by
     apply e.injective
-    simpa [he] using e.apply_symm_apply 0
+    simp [he]
   obtain ⟨D,p,hp,hD⟩ := exists_top_prefix_path (relabel B e) hn d hd
   have hq : ∃ q : Path B (relabel D e.symm), q.length ≤ 502*d*n := by
     have h : ∃ q : Path (relabel (relabel B e) e.symm) (relabel D e.symm),

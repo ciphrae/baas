@@ -16,9 +16,11 @@ def columnEmbedding (hm : m+1=n) : Zhong.Cell n m ↪ SlidingPuzzle.Cell n where
     have hc := congrArg (fun z : SlidingPuzzle.Cell n => z.2.val) h
     apply Prod.ext <;> apply Fin.ext <;> simp only at hr hc <;> omega
 
+omit [NeZero n] in
 @[simp] theorem columnEmbedding_apply (hm : m+1=n) (z : Zhong.Cell n m) :
     columnEmbedding hm z=(⟨z.2.val+1,by have := z.2.isLt; omega⟩,z.1) := rfl
 
+omit [NeZero n] in
 theorem columnEmbedding_range (hm : m+1=n) (z : SlidingPuzzle.Cell n) :
     z ∈ Set.range (columnEmbedding hm) ↔ 1 ≤ z.1.val := by
   constructor
@@ -31,6 +33,7 @@ theorem columnEmbedding_range (hm : m+1=n) (z : SlidingPuzzle.Cell n) :
     · change z.1.val-1+1=z.1.val; omega
     · rfl
 
+omit [NeZero n] in
 /-- Only locally legal moves are transported across the removed boundary. -/
 theorem columnEmbedding_neighbor (hm : m+1=n) (z : Zhong.Cell n m) (δ : Dir)
     (z' : Zhong.Cell n m) (h : neighbor? z δ=some z') :

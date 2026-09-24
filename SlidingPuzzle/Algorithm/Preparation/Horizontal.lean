@@ -115,7 +115,7 @@ theorem exists_horizontal_preparation_path {k : ℕ} (hk : 2 ≤ k)
     right; left
     have hh := (mem_stagingC j i c).mp hc
     rw [hh.2.2]
-    have hi : i.val < k^2 := by simpa [pow_two] using i.isLt
+    have hi : i.val < k^2 := by simp [pow_two]
     have hcol := (groupCol j).isLt
     have hmul := Nat.mul_le_mul_right (k^2) hcol
     have he : k*k^2 = k^3 := by ring

@@ -126,7 +126,7 @@ theorem permOf_jumpHead {c : Fin m} (hc : c.val + 2 < m) :
   have hc1 : c.val + 1 < m := by omega
   have hc2 : c.val + 2 < m := hc
   have h1 : neighbor? (top c) Dir.U = some (bot c) := by
-    simpa [top, bot] using (neighbor?_mk_U (x := (0 : Fin 2)) (y := c) (by decide))
+    simp [top, bot]
   have h2 : neighbor? (bot c) Dir.L = some (bot (⟨c.val + 1, hc1⟩ : Fin m)) := by
     simpa [bot] using (neighbor?_mk_L (x := (1 : Fin 2)) (y := c) hc1)
   have h3 : neighbor? (bot (⟨c.val + 1, hc1⟩ : Fin m)) Dir.L
@@ -169,7 +169,7 @@ theorem jumpHead_cells_ne {c : Fin m} (hc : c.val + 2 < m) :
   refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;>
     (intro h
      have hh := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-     simp only [top, bot, Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at hh
+     simp only [Prod.mk.injEq] at hh
      omega)
 
 /-- The action of the head `U L L D R` on `(0,c)`. -/
@@ -203,7 +203,7 @@ theorem applicableFrom_jumpHead {c : Fin m} (hc : c.val + 2 < m) :
   have hc1 : c.val + 1 < m := by omega
   have hc2 : c.val + 2 < m := hc
   have h1 : neighbor? (top c) Dir.U = some (bot c) := by
-    simpa [top, bot] using (neighbor?_mk_U (x := (0 : Fin 2)) (y := c) (by decide))
+    simp [top, bot]
   have h2 : neighbor? (bot c) Dir.L = some (bot (⟨c.val + 1, hc1⟩ : Fin m)) := by
     simpa [bot] using (neighbor?_mk_L (x := (1 : Fin 2)) (y := c) hc1)
   have h3 : neighbor? (bot (⟨c.val + 1, hc1⟩ : Fin m)) Dir.L
@@ -233,7 +233,7 @@ theorem trace_jumpHead {c : Fin m} (hc : c.val + 2 < m) :
   have hc1 : c.val + 1 < m := by omega
   have hc2 : c.val + 2 < m := hc
   have h1 : neighbor? (top c) Dir.U = some (bot c) := by
-    simpa [top, bot] using (neighbor?_mk_U (x := (0 : Fin 2)) (y := c) (by decide))
+    simp [top, bot]
   have h2 : neighbor? (bot c) Dir.L = some (bot (⟨c.val + 1, hc1⟩ : Fin m)) := by
     simpa [bot] using (neighbor?_mk_L (x := (1 : Fin 2)) (y := c) hc1)
   have h3 : neighbor? (bot (⟨c.val + 1, hc1⟩ : Fin m)) Dir.L
@@ -273,27 +273,27 @@ theorem permOf_jumpLoop {c : Fin m} (hc : c.val + 2 < m) :
       (neighbor?_mk_R (x := (1 : Fin 2)) (y := (⟨c.val + 1, hc1⟩ : Fin m))
         (by simp only [Fin.val_mk]; omega))
   have h3 : neighbor? (bot c) Dir.D = some (top c) := by
-    simpa [top, bot] using (neighbor?_mk_D (x := (1 : Fin 2)) (y := c) (by decide))
+    simp [top, bot]
   have h4 : neighbor? (top c) Dir.L = some (top (⟨c.val + 1, hc1⟩ : Fin m)) := by
     simpa [top] using (neighbor?_mk_L (x := (0 : Fin 2)) (y := c) hc1)
   have hab : top (⟨c.val + 1, hc1⟩ : Fin m) ≠ bot (⟨c.val + 1, hc1⟩ : Fin m) := by
     intro h; have hh := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-    simp only [top, bot, Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at hh; omega
+    simp only [Prod.mk.injEq] at hh; omega
   have hac : top (⟨c.val + 1, hc1⟩ : Fin m) ≠ bot c := by
     intro h; have hh := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-    simp only [top, bot, Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at hh; omega
+    simp only [Prod.mk.injEq] at hh; omega
   have had : top (⟨c.val + 1, hc1⟩ : Fin m) ≠ top c := by
     intro h; have hh := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-    simp only [top, bot, Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at hh; omega
+    simp only [Prod.mk.injEq] at hh; omega
   have hbc : bot (⟨c.val + 1, hc1⟩ : Fin m) ≠ bot c := by
     intro h; have hh := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-    simp only [top, bot, Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at hh; omega
+    simp only [Prod.mk.injEq] at hh; omega
   have hbd : bot (⟨c.val + 1, hc1⟩ : Fin m) ≠ top c := by
     intro h; have hh := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-    simp only [top, bot, Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at hh; omega
+    simp only [Prod.mk.injEq] at hh; omega
   have hcd : bot c ≠ top c := by
     intro h; have hh := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-    simp only [top, bot, Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at hh; omega
+    simp only [Prod.mk.injEq] at hh; omega
   unfold jumpLoop
   rw [permOf_cons_of_neighbor? h1, permOf_cons_of_neighbor? h2,
       permOf_cons_of_neighbor? h3, permOf_cons_of_neighbor? h4, permOf_nil, mul_one]
@@ -316,7 +316,7 @@ theorem trace_jumpLoop {c : Fin m} (hc : c.val + 2 < m) :
       (neighbor?_mk_R (x := (1 : Fin 2)) (y := (⟨c.val + 1, hc1⟩ : Fin m))
         (by simp only [Fin.val_mk]; omega))
   have h3 : neighbor? (bot c) Dir.D = some (top c) := by
-    simpa [top, bot] using (neighbor?_mk_D (x := (1 : Fin 2)) (y := c) (by decide))
+    simp [top, bot]
   have h4 : neighbor? (top c) Dir.L = some (top (⟨c.val + 1, hc1⟩ : Fin m)) := by
     simpa [top] using (neighbor?_mk_L (x := (0 : Fin 2)) (y := c) hc1)
   unfold jumpLoop
@@ -377,8 +377,8 @@ theorem trace_replicate_L2 (r : Fin 2) (k : ℕ) :
       have hL : neighbor? (r, c) Dir.L = some (r, (⟨c.val + 1, hc1⟩ : Fin m)) := by
         simpa using (neighbor?_mk_L (x := r) (y := c) hc1)
       rw [List.replicate_succ, trace_cons_of_neighbor? hL,
-          ih (⟨c.val + 1, hc1⟩ : Fin m) (by simp only [Fin.val_mk]; omega)]
-      exact Prod.ext rfl (Fin.ext (by simp only [Fin.val_mk]; omega))
+          ih (⟨c.val + 1, hc1⟩ : Fin m) (by simp only; omega)]
+      exact Prod.ext rfl (Fin.ext (by simp only; omega))
 
 /-- The action of a horizontal `L`-run on a `2 × m` board: within the row it is the
 successor map, and it fixes the other row and the cells outside its interval. -/
@@ -404,7 +404,7 @@ theorem permOf_replicate_L2 (r : Fin 2) (k : ℕ) :
       have hL : neighbor? (r, c) Dir.L = some (r, (⟨c.val + 1, hc1⟩ : Fin m)) := by
         simpa using (neighbor?_mk_L (x := r) (y := c) hc1)
       have hk1 : (⟨c.val + 1, hc1⟩ : Fin m).val + k < m := by
-        simp only [Fin.val_mk]; omega
+        simp only; omega
       obtain ⟨ih1, ih2, ih3⟩ := ih (⟨c.val + 1, hc1⟩ : Fin m) hk1
       have hstep : ∀ x : Cell 2 m,
           permOf (r, c) (List.replicate (k + 1) Dir.L) x
@@ -424,7 +424,7 @@ theorem permOf_replicate_L2 (r : Fin 2) (k : ℕ) :
           rw [hfix, Equiv.swap_apply_left]
         · have hcell : (r, (⟨c.val + i, by omega⟩ : Fin m))
               = (r, (⟨(⟨c.val + 1, hc1⟩ : Fin m).val + (i - 1), by omega⟩ : Fin m)) :=
-            Prod.ext rfl (Fin.ext (by simp only [Fin.val_mk]; omega))
+            Prod.ext rfl (Fin.ext (by simp only; omega))
           rw [hcell]
           have h := ih1 (i - 1) (by omega)
           rw [h]
@@ -432,23 +432,23 @@ theorem permOf_replicate_L2 (r : Fin 2) (k : ℕ) :
               by omega⟩ : Fin m)) ≠ (r, c) := by
             intro hcon
             have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) hcon
-            simp only [Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at this
+            simp only [Prod.mk.injEq] at this
             omega
           have hne2 : (r, (⟨(⟨c.val + 1, hc1⟩ : Fin m).val + (i - 1) + 1,
               by omega⟩ : Fin m)) ≠ (r, (⟨c.val + 1, hc1⟩ : Fin m)) := by
             intro hcon
             have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) hcon
-            simp only [Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at this
+            simp only [Prod.mk.injEq] at this
             omega
           rw [Equiv.swap_apply_of_ne_of_ne hne1 hne2]
           congr 1
           apply Fin.ext
-          simp only [Fin.val_mk]
+          simp only
           omega
       · rw [hstep]
         have hcell : (r, (⟨c.val + (k + 1), by omega⟩ : Fin m))
             = (r, (⟨(⟨c.val + 1, hc1⟩ : Fin m).val + k, by omega⟩ : Fin m)) :=
-          Prod.ext rfl (Fin.ext (by simp only [Fin.val_mk]; omega))
+          Prod.ext rfl (Fin.ext (by simp only; omega))
         rw [hcell, ih2, Equiv.swap_apply_right]
       · intro x hx
         rw [hstep]
@@ -464,14 +464,14 @@ theorem permOf_replicate_L2 (r : Fin 2) (k : ℕ) :
           intro hcon
           rcases hx with h | h | h
           · exact h (by rw [hcon])
-          · rw [hcon] at h; simp only [Prod.snd, Fin.val_mk] at h; omega
-          · rw [hcon] at h; simp only [Prod.snd, Fin.val_mk] at h; omega
+          · rw [hcon] at h; simp only at h; omega
+          · rw [hcon] at h; simp only at h; omega
         have hne2 : x ≠ (r, (⟨c.val + 1, hc1⟩ : Fin m)) := by
           intro hcon
           rcases hx with h | h | h
           · exact h (by rw [hcon])
-          · rw [hcon] at h; simp only [Prod.snd, Fin.val_mk] at h; omega
-          · rw [hcon] at h; simp only [Prod.snd, Fin.val_mk] at h; omega
+          · rw [hcon] at h; simp only at h; omega
+          · rw [hcon] at h; simp only at h; omega
         rw [Equiv.swap_apply_of_ne_of_ne hne1 hne2]
 
 /-- A horizontal `L`-run on a `2 × m` board fixes the cells of the other row. -/
@@ -501,7 +501,7 @@ theorem gadget_eq_row1Rev {c : Fin m} (hc : c.val + 2 < m) :
   have h2 : neighbor? (bot (⟨c.val + 1, by omega⟩ : Fin m)) Dir.L
       = some (bot (⟨c.val + 2, by omega⟩ : Fin m)) := by
     simpa [bot] using (neighbor?_mk_L (x := (1 : Fin 2))
-      (y := (⟨c.val + 1, by omega⟩ : Fin m)) (by simp only [Fin.val_mk]; omega))
+      (y := (⟨c.val + 1, by omega⟩ : Fin m)) (by simp only; omega))
   rw [permOf_cons_of_neighbor? h1, permOf_cons_of_neighbor? h2, permOf_nil, mul_one]
   rw [mul_inv_rev, Equiv.swap_inv, Equiv.swap_inv,
       Equiv.swap_comm (bot (⟨c.val + 1, by omega⟩ : Fin m))
@@ -520,7 +520,7 @@ theorem conj_forward {P : Equiv.Perm (Cell 2 m)} (hfix : ∀ j : Fin m, P (bot j
       intro c hk
       have hc1 : c.val + 1 < m := by omega
       have hk1 : (⟨c.val + 1, hc1⟩ : Fin m).val + k < m := by
-        simp only [Fin.val_mk]; omega
+        simp only; omega
       have hL : neighbor? (bot c) Dir.L = some (bot (⟨c.val + 1, hc1⟩ : Fin m)) := by
         simpa [bot] using (neighbor?_mk_L (x := (1 : Fin 2)) (y := c) hc1)
       rw [List.replicate_succ, permOf_cons_of_neighbor? hL]
@@ -608,7 +608,7 @@ theorem trace_jumpClosed : ∀ (l : ℕ) (c : Fin m) (hc : c.val + 2 * l < m),
       intro c hc
       have hc2 : c.val + 2 < m := by omega
       have hc2l : (⟨c.val + 2, hc2⟩ : Fin m).val + 2 * l < m := by
-        simp only [Fin.val_mk]; omega
+        simp only; omega
       have htraceLL : trace (top c) [Dir.L, Dir.L] = top (⟨c.val + 2, hc2⟩ : Fin m) := by
         have := trace_replicate_L2 (0 : Fin 2) (c := c) 2 hc2
         simpa [List.replicate] using this
@@ -618,7 +618,7 @@ theorem trace_jumpClosed : ∀ (l : ℕ) (c : Fin m) (hc : c.val + 2 * l < m),
         have h2 : neighbor? (top (⟨c.val + 1, by omega⟩ : Fin m)) Dir.L
             = some (top (⟨c.val + 2, by omega⟩ : Fin m)) := by
           simpa [top] using (neighbor?_mk_L (x := (0 : Fin 2))
-            (y := (⟨c.val + 1, by omega⟩ : Fin m)) (by simp only [Fin.val_mk]; omega))
+            (y := (⟨c.val + 1, by omega⟩ : Fin m)) (by simp only; omega))
         refine ⟨top (⟨c.val + 1, by omega⟩ : Fin m), h1, ?_⟩
         rw [applicableFrom_cons_of_neighbor? h2]
         exact trivial
@@ -643,7 +643,7 @@ theorem permOf_jumpClosed : ∀ (l : ℕ) (c : Fin m) (hc : c.val + 2 * l < m),
       intro c hc
       have hc2 : c.val + 2 < m := by omega
       have hc2l : (⟨c.val + 2, hc2⟩ : Fin m).val + 2 * l < m := by
-        simp only [Fin.val_mk]; omega
+        simp only; omega
       have htraceLL : trace (top c) [Dir.L, Dir.L] = top (⟨c.val + 2, hc2⟩ : Fin m) := by
         have := trace_replicate_L2 (0 : Fin 2) (c := c) 2 hc2
         simpa [List.replicate] using this
@@ -653,7 +653,7 @@ theorem permOf_jumpClosed : ∀ (l : ℕ) (c : Fin m) (hc : c.val + 2 * l < m),
         have h2 : neighbor? (top (⟨c.val + 1, by omega⟩ : Fin m)) Dir.L
             = some (top (⟨c.val + 2, by omega⟩ : Fin m)) := by
           simpa [top] using (neighbor?_mk_L (x := (0 : Fin 2))
-            (y := (⟨c.val + 1, by omega⟩ : Fin m)) (by simp only [Fin.val_mk]; omega))
+            (y := (⟨c.val + 1, by omega⟩ : Fin m)) (by simp only; omega))
         refine ⟨top (⟨c.val + 1, by omega⟩ : Fin m), h1, ?_⟩
         rw [applicableFrom_cons_of_neighbor? h2]
         exact trivial
@@ -673,7 +673,7 @@ theorem permOf_jumpClosed : ∀ (l : ℕ) (c : Fin m) (hc : c.val + 2 * l < m),
         apply conj_row1Rev
         intro j
         exact permOf_replicate_L2_fixes (r := (0 : Fin 2)) (c := c) (k := 2) hc2
-          (x := bot j) (by simp [bot])
+          (x := bot j) (by simp)
       have hgadget := permOf_jumpGadget hc2
       rw [jumpClosed_succ, List.append_assoc, List.append_assoc, permOf_append,
           htraceLL, permOf_append, ih (⟨c.val + 2, hc2⟩ : Fin m) hc2l,
@@ -702,11 +702,11 @@ theorem permOf_jumpWord {c : Fin m} (l : ℕ) (hc : c.val + 2 * l < m) :
   have htrace := trace_jumpClosed l c hc
   have hU : permOf (top c) [Dir.U] = Equiv.swap (top c) (bot c) := by
     have h1 : neighbor? (top c) Dir.U = some (bot c) := by
-      simpa [top, bot] using (neighbor?_mk_U (x := (0 : Fin 2)) (y := c) (by decide))
+      simp [top, bot]
     rw [permOf_cons_of_neighbor? h1, permOf_nil, mul_one]
   have hUtr : trace (top c) [Dir.U] = bot c := by
     have h1 : neighbor? (top c) Dir.U = some (bot c) := by
-      simpa [top, bot] using (neighbor?_mk_U (x := (0 : Fin 2)) (y := c) (by decide))
+      simp [top, bot]
     rw [trace_cons_of_neighbor? h1, trace_nil]
   have hF : permOf (bot c) (List.replicate (2 * l) Dir.L)
       = (row1Rev c (2 * l) hc)⁻¹ := by
@@ -716,7 +716,7 @@ theorem permOf_jumpWord {c : Fin m} (l : ℕ) (hc : c.val + 2 * l < m) :
     change (permOf (bot c) (List.replicate (2 * l) Dir.L)).symm (top c) = top c
     rw [Equiv.symm_apply_eq]
     exact ((permOf_replicate_L2 (1 : Fin 2) (2 * l) c hc).2.2 (top c)
-      (Or.inl (by simp [top]))).symm
+      (Or.inl (by simp))).symm
   have hbot : row1Rev c (2 * l) hc (bot c) = bot (⟨c.val + 2 * l, hc⟩ : Fin m) := by
     rw [row1Rev]
     change (permOf (bot c) (List.replicate (2 * l) Dir.L)).symm (bot c)

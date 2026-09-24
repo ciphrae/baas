@@ -59,7 +59,7 @@ theorem permOf_row0Head {c : Fin m} (hc : c.val + 3 < m) :
   have hc2 : c.val + 2 < m := by omega
   have hc3 : c.val + 3 < m := hc
   have h1 : neighbor? (top c) Dir.U = some (bot c) := by
-    simpa [top, bot] using (neighbor?_mk_U (x := (0 : Fin 2)) (y := c) (by decide))
+    simp [top, bot]
   have h2 : neighbor? (bot c) Dir.L = some (bot (⟨c.val + 1, hc1⟩ : Fin m)) := by
     simpa [bot] using (neighbor?_mk_L (x := (1 : Fin 2)) (y := c) hc1)
   have h3 : neighbor? (bot (⟨c.val + 1, hc1⟩ : Fin m)) Dir.D
@@ -69,11 +69,11 @@ theorem permOf_row0Head {c : Fin m} (hc : c.val + 3 < m) :
   have h4 : neighbor? (top (⟨c.val + 1, hc1⟩ : Fin m)) Dir.L
       = some (top (⟨c.val + 2, hc2⟩ : Fin m)) := by
     simpa [top] using (neighbor?_mk_L (x := (0 : Fin 2))
-      (y := (⟨c.val + 1, hc1⟩ : Fin m)) (by simp only [Fin.val_mk]; omega))
+      (y := (⟨c.val + 1, hc1⟩ : Fin m)) (by simp only; omega))
   have h5 : neighbor? (top (⟨c.val + 2, hc2⟩ : Fin m)) Dir.L
       = some (top (⟨c.val + 3, hc3⟩ : Fin m)) := by
     simpa [top] using (neighbor?_mk_L (x := (0 : Fin 2))
-      (y := (⟨c.val + 2, hc2⟩ : Fin m)) (by simp only [Fin.val_mk]; omega))
+      (y := (⟨c.val + 2, hc2⟩ : Fin m)) (by simp only; omega))
   have h6 : neighbor? (top (⟨c.val + 3, hc3⟩ : Fin m)) Dir.U
       = some (bot (⟨c.val + 3, hc3⟩ : Fin m)) := by
     simpa [top, bot] using
@@ -101,49 +101,49 @@ theorem row0Head_apply_top1 {c : Fin m} (hc : c.val + 3 < m) :
         (b := bot (⟨c.val + 2, by omega⟩ : Fin m))
         (show top (⟨c.val + 1, by omega⟩ : Fin m) ≠ bot (⟨c.val + 3, by omega⟩ : Fin m) by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega)
+          simp only [Prod.mk.injEq] at this; omega)
         (show top (⟨c.val + 1, by omega⟩ : Fin m) ≠ bot (⟨c.val + 2, by omega⟩ : Fin m) by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega),
+          simp only [Prod.mk.injEq] at this; omega),
       Equiv.swap_apply_of_ne_of_ne (a := top (⟨c.val + 3, by omega⟩ : Fin m))
         (b := bot (⟨c.val + 3, by omega⟩ : Fin m))
         (show top (⟨c.val + 1, by omega⟩ : Fin m) ≠ top (⟨c.val + 3, by omega⟩ : Fin m) by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega)
+          simp only [Prod.mk.injEq] at this; omega)
         (show top (⟨c.val + 1, by omega⟩ : Fin m) ≠ bot (⟨c.val + 3, by omega⟩ : Fin m) by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega),
+          simp only [Prod.mk.injEq] at this; omega),
       Equiv.swap_apply_of_ne_of_ne (a := top (⟨c.val + 2, by omega⟩ : Fin m))
         (b := top (⟨c.val + 3, by omega⟩ : Fin m))
         (show top (⟨c.val + 1, by omega⟩ : Fin m) ≠ top (⟨c.val + 2, by omega⟩ : Fin m) by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega)
+          simp only [Prod.mk.injEq] at this; omega)
         (show top (⟨c.val + 1, by omega⟩ : Fin m) ≠ top (⟨c.val + 3, by omega⟩ : Fin m) by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega),
+          simp only [Prod.mk.injEq] at this; omega),
       Equiv.swap_apply_left,
       Equiv.swap_apply_of_ne_of_ne (a := bot (⟨c.val + 1, by omega⟩ : Fin m))
         (b := top (⟨c.val + 1, by omega⟩ : Fin m))
         (show top (⟨c.val + 2, by omega⟩ : Fin m) ≠ bot (⟨c.val + 1, by omega⟩ : Fin m) by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega)
+          simp only [Prod.mk.injEq] at this; omega)
         (show top (⟨c.val + 2, by omega⟩ : Fin m) ≠ top (⟨c.val + 1, by omega⟩ : Fin m) by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega),
+          simp only [Prod.mk.injEq] at this; omega),
       Equiv.swap_apply_of_ne_of_ne (a := bot c) (b := bot (⟨c.val + 1, by omega⟩ : Fin m))
         (show top (⟨c.val + 2, by omega⟩ : Fin m) ≠ bot c by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega)
+          simp only [Prod.mk.injEq] at this; omega)
         (show top (⟨c.val + 2, by omega⟩ : Fin m) ≠ bot (⟨c.val + 1, by omega⟩ : Fin m) by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega),
+          simp only [Prod.mk.injEq] at this; omega),
       Equiv.swap_apply_of_ne_of_ne (a := top c) (b := bot c)
         (show top (⟨c.val + 2, by omega⟩ : Fin m) ≠ top c by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega)
+          simp only [Prod.mk.injEq] at this; omega)
         (show top (⟨c.val + 2, by omega⟩ : Fin m) ≠ bot c by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega)]
+          simp only [Prod.mk.injEq] at this; omega)]
 
 /-- The head `U L D L L U R` sends `(0,c+2)` to `(0,c+3)`. -/
 theorem row0Head_apply_top2 {c : Fin m} (hc : c.val + 3 < m) :
@@ -155,49 +155,49 @@ theorem row0Head_apply_top2 {c : Fin m} (hc : c.val + 3 < m) :
         (b := bot (⟨c.val + 2, by omega⟩ : Fin m))
         (show top (⟨c.val + 2, by omega⟩ : Fin m) ≠ bot (⟨c.val + 3, by omega⟩ : Fin m) by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega)
+          simp only [Prod.mk.injEq] at this; omega)
         (show top (⟨c.val + 2, by omega⟩ : Fin m) ≠ bot (⟨c.val + 2, by omega⟩ : Fin m) by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega),
+          simp only [Prod.mk.injEq] at this; omega),
       Equiv.swap_apply_of_ne_of_ne (a := top (⟨c.val + 3, by omega⟩ : Fin m))
         (b := bot (⟨c.val + 3, by omega⟩ : Fin m))
         (show top (⟨c.val + 2, by omega⟩ : Fin m) ≠ top (⟨c.val + 3, by omega⟩ : Fin m) by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega)
+          simp only [Prod.mk.injEq] at this; omega)
         (show top (⟨c.val + 2, by omega⟩ : Fin m) ≠ bot (⟨c.val + 3, by omega⟩ : Fin m) by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega),
+          simp only [Prod.mk.injEq] at this; omega),
       Equiv.swap_apply_left,
       Equiv.swap_apply_of_ne_of_ne (a := top (⟨c.val + 1, by omega⟩ : Fin m))
         (b := top (⟨c.val + 2, by omega⟩ : Fin m))
         (show top (⟨c.val + 3, by omega⟩ : Fin m) ≠ top (⟨c.val + 1, by omega⟩ : Fin m) by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega)
+          simp only [Prod.mk.injEq] at this; omega)
         (show top (⟨c.val + 3, by omega⟩ : Fin m) ≠ top (⟨c.val + 2, by omega⟩ : Fin m) by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega),
+          simp only [Prod.mk.injEq] at this; omega),
       Equiv.swap_apply_of_ne_of_ne (a := bot (⟨c.val + 1, by omega⟩ : Fin m))
         (b := top (⟨c.val + 1, by omega⟩ : Fin m))
         (show top (⟨c.val + 3, by omega⟩ : Fin m) ≠ bot (⟨c.val + 1, by omega⟩ : Fin m) by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega)
+          simp only [Prod.mk.injEq] at this; omega)
         (show top (⟨c.val + 3, by omega⟩ : Fin m) ≠ top (⟨c.val + 1, by omega⟩ : Fin m) by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega),
+          simp only [Prod.mk.injEq] at this; omega),
       Equiv.swap_apply_of_ne_of_ne (a := bot c) (b := bot (⟨c.val + 1, by omega⟩ : Fin m))
         (show top (⟨c.val + 3, by omega⟩ : Fin m) ≠ bot c by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega)
+          simp only [Prod.mk.injEq] at this; omega)
         (show top (⟨c.val + 3, by omega⟩ : Fin m) ≠ bot (⟨c.val + 1, by omega⟩ : Fin m) by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega),
+          simp only [Prod.mk.injEq] at this; omega),
       Equiv.swap_apply_of_ne_of_ne (a := top c) (b := bot c)
         (show top (⟨c.val + 3, by omega⟩ : Fin m) ≠ top c by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega)
+          simp only [Prod.mk.injEq] at this; omega)
         (show top (⟨c.val + 3, by omega⟩ : Fin m) ≠ bot c by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega)]
+          simp only [Prod.mk.injEq] at this; omega)]
 
 /-- The head `U L D L L U R` sends `(1,c+1)` to `(0,c+1)`. -/
 theorem row0Head_apply_bot1 {c : Fin m} (hc : c.val + 3 < m) :
@@ -209,49 +209,49 @@ theorem row0Head_apply_bot1 {c : Fin m} (hc : c.val + 3 < m) :
         (b := bot (⟨c.val + 2, by omega⟩ : Fin m))
         (show bot (⟨c.val + 1, by omega⟩ : Fin m) ≠ bot (⟨c.val + 3, by omega⟩ : Fin m) by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega)
+          simp only [Prod.mk.injEq] at this; omega)
         (show bot (⟨c.val + 1, by omega⟩ : Fin m) ≠ bot (⟨c.val + 2, by omega⟩ : Fin m) by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega),
+          simp only [Prod.mk.injEq] at this; omega),
       Equiv.swap_apply_of_ne_of_ne (a := top (⟨c.val + 3, by omega⟩ : Fin m))
         (b := bot (⟨c.val + 3, by omega⟩ : Fin m))
         (show bot (⟨c.val + 1, by omega⟩ : Fin m) ≠ top (⟨c.val + 3, by omega⟩ : Fin m) by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega)
+          simp only [Prod.mk.injEq] at this; omega)
         (show bot (⟨c.val + 1, by omega⟩ : Fin m) ≠ bot (⟨c.val + 3, by omega⟩ : Fin m) by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega),
+          simp only [Prod.mk.injEq] at this; omega),
       Equiv.swap_apply_of_ne_of_ne (a := top (⟨c.val + 2, by omega⟩ : Fin m))
         (b := top (⟨c.val + 3, by omega⟩ : Fin m))
         (show bot (⟨c.val + 1, by omega⟩ : Fin m) ≠ top (⟨c.val + 2, by omega⟩ : Fin m) by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega)
+          simp only [Prod.mk.injEq] at this; omega)
         (show bot (⟨c.val + 1, by omega⟩ : Fin m) ≠ top (⟨c.val + 3, by omega⟩ : Fin m) by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega),
+          simp only [Prod.mk.injEq] at this; omega),
       Equiv.swap_apply_of_ne_of_ne (a := top (⟨c.val + 1, by omega⟩ : Fin m))
         (b := top (⟨c.val + 2, by omega⟩ : Fin m))
         (show bot (⟨c.val + 1, by omega⟩ : Fin m) ≠ top (⟨c.val + 1, by omega⟩ : Fin m) by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega)
+          simp only [Prod.mk.injEq] at this; omega)
         (show bot (⟨c.val + 1, by omega⟩ : Fin m) ≠ top (⟨c.val + 2, by omega⟩ : Fin m) by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega),
+          simp only [Prod.mk.injEq] at this; omega),
       Equiv.swap_apply_left,
       Equiv.swap_apply_of_ne_of_ne (a := bot c) (b := bot (⟨c.val + 1, by omega⟩ : Fin m))
         (show top (⟨c.val + 1, by omega⟩ : Fin m) ≠ bot c by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega)
+          simp only [Prod.mk.injEq] at this; omega)
         (show top (⟨c.val + 1, by omega⟩ : Fin m) ≠ bot (⟨c.val + 1, by omega⟩ : Fin m) by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega),
+          simp only [Prod.mk.injEq] at this; omega),
       Equiv.swap_apply_of_ne_of_ne (a := top c) (b := bot c)
         (show top (⟨c.val + 1, by omega⟩ : Fin m) ≠ top c by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega)
+          simp only [Prod.mk.injEq] at this; omega)
         (show top (⟨c.val + 1, by omega⟩ : Fin m) ≠ bot c by
           intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-          simp only [top, bot, Prod.mk.injEq] at this; omega)]
+          simp only [Prod.mk.injEq] at this; omega)]
 
 /-- The trace of the head `U L D L L U R` starting at `(0,c)` is `(1,c+2)`. -/
 theorem trace_row0Head {c : Fin m} (hc : c.val + 3 < m) :
@@ -260,7 +260,7 @@ theorem trace_row0Head {c : Fin m} (hc : c.val + 3 < m) :
   have hc2 : c.val + 2 < m := by omega
   have hc3 : c.val + 3 < m := hc
   have h1 : neighbor? (top c) Dir.U = some (bot c) := by
-    simpa [top, bot] using (neighbor?_mk_U (x := (0 : Fin 2)) (y := c) (by decide))
+    simp [top, bot]
   have h2 : neighbor? (bot c) Dir.L = some (bot (⟨c.val + 1, hc1⟩ : Fin m)) := by
     simpa [bot] using (neighbor?_mk_L (x := (1 : Fin 2)) (y := c) hc1)
   have h3 : neighbor? (bot (⟨c.val + 1, hc1⟩ : Fin m)) Dir.D
@@ -270,11 +270,11 @@ theorem trace_row0Head {c : Fin m} (hc : c.val + 3 < m) :
   have h4 : neighbor? (top (⟨c.val + 1, hc1⟩ : Fin m)) Dir.L
       = some (top (⟨c.val + 2, hc2⟩ : Fin m)) := by
     simpa [top] using (neighbor?_mk_L (x := (0 : Fin 2))
-      (y := (⟨c.val + 1, hc1⟩ : Fin m)) (by simp only [Fin.val_mk]; omega))
+      (y := (⟨c.val + 1, hc1⟩ : Fin m)) (by simp only; omega))
   have h5 : neighbor? (top (⟨c.val + 2, hc2⟩ : Fin m)) Dir.L
       = some (top (⟨c.val + 3, hc3⟩ : Fin m)) := by
     simpa [top] using (neighbor?_mk_L (x := (0 : Fin 2))
-      (y := (⟨c.val + 2, hc2⟩ : Fin m)) (by simp only [Fin.val_mk]; omega))
+      (y := (⟨c.val + 2, hc2⟩ : Fin m)) (by simp only; omega))
   have h6 : neighbor? (top (⟨c.val + 3, hc3⟩ : Fin m)) Dir.U
       = some (bot (⟨c.val + 3, hc3⟩ : Fin m)) := by
     simpa [top, bot] using
@@ -296,7 +296,7 @@ theorem applicableFrom_row0Head {c : Fin m} (hc : c.val + 3 < m) :
   have hc2 : c.val + 2 < m := by omega
   have hc3 : c.val + 3 < m := hc
   have h1 : neighbor? (top c) Dir.U = some (bot c) := by
-    simpa [top, bot] using (neighbor?_mk_U (x := (0 : Fin 2)) (y := c) (by decide))
+    simp [top, bot]
   have h2 : neighbor? (bot c) Dir.L = some (bot (⟨c.val + 1, hc1⟩ : Fin m)) := by
     simpa [bot] using (neighbor?_mk_L (x := (1 : Fin 2)) (y := c) hc1)
   have h3 : neighbor? (bot (⟨c.val + 1, hc1⟩ : Fin m)) Dir.D
@@ -306,11 +306,11 @@ theorem applicableFrom_row0Head {c : Fin m} (hc : c.val + 3 < m) :
   have h4 : neighbor? (top (⟨c.val + 1, hc1⟩ : Fin m)) Dir.L
       = some (top (⟨c.val + 2, hc2⟩ : Fin m)) := by
     simpa [top] using (neighbor?_mk_L (x := (0 : Fin 2))
-      (y := (⟨c.val + 1, hc1⟩ : Fin m)) (by simp only [Fin.val_mk]; omega))
+      (y := (⟨c.val + 1, hc1⟩ : Fin m)) (by simp only; omega))
   have h5 : neighbor? (top (⟨c.val + 2, hc2⟩ : Fin m)) Dir.L
       = some (top (⟨c.val + 3, hc3⟩ : Fin m)) := by
     simpa [top] using (neighbor?_mk_L (x := (0 : Fin 2))
-      (y := (⟨c.val + 2, hc2⟩ : Fin m)) (by simp only [Fin.val_mk]; omega))
+      (y := (⟨c.val + 2, hc2⟩ : Fin m)) (by simp only; omega))
   have h6 : neighbor? (top (⟨c.val + 3, hc3⟩ : Fin m)) Dir.U
       = some (bot (⟨c.val + 3, hc3⟩ : Fin m)) := by
     simpa [top, bot] using
@@ -355,25 +355,25 @@ theorem permOf_row0Loop {c : Fin m} (hc : c.val + 3 < m) :
   have h4 : neighbor? (bot (⟨c.val + 1, hc1⟩ : Fin m)) Dir.L
       = some (bot (⟨c.val + 2, hc2⟩ : Fin m)) := by
     simpa [bot] using (neighbor?_mk_L (x := (1 : Fin 2))
-      (y := (⟨c.val + 1, hc1⟩ : Fin m)) (by simp only [Fin.val_mk]; omega))
+      (y := (⟨c.val + 1, hc1⟩ : Fin m)) (by simp only; omega))
   have hab : bot (⟨c.val + 2, hc2⟩ : Fin m) ≠ top (⟨c.val + 2, hc2⟩ : Fin m) := by
     intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-    simp only [top, bot, Prod.mk.injEq] at this; omega
+    simp only [Prod.mk.injEq] at this; omega
   have hac : bot (⟨c.val + 2, hc2⟩ : Fin m) ≠ top (⟨c.val + 1, hc1⟩ : Fin m) := by
     intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-    simp only [top, bot, Prod.mk.injEq] at this; omega
+    simp only [Prod.mk.injEq] at this; omega
   have had : bot (⟨c.val + 2, hc2⟩ : Fin m) ≠ bot (⟨c.val + 1, hc1⟩ : Fin m) := by
     intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-    simp only [top, bot, Prod.mk.injEq] at this; omega
+    simp only [Prod.mk.injEq] at this; omega
   have hbc : top (⟨c.val + 2, hc2⟩ : Fin m) ≠ top (⟨c.val + 1, hc1⟩ : Fin m) := by
     intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-    simp only [top, bot, Prod.mk.injEq] at this; omega
+    simp only [Prod.mk.injEq] at this; omega
   have hbd : top (⟨c.val + 2, hc2⟩ : Fin m) ≠ bot (⟨c.val + 1, hc1⟩ : Fin m) := by
     intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-    simp only [top, bot, Prod.mk.injEq] at this; omega
+    simp only [Prod.mk.injEq] at this; omega
   have hcd : top (⟨c.val + 1, hc1⟩ : Fin m) ≠ bot (⟨c.val + 1, hc1⟩ : Fin m) := by
     intro h; have := congrArg (fun x : Cell 2 m => (x.1.val, x.2.val)) h
-    simp only [top, bot, Prod.mk.injEq] at this; omega
+    simp only [Prod.mk.injEq] at this; omega
   unfold row0Loop
   rw [permOf_cons_of_neighbor? h1, permOf_cons_of_neighbor? h2,
       permOf_cons_of_neighbor? h3, permOf_cons_of_neighbor? h4, permOf_nil, mul_one]
@@ -404,7 +404,7 @@ theorem trace_row0Loop {c : Fin m} (hc : c.val + 3 < m) :
   have h4 : neighbor? (bot (⟨c.val + 1, hc1⟩ : Fin m)) Dir.L
       = some (bot (⟨c.val + 2, hc2⟩ : Fin m)) := by
     simpa [bot] using (neighbor?_mk_L (x := (1 : Fin 2))
-      (y := (⟨c.val + 1, hc1⟩ : Fin m)) (by simp only [Fin.val_mk]; omega))
+      (y := (⟨c.val + 1, hc1⟩ : Fin m)) (by simp only; omega))
   unfold row0Loop
   rw [trace_cons_of_neighbor? h1, trace_cons_of_neighbor? h2,
       trace_cons_of_neighbor? h3, trace_cons_of_neighbor? h4, trace_nil]
@@ -493,16 +493,16 @@ noncomputable def row0Rev (c : Fin m) (k : ℕ) (h : c.val + k < m) : Equiv.Perm
 /-- The gadget is the reverse cycle of length two at `(0,c+1)`. -/
 theorem row0Gadget_eq_row0Rev {c : Fin m} (hc : c.val + 3 < m) :
     permOf (top c) row0Gadget
-      = row0Rev (⟨c.val + 1, by omega⟩ : Fin m) 2 (by simp only [Fin.val_mk]; omega) := by
+      = row0Rev (⟨c.val + 1, by omega⟩ : Fin m) 2 (by simp only; omega) := by
   rw [row0Rev, show List.replicate 2 Dir.L = [Dir.L, Dir.L] from rfl]
   have h1 : neighbor? (top (⟨c.val + 1, by omega⟩ : Fin m)) Dir.L
       = some (top (⟨c.val + 2, by omega⟩ : Fin m)) := by
     simpa [top] using (neighbor?_mk_L (x := (0 : Fin 2))
-      (y := (⟨c.val + 1, by omega⟩ : Fin m)) (by simp only [Fin.val_mk]; omega))
+      (y := (⟨c.val + 1, by omega⟩ : Fin m)) (by simp only; omega))
   have h2 : neighbor? (top (⟨c.val + 2, by omega⟩ : Fin m)) Dir.L
       = some (top (⟨c.val + 3, by omega⟩ : Fin m)) := by
     simpa [top] using (neighbor?_mk_L (x := (0 : Fin 2))
-      (y := (⟨c.val + 2, by omega⟩ : Fin m)) (by simp only [Fin.val_mk]; omega))
+      (y := (⟨c.val + 2, by omega⟩ : Fin m)) (by simp only; omega))
   rw [permOf_cons_of_neighbor? h1, permOf_cons_of_neighbor? h2, permOf_nil, mul_one,
       mul_inv_rev, Equiv.swap_inv, Equiv.swap_inv,
       Equiv.swap_comm (top (⟨c.val + 2, by omega⟩ : Fin m))
@@ -528,17 +528,17 @@ theorem forward_mul0 {c : Fin m} (k : ℕ) (hk : c.val + 2 + k < m) (hc : c.val 
 theorem row0Rev_mul_gadget {c : Fin m} (hc : c.val + 3 < m) (k : ℕ)
     (h : c.val + 3 + k < m) :
     row0Rev (⟨c.val + 3, by omega⟩ : Fin m) k h * permOf (top c) row0Gadget
-      = row0Rev (⟨c.val + 1, by omega⟩ : Fin m) (k + 2) (by simp only [Fin.val_mk]; omega) := by
+      = row0Rev (⟨c.val + 1, by omega⟩ : Fin m) (k + 2) (by simp only; omega) := by
   rw [row0Gadget_eq_row0Rev hc]
   rw [show row0Rev (⟨c.val + 3, by omega⟩ : Fin m) k h
         = (permOf (top (⟨c.val + 3, by omega⟩ : Fin m))
             (List.replicate k Dir.L))⁻¹ from rfl]
-  rw [show row0Rev (⟨c.val + 1, by omega⟩ : Fin m) 2 (by simp only [Fin.val_mk]; omega)
+  rw [show row0Rev (⟨c.val + 1, by omega⟩ : Fin m) 2 (by simp only; omega)
         = (permOf (top (⟨c.val + 1, by omega⟩ : Fin m))
             (List.replicate 2 Dir.L))⁻¹ from rfl]
   rw [← mul_inv_rev]
-  rw [forward_mul0 (c := ⟨c.val + 1, by omega⟩) k (by simp only [Fin.val_mk]; omega)
-        (by simp only [Fin.val_mk]; omega)]
+  rw [forward_mul0 (c := ⟨c.val + 1, by omega⟩) k (by simp only; omega)
+        (by simp only; omega)]
   rw [row0Rev]
 
 /-! ### The closed part of the same-row jump word -/
@@ -576,16 +576,16 @@ theorem mul_comm_of_fixes {α : Type*} (P Q : Equiv.Perm α)
 /-- A permutation fixing the first-row interval of a horizontal run conjugates it to itself. -/
 theorem row0_conj (l : ℕ) (c : Fin m) (hc : c.val + 2 * l + 3 < m) :
     permOf (top c) [Dir.L, Dir.L]
-      * row0Rev (⟨c.val + 3, by omega⟩ : Fin m) (2 * l) (by simp only [Fin.val_mk]; omega)
+      * row0Rev (⟨c.val + 3, by omega⟩ : Fin m) (2 * l) (by simp only; omega)
       * (permOf (top c) [Dir.L, Dir.L])⁻¹
       = row0Rev (⟨c.val + 3, by omega⟩ : Fin m) (2 * l)
-          (by simp only [Fin.val_mk]; omega) := by
+          (by simp only; omega) := by
   have hP : ∀ x : Cell 2 m,
-      (row0Rev (⟨c.val + 3, by omega⟩ : Fin m) (2 * l) (by simp only [Fin.val_mk]; omega)) x ≠ x →
+      (row0Rev (⟨c.val + 3, by omega⟩ : Fin m) (2 * l) (by simp only; omega)) x ≠ x →
       permOf (top c) [Dir.L, Dir.L] x = x := by
     intro x hx
     have hfix := (permOf_replicate_L2 (0 : Fin 2) (2 * l)
-      (⟨c.val + 3, by omega⟩ : Fin m) (by simp only [Fin.val_mk]; omega)).2.2
+      (⟨c.val + 3, by omega⟩ : Fin m) (by simp only; omega)).2.2
     have hL : permOf (top (⟨c.val + 3, by omega⟩ : Fin m))
         (List.replicate (2 * l) Dir.L) x ≠ x := by
       intro h
@@ -601,12 +601,12 @@ theorem row0_conj (l : ℕ) (c : Fin m) (hc : c.val + 2 * l + 3 < m) :
       exact hnot (Or.inl h)
     have hxge : c.val + 3 ≤ x.2.val := by
       by_contra h
-      exact hnot (Or.inr (Or.inl (by simp only [Fin.val_mk]; omega)))
+      exact hnot (Or.inr (Or.inl (by simp only; omega)))
     have hfix2 := (permOf_replicate_L2 (0 : Fin 2) 2 c (by omega)).2.2
     exact hfix2 x (Or.inr (Or.inr (by omega)))
   have hQ : ∀ x : Cell 2 m, permOf (top c) [Dir.L, Dir.L] x ≠ x →
       (row0Rev (⟨c.val + 3, by omega⟩ : Fin m) (2 * l)
-        (by simp only [Fin.val_mk]; omega)) x = x := by
+        (by simp only; omega)) x = x := by
     intro x hx
     have hfix := (permOf_replicate_L2 (0 : Fin 2) 2 c (by omega)).2.2
     have hPx : permOf (top c) [Dir.L, Dir.L] x ≠ x := hx
@@ -618,7 +618,7 @@ theorem row0_conj (l : ℕ) (c : Fin m) (hc : c.val + 2 * l + 3 < m) :
       by_contra h
       exact hnot (Or.inr (Or.inr (by omega)))
     have hfixL := (permOf_replicate_L2 (0 : Fin 2) (2 * l)
-      (⟨c.val + 3, by omega⟩ : Fin m) (by simp only [Fin.val_mk]; omega)).2.2
+      (⟨c.val + 3, by omega⟩ : Fin m) (by simp only; omega)).2.2
     have hLx : permOf (top (⟨c.val + 3, by omega⟩ : Fin m))
         (List.replicate (2 * l) Dir.L) x = x := hfixL x (Or.inr (Or.inl hxlt))
     rw [row0Rev]
@@ -627,7 +627,7 @@ theorem row0_conj (l : ℕ) (c : Fin m) (hc : c.val + 2 * l + 3 < m) :
     rw [Equiv.symm_apply_eq]
     exact hLx.symm
   have hcomm := mul_comm_of_fixes (permOf (top c) [Dir.L, Dir.L])
-    (row0Rev (⟨c.val + 3, by omega⟩ : Fin m) (2 * l) (by simp only [Fin.val_mk]; omega))
+    (row0Rev (⟨c.val + 3, by omega⟩ : Fin m) (2 * l) (by simp only; omega))
     hP hQ
   rw [hcomm]
   group
@@ -643,7 +643,7 @@ theorem trace_row0Closed : ∀ (l : ℕ) (c : Fin m) (hc : c.val + 2 * l + 1 < m
       have hc2 : c.val + 2 < m := by omega
       have hc3 : c.val + 3 < m := by omega
       have hc2l : (⟨c.val + 2, hc2⟩ : Fin m).val + 2 * l + 1 < m := by
-        simp only [Fin.val_mk]; omega
+        simp only; omega
       have htraceLL : trace (top c) [Dir.L, Dir.L] = top (⟨c.val + 2, hc2⟩ : Fin m) := by
         have := trace_replicate_L2 (0 : Fin 2) (c := c) 2 hc2
         simpa [List.replicate] using this
@@ -653,7 +653,7 @@ theorem trace_row0Closed : ∀ (l : ℕ) (c : Fin m) (hc : c.val + 2 * l + 1 < m
         have h2 : neighbor? (top (⟨c.val + 1, by omega⟩ : Fin m)) Dir.L
             = some (top (⟨c.val + 2, hc2⟩ : Fin m)) := by
           simpa [top] using (neighbor?_mk_L (x := (0 : Fin 2))
-            (y := (⟨c.val + 1, by omega⟩ : Fin m)) (by simp only [Fin.val_mk]; omega))
+            (y := (⟨c.val + 1, by omega⟩ : Fin m)) (by simp only; omega))
         have happ : ApplicableFrom (top c) [Dir.L, Dir.L] := by
           refine ⟨top (⟨c.val + 1, by omega⟩ : Fin m), h1, ?_⟩
           rw [applicableFrom_cons_of_neighbor? h2]
@@ -669,7 +669,7 @@ theorem trace_row0Closed : ∀ (l : ℕ) (c : Fin m) (hc : c.val + 2 * l + 1 < m
 theorem permOf_row0Closed : ∀ (l : ℕ) (c : Fin m) (hc : c.val + 2 * l + 1 < m),
     permOf (top c) (row0Closed l)
       = row0Rev (⟨c.val + 1, by omega⟩ : Fin m) (2 * l)
-          (by simp only [Fin.val_mk]; omega) := by
+          (by simp only; omega) := by
   intro l
   induction l with
   | zero =>
@@ -681,7 +681,7 @@ theorem permOf_row0Closed : ∀ (l : ℕ) (c : Fin m) (hc : c.val + 2 * l + 1 < 
       have hc2 : c.val + 2 < m := by omega
       have hc3 : c.val + 3 < m := by omega
       have hc2l : (⟨c.val + 2, hc2⟩ : Fin m).val + 2 * l + 1 < m := by
-        simp only [Fin.val_mk]; omega
+        simp only; omega
       have htraceLL : trace (top c) [Dir.L, Dir.L] = top (⟨c.val + 2, hc2⟩ : Fin m) := by
         have := trace_replicate_L2 (0 : Fin 2) (c := c) 2 hc2
         simpa [List.replicate] using this
@@ -691,7 +691,7 @@ theorem permOf_row0Closed : ∀ (l : ℕ) (c : Fin m) (hc : c.val + 2 * l + 1 < 
         have h2 : neighbor? (top (⟨c.val + 1, by omega⟩ : Fin m)) Dir.L
             = some (top (⟨c.val + 2, hc2⟩ : Fin m)) := by
           simpa [top] using (neighbor?_mk_L (x := (0 : Fin 2))
-            (y := (⟨c.val + 1, by omega⟩ : Fin m)) (by simp only [Fin.val_mk]; omega))
+            (y := (⟨c.val + 1, by omega⟩ : Fin m)) (by simp only; omega))
         have happ : ApplicableFrom (top c) [Dir.L, Dir.L] := by
           refine ⟨top (⟨c.val + 1, by omega⟩ : Fin m), h1, ?_⟩
           rw [applicableFrom_cons_of_neighbor? h2]
@@ -706,7 +706,7 @@ theorem permOf_row0Closed : ∀ (l : ℕ) (c : Fin m) (hc : c.val + 2 * l + 1 < 
         have h2 : neighbor? (top (⟨c.val + 1, by omega⟩ : Fin m)) Dir.L
             = some (top (⟨c.val + 2, hc2⟩ : Fin m)) := by
           simpa [top] using (neighbor?_mk_L (x := (0 : Fin 2))
-            (y := (⟨c.val + 1, by omega⟩ : Fin m)) (by simp only [Fin.val_mk]; omega))
+            (y := (⟨c.val + 1, by omega⟩ : Fin m)) (by simp only; omega))
         have happ : ApplicableFrom (top c) [Dir.L, Dir.L] := by
           refine ⟨top (⟨c.val + 1, by omega⟩ : Fin m), h1, ?_⟩
           rw [applicableFrom_cons_of_neighbor? h2]
@@ -723,7 +723,7 @@ theorem permOf_row0Closed : ∀ (l : ℕ) (c : Fin m) (hc : c.val + 2 * l + 1 < 
           permOf_append, hR2trace, hR2perm, hgadget]
       rw [show (permOf (top c) [Dir.L, Dir.L])
               * (row0Rev (⟨c.val + 3, by omega⟩ : Fin m) (2 * l)
-                    (by simp only [Fin.val_mk]; omega)
+                    (by simp only; omega)
                   * ((permOf (top c) [Dir.L, Dir.L])⁻¹
                     * (Equiv.swap (top (⟨c.val + 3, by omega⟩ : Fin m))
                           (top (⟨c.val + 2, by omega⟩ : Fin m))
@@ -731,7 +731,7 @@ theorem permOf_row0Closed : ∀ (l : ℕ) (c : Fin m) (hc : c.val + 2 * l + 1 < 
                           (top (⟨c.val + 1, by omega⟩ : Fin m)))))
             = (permOf (top c) [Dir.L, Dir.L]
                 * row0Rev (⟨c.val + 3, by omega⟩ : Fin m) (2 * l)
-                    (by simp only [Fin.val_mk]; omega)
+                    (by simp only; omega)
                 * (permOf (top c) [Dir.L, Dir.L])⁻¹)
               * (Equiv.swap (top (⟨c.val + 3, by omega⟩ : Fin m))
                     (top (⟨c.val + 2, by omega⟩ : Fin m))
@@ -757,30 +757,30 @@ theorem permOf_row0Word {c : Fin m} (l : ℕ) (hc : c.val + 2 * l + 1 < m) :
     rw [trace_cons_of_neighbor? h1, trace_nil]
   have hF : permOf (top (⟨c.val + 1, by omega⟩ : Fin m)) (List.replicate (2 * l) Dir.L)
       = (row0Rev (⟨c.val + 1, by omega⟩ : Fin m) (2 * l)
-          (by simp only [Fin.val_mk]; omega))⁻¹ := by
+          (by simp only; omega))⁻¹ := by
     rw [row0Rev, inv_inv]
   have htop : row0Rev (⟨c.val + 1, by omega⟩ : Fin m) (2 * l)
-      (by simp only [Fin.val_mk]; omega) (top c) = top c := by
+      (by simp only; omega) (top c) = top c := by
     rw [row0Rev]
     change (permOf (top (⟨c.val + 1, by omega⟩ : Fin m))
       (List.replicate (2 * l) Dir.L)).symm (top c) = top c
     rw [Equiv.symm_apply_eq]
     exact ((permOf_replicate_L2 (0 : Fin 2) (2 * l)
-      (⟨c.val + 1, by omega⟩ : Fin m) (by simp only [Fin.val_mk]; omega)).2.2 (top c)
-        (Or.inr (Or.inl (by simp only [top, Fin.val_mk]; omega)))).symm
+      (⟨c.val + 1, by omega⟩ : Fin m) (by simp only; omega)).2.2 (top c)
+        (Or.inr (Or.inl (by simp only; omega)))).symm
   have hbot : row0Rev (⟨c.val + 1, by omega⟩ : Fin m) (2 * l)
-      (by simp only [Fin.val_mk]; omega) (top (⟨c.val + 1, by omega⟩ : Fin m))
+      (by simp only; omega) (top (⟨c.val + 1, by omega⟩ : Fin m))
       = top (⟨c.val + 2 * l + 1, hc⟩ : Fin m) := by
     rw [row0Rev]
     change (permOf (top (⟨c.val + 1, by omega⟩ : Fin m))
       (List.replicate (2 * l) Dir.L)).symm (top (⟨c.val + 1, by omega⟩ : Fin m))
       = top (⟨c.val + 2 * l + 1, hc⟩ : Fin m)
     have hlast := (permOf_replicate_L2 (0 : Fin 2) (2 * l)
-      (⟨c.val + 1, by omega⟩ : Fin m) (by simp only [Fin.val_mk]; omega)).2.1
+      (⟨c.val + 1, by omega⟩ : Fin m) (by simp only; omega)).2.1
     rw [Equiv.symm_apply_eq]
     rw [show top (⟨c.val + 2 * l + 1, hc⟩ : Fin m)
           = top (⟨c.val + 1 + 2 * l, by omega⟩ : Fin m) from by
-          congr 1; apply Fin.ext; simp only [Fin.val_mk]; omega]
+          congr 1; apply Fin.ext; simp only; omega]
     exact hlast.symm
   rw [row0Word,
       show row0Closed l ++ List.replicate (2 * l + 1) Dir.L
@@ -789,7 +789,7 @@ theorem permOf_row0Word {c : Fin m} (l : ℕ) (hc : c.val + 2 * l + 1 < m) :
       permOf_append, hclosed, htrace, permOf_append, hL, hLtr, hF]
   rw [← mul_assoc, ← Equiv.swap_apply_apply
         (row0Rev (⟨c.val + 1, by omega⟩ : Fin m) (2 * l)
-          (by simp only [Fin.val_mk]; omega)) (top c) (top (⟨c.val + 1, by omega⟩ : Fin m)),
+          (by simp only; omega)) (top c) (top (⟨c.val + 1, by omega⟩ : Fin m)),
       htop, hbot]
 
 /-- The closed part of the same-row word has length `22 l`. -/

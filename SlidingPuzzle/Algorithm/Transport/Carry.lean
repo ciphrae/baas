@@ -80,7 +80,7 @@ theorem exists_transport_carry_exit [NeZero n] (hk : 2 ≤ k) (hn : n = k^4)
   have hn2 : 2 ≤ n := by rw [hn]; nlinarith [Nat.pow_le_pow_left hk 4]
   have hk2 : 4 ≤ k^2 := by nlinarith
   have hk3 : k^2+4 ≤ k^3 := by nlinarith [Nat.mul_le_mul_right k hk2]
-  have hiLt : i.val < k^2 := by simpa [pow_two] using i.isLt
+  have hiLt : i.val < k^2 := by simp [pow_two]
   have hrowEnd : ((groupRow j).val+1)*k^3 ≤ n := by
     calc
       _ ≤ k*k^3 := Nat.mul_le_mul_right _ (groupRow j).isLt
@@ -166,7 +166,7 @@ theorem exists_transport_carry_exit [NeZero n] (hk : 2 ≤ k) (hn : n = k^4)
   have hbS₂' : blank S₂ = e := by rw [hbS₂]
   have hS₂z : S₂ z = S b := by
     have hzb : (R, ⟨w+(b.2.val-1-w)+1, by omega⟩) = b := by
-      ext <;> simp [R] <;> omega
+      ext <;> simp [R]; omega
     have h1 : S₂ z = S₁' b := by rw [← hzb]; exact htile
     rw [h1]
     have hbw : b ∉ cs₁ := by
@@ -360,7 +360,7 @@ theorem exists_transport_exit_count [NeZero n] (hk : 2 ≤ k) (hn : n = k^4)
       exists_transport_exit_path hk hn A S hA i j hAS b hb ht hblank hrow
     have hbD : reservoir j (blank D) := by rw [hD]; exact hb
     refine ⟨D, p, hAD.clear hk hA hbD, hbD, hAD.boardMatrix_eq_swap hk i A D b ht hD, ?_⟩
-    have hiLt : i.val < k^2 := by simpa [pow_two] using i.isLt
+    have hiLt : i.val < k^2 := by simp [pow_two]
     have hcol := hblank.2.2
     have hb3 := hb.2.2.1
     have hdist : Nat.dist (blank S).2.val b.2.val ≤ k^2+1 := by

@@ -46,16 +46,16 @@ theorem eastTransportWord_spec (a c d v : ℕ) (ha : a+v+d+1 < n)
   have hh := reflectedWord_spec _ _ _ _ _ a happ ht hp (fun z hz => hfix z (Or.inl hz))
   have hstart : colRefl n m c(a+v+d,m-1-c+d)=c(a+v+d,c-d) := by
     simp only [colRefl_apply]
-    apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_rev] <;> omega
+    apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_rev]; omega
   have hend : colRefl n m c(a,m-1-c+1)=c(a,c-1) := by
     simp only [colRefl_apply]
-    apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_rev] <;> omega
+    apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_rev]; omega
   have htarget : colRefl n m c(a,m-1-c)=c(a,c) := by
     simp only [colRefl_apply]
-    apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_rev] <;> omega
+    apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_rev]; omega
   have hsource : colRefl n m c(a+v+d+1,m-1-c+d)=c(a+v+d+1,c-d) := by
     simp only [colRefl_apply]
-    apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_rev] <;> omega
+    apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_rev]; omega
   simpa only [eastTransportWord,hstart,hend,htarget,hsource] using hh
 
 /-- Predominantly horizontal northeast transport, ending below the tile. -/
@@ -78,16 +78,16 @@ theorem eastHorizontalWord_spec (a c d v : ℕ) (ha : a+d < n)
   have hh := reflectedWord_spec _ _ _ _ _ a happ ht hp (fun z hz => hfix z (Or.inl hz))
   have hstart : colRefl n m c(a+d,m-1-c+v+d)=c(a+d,c-v-d) := by
     simp only [colRefl_apply]
-    apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_rev] <;> omega
+    apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_rev]; omega
   have hend : colRefl n m c(a+1,m-1-c)=c(a+1,c) := by
     simp only [colRefl_apply]
-    apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_rev] <;> omega
+    apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_rev]; omega
   have htarget : colRefl n m c(a,m-1-c)=c(a,c) := by
     simp only [colRefl_apply]
-    apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_rev] <;> omega
+    apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_rev]; omega
   have hsource : colRefl n m c(a+d,m-1-c+v+d+1)=c(a+d,c-v-d-1) := by
     simp only [colRefl_apply]
-    apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_rev] <;> omega
+    apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_rev]; omega
   simpa only [eastHorizontalWord,hstart,hend,htarget,hsource] using hh
 
 /-- Northeast diagonal travel, with a row-only preservation statement. -/
@@ -110,16 +110,16 @@ theorem eastDiagonalRun_spec (d a c : ℕ) (ha : a+d+1 < n)
   have hh := reflectedWord_spec _ _ _ _ _ a happ ht hp hfix
   have hstart : colRefl n m c(a+d,m-1-c+d)=c(a+d,c-d) := by
     simp only [colRefl_apply]
-    apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_rev] <;> omega
+    apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_rev]; omega
   have hend : colRefl n m c(a,m-1-c)=c(a,c) := by
     simp only [colRefl_apply]
-    apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_rev] <;> omega
+    apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_rev]; omega
   have htarget : colRefl n m c(a+1,m-1-c)=c(a+1,c) := by
     simp only [colRefl_apply]
-    apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_rev] <;> omega
+    apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_rev]; omega
   have hsource : colRefl n m c(a+d+1,m-1-c+d)=c(a+d+1,c-d) := by
     simp only [colRefl_apply]
-    apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_rev] <;> omega
+    apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_rev]; omega
   simpa only [hstart,hend,htarget,hsource] using hh
 
 end SlidingPuzzle.Parberry

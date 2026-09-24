@@ -37,22 +37,22 @@ local notation "c(" a "," b ")" => ((⟨a, by omega⟩ : Fin n), (⟨b, by omega
 theorem nb_U (a y : ℕ) (h : a + 1 < n) (hy : y < m) :
     neighbor? c(a,y) Dir.U = some c(a+1,y) := by
   simp only [neighbor?]
-  rw [dif_pos (show (c(a,y) : Cell n m).1.1 + 1 < n by simp only [Fin.val_mk]; omega)]
+  rw [dif_pos (show (c(a,y) : Cell n m).1.1 + 1 < n by simp only; omega)]
 
 theorem nb_L (a y : ℕ) (h : y + 1 < m) (ha : a < n) :
     neighbor? c(a,y) Dir.L = some c(a,y+1) := by
   simp only [neighbor?]
-  rw [dif_pos (show (c(a,y) : Cell n m).2.1 + 1 < m by simp only [Fin.val_mk]; omega)]
+  rw [dif_pos (show (c(a,y) : Cell n m).2.1 + 1 < m by simp only; omega)]
 
 theorem nb_D (a y : ℕ) (h : 0 < a) (ha : a < n) (hy : y < m) :
     neighbor? c(a,y) Dir.D = some c(a-1,y) := by
   simp only [neighbor?]
-  rw [if_pos (show 0 < (c(a,y) : Cell n m).1.1 by simp only [Fin.val_mk]; omega)]
+  rw [if_pos (show 0 < (c(a,y) : Cell n m).1.1 by simp only; omega)]
 
 theorem nb_R (a y : ℕ) (h : 0 < y) (ha : a < n) (hy : y < m) :
     neighbor? c(a,y) Dir.R = some c(a,y-1) := by
   simp only [neighbor?]
-  rw [if_pos (show 0 < (c(a,y) : Cell n m).2.1 by simp only [Fin.val_mk]; omega)]
+  rw [if_pos (show 0 < (c(a,y) : Cell n m).2.1 by simp only; omega)]
 
 /-! ### The one-row raise step -/
 
@@ -101,17 +101,17 @@ theorem raiseStepR_fixes (a y : ℕ) (ha : a + 1 < n) (ha0 : 1 < a) (hy : y + 1 
   rw [raiseStepR_permOf a y ha (by omega) hy]
   simp only [Equiv.Perm.mul_apply]
   have n1 : z ≠ c(a-1,y+1) := by
-    intro h; have := congrArg (fun w : Cell n m => w.1.val) h; simp only [Fin.val_mk] at this; omega
+    intro h; have := congrArg (fun w : Cell n m => w.1.val) h; simp only at this; omega
   have n2 : z ≠ c(a-1,y) := by
-    intro h; have := congrArg (fun w : Cell n m => w.1.val) h; simp only [Fin.val_mk] at this; omega
+    intro h; have := congrArg (fun w : Cell n m => w.1.val) h; simp only at this; omega
   have n3 : z ≠ c(a,y+1) := by
-    intro h; have := congrArg (fun w : Cell n m => w.1.val) h; simp only [Fin.val_mk] at this; omega
+    intro h; have := congrArg (fun w : Cell n m => w.1.val) h; simp only at this; omega
   have n4 : z ≠ c(a+1,y+1) := by
-    intro h; have := congrArg (fun w : Cell n m => w.1.val) h; simp only [Fin.val_mk] at this; omega
+    intro h; have := congrArg (fun w : Cell n m => w.1.val) h; simp only at this; omega
   have n5 : z ≠ c(a+1,y) := by
-    intro h; have := congrArg (fun w : Cell n m => w.1.val) h; simp only [Fin.val_mk] at this; omega
+    intro h; have := congrArg (fun w : Cell n m => w.1.val) h; simp only at this; omega
   have n6 : z ≠ c(a,y) := by
-    intro h; have := congrArg (fun w : Cell n m => w.1.val) h; simp only [Fin.val_mk] at this; omega
+    intro h; have := congrArg (fun w : Cell n m => w.1.val) h; simp only at this; omega
   have hS1 : Equiv.swap c(a,y) c(a+1,y) z = z := Equiv.swap_apply_of_ne_of_ne n6 n5
   have hS2 : Equiv.swap c(a+1,y) c(a+1,y+1) z = z := Equiv.swap_apply_of_ne_of_ne n5 n4
   have hS3 : Equiv.swap c(a+1,y+1) c(a,y+1) z = z := Equiv.swap_apply_of_ne_of_ne n4 n3
@@ -207,13 +207,13 @@ theorem walkEnd_fixes (a y : ℕ) (ha : a + 1 < n) (hy : y + 1 < m)
   rw [walkEnd_permOf a y ha hy]
   simp only [Equiv.Perm.mul_apply]
   have n1 : z ≠ c(a+1,y+1) := by
-    intro h; have := congrArg (fun w : Cell n m => w.1.val) h; simp only [Fin.val_mk] at this; omega
+    intro h; have := congrArg (fun w : Cell n m => w.1.val) h; simp only at this; omega
   have n2 : z ≠ c(a,y+1) := by
-    intro h; have := congrArg (fun w : Cell n m => w.1.val) h; simp only [Fin.val_mk] at this; omega
+    intro h; have := congrArg (fun w : Cell n m => w.1.val) h; simp only at this; omega
   have n3 : z ≠ c(a+1,y) := by
-    intro h; have := congrArg (fun w : Cell n m => w.1.val) h; simp only [Fin.val_mk] at this; omega
+    intro h; have := congrArg (fun w : Cell n m => w.1.val) h; simp only at this; omega
   have n4 : z ≠ c(a,y) := by
-    intro h; have := congrArg (fun w : Cell n m => w.1.val) h; simp only [Fin.val_mk] at this; omega
+    intro h; have := congrArg (fun w : Cell n m => w.1.val) h; simp only at this; omega
   have hS1 : Equiv.swap c(a,y) c(a+1,y) z = z := Equiv.swap_apply_of_ne_of_ne n4 n3
   have hS2 : Equiv.swap c(a+1,y) c(a+1,y+1) z = z := Equiv.swap_apply_of_ne_of_ne n3 n1
   have hS3 : Equiv.swap c(a+1,y+1) c(a,y+1) z = z := Equiv.swap_apply_of_ne_of_ne n1 n2
@@ -224,7 +224,7 @@ theorem walkEnd_fixes (a y : ℕ) (ha : a + 1 < n) (hy : y + 1 < m)
 /-- `walkAuxR a y k` starts with the blank at `(a,y)` and the tile at `(a+1,y)`, performs
 `k` raise steps and then the terminal word, so the tile ends at `(a-k, y)`. -/
 def walkAuxR : ℕ → ℕ → ℕ → List Dir
-  | a, y, 0 => walkEnd
+  | _a, _y, 0 => walkEnd
   | a, y, k + 1 => raiseStepR ++ walkAuxR (a - 1) y k
 
 @[simp] theorem walkAuxR_zero (a y : ℕ) : walkAuxR a y 0 = walkEnd := rfl
@@ -255,18 +255,18 @@ theorem walkAuxR_spec (a y k : ℕ) (ha : a + 1 < n) (hk : k ≤ a) (hy : y + 1 
       · rw [walkAuxR_succ, applicableFrom_append, htrace]
         exact ⟨hstep, hIH.1⟩
       · rw [walkAuxR_succ, trace_append, htrace, hIH.2.1]
-        exact Prod.ext (Fin.ext (by simp only [Fin.val_mk]; omega)) rfl
+        exact Prod.ext (Fin.ext (by simp only; omega)) rfl
       · intro z hz
         rw [walkAuxR_succ, permOf_append, htrace, Equiv.Perm.mul_apply]
         rw [hIH.2.2.1 z (by omega), raiseStepR_fixes a y ha (by omega) hy (by omega)]
       · rw [walkAuxR_succ, permOf_append, htrace, Equiv.Perm.mul_apply]
         have harg : ((⟨a - (k + 1), by omega⟩ : Fin n), (⟨y, by omega⟩ : Fin m))
             = ((⟨a - 1 - k, by omega⟩ : Fin n), (⟨y, by omega⟩ : Fin m)) :=
-          Prod.ext (Fin.ext (by simp only [Fin.val_mk]; omega)) rfl
+          Prod.ext (Fin.ext (by simp only; omega)) rfl
         rw [harg, hIH.2.2.2]
         rw [show ((⟨a - 1 + 1, by omega⟩ : Fin n), (⟨y, by omega⟩ : Fin m))
               = ((⟨a, by omega⟩ : Fin n), (⟨y, by omega⟩ : Fin m)) from
-            Prod.ext (Fin.ext (by simp only [Fin.val_mk]; omega)) rfl,
+            Prod.ext (Fin.ext (by simp only; omega)) rfl,
           raiseStepR_apply_base a y ha (by omega) hy]
 
 /-- The trace set of the raise step stays in the two columns `y, y+1`. -/
@@ -283,7 +283,7 @@ theorem raiseStepR_traceSet_col (a y : ℕ) (ha : a + 1 < n) (ha0 : 0 < a) (hy :
       traceSet_cons_of_neighbor? hD2, traceSet_cons_of_neighbor? hR, traceSet_nil] at hz
   simp only [Finset.mem_insert, Finset.mem_singleton] at hz
   rcases hz with rfl | rfl | rfl | rfl | rfl | rfl <;>
-    simp only [Prod.snd, Fin.val_mk] <;> omega
+    simp only <;> omega
 
 /-- The trace set of the terminal word stays in the two columns `y, y+1`. -/
 theorem walkEnd_traceSet_col (a y : ℕ) (ha : a + 1 < n) (hy : y + 1 < m) :
@@ -297,7 +297,7 @@ theorem walkEnd_traceSet_col (a y : ℕ) (ha : a + 1 < n) (hy : y + 1 < m) :
       traceSet_nil] at hz
   simp only [Finset.mem_insert, Finset.mem_singleton] at hz
   rcases hz with rfl | rfl | rfl | rfl <;>
-    simp only [Prod.snd, Fin.val_mk] <;> omega
+    simp only <;> omega
 
 /-- The trace set of the recursive walk stays in the two columns `y, y+1`. -/
 theorem walkAuxR_traceSet_col (a y k : ℕ) (ha : a + 1 < n) (hk : k ≤ a) (hy : y + 1 < m) :
@@ -589,7 +589,7 @@ theorem navToAbove (r x0 y0 x y : ℕ) (hx : x < n) (hx0 : x0 < n) (hy : y < m) 
     · omega
 
 theorem navAbove (r x0 y0 x y : ℕ) (hx : x < n) (hx0 : x0 < n) (hy : y < m) (hy0 : y0 < m)
-    (hx0r : r + 1 ≤ x0) (hxr : r + 1 ≤ x - 1) (hm : 2 ≤ m) (hy1 : y + 1 < m)
+    (hx0r : r + 1 ≤ x0) (hxr : r + 1 ≤ x - 1) (_hm : 2 ≤ m) (hy1 : y + 1 < m)
     (hne : ¬ (x0 = x ∧ y0 = y)) :
     ∃ σ : List Dir, ApplicableFrom c(x0,y0) σ ∧ trace c(x0,y0) σ = c(x-1,y) ∧
       permOf c(x0,y0) σ c(x,y) = c(x,y) ∧
@@ -682,13 +682,13 @@ theorem raiseTile (r x0 y0 x y : ℕ) (hx : x < n) (hx0 : x0 < n) (hy : y < m) (
   have hwalk := walkAuxR_spec (x-1) y (x-r-2) (by rw [hx']; exact hx) (by omega) hy1
   have hcell : ((⟨(x-1)-(x-r-2), by omega⟩ : Fin n), (⟨y+1, by omega⟩ : Fin m))
       = ((⟨r+1, by omega⟩ : Fin n), (⟨y+1, by omega⟩ : Fin m)) :=
-    Prod.ext (Fin.ext (by simp only [Fin.val_mk]; omega)) rfl
+    Prod.ext (Fin.ext (by simp only; omega)) rfl
   have hcell2 : ((⟨r+1, by omega⟩ : Fin n), (⟨y, by omega⟩ : Fin m))
       = ((⟨(x-1)-(x-r-2), by omega⟩ : Fin n), (⟨y, by omega⟩ : Fin m)) :=
-    Prod.ext (Fin.ext (by simp only [Fin.val_mk]; omega)) rfl
+    Prod.ext (Fin.ext (by simp only; omega)) rfl
   have hcell3 : ((⟨(x-1)+1, by omega⟩ : Fin n), (⟨y, by omega⟩ : Fin m))
       = ((⟨x, by omega⟩ : Fin n), (⟨y, by omega⟩ : Fin m)) :=
-    Prod.ext (Fin.ext (by simp only [Fin.val_mk]; omega)) rfl
+    Prod.ext (Fin.ext (by simp only; omega)) rfl
   have hwalkcol := walkAuxR_traceSet_col (x-1) y (x-r-2) (by rw [hx']; exact hx) (by omega) hy1
   have hcol : ∀ z ∈ traceSet c(x0,y0) (σn ++ walkAuxR (x-1) y (x-r-2)),
       min y0 y ≤ z.2.val ∧ z.2.val ≤ max y0 (y+1) := by
@@ -731,13 +731,13 @@ theorem raiseTileLeft (r x0 y0 x y : ℕ) (hx : x < n) (hx0 : x0 < n) (hy : y < 
     rw [hc'] at this
     simpa using this
   have hp : colRefl n m c(x0, m-1-y0) = c(x0,y0) := by
-    rw [colRefl_apply]; congr 1; apply Fin.ext; rw [Fin.val_rev]; simp only [Fin.val_mk]; omega
+    rw [colRefl_apply]; congr 1; apply Fin.ext; rw [Fin.val_rev]; simp only; omega
   have htrc : colRefl n m c(r+1, (m-1-y)+1) = c(r+1,y-1) := by
-    rw [colRefl_apply]; congr 1; apply Fin.ext; rw [Fin.val_rev]; simp only [Fin.val_mk]; omega
+    rw [colRefl_apply]; congr 1; apply Fin.ext; rw [Fin.val_rev]; simp only; omega
   have hqc : colRefl n m c(r+1, m-1-y) = c(r+1,y) := by
-    rw [colRefl_apply]; congr 1; apply Fin.ext; rw [Fin.val_rev]; simp only [Fin.val_mk]; omega
+    rw [colRefl_apply]; congr 1; apply Fin.ext; rw [Fin.val_rev]; simp only; omega
   have htc : colRefl n m c(x, m-1-y) = c(x,y) := by
-    rw [colRefl_apply]; congr 1; apply Fin.ext; rw [Fin.val_rev]; simp only [Fin.val_mk]; omega
+    rw [colRefl_apply]; congr 1; apply Fin.ext; rw [Fin.val_rev]; simp only; omega
   have hzz : ∀ z : Cell n m, colRefl n m (colRefl n m z) = z := by
     intro z; rw [colRefl_apply, colRefl_apply]; congr 1; exact Fin.rev_rev z.2
   have hrow : ∀ z : Cell n m, (colRefl n m z).1.val = z.1.val := by
