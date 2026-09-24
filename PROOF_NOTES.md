@@ -25,6 +25,16 @@ nonblank tile is uniformly distributed over the orbit, giving mean
 `(2/3)*n³ + O(n)`; `M ≤ n³` for every board (`DistanceEstimates.lean`); and a
 reachable board with `M ≥ n³ - 3*n²` gives the matching lower bound.
 
+These bounds suffice, but the exact reachable maximum is known (not
+formalized): `n³ - n` for even `n` and `n³ - 2n + 1` for odd `n` (6 and 22 at
+`n = 2, 3`). For the upper bound, apply `|p - t| ≤ |p - c| + |t - c|` about the
+centre `c = (n-1)/2` to every label including the blank. This gives
+`M ≤ 2S - |b - c| - (n-1)`, where `S = 2n*Σₓ|x - c|` and `b` is the blank's
+cell; for even `n` also `|b - c| ≥ 1`. For attainment, take the half-turn
+board (reachable, `M = n³ - 2n + 2` or `n³ - 3n + 2`) and walk the blank
+monotonically from `(0,0)` to the centre. Each step pushes a tile away from a
+target on the far side of the centre, so `M` increases by one per step.
+
 **Factor two.** A legal move changes `M` by exactly one, so every path satisfies
 `length + M(end) = M(start) + 2*inefficientMoves` (`Path.length_add_manhattan`).
 The paper's bounds of the form `SOL ≤ D + α` (Section 5) need `2α` when `α` counts
