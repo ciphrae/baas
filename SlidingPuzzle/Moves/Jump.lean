@@ -1,7 +1,6 @@
 import SlidingPuzzle.Bridge.Words
-import Zhong.Algorithm.Lift
-import SlidingPuzzle.Moves.Transpose
 import Zhong.Algorithm.JumpAll
+import SlidingPuzzle.Moves.Transpose
 
 /-! Local blank/tile jumps in every orientation. The cost depends on the
 distance between the endpoints, rather than the side of the whole board. -/

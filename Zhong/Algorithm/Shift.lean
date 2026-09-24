@@ -1,10 +1,9 @@
+import Zhong.Algorithm.Move
 /-
 Copyright (c) 2026 The Zhong formalisation contributors. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Zhong formalisation contributors
 -/
-import Zhong.ClosedWalk
-import Zhong.Algorithm.Move
 
 /-!
 # The shift primitive (Lemma 1 of Zhong 2023)

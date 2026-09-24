@@ -1,7 +1,6 @@
-import SlidingPuzzle.Bridge.Distance
 import SlidingPuzzle.Bridge.Words
+import SlidingPuzzle.Bridge.Distance
 import SlidingPuzzle.StatisticalBounds
-import Zhong.Uniform
 import Zhong.Extremal
 
 /-! Statistics of the reachable sliding-puzzle orbit, identified with Zhong's orbit. -/

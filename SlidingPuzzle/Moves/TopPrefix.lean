@@ -1,3 +1,4 @@
+import Zhong.Algorithm.Assembly
 import SlidingPuzzle.Moves.Relabel
 import SlidingPuzzle.Moves.BlankAccess
 

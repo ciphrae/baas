@@ -1,4 +1,4 @@
-import SlidingPuzzle.Moves.Block
+import SlidingPuzzle.Basic
 
 /-! Solve a blank-free square by borrowing and returning the global blank. -/
 namespace SlidingPuzzle

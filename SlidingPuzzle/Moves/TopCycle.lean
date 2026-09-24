@@ -1,5 +1,5 @@
-import SlidingPuzzle.Moves.TopPrefix
-import SlidingPuzzle.Moves.Conjugation
+import SlidingPuzzle.Bridge.Words
+import Zhong.Algorithm.Place
 
 /-! A top-row three-cycle, with every other cell restored. -/
 namespace SlidingPuzzle

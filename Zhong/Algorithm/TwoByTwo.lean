@@ -1,9 +1,10 @@
+import Zhong.Orbit
+import Zhong.Group
 /-
 Copyright (c) 2026 The Zhong formalisation contributors. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Zhong formalisation contributors
 -/
-import Zhong.Group
 
 /-!
 # The `2 × 2` base case

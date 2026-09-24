@@ -1,7 +1,5 @@
 import SlidingPuzzle.Target
-import SlidingPuzzle.Moves.LocalSolve
 import SlidingPuzzle.Moves.BlankAccess
-import SlidingPuzzle.Moves.Conjugation
 
 /-! Square subboards and blank access from the global target corner. -/
 namespace SlidingPuzzle

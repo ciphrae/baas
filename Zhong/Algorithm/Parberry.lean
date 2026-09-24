@@ -1,9 +1,9 @@
+import Zhong.Algorithm.Lift
 /-
 Copyright (c) 2026 The Zhong formalisation contributors. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Zhong formalisation contributors
 -/
-import Zhong.Algorithm.Place
 
 /-!
 # Parberry's reduction-of-order algorithm (M7)

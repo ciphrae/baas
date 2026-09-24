@@ -1,6 +1,5 @@
-import SlidingPuzzle.Algorithm.Cardinalities
+import SlidingPuzzle.Algorithm.Partition
 import SlidingPuzzle.Moves.Relabel
-import SlidingPuzzle.Algorithm.Dimension
 
 /-! Finite tile allocations extend to a complete target board. -/
 namespace SlidingPuzzle

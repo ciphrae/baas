@@ -1,10 +1,10 @@
+import Zhong.Alternating
+import Zhong.Expectation
 /-
 Copyright (c) 2026 The Zhong formalisation contributors. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Zhong formalisation contributors
 -/
-import Zhong.ClosedWalk
-import Zhong.Expectation
 
 /-!
 # Uniform marginals of the orbit (step 4 of Proposition 9)
@@ -70,22 +70,6 @@ theorem mul_mem_walkSet {p : Cell n m} {h : Equiv.Perm (Cell n m)}
     rw [mem_walkSet]
     exact ⟨σ ++ τ, permOf_append_of_trace_eq p σ τ hσ⟩
   exact (Subgroup.closure_le (K := K)).mpr hgen hh g hg
-
-/-- Every element of the closed-walk group fixes the base point. -/
-theorem closedGroup_apply_self {p : Cell n m} {h : Equiv.Perm (Cell n m)}
-    (hh : h ∈ closedGroup p) : h p = p := by
-  refine Subgroup.closure_induction ?mem ?one ?mul ?inv hh
-  · rintro x ⟨σ, hσ, rfl⟩
-    have hsymm : (permOf p σ).symm p = p := by rw [permOf_symm_apply, hσ]
-    exact ((Equiv.symm_apply_eq (permOf p σ)).mp hsymm).symm
-  · simp
-  · intro x y hx hy ihx ihy
-    rw [Equiv.Perm.mul_apply, ihy, ihx]
-  · intro x hx ih
-    have h1 : x (x⁻¹ p) = p := by
-      rw [← Equiv.Perm.mul_apply, mul_inv_cancel, Equiv.Perm.one_apply]
-    apply Equiv.injective x
-    rw [h1, ih]
 
 /-- The closed-walk group is contained in the walk set. -/
 theorem closedGroup_le_walkSet (p : Cell n m) :

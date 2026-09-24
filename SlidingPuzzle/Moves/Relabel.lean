@@ -1,4 +1,4 @@
-import SlidingPuzzle.Moves.Placement
+import SlidingPuzzle.Paths
 
 /-! Relabeling tile names by a permutation which fixes the blank. -/
 namespace SlidingPuzzle

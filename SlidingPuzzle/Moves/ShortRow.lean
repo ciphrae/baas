@@ -1,4 +1,4 @@
-import SlidingPuzzle.Algorithm.Parberry.RowSolve
+import SlidingPuzzle.Parberry.RowSolve
 import SlidingPuzzle.Moves.Relabel
 import SlidingPuzzle.Moves.BlankAccess
 

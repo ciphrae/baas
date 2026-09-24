@@ -1,13 +1,11 @@
+import Zhong.Algorithm.JumpRow
+import Zhong.Algorithm.Orient
+import Zhong.Algorithm.Shift
 /-
 Copyright (c) 2026 The Zhong formalisation contributors. All rights reserved.
 Released under Apache 2.0 license as described in the LICENSE file.
 Authors: Zhong formalisation contributors
 -/
-import Zhong.Algorithm.Jump
-import Zhong.Algorithm.JumpRow
-import Zhong.Algorithm.Orient
-import Zhong.Algorithm.Move
-import Zhong.Algorithm.Shift
 
 /-!
 # Lifting operation sequences to two-row and two-column strips

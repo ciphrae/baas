@@ -1,4 +1,4 @@
-import SlidingPuzzle.Algorithm.Accounting
+import SlidingPuzzle.Manhattan
 import SlidingPuzzle.Moves.Local
 
 /-! Monotone corridor slides with an inefficient-move budget. Unlike a bound

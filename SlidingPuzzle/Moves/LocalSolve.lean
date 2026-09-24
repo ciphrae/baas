@@ -1,6 +1,4 @@
 import SlidingPuzzle.Moves.Relabel
-import SlidingPuzzle.Bridge.Reachability
-import SlidingPuzzle.Moves.Embedding
 
 /-! Cubic local solving without assuming the local parity condition. -/
 namespace SlidingPuzzle

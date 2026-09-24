@@ -1,6 +1,5 @@
-import SlidingPuzzle.Algorithm.BoardCounts
-import SlidingPuzzle.Algorithm.TransportPostcondition
-import SlidingPuzzle.Bridge.Reachability
+import SlidingPuzzle.OrbitParity
+import SlidingPuzzle.Algorithm.Transport.Postcondition
 
 /-! Contracts for the four global states used by the partition algorithm.
 

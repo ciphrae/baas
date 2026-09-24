@@ -1,5 +1,6 @@
-import SlidingPuzzle.Statistics
+import SlidingPuzzle.Manhattan
 import SlidingPuzzle.DistanceEstimates
+import SlidingPuzzle.Statistics
 
 /-! Unconditional statistical consequences of the proved boardwise bounds. -/
 namespace SlidingPuzzle

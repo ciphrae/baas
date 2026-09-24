@@ -1,5 +1,5 @@
-import SlidingPuzzle.Algorithm.TransportVerticalSchedule
-import SlidingPuzzle.Algorithm.TransportStep
+import SlidingPuzzle.Algorithm.Transport.VerticalSchedule
+import SlidingPuzzle.Algorithm.Transport.Step
 
 /-! Concrete vertical transport in both directions and the completed Transport
 contract. Only the initial good interval can incur inefficient ordinary slides;

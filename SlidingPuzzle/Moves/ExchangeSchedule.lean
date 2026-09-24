@@ -1,4 +1,4 @@
-import SlidingPuzzle.Moves.Exchange
+import SlidingPuzzle.Paths
 
 /-! A finite schedule of disjoint paired region exchanges.
 

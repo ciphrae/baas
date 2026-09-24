@@ -1,4 +1,4 @@
-import SlidingPuzzle.Manhattan
+import SlidingPuzzle.Basic
 
 namespace SlidingPuzzle
 

@@ -1,5 +1,7 @@
-import SlidingPuzzle.Moves.TopCycle
 import SlidingPuzzle.Algorithm.Allocation
+import SlidingPuzzle.Moves.Conjugation
+import SlidingPuzzle.Moves.TopPrefix
+import SlidingPuzzle.Moves.TopCycle
 
 /-! Three-tile rotations anywhere on the board, with linear move cost. -/
 namespace SlidingPuzzle

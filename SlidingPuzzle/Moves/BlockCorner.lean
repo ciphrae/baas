@@ -1,4 +1,3 @@
-import SlidingPuzzle.Moves.Block
 import SlidingPuzzle.Moves.ThreeCycle
 
 /-! Correct a block's corner before borrowing the blank. -/
