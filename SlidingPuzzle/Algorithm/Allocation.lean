@@ -1,5 +1,6 @@
 import SlidingPuzzle.Algorithm.Cardinalities
-import SlidingPuzzle.Moves.Prefix
+import SlidingPuzzle.Moves.Relabel
+import SlidingPuzzle.Algorithm.Dimension
 
 /-! Finite tile allocations extend to a complete target board. -/
 namespace SlidingPuzzle
@@ -120,77 +121,5 @@ theorem exists_board_with_group_assignment {k : ℕ} (hk : 2 ≤ k)
 
 /- Place prescribed groups in an outer prefix using only the finite capacity
 inequalities. The completed target board is constructed inside this theorem. -/
-/-- The same allocation proof accepts any protected-prefix cost. -/
-theorem exists_prefix_group_path_with_blank_of_bound {P k : ℕ}
-    (hprefix : PrefixPathBound P) (hk : 2 ≤ k) (B : Board n)
-    (d : ℕ) (hd : d+4 ≤ n) (s : Finset (Cell n))
-    (hs : ∀ c ∈ s, c.1.val<d ∨ c.2.val<d)
-    (required : {c // c ∈ s} → Partition.GroupIndex k)
-    (hcapacity : ∀ i, Fintype.card {c : {c // c ∈ s} // required c=i} ≤
-      (Partition.targetGroup (n := n) i).card) :
-    ∃ C : Board n, ∃ p : Path B C, p.length ≤ P*d*n^2 ∧
-      (∀ c : {c // c ∈ s}, C c.val ∈ Partition.targetGroup (required c)) ∧
-      d ≤ (blank C).1.val ∧ d ≤ (blank C).2.val := by
-  have hb : blank (target n) ∉ s := by
-    intro h
-    have hh := hs _ h
-    have he : blank (target n) =
-        (⟨n-1, Nat.sub_lt (NeZero.pos n) (by omega)⟩,
-         ⟨n-1, Nat.sub_lt (NeZero.pos n) (by omega)⟩) := by
-      apply (target n).injective
-      rw [target_bottomRight]
-      exact (target n).apply_symm_apply 0
-    rw [he] at hh
-    simp only at hh
-    omega
-  obtain ⟨T,hT,hassign⟩ := exists_board_with_group_assignment hk s hb required hcapacity
-  obtain ⟨C,p,hp,hC⟩ := hprefix B T hT d hd
-  refine ⟨C,p,hp,?_,?_⟩
-  · intro c
-    have he := hC c.val.1 c.val.2 (hs c.val c.property)
-    change C c.val=T c.val at he
-    rw [he]
-    exact hassign c
-  · have hnot : ¬ ((blank C).1.val < d ∨ (blank C).2.val < d) := by
-      intro h
-      have he : blank C = blank T := T.injective (by
-        rw [← hC (blank C).1 (blank C).2 h]
-        simp [blank, position])
-      rw [he, hT] at h
-      have ht : blank (target n) =
-          (⟨n-1, by have := NeZero.pos n; omega⟩,
-           ⟨n-1, by have := NeZero.pos n; omega⟩) := by
-        apply (target n).injective
-        rw [target_bottomRight]
-        simp [blank, position]
-      rw [ht] at h
-      simp only at h
-      omega
-    omega
-
-theorem exists_prefix_group_path_with_blank {k : ℕ} (hk : 2 ≤ k) (B : Board n)
-    (d : ℕ) (hd : d+4 ≤ n) (s : Finset (Cell n))
-    (hs : ∀ c ∈ s, c.1.val<d ∨ c.2.val<d)
-    (required : {c // c ∈ s} → Partition.GroupIndex k)
-    (hcapacity : ∀ i, Fintype.card {c : {c // c ∈ s} // required c=i} ≤
-      (Partition.targetGroup (n := n) i).card) :
-    ∃ C : Board n, ∃ p : Path B C, p.length ≤ 1004*d*n^2 ∧
-      (∀ c : {c // c ∈ s}, C c.val ∈ Partition.targetGroup (required c)) ∧
-      d ≤ (blank C).1.val ∧ d ≤ (blank C).2.val := by
-  exact exists_prefix_group_path_with_blank_of_bound prefixPathBound_current hk B d hd s hs required hcapacity
-
-/-- The group-placement interface without the optional blank-location conclusion. -/
-theorem exists_prefix_group_path {k : ℕ} (hk : 2 ≤ k) (B : Board n)
-    (d : ℕ) (hd : d+4 ≤ n) (s : Finset (Cell n))
-    (hs : ∀ c ∈ s, c.1.val<d ∨ c.2.val<d)
-    (required : {c // c ∈ s} → Partition.GroupIndex k)
-    (hcapacity : ∀ i, Fintype.card {c : {c // c ∈ s} // required c=i} ≤
-      (Partition.targetGroup (n := n) i).card) :
-    ∃ C : Board n, ∃ p : Path B C, p.length ≤ 1004*d*n^2 ∧
-      ∀ c : {c // c ∈ s}, C c.val ∈ Partition.targetGroup (required c) := by
-  obtain ⟨C,p,hp,hC,_⟩ :=
-    exists_prefix_group_path_with_blank hk B d hd s hs required hcapacity
-  exact ⟨C,p,hp,hC⟩
-
 end
 end SlidingPuzzle

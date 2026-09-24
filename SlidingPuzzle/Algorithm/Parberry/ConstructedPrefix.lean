@@ -1,5 +1,6 @@
 import SlidingPuzzle.Algorithm.Parberry.Solver
-import SlidingPuzzle.Moves.Prefix
+import SlidingPuzzle.Moves.Relabel
+import SlidingPuzzle.Algorithm.Dimension
 
 /-! The constructed layer gives unconditional protected-prefix paths, including
 arbitrary target labels. The explicit polynomial is retained before bounding it
@@ -53,41 +54,4 @@ theorem exists_prefix (B : Board n)
         have hz : z.1.val<1 ∨ z.2.val<1 := by dsimp [z]; omega
         rw [← he,hE,hD z.1 z.2 hz,cornerLabels_target]
 
-/-- On the smallest admissible residual sizes, the polynomial still improves
-on the older uniform prefix constant. -/
-theorem exists_prefix_uniform (B : Board n) (d : ℕ) (hd : d+4 ≤ n) :
-    ∃ C : Board n, ∃ p : Path B C, p.length ≤ 616*d*n^2 ∧
-      ∀ x y : Fin n, x.val<d ∨ y.val<d → C (x,y)=target n (x,y) := by
-  obtain ⟨C,p,hp,hC⟩ := exists_prefix B d hd
-  refine ⟨C,p,?_,hC⟩
-  by_cases hd0 : d=0
-  · subst d; simpa using hp
-  · have hn : 5 ≤ n := by omega
-    have hsquare : 5*n ≤ n^2 := by nlinarith
-    have hpoly : 15*n^2+3002*n+1 ≤ 616*n^2 := by nlinarith
-    have hmul := Nat.mul_le_mul_right d hpoly
-    nlinarith
-
-/-- Uniform prefix contract supplied by the actual constructed layer. -/
-theorem prefixPathBound : PrefixPathBound 616 := by
-  intro n _ B T hblank d hd
-  let e : Equiv.Perm (Tile n) := T.symm.trans (target n)
-  have he : e 0=0 := by
-    change target n (blank T)=0
-    rw [hblank]
-    simp [blank,position]
-  have hes : e.symm 0=0 := by
-    apply e.injective
-    simpa [he] using e.apply_symm_apply 0
-  obtain ⟨D,p,hp,hD⟩ := exists_prefix_uniform (relabel B e) d hd
-  have hq : ∃ q : Path B (relabel D e.symm), q.length ≤ 616*d*n^2 := by
-    have hh : ∃ q : Path (relabel (relabel B e) e.symm) (relabel D e.symm),
-        q.length ≤ 616*d*n^2 := ⟨p.relabel e.symm hes,by simpa using hp⟩
-    rwa [relabel_relabel_symm] at hh
-  obtain ⟨q,hq⟩ := hq
-  refine ⟨relabel D e.symm,q,hq,?_⟩
-  intro x y hxy
-  change e.symm (D (x,y))=T (x,y)
-  rw [hD x y hxy]
-  simp [e]
 end SlidingPuzzle.Parberry

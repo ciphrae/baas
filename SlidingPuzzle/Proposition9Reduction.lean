@@ -21,12 +21,4 @@ theorem gods_number_of_uniformApproximation (h : UniformApproximation) :
   conditional_gods_number h
     ⟨3, by norm_num, maximumManhattan_error_eventually⟩
 
-/-- Reduction of the concrete Proposition 9 to its remaining algorithmic theorem. -/
-theorem proposition9_of_uniformApproximation (h : UniformApproximation) :
-    ((fun n : ℕ => averageOptimalLength n - (2 / 3 : ℝ) * (n : ℝ) ^ 3)
-      =O[atTop] (fun n : ℕ => Real.rpow (n : ℝ) (11 / 4 : ℝ))) ∧
-    ((fun n : ℕ => godsNumber n - (n : ℝ) ^ 3)
-      =O[atTop] (fun n : ℕ => Real.rpow (n : ℝ) (11 / 4 : ℝ))) :=
-  ⟨average_optimal_length_of_uniformApproximation h, gods_number_of_uniformApproximation h⟩
-
 end SlidingPuzzle

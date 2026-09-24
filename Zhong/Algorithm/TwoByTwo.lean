@@ -61,10 +61,4 @@ theorem solve22_correct : ∀ B : Board 2 2,
 theorem solve22_applicable : ∀ B : Board 2 2, ApplicableFrom (blank B) (solve22 B) := by
   decide
 
-/-- **The `2 × 2` base case.**  Every board reachable from the target can be solved in at most
-`6` moves. -/
-theorem solve2x2 (B : Board 2 2) (h : Reachable B (target 2 2)) :
-    ∃ σ : List Dir, σ.length ≤ 6 ∧ actSeq B σ = target 2 2 :=
-  ⟨solve22 B, solve22_length B, solve22_correct B (reachable_sign_relPerm h)⟩
-
 end Zhong

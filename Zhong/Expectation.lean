@@ -39,14 +39,6 @@ i.e. `∑_{x < n} |x - a|`. -/
 def rowDistSum (n : ℕ) (a : Fin n) : ℤ :=
   ∑ x : Fin n, (Nat.dist (x : ℕ) (a : ℕ) : ℤ)
 
-/-- The row-distance sum written with absolute values. -/
-theorem rowDistSum_eq_abs (n : ℕ) (a : Fin n) :
-    rowDistSum n a = ∑ x : Fin n, |(x : ℤ) - (a : ℤ)| := by
-  unfold rowDistSum
-  apply Finset.sum_congr rfl
-  intro x _
-  rw [cast_dist]
-
 /-- Sum of the reversed index `n - x` over `Fin n`. -/
 theorem two_mul_sum_fin_sub (n : ℕ) :
     2 * (∑ a : Fin n, ((n : ℤ) - (a : ℤ))) = (n : ℤ) * ((n : ℤ) + 1) := by

@@ -1,6 +1,8 @@
 import SlidingPuzzle.Algorithm.Parberry.ColumnSolve
 import SlidingPuzzle.Algorithm.Parberry.RowSolve
-import SlidingPuzzle.Algorithm.Parberry.Reduction
+import SlidingPuzzle.Algorithm.ResidualReachability
+import SlidingPuzzle.Moves.Placement
+import Zhong.Algorithm.TwoByTwo
 
 /-! A constructed Parberry solver with leading coefficient five.
 The boundary routines give an explicit quadratic remainder. This theorem is
@@ -72,17 +74,5 @@ theorem exists_solution_cubic {n : ℕ} [NeZero n] (B : ReachableBoard n) (hn : 
     ∃ p : Path B.val (target n), p.length ≤ 5*n^3+1509*n^2+1505*n+4796 := by
   obtain ⟨p,hp⟩ := exists_solution_cubic_aux n hn B
   exact ⟨p,by omega⟩
-
-/-- The explicit quadratic remainder gives a uniform improvement on blocks of
-side at least eight. This is distinct from claiming an exact `5*n³` bound. -/
-theorem cubicSolverBound : CubicSolverBound 227 := by
-  intro n _ hn B
-  obtain ⟨p,hp⟩ := exists_solution_cubic_aux n (by omega) B
-  refine ⟨p,?_⟩
-  have hcube : 8*n^2 ≤ n^3 := by nlinarith [Nat.mul_le_mul_right (n^2) hn]
-  have hquad : 8*n ≤ n^2 := by nlinarith
-  have hlinear : 64*n ≤ n^3 := by nlinarith
-  have hconstant : 512 ≤ n^3 := by nlinarith
-  nlinarith
 
 end SlidingPuzzle.Parberry

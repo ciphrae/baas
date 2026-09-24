@@ -792,13 +792,6 @@ theorem permOf_row0Word {c : Fin m} (l : ℕ) (hc : c.val + 2 * l + 1 < m) :
           (by simp only [Fin.val_mk]; omega)) (top c) (top (⟨c.val + 1, by omega⟩ : Fin m)),
       htop, hbot]
 
-/-- **Lemma 2 (Zhong 2023), same-row case, board form.** -/
-theorem row0Word_effect {c : Fin m} (l : ℕ) (hc : c.val + 2 * l + 1 < m) [NeZero (2 * m)]
-    (B : Board 2 m) (hblank : blank B = top c) :
-    actSeq B (row0Word l)
-      = (Equiv.swap (top c) (top (⟨c.val + 2 * l + 1, hc⟩ : Fin m))).trans B := by
-  rw [actSeq_eq_permOf, hblank, permOf_row0Word l hc]
-
 /-- The closed part of the same-row word has length `22 l`. -/
 theorem row0Closed_length (l : ℕ) : (row0Closed l).length = 22 * l := by
   induction l with

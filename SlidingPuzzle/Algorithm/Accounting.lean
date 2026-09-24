@@ -58,18 +58,6 @@ theorem two_inefficientMoves_le_of_blank_swap {c : Cell n}
       omega
     omega
 
-/-- Summing inefficient-move bounds for four phases retains the factor two. -/
-theorem four_phase_solution_bound {B₁ B₂ B₃ : Board n}
-    (p₁ : Path A B₁) (p₂ : Path B₁ B₂) (p₃ : Path B₂ B₃)
-    (p₄ : Path B₃ (target n)) {e₁ e₂ e₃ e₄ : ℕ}
-    (h₁ : p₁.inefficientMoves ≤ e₁) (h₂ : p₂.inefficientMoves ≤ e₂)
-    (h₃ : p₃.inefficientMoves ≤ e₃) (h₄ : p₄.inefficientMoves ≤ e₄) :
-    (p₁.append (p₂.append (p₃.append p₄))).length ≤
-      manhattan A + 2 * (e₁ + e₂ + e₃ + e₄) := by
-  rw [solution_length]
-  simp only [inefficientMoves_append]
-  omega
-
 end Path
 
 /-- Convert an actual residual solution and a legal prefix into an OPT bound. -/

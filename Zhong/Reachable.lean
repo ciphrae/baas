@@ -102,16 +102,6 @@ theorem reachable_of_sign_relPerm [NeZero (n * m)] (hm : 3 ≤ m) (hn : 2 ≤ n)
   change (B₂.trans B₁.symm).trans B₁ = B₂
   rw [Equiv.trans_assoc, Equiv.symm_trans_self, Equiv.trans_refl]
 
-/-- **Proposition 3.**  For the `n × m` puzzle with `m ≥ 3` and `n ≥ 2`, two boards are
-reachable from one another if and only if their relative permutation has the parity of the
-product of the blank-cell parities. -/
-theorem reachable_iff_sign_relPerm [NeZero (n * m)] (hm : 3 ≤ m) (hn : 2 ≤ n)
-    {B₁ B₂ : Board n m} :
-    Reachable B₁ B₂ ↔
-      Equiv.Perm.sign (relPerm B₁ B₂)
-        = cellParity (blank B₁) * cellParity (blank B₂) :=
-  ⟨reachable_sign_relPerm, reachable_of_sign_relPerm hm hn⟩
-
 /-- Reachability is symmetric. -/
 theorem reachable_symm [NeZero (n * m)] (hm : 3 ≤ m) (hn : 2 ≤ n) {B₁ B₂ : Board n m}
     (h : Reachable B₁ B₂) : Reachable B₂ B₁ := by

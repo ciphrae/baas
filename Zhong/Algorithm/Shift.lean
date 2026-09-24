@@ -293,7 +293,6 @@ blank starts at `(0, start)`.  It moves the `k` rightmost columns `[start-k, sta
 the first two rows: column `start-k` is sent to column `start`, and every column
 `c > start-k` is sent to column `c-1` of the other row. -/
 
-
 noncomputable def sweepFun (m : ℕ) (lo hi : ℕ) (hhi : hi < m) (x : Cell 3 m) :
     Cell 3 m :=
   if _ : x.1 = (2 : Fin 3) then x
@@ -534,23 +533,6 @@ theorem fiveCycle_apply_a {α : Type*} [DecidableEq α] {a b c d e : α}
   rw [Equiv.swap_apply_of_ne_of_ne had hae, Equiv.swap_apply_of_ne_of_ne hac had,
       Equiv.swap_apply_of_ne_of_ne hab hac, Equiv.swap_apply_left]
 
-theorem fiveCycle_apply_b {α : Type*} [DecidableEq α] {a b c d e : α}
-    (hab : a ≠ b) (hac : a ≠ c) (had : a ≠ d) (hae : a ≠ e) (hbc : b ≠ c)
-    (hbd : b ≠ d) (hbe : b ≠ e) (hcd : c ≠ d) (hce : c ≠ e) (hde : d ≠ e) :
-    (Equiv.swap a b * Equiv.swap b c * Equiv.swap c d * Equiv.swap d e) b = c := by
-  change Equiv.swap a b (Equiv.swap b c (Equiv.swap c d (Equiv.swap d e b))) = c
-  rw [Equiv.swap_apply_of_ne_of_ne hbd hbe, Equiv.swap_apply_of_ne_of_ne hbc hbd,
-      Equiv.swap_apply_left, Equiv.swap_apply_of_ne_of_ne hac.symm hbc.symm]
-
-theorem fiveCycle_apply_c {α : Type*} [DecidableEq α] {a b c d e : α}
-    (hab : a ≠ b) (hac : a ≠ c) (had : a ≠ d) (hae : a ≠ e) (hbc : b ≠ c)
-    (hbd : b ≠ d) (hbe : b ≠ e) (hcd : c ≠ d) (hce : c ≠ e) (hde : d ≠ e) :
-    (Equiv.swap a b * Equiv.swap b c * Equiv.swap c d * Equiv.swap d e) c = d := by
-  change Equiv.swap a b (Equiv.swap b c (Equiv.swap c d (Equiv.swap d e c))) = d
-  rw [Equiv.swap_apply_of_ne_of_ne hcd hce, Equiv.swap_apply_left,
-      Equiv.swap_apply_of_ne_of_ne hbd.symm hcd.symm,
-      Equiv.swap_apply_of_ne_of_ne had.symm hbd.symm]
-
 theorem fiveCycle_apply_d {α : Type*} [DecidableEq α] {a b c d e : α}
     (hab : a ≠ b) (hac : a ≠ c) (had : a ≠ d) (hae : a ≠ e) (hbc : b ≠ c)
     (hbd : b ≠ d) (hbe : b ≠ e) (hcd : c ≠ d) (hce : c ≠ e) (hde : d ≠ e) :
@@ -569,32 +551,6 @@ theorem fiveCycle_apply_e {α : Type*} [DecidableEq α] {a b c d e : α}
       Equiv.swap_apply_right]
 
 /-! ### The horizontal run `L^k` -/
-
-/-- The cells visited by a horizontal `L`-run stay in its row and in the interval
-`[c, c+k]`. -/
-theorem traceSet_replicate_L_subset {m : ℕ} (k : ℕ) :
-    ∀ (c : Fin m) (hk : c.val + k < m),
-      ∀ y ∈ traceSet ((0 : Fin 3), c) (List.replicate k Dir.L),
-        y.1.val = 0 ∧ c.val ≤ y.2.val ∧ y.2.val ≤ c.val + k := by
-  induction k with
-  | zero =>
-      intro c hk y hy
-      rw [List.replicate_zero, traceSet_nil, Finset.mem_singleton] at hy
-      subst hy
-      simp
-  | succ k ih =>
-      intro c hk y hy
-      have hL : neighbor? ((0 : Fin 3), c) Dir.L
-          = some ((0 : Fin 3), (⟨c.val + 1, by omega⟩ : Fin m)) := by
-        have hlt : c.val + 1 < m := by omega
-        have h := neighbor?_mk_L (x := (0 : Fin 3)) (y := c) hlt
-        rw [h]
-      rw [List.replicate_succ, traceSet_cons_of_neighbor? hL, Finset.mem_insert] at hy
-      rcases hy with rfl | hy
-      · simp
-      · have := ih (⟨c.val + 1, by omega⟩ : Fin m) (by simp only [Fin.val_mk]; omega) y hy
-        simp only [Fin.val_mk] at this ⊢
-        omega
 
 /-- A horizontal `L`-run induces the successor map on its row, fixes the cells outside
 its row, and fixes the cells to the left of its start and to the right of its end. -/
@@ -904,24 +860,6 @@ theorem permOf_LDRD_fix_2 {m : ℕ} (hm : 1 < m) {c : ℕ} (hc : c < m) (hc2 : 2
   · intro h; have := congrArg (fun x : Cell 3 m => (x.1.val, x.2.val)) h
     simp only [Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at this; omega
 
-
-/-- The head fixes `(1,c)` for `c ≥ 2`. -/
-theorem permOf_LDRD_fix_1 {m : ℕ} (hm : 1 < m) {c : ℕ} (hc : c < m) (hc2 : 2 ≤ c) :
-    permOf ((2 : Fin 3), (⟨0, by omega⟩ : Fin m)) [Dir.L, Dir.D, Dir.R, Dir.D]
-        ((1 : Fin 3), (⟨c, hc⟩ : Fin m))
-      = ((1 : Fin 3), (⟨c, hc⟩ : Fin m)) := by
-  apply permOf_LDRD_of_not_mem hm
-  · intro h; have := congrArg (fun x : Cell 3 m => (x.1.val, x.2.val)) h
-    simp only [Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at this; omega
-  · intro h; have := congrArg (fun x : Cell 3 m => (x.1.val, x.2.val)) h
-    simp only [Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at this; omega
-  · intro h; have := congrArg (fun x : Cell 3 m => (x.1.val, x.2.val)) h
-    simp only [Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at this; omega
-  · intro h; have := congrArg (fun x : Cell 3 m => (x.1.val, x.2.val)) h
-    simp only [Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at this; omega
-  · intro h; have := congrArg (fun x : Cell 3 m => (x.1.val, x.2.val)) h
-    simp only [Prod.fst, Prod.snd, Fin.val_mk, Prod.mk.injEq] at this; omega
-
 /-- The action of the head as `eps ∘ λ`. -/
 theorem permOf_headWord_eq {m : ℕ} (hm : 1 < m) :
     permOf ((2 : Fin 3), (⟨0, by omega⟩ : Fin m)) (headWord m)
@@ -1000,20 +938,6 @@ theorem permOf_headWord_20 {m : ℕ} (hm : 1 < m) :
     (by simp only [Fin.val_mk]; omega)).2.2 ((2 : Fin 3), (⟨0, by omega⟩ : Fin m)) (Or.inl (by simp))
   rw [hlam, permOf_LDRD_a hm]
 
-/-- The head fixes `(1,c)` for `c ≥ 2`. -/
-theorem permOf_headWord_1 {m : ℕ} (hm : 1 < m) {c : ℕ} (hc : c < m) (hc2 : 2 ≤ c) :
-    permOf ((2 : Fin 3), (⟨0, by omega⟩ : Fin m)) (headWord m)
-        ((1 : Fin 3), (⟨c, hc⟩ : Fin m))
-      = ((1 : Fin 3), (⟨c, hc⟩ : Fin m)) := by
-  rw [permOf_headWord_eq hm]
-  change permOf ((2 : Fin 3), (⟨0, by omega⟩ : Fin m)) [Dir.L, Dir.D, Dir.R, Dir.D]
-      (permOf ((0 : Fin 3), (⟨0, by omega⟩ : Fin m)) (List.replicate (m - 1) Dir.L)
-        ((1 : Fin 3), (⟨c, hc⟩ : Fin m)))
-    = ((1 : Fin 3), (⟨c, hc⟩ : Fin m))
-  have hlam := (permOf_replicate_L (m - 1) (⟨0, by omega⟩ : Fin m)
-    (by simp only [Fin.val_mk]; omega)).2.2 ((1 : Fin 3), (⟨c, hc⟩ : Fin m)) (Or.inl (by simp))
-  rw [hlam, permOf_LDRD_fix_1 hm hc hc2]
-
 /-- The head fixes `(2,c)` for `c ≥ 2`. -/
 theorem permOf_headWord_2 {m : ℕ} (hm : 1 < m) {c : ℕ} (hc : c < m) (hc2 : 2 ≤ c) :
     permOf ((2 : Fin 3), (⟨0, by omega⟩ : Fin m)) (headWord m)
@@ -1029,33 +953,6 @@ theorem permOf_headWord_2 {m : ℕ} (hm : 1 < m) {c : ℕ} (hc : c < m) (hc2 : 2
   rw [hlam, permOf_LDRD_fix_2 hm hc hc2]
 
 /-! ### The tail `U U R D D L U R U` -/
-
-theorem path3_apply_a {α : Type*} [DecidableEq α] {a b c d : α}
-    (hab : a ≠ b) (hac : a ≠ c) (had : a ≠ d) (hbc : b ≠ c) (hbd : b ≠ d) (hcd : c ≠ d) :
-    (Equiv.swap a b * Equiv.swap b c * Equiv.swap c d) a = b := by
-  change Equiv.swap a b (Equiv.swap b c (Equiv.swap c d a)) = b
-  rw [Equiv.swap_apply_of_ne_of_ne hac had, Equiv.swap_apply_of_ne_of_ne hab hac,
-      Equiv.swap_apply_left]
-
-theorem path3_apply_b {α : Type*} [DecidableEq α] {a b c d : α}
-    (hab : a ≠ b) (hac : a ≠ c) (had : a ≠ d) (hbc : b ≠ c) (hbd : b ≠ d) (hcd : c ≠ d) :
-    (Equiv.swap a b * Equiv.swap b c * Equiv.swap c d) b = c := by
-  change Equiv.swap a b (Equiv.swap b c (Equiv.swap c d b)) = c
-  rw [Equiv.swap_apply_of_ne_of_ne hbc hbd, Equiv.swap_apply_left,
-      Equiv.swap_apply_of_ne_of_ne hac.symm hbc.symm]
-
-theorem path3_apply_c {α : Type*} [DecidableEq α] {a b c d : α}
-    (hab : a ≠ b) (hac : a ≠ c) (had : a ≠ d) (hbc : b ≠ c) (hbd : b ≠ d) (hcd : c ≠ d) :
-    (Equiv.swap a b * Equiv.swap b c * Equiv.swap c d) c = d := by
-  change Equiv.swap a b (Equiv.swap b c (Equiv.swap c d c)) = d
-  rw [Equiv.swap_apply_left, Equiv.swap_apply_of_ne_of_ne hbd.symm hcd.symm,
-      Equiv.swap_apply_of_ne_of_ne had.symm hbd.symm]
-
-theorem path3_apply_d {α : Type*} [DecidableEq α] {a b c d : α}
-    (hab : a ≠ b) (hac : a ≠ c) (had : a ≠ d) (hbc : b ≠ c) (hbd : b ≠ d) (hcd : c ≠ d) :
-    (Equiv.swap a b * Equiv.swap b c * Equiv.swap c d) d = a := by
-  change Equiv.swap a b (Equiv.swap b c (Equiv.swap c d d)) = a
-  rw [Equiv.swap_apply_right, Equiv.swap_apply_right, Equiv.swap_apply_right]
 
 theorem trace_tail_UU {m : ℕ} (hm : 1 < m) :
     trace ((0 : Fin 3), (⟨1, hm⟩ : Fin m)) [Dir.U, Dir.U]
@@ -1362,24 +1259,6 @@ theorem permOf_shiftWord_row2 {m : ℕ} (hm : 1 < m) (c : Fin m) :
       rw [show sweepFun m 1 (m - 1) hsm ((2 : Fin 3), c) = ((2 : Fin 3), c) from
             sweepFun_row2 1 (m - 1) hsm c,
           permOf_headWord_2 hm c.isLt hc2]
-
-/-- **Lemma 1 (Zhong 2023).**  If the blank of a `3 × m` board is at `(2,0)`, then acting
-`θ_m` moves the first row down to the second row and fixes the third row. -/
-theorem shiftWord_effect {m : ℕ} (hm : 1 < m) [NeZero (3 * m)] (B : Board 3 m)
-    (hblank : blank B = ((2 : Fin 3), (⟨0, by omega⟩ : Fin m))) :
-    (∀ c : Fin m, actSeq B (shiftWord m) ((1 : Fin 3), c) = B ((0 : Fin 3), c)) ∧
-    (∀ c : Fin m, actSeq B (shiftWord m) ((2 : Fin 3), c) = B ((2 : Fin 3), c)) := by
-  constructor
-  · intro c
-    rw [actSeq_eq_permOf, hblank]
-    change B (permOf ((2 : Fin 3), (⟨0, by omega⟩ : Fin m)) (shiftWord m) ((1 : Fin 3), c))
-      = B ((0 : Fin 3), c)
-    rw [permOf_shiftWord_row1 hm c]
-  · intro c
-    rw [actSeq_eq_permOf, hblank]
-    change B (permOf ((2 : Fin 3), (⟨0, by omega⟩ : Fin m)) (shiftWord m) ((2 : Fin 3), c))
-      = B ((2 : Fin 3), c)
-    rw [permOf_shiftWord_row2 hm c]
 
 /-- The sweep word `(R U L D R)^k` has length `5k`. -/
 theorem sweepWord_length (k : ℕ) : (sweepWord k).length = 5 * k := by

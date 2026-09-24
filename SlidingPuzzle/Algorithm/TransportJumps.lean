@@ -60,23 +60,5 @@ theorem exists_group_vertical_jump {n k : ℕ} [NeZero n]
     have hp : p.length = 1 := rfl
     omega
 
-/-- A band crossing between group-i vertical corridors needs no parity
-assumption. An adjacent buffer in the starting corridor is enough. In
-Algorithm 4 the gap is `k+1`, giving the short-jump budget `26*(k+3)`. -/
-theorem exists_transport_band_jump {n k : ℕ} [NeZero n]
-    (hk : 2 ≤ k) (hn : 2 ≤ n) (A B : Board n) (hA : Clear (k := k) A)
-    (i l j : GroupIndex k) (hAB : GroupEquivalent i A B)
-    (b u : Cell n) (hb : vertical j i b) (hu : vertical l i u)
-    (hbne : b ≠ blank B) (hune : u ≠ blank B)
-    (hbc : b.2 = (blank B).2)
-    (hadj : gridDistance (blank B) u = 1)
-    (hgap : Nat.dist (blank B).1.val b.1.val ≤ k+1) :
-    ∃ D : Board n, ∃ p : Path B D,
-      blank D = b ∧ GroupEquivalent i A D ∧ p.length ≤ 26*(k+3) := by
-  obtain ⟨D, p, hD, hBD, hp⟩ := exists_group_vertical_jump hk hn B i b u
-    (hAB.mem_targetGroup (hA.2 j i b hb) hbne)
-    (hAB.mem_targetGroup (hA.2 l i u hu) hune) hbc hadj
-  exact ⟨D, p, hD, hAB.trans hBD, hp.trans (Nat.mul_le_mul_left 26 (by omega))⟩
-
 end
 end SlidingPuzzle.Partition

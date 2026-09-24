@@ -1,4 +1,5 @@
-import SlidingPuzzle.Moves.Strips
+import SlidingPuzzle.Bridge.Words
+import Zhong.Algorithm.Lift
 import SlidingPuzzle.Moves.Transpose
 import Zhong.Algorithm.JumpAll
 

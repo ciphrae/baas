@@ -47,30 +47,6 @@ theorem transportWord_spec (a b d v : ℕ) (ha : a+v+d+1 < n)
     have hh := hds z hmem
     omega
 
-/-- A concrete public-model path implementing the cheap southeast-to-northwest
-placement route, with the required prefix preservation. -/
-theorem exists_transport_path {n : ℕ} [NeZero n] (B : Board n)
-    (a b d v : ℕ) (ha : a+v+d+1 < n) (hb : b+d < n) (hb1 : b+1 < n)
-    (hblank : blank B = (⟨a+v+d,by omega⟩,⟨b+d,hb⟩)) :
-    ∃ C : Board n, ∃ p : Path B C,
-      p.length ≤ 6*d+5*v+3 ∧ blank C = (⟨a,by omega⟩,⟨b+1,hb1⟩) ∧
-      C (⟨a,by omega⟩,⟨b,by omega⟩) = B (⟨a+v+d+1,ha⟩,⟨b+d,hb⟩) ∧
-      ∀ z, z.1.val<a ∨ z.2.val<b → C z = B z := by
-  obtain ⟨_,ht,hp,hfix⟩ := transportWord_spec (n := n) (m := n) a b d v ha hb hb1
-  obtain ⟨p,hlen⟩ := path_of_zhong_word B (transportWord a b d v)
-  refine ⟨Zhong.actSeq B (transportWord a b d v),p,by simpa using hlen,?_,?_,?_⟩
-  · change Zhong.blank (Zhong.actSeq B (transportWord a b d v)) = _
-    rw [Zhong.blank_actSeq]
-    change trace (blank B) (transportWord a b d v) = _
-    rw [hblank,ht]
-  · rw [Zhong.actSeq_eq_permOf]
-    change B (permOf (blank B) (transportWord a b d v) _) = _
-    rw [hblank,hp]
-  · intro z hz
-    rw [Zhong.actSeq_eq_permOf]
-    change B (permOf (blank B) (transportWord a b d v) z) = B z
-    rw [hblank,hfix z hz]
-
 /-- Navigate from the preceding row position and then place a tile from the
 southeast sector where its vertical displacement dominates. -/
 def southeastWord (a b d v : ℕ) : List Dir :=
@@ -110,31 +86,6 @@ theorem southeastWord_spec (a b d v : ℕ)
   · intro z hz
     rw [southeastWord,permOf_append,hnt,Equiv.Perm.mul_apply,
       htfix z (by omega),hnfix z (by omega)]
-
-/-- A real legal placement path, including initial blank routing, for the tall
-southeast sector of a Parberry row placement. -/
-theorem exists_southeast_path {n : ℕ} [NeZero n] (B : Board n)
-    (a b d v : ℕ) (ha : a+v+d+2 < n) (hb : b+d+1 < n) (hb2 : b+2 < n)
-    (hblank : blank B=(⟨a+1,by omega⟩,⟨b,by omega⟩)) :
-    ∃ C : Board n, ∃ p : Path B C,
-      p.length ≤ 8*d+6*v+9 ∧ blank C=(⟨a,by omega⟩,⟨b+2,hb2⟩) ∧
-      C (⟨a,by omega⟩,⟨b+1,by omega⟩)=B (⟨a+v+d+2,ha⟩,⟨b+d+1,hb⟩) ∧
-      ∀ z, z.1.val<a ∨ (z.1.val=a ∧ z.2.val<b+1) → C z=B z := by
-  obtain ⟨_,ht,hp,hfix⟩ := southeastWord_spec (n := n) (m := n) a b d v ha hb hb2
-  obtain ⟨p,hlen⟩ := path_of_zhong_word B (southeastWord a b d v)
-  refine ⟨Zhong.actSeq B (southeastWord a b d v),p,by simpa using hlen,?_,?_,?_⟩
-  · change Zhong.blank (Zhong.actSeq B (southeastWord a b d v)) = _
-    rw [Zhong.blank_actSeq]
-    change trace (blank B) (southeastWord a b d v) = _
-    rw [hblank,ht]
-  · rw [Zhong.actSeq_eq_permOf]
-    change B (permOf (blank B) (southeastWord a b d v) _) = _
-    rw [hblank,hp]
-  · intro z hz
-    rw [Zhong.actSeq_eq_permOf]
-    change B (permOf (blank B) (southeastWord a b d v) z) = B z
-    rw [hblank,hfix z hz]
-
 
 /-- Park the blank beneath a placed tile so the next row placement starts
 in its required position. -/
@@ -187,30 +138,6 @@ theorem southeastPlacementWord_spec (a b d v : ℕ)
   · intro z hz
     rw [southeastPlacementWord,permOf_append,hst,Equiv.Perm.mul_apply,
       hpfix z (by omega),hsfix z hz]
-
-/-- The southeast sector is a full legal row-placement step with the blank
-ready for the following step, not merely a transport word. -/
-theorem exists_southeast_placement {n : ℕ} [NeZero n] (B : Board n)
-    (a b d v : ℕ) (ha : a+v+d+2 < n) (hb : b+d+1 < n) (hb2 : b+2 < n)
-    (hblank : blank B=(⟨a+1,by omega⟩,⟨b,by omega⟩)) :
-    ∃ C : Board n, ∃ p : Path B C,
-      p.length ≤ 8*d+6*v+11 ∧ blank C=(⟨a+1,by omega⟩,⟨b+1,by omega⟩) ∧
-      C (⟨a,by omega⟩,⟨b+1,by omega⟩)=B (⟨a+v+d+2,ha⟩,⟨b+d+1,hb⟩) ∧
-      ∀ z, z.1.val<a ∨ (z.1.val=a ∧ z.2.val<b+1) → C z=B z := by
-  obtain ⟨_,ht,hp,hfix⟩ := southeastPlacementWord_spec (n := n) (m := n) a b d v ha hb hb2
-  obtain ⟨p,hlen⟩ := path_of_zhong_word B (southeastPlacementWord a b d v)
-  refine ⟨Zhong.actSeq B (southeastPlacementWord a b d v),p,by simpa using hlen,?_,?_,?_⟩
-  · change Zhong.blank (Zhong.actSeq B (southeastPlacementWord a b d v)) = _
-    rw [Zhong.blank_actSeq]
-    change trace (blank B) (southeastPlacementWord a b d v) = _
-    rw [hblank,ht]
-  · rw [Zhong.actSeq_eq_permOf]
-    change B (permOf (blank B) (southeastPlacementWord a b d v) _) = _
-    rw [hblank,hp]
-  · intro z hz
-    rw [Zhong.actSeq_eq_permOf]
-    change B (permOf (blank B) (southeastPlacementWord a b d v) z) = B z
-    rw [hblank,hfix z hz]
 
 /-- This sector meets the paper's per-tile budget after including blank parking. -/
 theorem southeastPlacementWord_budget (a b d v n : ℕ)

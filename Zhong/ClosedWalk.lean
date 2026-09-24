@@ -55,18 +55,6 @@ theorem mem_closedGroup {p : Cell n m} {σ : List Dir} (h : IsClosedWalk p σ) :
     permOf p σ ∈ closedGroup p :=
   Subgroup.subset_closure ⟨σ, h, rfl⟩
 
-/-- Every closed walk induces an even permutation. -/
-theorem sign_permOf_of_closed {p : Cell n m} {σ : List Dir} (h : IsClosedWalk p σ) :
-    Equiv.Perm.sign (permOf p σ) = 1 := by
-  rw [sign_permOf, h, cellParity_sq]
-
-/-- The closed-walk group at `p` is contained in the alternating group. -/
-theorem closedGroup_le_alternating (p : Cell n m) :
-    closedGroup p ≤ alternatingGroup (Cell n m) := by
-  rw [closedGroup, Subgroup.closure_le]
-  rintro g ⟨σ, h, rfl⟩
-  exact Equiv.Perm.mem_alternatingGroup.mpr (sign_permOf_of_closed h)
-
 /-- The product of four transpositions around a square equals the product of two of
 them: `(a b)(b c)(c d)(d a) = (b c)(c d)` for four distinct points. -/
 theorem swap_mul_swap_mul_swap_mul_swap {α : Type*} [DecidableEq α] {a b c d : α}
@@ -99,50 +87,6 @@ block returns the blank and cycles the other three cells. -/
     neighbor? (x, y) Dir.D
       = some (⟨x.1 - 1, Nat.lt_of_le_of_lt (Nat.sub_le _ _) x.2⟩, y) := by
   simp only [neighbor?]; rw [if_pos h]
-
-/-- The `2 × 2` loop `L U R D` induces a three-cycle on the other three cells. -/
-theorem permOf_loop_at (i : Fin n) (j : Fin m) (hi : i.1 + 1 < n) (hj : j.1 + 1 < m) :
-    Equiv.Perm.IsThreeCycle (permOf (i, j) [Dir.L, Dir.U, Dir.R, Dir.D]) := by
-  let c00 : Cell n m := (i, j)
-  have hp1 : c00.2.1 + 1 < m := by simpa [c00] using hj
-  let c01 : Cell n m := (c00.1, ⟨c00.2.1 + 1, hp1⟩)
-  have hp2 : c01.1.1 + 1 < n := by simpa [c01, c00] using hi
-  let c11 : Cell n m := (⟨c01.1.1 + 1, hp2⟩, c01.2)
-  have hp3 : 0 < c11.2.1 := by simp [c11, c01, c00]
-  let c10 : Cell n m := (c11.1, ⟨c11.2.1 - 1, Nat.lt_of_le_of_lt (Nat.sub_le _ _) c11.2.2⟩)
-  have hp4 : 0 < c10.1.1 := by simp [c10, c11, c01, c00]
-  let c00' : Cell n m := (⟨c10.1.1 - 1, Nat.lt_of_le_of_lt (Nat.sub_le _ _) c10.1.2⟩, c10.2)
-  have h1 : neighbor? c00 Dir.L = some c01 := by
-    simp only [neighbor?]; rw [dif_pos hp1]
-  have h2 : neighbor? c01 Dir.U = some c11 := by
-    simp only [neighbor?]; rw [dif_pos hp2]
-  have h3 : neighbor? c11 Dir.R = some c10 := by
-    simp only [neighbor?]; rw [if_pos hp3]
-  have h4 : neighbor? c10 Dir.D = some c00' := by
-    simp only [neighbor?]; rw [if_pos hp4]
-  have hc00' : c00' = c00 := by
-    ext <;> simp [c00', c10, c11, c01, c00]
-  have hne0001 : c00 ≠ c01 := by
-    intro hh; have := congrArg (fun x : Cell n m => x.2.1) hh; dsimp only [c00, c01] at this; omega
-  have hne0011 : c00 ≠ c11 := by
-    intro hh; have := congrArg (fun x : Cell n m => x.1.1) hh; dsimp only [c00, c11, c01] at this; omega
-  have hne0010 : c00 ≠ c10 := by
-    intro hh; have := congrArg (fun x : Cell n m => x.1.1) hh; dsimp only [c00, c10, c11, c01] at this; omega
-  have hne0111 : c01 ≠ c11 := by
-    intro hh; have := congrArg (fun x : Cell n m => x.1.1) hh; dsimp only [c01, c11, c00] at this; omega
-  have hne0110 : c01 ≠ c10 := by
-    intro hh; have := congrArg (fun x : Cell n m => x.2.1) hh; dsimp only [c01, c10, c11, c00] at this; omega
-  have hne1110 : c11 ≠ c10 := by
-    intro hh; have := congrArg (fun x : Cell n m => x.2.1) hh; dsimp only [c11, c10, c01, c00] at this; omega
-  change Equiv.Perm.IsThreeCycle (permOf c00 [Dir.L, Dir.U, Dir.R, Dir.D])
-  rw [permOf_cons_of_neighbor? h1, permOf_cons_of_neighbor? h2,
-      permOf_cons_of_neighbor? h3, permOf_cons_of_neighbor? h4, permOf_nil, mul_one]
-  rw [hc00']
-  simp only [← mul_assoc]
-  rw [swap_mul_swap_mul_swap_mul_swap (a := c00) (b := c01) (c := c11) (d := c10)
-    hne0001 hne0011 hne0010 hne0111 hne0110 hne1110]
-  rw [Equiv.swap_comm c01 c11]
-  exact Equiv.Perm.isThreeCycle_swap_mul_swap_same hne0111.symm hne1110 hne0110
 
 /-- The explicit form of the `2 × 2` loop permutation: the three-cycle on the other three
 cells of the square. -/
@@ -219,39 +163,6 @@ theorem trace_loop_at (i : Fin n) (j : Fin m) (hi : i.1 + 1 < n) (hj : j.1 + 1 <
   change trace c00 [Dir.L, Dir.U, Dir.R, Dir.D] = c00
   rw [trace_cons_of_neighbor? h1, trace_cons_of_neighbor? h2,
       trace_cons_of_neighbor? h3, trace_cons_of_neighbor? h4, trace_nil, hc00']
-
-/-- The `2 × 2` loop is a closed walk at its top-left corner. -/
-theorem trace_loop (hn : 1 < n) (hm : 1 < m) :
-    trace ((⟨0, by omega⟩, ⟨0, by omega⟩) : Cell n m) [Dir.L, Dir.U, Dir.R, Dir.D]
-      = ((⟨0, by omega⟩, ⟨0, by omega⟩) : Cell n m) := by
-  let c00 : Cell n m := (⟨0, by omega⟩, ⟨0, by omega⟩)
-  have hp1 : c00.2.1 + 1 < m := by simp [c00]; omega
-  let c01 : Cell n m := (c00.1, ⟨c00.2.1 + 1, hp1⟩)
-  have hp2 : c01.1.1 + 1 < n := by simp [c01, c00]; omega
-  let c11 : Cell n m := (⟨c01.1.1 + 1, hp2⟩, c01.2)
-  have hp3 : 0 < c11.2.1 := by simp [c11, c01, c00]
-  let c10 : Cell n m := (c11.1, ⟨c11.2.1 - 1, Nat.lt_of_le_of_lt (Nat.sub_le _ _) c11.2.2⟩)
-  have hp4 : 0 < c10.1.1 := by simp [c10, c11, c01, c00]
-  let c00' : Cell n m := (⟨c10.1.1 - 1, Nat.lt_of_le_of_lt (Nat.sub_le _ _) c10.1.2⟩, c10.2)
-  have h1 : neighbor? c00 Dir.L = some c01 := by
-    simp only [neighbor?]; rw [dif_pos hp1]
-  have h2 : neighbor? c01 Dir.U = some c11 := by
-    simp only [neighbor?]; rw [dif_pos hp2]
-  have h3 : neighbor? c11 Dir.R = some c10 := by
-    simp only [neighbor?]; rw [if_pos hp3]
-  have h4 : neighbor? c10 Dir.D = some c00' := by
-    simp only [neighbor?]; rw [if_pos hp4]
-  have hc00' : c00' = c00 := by
-    ext <;> simp [c00', c10, c11, c01, c00]
-  change trace c00 [Dir.L, Dir.U, Dir.R, Dir.D] = c00
-  rw [trace_cons_of_neighbor? h1, trace_cons_of_neighbor? h2,
-      trace_cons_of_neighbor? h3, trace_cons_of_neighbor? h4, trace_nil, hc00']
-
-/-- The `2 × 2` loop is a non-identity element of the closed-walk group. -/
-theorem loop_mem_closedGroup (hn : 1 < n) (hm : 1 < m) :
-    permOf ((⟨0, by omega⟩, ⟨0, by omega⟩) : Cell n m) [Dir.L, Dir.U, Dir.R, Dir.D]
-      ∈ closedGroup ((⟨0, by omega⟩, ⟨0, by omega⟩) : Cell n m) :=
-  mem_closedGroup (trace_loop hn hm)
 
 /-! ### Moving the `2 × 2` loop around
 
@@ -361,88 +272,6 @@ theorem applicableFrom_pathWord (i j c : ℕ) (hi : i < n) (hcj : c + j < m) :
       refine ⟨(((⟨0, by omega⟩ : Fin n), (⟨c + 1, by omega⟩ : Fin m)) : Cell n m), ?_, ?_⟩
       · simp only [neighbor?]; rw [dif_pos (by omega : c + 1 < m)]
       · exact ih (c + 1) (by omega)
-
-
-/-- Conjugating the `2 × 2` loop at `(i, j)` by the path from `(0, 0)` gives the same
-three-cycle: the path never visits the three cells of the square, so the conjugating
-permutation fixes them. -/
-theorem squareCycle_isThreeCycle (i : Fin n) (j : Fin m) (hi : i.1 + 1 < n) (hj : j.1 + 1 < m) :
-    Equiv.Perm.IsThreeCycle
-      (permOf ((⟨0, by omega⟩, ⟨0, by omega⟩) : Cell n m)
-        (pathWord i.1 j.1 ++ [Dir.L, Dir.U, Dir.R, Dir.D] ++ invWord (pathWord i.1 j.1))) := by
-  let p : Cell n m := (⟨0, by omega⟩, ⟨0, by omega⟩)
-  let c : Cell n m := (i, j)
-  let γ : List Dir := pathWord i.1 j.1
-  let a : Cell n m := (i, ⟨j.1 + 1, hj⟩)
-  let b : Cell n m := (⟨i.1 + 1, hi⟩, ⟨j.1 + 1, hj⟩)
-  let d : Cell n m := (⟨i.1 + 1, hi⟩, j)
-  have htrace : trace p γ = c := by
-    dsimp only [p, c, γ]
-    rw [trace_pathWord (n := n) (m := m) i.1 j.1 0 (by omega) (by omega)]
-    ext <;> simp
-  have hinv : permOf c (invWord γ) = (permOf p γ)⁻¹ := by
-    rw [← htrace]
-    exact permOf_invWord (by dsimp only [p, γ]; exact applicableFrom_pathWord (n := n) (m := m) i.1 j.1 0 (by omega) (by omega))
-  have hloop : permOf c [Dir.L, Dir.U, Dir.R, Dir.D] = Equiv.swap a b * Equiv.swap b d := by
-    dsimp only [c, a, b, d]
-    exact permOf_loop_at_eq i j hi hj
-  have hfixa : permOf p γ a = a := by
-    apply permOf_apply_of_not_mem_traceSet
-    dsimp only [p, γ, a]
-    intro hmem
-    have h := traceSet_pathWord_subset (n := n) (m := m) i.1 j.1 0 (by omega) (by omega)
-      ((i, ⟨j.1 + 1, hj⟩) : Cell n m) hmem
-    simp only [Prod.fst, Prod.snd, Fin.val_mk] at h
-    omega
-  have hfixb : permOf p γ b = b := by
-    apply permOf_apply_of_not_mem_traceSet
-    dsimp only [p, γ, b]
-    intro hmem
-    have h := traceSet_pathWord_subset (n := n) (m := m) i.1 j.1 0 (by omega) (by omega)
-      ((⟨i.1 + 1, hi⟩, ⟨j.1 + 1, hj⟩) : Cell n m) hmem
-    simp only [Prod.fst, Prod.snd, Fin.val_mk] at h
-    omega
-  have hfixd : permOf p γ d = d := by
-    apply permOf_apply_of_not_mem_traceSet
-    dsimp only [p, γ, d]
-    intro hmem
-    have h := traceSet_pathWord_subset (n := n) (m := m) i.1 j.1 0 (by omega) (by omega)
-      ((⟨i.1 + 1, hi⟩, j) : Cell n m) hmem
-    simp only [Prod.fst, Prod.snd, Fin.val_mk] at h
-    omega
-  have hconj : permOf p γ * (Equiv.swap a b * Equiv.swap b d) * (permOf p γ)⁻¹
-      = Equiv.swap a b * Equiv.swap b d := by
-    have h1 : permOf p γ * Equiv.swap a b * (permOf p γ)⁻¹ = Equiv.swap a b := by
-      rw [← Equiv.swap_apply_apply (permOf p γ) a b, hfixa, hfixb]
-    have h2 : permOf p γ * Equiv.swap b d * (permOf p γ)⁻¹ = Equiv.swap b d := by
-      rw [← Equiv.swap_apply_apply (permOf p γ) b d, hfixb, hfixd]
-    calc permOf p γ * (Equiv.swap a b * Equiv.swap b d) * (permOf p γ)⁻¹
-        = (permOf p γ * Equiv.swap a b * (permOf p γ)⁻¹)
-            * (permOf p γ * Equiv.swap b d * (permOf p γ)⁻¹) := by group
-      _ = Equiv.swap a b * Equiv.swap b d := by rw [h1, h2]
-  have hword : permOf p (γ ++ [Dir.L, Dir.U, Dir.R, Dir.D] ++ invWord γ)
-      = Equiv.swap a b * Equiv.swap b d := by
-    rw [List.append_assoc, permOf_append, htrace, permOf_append,
-        show trace c [Dir.L, Dir.U, Dir.R, Dir.D] = c from by
-          dsimp only [c]; exact trace_loop_at i j hi hj,
-        hinv, hloop]
-    rw [← mul_assoc]
-    exact hconj
-  change Equiv.Perm.IsThreeCycle
-    (permOf p (γ ++ [Dir.L, Dir.U, Dir.R, Dir.D] ++ invWord γ))
-  rw [hword]
-  have hba : b ≠ a := by
-    intro hh; have := congrArg (fun x : Cell n m => x.1.1) hh
-    dsimp only [a, b] at this; omega
-  have hbd : b ≠ d := by
-    intro hh; have := congrArg (fun x : Cell n m => x.2.1) hh
-    dsimp only [b, d] at this; omega
-  have had : a ≠ d := by
-    intro hh; have := congrArg (fun x : Cell n m => x.1.1) hh
-    dsimp only [a, d] at this; omega
-  rw [Equiv.swap_comm a b]
-  exact Equiv.Perm.isThreeCycle_swap_mul_swap_same hba hbd had
-
 
 /-- The explicit action of the conjugated `2 × 2` loop: it is the three-cycle
 `(i,j+1) → (i+1,j+1) → (i+1,j) → (i,j+1)`. -/
@@ -825,5 +654,4 @@ theorem sameOrbit_transitive (hn : 1 < n) (hm : 1 < m) (p : Cell n m) :
   rw [hkab, Equiv.apply_symm_apply]
 
 end Zhong
-
 

@@ -172,32 +172,4 @@ end SlidingPuzzle.Partition
 
 namespace SlidingPuzzle.Algorithm
 
-/-- The concrete transport phase with a uniform inefficient-move bound. -/
-theorem transportContract : TransportContract 82 := by
-  apply transportContract_of_step_bound 82
-  intro k hk
-  let : NeZero (k^4) := ⟨by positivity⟩
-  have hstep := Partition.transportStepBound_of_vertical_bound_jump hk rfl
-    (Partition.verticalTransportBound hk rfl)
-  apply hstep.mono hk
-  have hcount : k-1+1=k := Nat.sub_add_cancel (by omega)
-  have hprod : (k-1)*(k+3)+(k+3)=k*(k+3) := by
-    calc
-      _ = ((k-1)+1)*(k+3) := by ring
-      _ = k*(k+3) := by rw [hcount]
-  have hprod' : (k+3)+(k-1)*(k+3)=k*(k+3) := by omega
-  have hvertical :
-      26*(k+2)+k^3+(k-1)*(26*(k+3))+26 = k^3+26*k^2+78*k := by
-    calc
-      _ = k^3+26*((k+2)+(k-1)*(k+3)+1) := by ring
-      _ = k^3+26*((k+3)+(k-1)*(k+3)) := by congr 1 <;> omega
-      _ = k^3+26*(k*(k+3)) := by rw [hprod']
-      _ = k^3+26*k^2+78*k := by ring
-  have hfactor : 0 ≤ ((k:ℤ)-2)*(30*(k:ℤ)^2+34*(k:ℤ)-10) :=
-    mul_nonneg (by omega) (by nlinarith)
-  have hbudgetInt : 26*(k:ℤ)^2+78*(k:ℤ) ≤ 30*(k:ℤ)^3+25 := by
-    nlinarith [hfactor]
-  have hbudget : 26*k^2+78*k ≤ 30*k^3+25 := by exact_mod_cast hbudgetInt
-  nlinarith [hvertical, hbudget]
-
 end SlidingPuzzle.Algorithm

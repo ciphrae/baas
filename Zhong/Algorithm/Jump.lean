@@ -731,14 +731,6 @@ theorem permOf_jumpWord {c : Fin m} (l : ℕ) (hc : c.val + 2 * l < m) :
   rw [← mul_assoc, ← Equiv.swap_apply_apply (row1Rev c (2 * l) hc) (top c) (bot c),
       htop, hbot]
 
-/-- **Lemma 2 (Zhong 2023), canonical case, board form.**  On a `2 × m` board whose blank
-is at `(0,c)`, acting `jumpWord l` swaps the blank with the tile at `(1, c + 2l)`. -/
-theorem jumpWord_effect {c : Fin m} (l : ℕ) (hc : c.val + 2 * l < m) [NeZero (2 * m)]
-    (B : Board 2 m) (hblank : blank B = top c) :
-    actSeq B (jumpWord l)
-      = (Equiv.swap (top c) (bot (⟨c.val + 2 * l, hc⟩ : Fin m))).trans B := by
-  rw [actSeq_eq_permOf, hblank, permOf_jumpWord l hc]
-
 /-- The gadget has length `14`. -/
 theorem jumpGadget_length : jumpGadget.length = 14 := rfl
 

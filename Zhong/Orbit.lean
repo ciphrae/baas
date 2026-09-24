@@ -41,25 +41,6 @@ theorem mem_orbit_self [NeZero (n * m)] (B : Board n m) : B ∈ orbit B := by
   classical
   simp [orbit, reachable_refl B]
 
-/-- The optimal solution length from `B` to `B'`: the infimum of the lengths of
-operation sequences taking `B` to `B'`. -/
-noncomputable def optLen [NeZero (n * m)] (B B' : Board n m) : ℕ :=
-  sInf { l : ℕ | ∃ σ : List Dir, σ.length = l ∧ actSeq B σ = B' }
-
-/-- Any operation sequence gives an upper bound for the optimal length. -/
-theorem optLen_le_length [NeZero (n * m)] {B B' : Board n m} (σ : List Dir)
-    (h : actSeq B σ = B') : optLen B B' ≤ σ.length :=
-  Nat.sInf_le ⟨σ, rfl, h⟩
-
-/-- The optimal length is attained by some operation sequence (when `B'` is reachable). -/
-theorem optLen_spec [NeZero (n * m)] {B B' : Board n m} (h : Reachable B B') :
-    ∃ σ : List Dir, actSeq B σ = B' ∧ σ.length = optLen B B' := by
-  have hne : { l : ℕ | ∃ σ : List Dir, σ.length = l ∧ actSeq B σ = B' }.Nonempty := by
-    obtain ⟨σ, rfl⟩ := h
-    exact ⟨σ.length, σ, rfl, rfl⟩
-  obtain ⟨σ, hlen, hact⟩ := Nat.sInf_mem hne
-  exact ⟨σ, hact, hlen⟩
-
 /-! ### The parity invariant (Proposition 3, necessary direction)
 
 Proposition 3 of Zhong (2023) characterises when two boards lie in the same orbit: the

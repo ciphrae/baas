@@ -1,4 +1,5 @@
-import SlidingPuzzle.Moves.Strips
+import SlidingPuzzle.Bridge.Words
+import Zhong.Algorithm.Lift
 import Zhong.Algorithm.Parberry
 
 /-! Blank access with a preservation guarantee outside the endpoint rectangle. -/

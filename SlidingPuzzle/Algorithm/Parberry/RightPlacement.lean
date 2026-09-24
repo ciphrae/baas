@@ -83,33 +83,4 @@ theorem exists_rightPlacementWord (a b i j : ℕ)
     simpa only [hx,hy] using widePlacementWord_spec a b d v (by omega : a+d+1 < n)
       (by omega : b+v+d+3 < n)
 
-/-- Public-model placement with initial routing, a prepared blank for the next
-column, and preservation of every previously completed cell. -/
-theorem exists_right_placement [NeZero n] (B : Board n) (a b : ℕ)
-    (x y : Fin n) (hx : a ≤ x.val) (hy : b+1 ≤ y.val)
-    (ha2 : a+2 < n) (hb2 : b+2 < n)
-    (hblank : blank B=c(a+1,b)) :
-    ∃ C : Board n, ∃ p : Path B C,
-      p.length+2*(b+1)+7 ≤ 8*n ∧ blank C=c(a+1,b+1) ∧
-      C c(a,b+1)=B (x,y) ∧
-      ∀ z, z.1.val<a ∨ (z.1.val=a ∧ z.2.val<b+1) → C z=B z := by
-  obtain ⟨σ,hlen,_,ht,hp,hfix⟩ := exists_rightPlacementWord a b (x.val-a) (y.val-b-1)
-    (by omega : a+(x.val-a) < n) (by omega : b+(y.val-b-1)+1 < n) ha2 hb2
-  have he : (c(a+(x.val-a),b+(y.val-b-1)+1) : Zhong.Cell n n)=(x,y) := by
-    apply Prod.ext <;> apply Fin.ext <;> simp only [Fin.val_mk] <;> omega
-  rw [he] at hp
-  obtain ⟨p,hle⟩ := path_of_zhong_word B σ
-  refine ⟨Zhong.actSeq B σ,p,by omega,?_,?_,?_⟩
-  · change Zhong.blank (Zhong.actSeq B σ)=_
-    rw [Zhong.blank_actSeq]
-    change trace (blank B) σ=_
-    rw [hblank,ht]
-  · rw [Zhong.actSeq_eq_permOf]
-    change B (permOf (blank B) σ _)=_
-    rw [hblank,hp]
-  · intro z hz
-    rw [Zhong.actSeq_eq_permOf]
-    change B (permOf (blank B) σ z)=B z
-    rw [hblank,hfix z hz]
-
 end SlidingPuzzle.Parberry

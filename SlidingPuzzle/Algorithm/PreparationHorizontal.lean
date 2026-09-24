@@ -130,58 +130,5 @@ theorem exists_horizontal_preparation_path {k : ℕ} (hk : 2 ≤ k)
 
 /- A legal preparation prefix now stages all vertical quotas, clears every
 horizontal corridor, and installs last-reservoir representatives. -/
-/-- Horizontal spreading retains the shared prefix budget. -/
-theorem exists_horizontal_prepared_path_with_blank_of_bound {P k : ℕ}
-    (hprefix : PrefixPathBound P) (hk : 2 ≤ k)
-    [NeZero (k^4)] (B : Board (k^4)) :
-    ∃ C : Board (k^4), ∃ p : Path B C,
-      p.length ≤ (P+15)*k^11 ∧ (blank C).1.val = k^4-1 ∧
-      (∀ (i : GroupIndex k) (c : Cell (k^4)), horizontal i c → C c ∈ targetGroup i) ∧
-      (∀ (j i : GroupIndex k) (c : Cell (k^4)), c ∈ stagingC j i → C c ∈ targetGroup i) ∧
-      (∀ i : GroupIndex k, i ≠ lastGroup k hk → C (representativeDestination hk i) ∈ targetGroup i) ∧
-      (blank C).2.val = k^4-k^2 := by
-  obtain ⟨A,p,hp,hstage,hrep,hbr,hbc⟩ := exists_staging_representative_row_path_with_blank_of_bound hprefix hk B
-  obtain ⟨C,q,hq,hb,hH,hCs,hR⟩ := exists_horizontal_preparation_path hk A hstage hbr
-  refine ⟨C,p.append q,?_,by rw [hb]; exact hbr,hH,?_,?_,by rw [hb]; exact hbc⟩
-  · have hpow : 12*k^10 ≤ 6*k^11 := by
-      calc
-        12*k^10 = 6*(2*k^10) := by ring
-        _ ≤ 6*k^11 := Nat.mul_le_mul_left _ (by
-          calc
-            2*k^10 ≤ k*k^10 := Nat.mul_le_mul_right _ hk
-            _ = k^11 := by ring)
-    rw [Path.length_append]
-    calc
-      p.length + q.length ≤ (P+9)*k^11 + 12*k^10 := Nat.add_le_add hp hq
-      _ ≤ (P+9)*k^11 + 6*k^11 := Nat.add_le_add_left hpow _
-      _ = (P+15)*k^11 := by ring
-  · intro j i c hc
-    rw [hCs j i c hc]
-    exact hstage i c ((mem_stagingCells i c).mpr (Or.inr (Or.inr ⟨j,hc⟩)))
-  · intro i hi
-    rw [hR]
-    exact hrep i hi
-
-theorem exists_horizontal_prepared_path_with_blank {k : ℕ} (hk : 2 ≤ k)
-    [NeZero (k^4)] (B : Board (k^4)) :
-    ∃ C : Board (k^4), ∃ p : Path B C,
-      p.length ≤ 1019*k^11 ∧ (blank C).1.val = k^4-1 ∧
-      (∀ (i : GroupIndex k) (c : Cell (k^4)), horizontal i c → C c ∈ targetGroup i) ∧
-      (∀ (j i : GroupIndex k) (c : Cell (k^4)), c ∈ stagingC j i → C c ∈ targetGroup i) ∧
-      (∀ i : GroupIndex k, i ≠ lastGroup k hk → C (representativeDestination hk i) ∈ targetGroup i) ∧
-      (blank C).2.val = k^4-k^2 := by
-  exact exists_horizontal_prepared_path_with_blank_of_bound prefixPathBound_current hk B
-
-/-- The horizontal preparation prefix without retaining the blank column. -/
-theorem exists_horizontal_prepared_path {k : ℕ} (hk : 2 ≤ k)
-    [NeZero (k^4)] (B : Board (k^4)) :
-    ∃ C : Board (k^4), ∃ p : Path B C,
-      p.length ≤ 1019*k^11 ∧ (blank C).1.val = k^4-1 ∧
-      (∀ (i : GroupIndex k) (c : Cell (k^4)), horizontal i c → C c ∈ targetGroup i) ∧
-      (∀ (j i : GroupIndex k) (c : Cell (k^4)), c ∈ stagingC j i → C c ∈ targetGroup i) ∧
-      (∀ i : GroupIndex k, i ≠ lastGroup k hk → C (representativeDestination hk i) ∈ targetGroup i) := by
-  obtain ⟨C,p,hp,hb,hH,hV,hR,_⟩ := exists_horizontal_prepared_path_with_blank hk B
-  exact ⟨C,p,hp,hb,hH,hV,hR⟩
-
 end
 end SlidingPuzzle.Partition

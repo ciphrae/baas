@@ -1,4 +1,10 @@
-import SlidingPuzzle.Algorithm.PhaseContracts
+import SlidingPuzzle.Algorithm.PhaseStates
+import SlidingPuzzle.Algorithm.Accounting
+import SlidingPuzzle.Algorithm.ResidualPotential
+import SlidingPuzzle.Algorithm.ResidualReachability
+import SlidingPuzzle.Moves.Relabel
+import SlidingPuzzle.Algorithm.Dimension
+import SlidingPuzzle.Proposition9Reduction
 
 /-! Lifting Algorithm 4's count run to legal board paths. The local construction
 is an explicit parameter, instantiated in `Transport.lean`: it restores Clear,
@@ -17,13 +23,6 @@ def TransportStepBound {n k : ℕ} [NeZero n] (hk : 2 ≤ k) (E : ℕ) : Prop :=
       Clear (k := k) D ∧ reservoir (transportIndex k hk j) (blank D) ∧
       boardMatrix hk D = TransportCounts.move (boardMatrix hk B) i j ∧
       p.inefficientMoves ≤ E
-
-theorem TransportStepBound.mono {n k E F : ℕ} [NeZero n] (hk : 2 ≤ k)
-    (hEF : E ≤ F) (h : TransportStepBound (n := n) hk E) :
-    TransportStepBound (n := n) hk F := by
-  intro B hB i j hi hchoice
-  obtain ⟨D,p,hD,hb,hm,hp⟩ := h B hB i j hi hchoice
-  exact ⟨D,p,hD,hb,hm,hp.trans hEF⟩
 
 /-- Realize every step of a count run on the evolving board. In particular,
 the terminal matrix is the matrix of the actual endpoint, and the costs add. -/
@@ -67,19 +66,5 @@ end SlidingPuzzle.Partition
 
 namespace SlidingPuzzle.Algorithm
 open SlidingPuzzle.Partition
-
-/-- All global Transport obligations follow from legal one-iteration paths
-with a uniform `C*k³` inefficient-move bound. This theorem does not supply the
-local paths: their construction remains the explicit hypothesis `hstep`. -/
-theorem transportContract_of_step_bound (C : ℕ)
-    (hstep : ∀ k : ℕ, ∀ hk : 2 ≤ k,
-      letI : NeZero (k^4) := ⟨by positivity⟩
-      TransportStepBound (n := k^4) hk (C*k^3)) : TransportContract C := by
-  intro k hk
-  let : NeZero (k^4) := ⟨by positivity⟩
-  intro B hB
-  obtain ⟨D, p, hD, hp⟩ := exists_transport_path_of_step_bound hk rfl (hstep k hk) B hB
-  refine ⟨D, p, hD, ?_⟩
-  convert hp using 1; ring
 
 end SlidingPuzzle.Algorithm

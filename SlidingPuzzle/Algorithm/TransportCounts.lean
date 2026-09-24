@@ -44,13 +44,6 @@ theorem move_unchanged (C : CountMatrix m) {i j r c : Fin (m + 1)}
     move C i j r c = C r c := by
   simp [move, hsrc, hdiag]
 
-theorem move_offdiag_le (C : CountMatrix m) (i j r c : Fin (m + 1)) (hrc : r ≠ c) :
-    move C i j r c ≤ C r c := by
-  have hdiag : ¬ (r = i ∧ c = i) := by rintro ⟨hr, hc⟩; exact hrc (hr.trans hc.symm)
-  by_cases hsrc : r = j ∧ c = i
-  · simp [move, hsrc]
-  · simp [move, hsrc, hdiag]
-
 theorem incoming_eq_erase (C : CountMatrix m) (i : Fin (m + 1)) :
     incoming C i = ∑ r ∈ Finset.univ.erase i, C r i := by
   classical

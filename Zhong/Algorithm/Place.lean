@@ -113,88 +113,9 @@ theorem fourChain_fixes {p u v w x : Cell 2 m}
   rw [Equiv.swap_apply_of_ne_of_ne hxu hxv]
   rw [Equiv.swap_apply_of_ne_of_ne hxp hxu]
 
-/-- The eight-swap product of the `A = P = C` placement fixes every cell outside
-`{p, z, a, u₃, u₁, c}`. -/
-theorem eightChain_fixes {p a c z u1 u3 x : Cell 2 m}
-    (hxp : x ≠ p) (hxz : x ≠ z) (hxa : x ≠ a) (hxu3 : x ≠ u3) (hxu1 : x ≠ u1)
-    (hxc : x ≠ c) :
-    (Equiv.swap p z * Equiv.swap z a * Equiv.swap a u3 * Equiv.swap u3 p
-        * Equiv.swap p u1 * Equiv.swap u1 c * Equiv.swap c z * Equiv.swap z p) x = x := by
-  rw [Equiv.Perm.mul_apply, Equiv.Perm.mul_apply, Equiv.Perm.mul_apply,
-    Equiv.Perm.mul_apply, Equiv.Perm.mul_apply, Equiv.Perm.mul_apply, Equiv.Perm.mul_apply]
-  rw [Equiv.swap_apply_of_ne_of_ne hxz hxp]
-  rw [Equiv.swap_apply_of_ne_of_ne hxc hxz]
-  rw [Equiv.swap_apply_of_ne_of_ne hxu1 hxc]
-  rw [Equiv.swap_apply_of_ne_of_ne hxp hxu1]
-  rw [Equiv.swap_apply_of_ne_of_ne hxu3 hxp]
-  rw [Equiv.swap_apply_of_ne_of_ne hxa hxu3]
-  rw [Equiv.swap_apply_of_ne_of_ne hxz hxa]
-  rw [Equiv.swap_apply_of_ne_of_ne hxp hxz]
-
 /-! ### The four-jump placement (cases `A ≠ P = C` and `A = C ≠ P`) -/
 
-/-- The four-jump chain `p → u → v → w → p` moves the content of `w` to `v`
-(equivalently, the cell `v` ends up holding the content that was at `w`). -/
-theorem strip_place_four_content_v {p u v w : Cell 2 m}
-    (hpu : (p.1.val + p.2.val + u.1.val + u.2.val) % 2 = 1)
-    (huv : (u.1.val + u.2.val + v.1.val + v.2.val) % 2 = 1)
-    (hvw : (v.1.val + v.2.val + w.1.val + w.2.val) % 2 = 1)
-    (hwp : (w.1.val + w.2.val + p.1.val + p.2.val) % 2 = 1)
-    (hpv : p ≠ v) (hpw : p ≠ w) (huw : u ≠ w) :
-    ∃ σ : List Dir, ApplicableFrom p σ ∧ permOf p σ v = w ∧ σ.length ≤ 48 * m + 4 := by
-  obtain ⟨σ, hapσ, hperm, hlen⟩ := strip_place_four hpu huv hvw hwp
-  refine ⟨σ, hapσ, ?_, hlen⟩
-  rw [hperm, fourChain_apply_v (odd_ne hpu) hpv hpw (odd_ne huv) huw (odd_ne hvw)]
-
-/-- The four-jump chain `p → u → v → w → p` moves the content of `v` to `u`
-(equivalently, the cell `u` ends up holding the content that was at `v`). -/
-theorem strip_place_four_content_u {p u v w : Cell 2 m}
-    (hpu : (p.1.val + p.2.val + u.1.val + u.2.val) % 2 = 1)
-    (huv : (u.1.val + u.2.val + v.1.val + v.2.val) % 2 = 1)
-    (hvw : (v.1.val + v.2.val + w.1.val + w.2.val) % 2 = 1)
-    (hwp : (w.1.val + w.2.val + p.1.val + p.2.val) % 2 = 1)
-    (hpv : p ≠ v) (hpw : p ≠ w) (huw : u ≠ w) :
-    ∃ σ : List Dir, ApplicableFrom p σ ∧ permOf p σ u = v ∧ σ.length ≤ 48 * m + 4 := by
-  obtain ⟨σ, hapσ, hperm, hlen⟩ := strip_place_four hpu huv hvw hwp
-  refine ⟨σ, hapσ, ?_, hlen⟩
-  rw [hperm, fourChain_apply_u (odd_ne hpu) hpv hpw (odd_ne huv) huw (odd_ne hvw)]
-
 /-! ### The eight-jump placement (case `A = P = C`) -/
-
-/-- **Placement when the blank, the tile and the target share a colour.**  The two
-four-jump chains `p → z → a → u₃ → p` and `p → u₁ → c → z → p` compose to the `5`-cycle
-`c → a → u₃ → z → u₁ → c`, so the content of `a` moves to `c`.  All auxiliaries
-`z, u₁, u₃` have the colour opposite to `p` (and to `a, c`). -/
-theorem strip_place_eight_content {p a c z u1 u3 : Cell 2 m}
-    (hpz : (p.1.val + p.2.val + z.1.val + z.2.val) % 2 = 1)
-    (hza : (z.1.val + z.2.val + a.1.val + a.2.val) % 2 = 1)
-    (hau3 : (a.1.val + a.2.val + u3.1.val + u3.2.val) % 2 = 1)
-    (hu3p : (u3.1.val + u3.2.val + p.1.val + p.2.val) % 2 = 1)
-    (hpu1 : (p.1.val + p.2.val + u1.1.val + u1.2.val) % 2 = 1)
-    (hu1c : (u1.1.val + u1.2.val + c.1.val + c.2.val) % 2 = 1)
-    (hcz : (c.1.val + c.2.val + z.1.val + z.2.val) % 2 = 1)
-    (hzp : (z.1.val + z.2.val + p.1.val + p.2.val) % 2 = 1)
-    (hpa : p ≠ a) (hpc : p ≠ c) (hzu3 : z ≠ u3) (hu1z : u1 ≠ z) :
-    ∃ σ : List Dir, ApplicableFrom p σ ∧ permOf p σ c = a ∧ σ.length ≤ 96 * m + 8 := by
-  obtain ⟨σo, hapo, hpermo, hleno⟩ := strip_place_four hpz hza hau3 hu3p
-  obtain ⟨σi, hapi, hpermi, hleni⟩ := strip_place_four hpu1 hu1c hcz hzp
-  have hfixo : permOf p σo p = p := by
-    rw [hpermo, fourChain_apply_p (odd_ne hpz) hpa (odd_ne hu3p).symm (odd_ne hza) hzu3
-      (odd_ne hau3)]
-  have htraceo : trace p σo = p := by
-    rw [← permOf_symm_apply p σo, Equiv.symm_apply_eq]
-    exact hfixo.symm
-  refine ⟨σo ++ σi, ?_, ?_, ?_⟩
-  · rw [applicableFrom_append, htraceo]
-    exact ⟨hapo, hapi⟩
-  · have hinner : (Equiv.swap p u1 * Equiv.swap u1 c * Equiv.swap c z * Equiv.swap z p) c = z :=
-      fourChain_apply_v (odd_ne hpu1) hpc (odd_ne hpz) (odd_ne hu1c) hu1z (odd_ne hcz)
-    have houter : (Equiv.swap p z * Equiv.swap z a * Equiv.swap a u3 * Equiv.swap u3 p) z = a :=
-      fourChain_apply_u (odd_ne hpz) hpa (odd_ne hu3p).symm (odd_ne hza) hzu3 (odd_ne hau3)
-    rw [permOf_append_of_trace_eq p σo σi htraceo, Equiv.Perm.mul_apply,
-      hpermo, hpermi, hinner, houter]
-  · rw [List.length_append]
-    omega
 
 /-! ### Lifting placement to a strip of a larger board
 
@@ -292,51 +213,6 @@ theorem hStrip_place_four_content {n m : ℕ} (r : ℕ) (hr : r + 1 < n) {p a v 
   obtain ⟨hval, hfix⟩ := hStrip_permOf_spec r hr happ hP hca' hT
   exact ⟨σ, happ', hval, hfix, hlen⟩
 
-/-- **The clean content exchange of the `A = C ≠ P` placement.**  The same word as
-`hStrip_place_four_content`, but exposing the full three-cycle `a → v → c → a`: the content of
-the tile cell `a` moves to the target `c`, the content of `c` is dumped into the workspace cell
-`v`, and the content of `v` moves to `a`.  When `a` and `v` are don't-care cells, this places a
-tile into the `H` row while moving the displaced content out of the row and into the workspace. -/
-theorem hStrip_place_four_exchange {n m : ℕ} (r : ℕ) (hr : r + 1 < n) {p a v c : Cell 2 m}
-    (hpa : (p.1.val + p.2.val + a.1.val + a.2.val) % 2 = 1)
-    (hav : (a.1.val + a.2.val + v.1.val + v.2.val) % 2 = 1)
-    (hvc : (v.1.val + v.2.val + c.1.val + c.2.val) % 2 = 1)
-    (hcp : (c.1.val + c.2.val + p.1.val + p.2.val) % 2 = 1)
-    (hpv : p ≠ v) (hpc : p ≠ c) (hac : a ≠ c) :
-    ∃ σ : List Dir, ApplicableFrom (hStrip (m := m) r hr p) σ
-      ∧ permOf (hStrip (m := m) r hr p) σ (hStrip r hr c) = hStrip r hr a
-      ∧ permOf (hStrip (m := m) r hr p) σ (hStrip r hr a) = hStrip r hr v
-      ∧ permOf (hStrip (m := m) r hr p) σ (hStrip r hr v) = hStrip r hr c
-      ∧ (∀ y : Cell n m, y ∉ ({p, a, v, c} : Finset (Cell 2 m)).image (hStrip (m := m) r hr) →
-          permOf (hStrip (m := m) r hr p) σ y = y)
-      ∧ σ.length ≤ 48 * m + 4 := by
-  obtain ⟨σ, happ, hP, hlen⟩ := strip_place_four hpa hav hvc hcp
-  have hca' : (Equiv.swap p a * Equiv.swap a v * Equiv.swap v c * Equiv.swap c p) c = a :=
-    fourChain_apply_w (odd_ne hpa) hpv hpc (odd_ne hav) hac (odd_ne hvc)
-  have ha' : (Equiv.swap p a * Equiv.swap a v * Equiv.swap v c * Equiv.swap c p) a = v :=
-    fourChain_apply_u (odd_ne hpa) hpv hpc (odd_ne hav) hac (odd_ne hvc)
-  have hv' : (Equiv.swap p a * Equiv.swap a v * Equiv.swap v c * Equiv.swap c p) v = c :=
-    fourChain_apply_v (odd_ne hpa) hpv hpc (odd_ne hav) hac (odd_ne hvc)
-  have hT : ∀ x : Cell 2 m, x ∉ ({p, a, v, c} : Finset (Cell 2 m)) →
-      (Equiv.swap p a * Equiv.swap a v * Equiv.swap v c * Equiv.swap c p) x = x := by
-    intro x hx
-    simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hx
-    exact fourChain_fixes hx.1 hx.2.1 hx.2.2.1 hx.2.2.2
-  have happ' : ApplicableFrom (hStrip (m := m) r hr p) σ := by
-    have := applicableFrom_map_of_neighbor_map (ι := hStrip (m := m) r hr) (f := id)
-      (hStrip_neighbor r hr) happ
-    simpa using this
-  obtain ⟨hvalc, hfix⟩ := hStrip_permOf_spec r hr happ hP hca' hT
-  have hvala : permOf (hStrip (m := m) r hr p) σ (hStrip r hr a) = hStrip r hr v := by
-    have hmap := permOf_map_apply_of_neighbor_map (ι := hStrip (m := m) r hr) (f := id)
-      (hStrip_injective r hr) (hStrip_neighbor r hr) p σ happ a
-    simpa [hP, ha'] using hmap
-  have hvalv : permOf (hStrip (m := m) r hr p) σ (hStrip r hr v) = hStrip r hr c := by
-    have hmap := permOf_map_apply_of_neighbor_map (ι := hStrip (m := m) r hr) (f := id)
-      (hStrip_injective r hr) (hStrip_neighbor r hr) p σ happ v
-    simpa [hP, hv'] using hmap
-  exact ⟨σ, happ', hvalc, hvala, hvalv, hfix, hlen⟩
-
 /-- **Board-level placement, case `A ≠ P = C`.**  On the strip at rows `r, r+1`, move the
 content of `a` to `c` using the four-jump chain `p → u → c → a → p`. -/
 theorem hStrip_place_four_content_v {n m : ℕ} (r : ℕ) (hr : r + 1 < n) {p u c a : Cell 2 m}
@@ -364,59 +240,5 @@ theorem hStrip_place_four_content_v {n m : ℕ} (r : ℕ) (hr : r + 1 < n) {p u 
     simpa using this
   obtain ⟨hval, hfix⟩ := hStrip_permOf_spec r hr happ hP hca' hT
   exact ⟨σ, happ', hval, hfix, hlen⟩
-
-/-- **Board-level placement, case `A = P = C`.**  On the strip at rows `r, r+1`, move the
-content of `a` to `c` using the two four-jump chains `p → z → a → u₃ → p` and
-`p → u₁ → c → z → p`. -/
-theorem hStrip_place_eight_content {n m : ℕ} (r : ℕ) (hr : r + 1 < n) {p a c z u1 u3 : Cell 2 m}
-    (hpz : (p.1.val + p.2.val + z.1.val + z.2.val) % 2 = 1)
-    (hza : (z.1.val + z.2.val + a.1.val + a.2.val) % 2 = 1)
-    (hau3 : (a.1.val + a.2.val + u3.1.val + u3.2.val) % 2 = 1)
-    (hu3p : (u3.1.val + u3.2.val + p.1.val + p.2.val) % 2 = 1)
-    (hpu1 : (p.1.val + p.2.val + u1.1.val + u1.2.val) % 2 = 1)
-    (hu1c : (u1.1.val + u1.2.val + c.1.val + c.2.val) % 2 = 1)
-    (hcz : (c.1.val + c.2.val + z.1.val + z.2.val) % 2 = 1)
-    (hzp : (z.1.val + z.2.val + p.1.val + p.2.val) % 2 = 1)
-    (hpa : p ≠ a) (hpc : p ≠ c) (hzu3 : z ≠ u3) (hu1z : u1 ≠ z) :
-    ∃ σ : List Dir, ApplicableFrom (hStrip (m := m) r hr p) σ
-      ∧ permOf (hStrip (m := m) r hr p) σ (hStrip r hr c) = hStrip r hr a
-      ∧ (∀ y : Cell n m,
-          y ∉ ({p, a, c, z, u1, u3} : Finset (Cell 2 m)).image (hStrip (m := m) r hr) →
-          permOf (hStrip (m := m) r hr p) σ y = y)
-      ∧ σ.length ≤ 96 * m + 8 := by
-  obtain ⟨σo, hapo, hpermo, hleno⟩ := strip_place_four hpz hza hau3 hu3p
-  obtain ⟨σi, hapi, hpermi, hleni⟩ := strip_place_four hpu1 hu1c hcz hzp
-  have hfixo : permOf p σo p = p := by
-    rw [hpermo, fourChain_apply_p (odd_ne hpz) hpa (odd_ne hu3p).symm (odd_ne hza) hzu3
-      (odd_ne hau3)]
-  have htraceo : trace p σo = p := by
-    rw [← permOf_symm_apply p σo, Equiv.symm_apply_eq]
-    exact hfixo.symm
-  have happ : ApplicableFrom p (σo ++ σi) := by
-    rw [applicableFrom_append, htraceo]
-    exact ⟨hapo, hapi⟩
-  have hP : permOf p (σo ++ σi)
-      = (Equiv.swap p z * Equiv.swap z a * Equiv.swap a u3 * Equiv.swap u3 p)
-        * (Equiv.swap p u1 * Equiv.swap u1 c * Equiv.swap c z * Equiv.swap z p) := by
-    rw [permOf_append_of_trace_eq p σo σi htraceo, hpermo, hpermi]
-  have hca' : ((Equiv.swap p z * Equiv.swap z a * Equiv.swap a u3 * Equiv.swap u3 p)
-        * (Equiv.swap p u1 * Equiv.swap u1 c * Equiv.swap c z * Equiv.swap z p)) c = a := by
-    rw [Equiv.Perm.mul_apply]
-    rw [fourChain_apply_v (odd_ne hpu1) hpc (odd_ne hpz) (odd_ne hu1c) hu1z (odd_ne hcz),
-      fourChain_apply_u (odd_ne hpz) hpa (odd_ne hu3p).symm (odd_ne hza) hzu3 (odd_ne hau3)]
-  have hT : ∀ x : Cell 2 m, x ∉ ({p, a, c, z, u1, u3} : Finset (Cell 2 m)) →
-      ((Equiv.swap p z * Equiv.swap z a * Equiv.swap a u3 * Equiv.swap u3 p)
-        * (Equiv.swap p u1 * Equiv.swap u1 c * Equiv.swap c z * Equiv.swap z p)) x = x := by
-    intro x hx
-    simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hx
-    obtain ⟨hxp, hxa, hxc, hxz, hxu1, hxu3⟩ := hx
-    rw [Equiv.Perm.mul_apply, fourChain_fixes hxp hxu1 hxc hxz,
-      fourChain_fixes hxp hxz hxa hxu3]
-  have happ' : ApplicableFrom (hStrip (m := m) r hr p) (σo ++ σi) := by
-    have := applicableFrom_map_of_neighbor_map (ι := hStrip (m := m) r hr) (f := id)
-      (hStrip_neighbor r hr) happ
-    simpa using this
-  obtain ⟨hval, hfix⟩ := hStrip_permOf_spec r hr happ hP hca' hT
-  exact ⟨σo ++ σi, happ', hval, hfix, by rw [List.length_append]; omega⟩
 
 end Zhong

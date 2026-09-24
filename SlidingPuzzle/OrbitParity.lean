@@ -96,9 +96,4 @@ theorem reachable_parityInvariant (B : Board n) (h : Reachable B) :
   obtain ⟨p⟩ := h
   exact p.parityInvariant.trans (parityInvariant_target n)
 
-/-- Expanded form of the necessary parity condition for a reachable board. -/
-theorem reachable_boardSign_mul_colorSign (B : Board n) (h : Reachable B) :
-    boardSign B * colorSign (blank B) = colorSign (blank (target n)) :=
-  reachable_parityInvariant B h
-
 end SlidingPuzzle

@@ -99,11 +99,6 @@ theorem zhong_word_of_path {B C : Board n} (p : Path B C) :
       · rw [Zhong.actSeq_cons, hδ, hword]
       · simpa [Path.length_cons] using congrArg Nat.succ hlength
 
-theorem zhong_reachable_of_step {B C : Board n} (h : Step B C) : Zhong.Reachable B C := by
-  obtain ⟨δ, hδ⟩ := zhong_act_of_step h
-  refine ⟨[δ], ?_⟩
-  simpa [Zhong.actSeq_cons] using hδ
-
 /-- Every legal path is a Zhong operation word. -/
 theorem zhong_reachable_of_path {B C : Board n} (p : Path B C) : Zhong.Reachable B C := by
   obtain ⟨word, hword, _⟩ := zhong_word_of_path p

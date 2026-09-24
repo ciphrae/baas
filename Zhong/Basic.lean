@@ -44,42 +44,6 @@ instance : Fintype Dir :=
 
 namespace Dir
 
-/-- Row displacement `Δx` (Table 1). -/
-def dx : Dir → ℤ
-  | U => -1
-  | D => 1
-  | L => 0
-  | R => 0
-
-/-- Column displacement `Δy` (Table 1). -/
-def dy : Dir → ℤ
-  | U => 0
-  | D => 0
-  | L => -1
-  | R => 1
-
-/-- The displacement of the *neighbouring* cell (the one that exchanges with the blank)
-is `(-Δx, -Δy)`. -/
-def nbrDx : Dir → ℤ
-  | U => 1
-  | D => -1
-  | L => 0
-  | R => 0
-
-def nbrDy : Dir → ℤ
-  | U => 0
-  | D => 0
-  | L => 1
-  | R => -1
-
-@[simp] theorem dx_U : dx U = -1 := rfl
-@[simp] theorem dx_D : dx D = 1 := rfl
-@[simp] theorem dx_L : dx L = 0 := rfl
-@[simp] theorem dx_R : dx R = 0 := rfl
-@[simp] theorem dy_U : dy U = 0 := rfl
-@[simp] theorem dy_D : dy D = 0 := rfl
-@[simp] theorem dy_L : dy L = -1 := rfl
-@[simp] theorem dy_R : dy R = 1 := rfl
 
 end Dir
 

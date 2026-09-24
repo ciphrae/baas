@@ -28,10 +28,6 @@ omit [Nonempty α] in
     finiteMean (fun a => f a + g a) = finiteMean f + finiteMean g := by
   simp [finiteMean, Finset.sum_add_distrib, add_div]
 
-@[simp] theorem finiteMean_add_const (f : α → ℝ) (c : ℝ) :
-    finiteMean (fun a => f a + c) = finiteMean f + c := by
-  rw [finiteMean_add, finiteMean_const]
-
 theorem le_finiteMaximum (f : α → ℝ) (a : α) : f a ≤ finiteMaximum f := by
   classical
   exact Finset.le_max' _ _ (Finset.mem_image_of_mem f (Finset.mem_univ a))

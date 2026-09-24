@@ -41,6 +41,7 @@ theorem closedGroup_le_stabilizer (p : Cell n m) :
   calc permOf p σ p = permOf p σ ((permOf p σ).symm p) := by rw [hfix]
     _ = p := Equiv.apply_symm_apply _ _
 
+
 /-- Every element of the closed-walk group at `p` fixes `p`. -/
 theorem closedGroup_apply_self {p : Cell n m} {g : Equiv.Perm (Cell n m)}
     (hg : g ∈ closedGroup p) : g p = p :=

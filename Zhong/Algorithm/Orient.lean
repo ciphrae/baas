@@ -187,9 +187,6 @@ def flipJumpWord (l : ℕ) : List Dir := (jumpWord l).map flipDir
 /-- The column-reflected jump word. -/
 def reflJumpWord (l : ℕ) : List Dir := (jumpWord l).map reflDir
 
-/-- The transposed jump word. -/
-def transJumpWord (l : ℕ) : List Dir := (jumpWord l).map transDir
-
 /-- **Lemma 2, blank in row `1`.**  On a `2 × m` board with the blank at `(1, c)`, the
 word `flipJumpWord l` swaps the blank with the tile at `(0, c + 2l)`. -/
 theorem permOf_flipJumpWord {c : Fin m} (l : ℕ) (hc : c.val + 2 * l < m) :
@@ -225,45 +222,7 @@ theorem permOf_reflJumpWord {c : Fin m} (l : ℕ) (hc : 2 * l ≤ c.val) :
   rw [permCongr_swap, htop, hbot] at h
   exact h
 
-/-- **Lemma 2, transposed board.**  On an `m × 2` board with the blank at `(c, 0)`, the
-word `transJumpWord l` swaps the blank with the tile at `(c + 2l, 1)`. -/
-theorem permOf_transJumpWord {c : Fin m} (l : ℕ) (hc : c.val + 2 * l < m) :
-    permOf ((c, (0 : Fin 2)) : Cell m 2) (transJumpWord l)
-      = Equiv.swap ((c, (0 : Fin 2)) : Cell m 2)
-          (((⟨c.val + 2 * l, hc⟩ : Fin m), (1 : Fin 2)) : Cell m 2) := by
-  have h := permOf_map (transEquiv 2 m) transDir (neighbor?_transEquiv) (top c) (jumpWord l)
-  rw [permOf_jumpWord l hc] at h
-  have htop : transEquiv 2 m (top c) = ((c, (0 : Fin 2)) : Cell m 2) := by
-    simp [top, transEquiv_apply]
-  have hbot : transEquiv 2 m (bot (⟨c.val + 2 * l, hc⟩ : Fin m))
-      = (((⟨c.val + 2 * l, hc⟩ : Fin m), (1 : Fin 2)) : Cell m 2) := by
-    simp [bot, transEquiv_apply]
-  rw [permCongr_swap, htop, hbot] at h
-  exact h
-
 /-! ### Board forms -/
-
-/-- **Lemma 2, blank in row `1`, board form.** -/
-theorem flipJumpWord_effect {c : Fin m} (l : ℕ) (hc : c.val + 2 * l < m) [NeZero (2 * m)]
-    (B : Board 2 m) (hblank : blank B = bot c) :
-    actSeq B (flipJumpWord l)
-      = (Equiv.swap (bot c) (top (⟨c.val + 2 * l, hc⟩ : Fin m))).trans B := by
-  rw [actSeq_eq_permOf, hblank, permOf_flipJumpWord l hc]
-
-/-- **Lemma 2, target to the left, board form.** -/
-theorem reflJumpWord_effect {c : Fin m} (l : ℕ) (hc : 2 * l ≤ c.val) [NeZero (2 * m)]
-    (B : Board 2 m) (hblank : blank B = top c) :
-    actSeq B (reflJumpWord l)
-      = (Equiv.swap (top c) (bot (⟨c.val - 2 * l, by omega⟩ : Fin m))).trans B := by
-  rw [actSeq_eq_permOf, hblank, permOf_reflJumpWord l hc]
-
-/-- **Lemma 2, transposed board, board form.** -/
-theorem transJumpWord_effect {c : Fin m} (l : ℕ) (hc : c.val + 2 * l < m) [NeZero (m * 2)]
-    (B : Board m 2) (hblank : blank B = ((c, (0 : Fin 2)) : Cell m 2)) :
-    actSeq B (transJumpWord l)
-      = (Equiv.swap ((c, (0 : Fin 2)) : Cell m 2)
-          (((⟨c.val + 2 * l, hc⟩ : Fin m), (1 : Fin 2)) : Cell m 2)).trans B := by
-  rw [actSeq_eq_permOf, hblank, permOf_transJumpWord l hc]
 
 /-! ### Lengths -/
 
@@ -272,8 +231,5 @@ theorem transJumpWord_effect {c : Fin m} (l : ℕ) (hc : c.val + 2 * l < m) [NeZ
 
 @[simp] theorem reflJumpWord_length (l : ℕ) : (reflJumpWord l).length = 20 * l + 1 := by
   simp [reflJumpWord, jumpWord_length]
-
-@[simp] theorem transJumpWord_length (l : ℕ) : (transJumpWord l).length = 20 * l + 1 := by
-  simp [transJumpWord, jumpWord_length]
 
 end Zhong

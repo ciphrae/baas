@@ -69,17 +69,4 @@ theorem append {A B C : Board n} {xs ys : List (Cell n)}
 
 end Executes
 
-/-- Every endpoint reached from a reachable board is again in the orbit. -/
-def reachableAfter (B : ReachableBoard n) {C : Board n} (p : Path B.val C) :
-    ReachableBoard n := ⟨C, by
-      obtain ⟨q⟩ := B.property
-      exact ⟨q.append p⟩⟩
-
-/-- Following a word and then solving its endpoint gives a quantitative solution. -/
-theorem optimalLength_le_word_then_solution (B : ReachableBoard n) {C : Board n}
-    {cs : List (Cell n)} (h : Executes B.val cs C) (q : Path C (target n)) :
-    optimalLength B ≤ cs.length + q.length := by
-  obtain ⟨p, hp⟩ := h.exists_path
-  simpa [hp] using optimalLength_le_path_length B (p.append q)
-
 end SlidingPuzzle

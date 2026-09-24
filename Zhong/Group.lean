@@ -91,21 +91,6 @@ theorem blank_actSeq [NeZero (n * m)] (B : Board n m) (σ : List Dir) :
       | none => rw [act_of_neighbor?_eq_none h, trace_cons_of_neighbor?_eq_none h]
       | some c' => rw [blank_act_of_neighbor? h, trace_cons_of_neighbor? h]
 
-/-- **The blank cannot enter a pointwise-fixed region.**  If a set `F` of cells is fixed by the
-action of `σ` and does not contain the blank of `B`, then it does not contain the blank of the
-resulting board.  This is what keeps the blank inside the active region of a sparse
-reduction-of-order solver, where `F` is the union of the already-fixed cells. -/
-theorem not_mem_blank_actSeq_of_fixes [NeZero (n * m)] {B : Board n m} {σ : List Dir}
-    {F : Cell n m → Prop} (hfix : ∀ z, F z → (actSeq B σ) z = B z)
-    (hb : ¬ F (blank B)) : ¬ F (blank (actSeq B σ)) := by
-  intro hF
-  have h1 : (actSeq B σ) (blank (actSeq B σ)) = 0 := by
-    rw [blank]; exact Equiv.apply_symm_apply _ 0
-  rw [hfix _ hF] at h1
-  have h2 : blank (actSeq B σ) = blank B :=
-    B.injective (by rw [h1]; exact (Equiv.apply_symm_apply B 0).symm)
-  exact hb (h2 ▸ hF)
-
 /-- The inverse of the induced permutation sends the starting cell to the trace. -/
 theorem permOf_symm_apply (p : Cell n m) (σ : List Dir) :
     (permOf p σ).symm p = trace p σ := by
@@ -149,12 +134,6 @@ theorem permOf_append (p : Cell n m) (σ₁ σ₂ : List Dir) :
           rw [List.cons_append, permOf_cons_of_neighbor? h, trace_cons_of_neighbor? h,
               permOf_cons_of_neighbor? h, ih c', mul_assoc]
 
-/-- A permutation induced by a sequence is reachable: it maps any board with the matching
-blank position to a reachable board. -/
-theorem reachable_permOf [NeZero (n * m)] (B : Board n m) (σ : List Dir) :
-    Reachable B ((permOf (blank B) σ).trans B) :=
-  ⟨σ, actSeq_eq_permOf B σ⟩
-
 /-- Cell permutations induced by closed walks (sequences returning the blank to its start)
 compose: this makes the closed-walk permutations a subgroup of the permutations fixing `p`. -/
 theorem permOf_append_of_trace_eq (p : Cell n m) (σ₁ σ₂ : List Dir)
@@ -177,8 +156,6 @@ def invDir : Dir → Dir
 @[simp] theorem invDir_D : invDir Dir.D = Dir.U := rfl
 @[simp] theorem invDir_L : invDir Dir.L = Dir.R := rfl
 @[simp] theorem invDir_R : invDir Dir.R = Dir.L := rfl
-
-theorem invDir_invDir (δ : Dir) : invDir (invDir δ) = δ := by cases δ <;> rfl
 
 /-- The inverse of an operation sequence. -/
 def invWord : List Dir → List Dir
@@ -286,19 +263,6 @@ theorem mem_traceSet_self (p : Cell n m) (σ : List Dir) : p ∈ traceSet p σ :
       cases h : neighbor? p δ with
       | none => rw [traceSet_cons_of_neighbor?_eq_none h]; exact Finset.mem_insert_self _ _
       | some c' => rw [traceSet_cons_of_neighbor? h]; exact Finset.mem_insert_self _ _
-
-/-- The endpoint of the trace is visited by the blank. -/
-theorem trace_mem_traceSet (p : Cell n m) (σ : List Dir) : trace p σ ∈ traceSet p σ := by
-  induction σ generalizing p with
-  | nil => simp
-  | cons δ σ ih =>
-      cases h : neighbor? p δ with
-      | none =>
-          rw [trace_cons_of_neighbor?_eq_none h, traceSet_cons_of_neighbor?_eq_none h]
-          exact Finset.mem_insert_of_mem (ih p)
-      | some c' =>
-          rw [trace_cons_of_neighbor? h, traceSet_cons_of_neighbor? h]
-          exact Finset.mem_insert_of_mem (ih c')
 
 theorem traceSet_append (p : Cell n m) (σ₁ σ₂ : List Dir) :
     traceSet p (σ₁ ++ σ₂) = traceSet p σ₁ ∪ traceSet (trace p σ₁) σ₂ := by

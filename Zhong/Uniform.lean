@@ -243,25 +243,6 @@ theorem mul_inv_apply_self {p q : Cell n m} {g gq : Equiv.Perm (Cell n m)}
     exact h.symm
   rw [hgq_eq]
 
-/-- Each walk fiber has the cardinality of the closed-walk group. -/
-theorem card_walkFiber_eq {p q : Cell n m} {gq : Equiv.Perm (Cell n m)}
-    (hgq : gq ∈ walkFiber p q) :
-    (walkFiber p q).card = (closedGroupFinset p).card := by
-  refine Finset.card_bij (fun g _ => g * gq⁻¹) ?_ ?_ ?_
-  · intro g hg
-    rw [mem_closedGroupFinset, mem_closedGroup_iff_walkSet]
-    exact ⟨mul_inv_mem_walkSet hg hgq, mul_inv_apply_self hg hgq⟩
-  · intro a _ b _ hab
-    exact mul_right_cancel hab
-  · intro h hh
-    rw [mem_closedGroupFinset] at hh
-    refine ⟨h * gq, ?_, ?_⟩
-    · rw [mem_walkFiber]
-      refine ⟨mul_mem_walkSet hh (mem_walkFiber.mp hgq).1, ?_⟩
-      rw [mul_inv_rev, Equiv.Perm.mul_apply,
-        closedGroup_apply_self (Subgroup.inv_mem _ hh), (mem_walkFiber.mp hgq).2]
-    · rw [mul_assoc, mul_inv_cancel, mul_one]
-
 /-- There is an applicable word from any cell to any other cell. -/
 theorem exists_word_to (p q : Cell n m) :
     ∃ σ : List Dir, ApplicableFrom p σ ∧ trace p σ = q := by

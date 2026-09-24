@@ -72,16 +72,4 @@ theorem conditional_gods_number (happrox : UniformApproximation)
   apply abs_le.mpr
   constructor <;> linarith [hs.2.1, hs.2.2]
 
-/-- The conjunction of the two conditional Proposition 9 conclusions. -/
-theorem conditional_proposition9 (happrox : UniformApproximation)
-    (hmean : ∃ C : ℝ, 0 ≤ C ∧ ∀ᶠ n : ℕ in atTop,
-      |averageManhattan n - (2 / 3 : ℝ) * (n : ℝ) ^ 3| ≤ C * (n : ℝ) ^ 2)
-    (hmax : ∃ C : ℝ, 0 ≤ C ∧ ∀ᶠ n : ℕ in atTop,
-      |maximumManhattan n - (n : ℝ) ^ 3| ≤ C * (n : ℝ) ^ 2) :
-    ((fun n : ℕ => averageOptimalLength n - (2 / 3 : ℝ) * (n : ℝ) ^ 3)
-      =O[atTop] (fun n : ℕ => Real.rpow (n : ℝ) (11 / 4 : ℝ))) ∧
-    ((fun n : ℕ => godsNumber n - (n : ℝ) ^ 3)
-      =O[atTop] (fun n : ℕ => Real.rpow (n : ℝ) (11 / 4 : ℝ))) :=
-  ⟨conditional_average_optimal_length happrox hmean, conditional_gods_number happrox hmax⟩
-
 end SlidingPuzzle

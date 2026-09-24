@@ -100,20 +100,6 @@ theorem optimalLength_le_leading_eventually {n : ℕ} [NeZero n]
   norm_num only [Nat.cast_ofNat] at hr
   linarith
 
-/-- The same eventual bound has an explicit legal witness. -/
-theorem exists_solution_with_leading_eventually {n : ℕ} [NeZero n]
-    (hn : max 16 (43054^4) ≤ n) (B : ReachableBoard n) :
-    ∃ p : Path B.val (target n),
-      (p.inefficientMoves : ℝ) ≤ (191/2 : ℝ)*Real.rpow (n : ℝ) (11/4 : ℝ) ∧
-      (p.length : ℝ) ≤ (manhattan B.val : ℝ)+191*Real.rpow (n : ℝ) (11/4 : ℝ) := by
-  obtain ⟨p,hp⟩ := shortest_witness B
-  have hlength := optimalLength_le_leading_eventually hn B
-  rw [← hp] at hlength
-  refine ⟨p,?_,hlength⟩
-  have hbalance : (p.length : ℝ)=(manhattan B.val : ℝ)+2*(p.inefficientMoves : ℝ) := by
-    exact_mod_cast p.solution_length
-  linarith
-
 /-- Proposition 9 already permits an eventual bound: small boards impose no
 restriction on the leading-term accounting. -/
 theorem uniformApproximation_leading : UniformApproximation := by

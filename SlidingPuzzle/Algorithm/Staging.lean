@@ -336,22 +336,6 @@ theorem stagingCells_disjoint {n k : ℕ} (hk : 2 ≤ k) {i i' : GroupIndex k}
   intro c hi hi'
   exact hii' (stagingCells_destination_unique hk hi hi')
 
-theorem stagingCells_pairwise_disjoint {n k : ℕ} (hk : 2 ≤ k) :
-    (Set.univ : Set (GroupIndex k)).PairwiseDisjoint (fun i => stagingCells (n := n) i) := by
-  intro i _ i' _ hii'
-  exact stagingCells_disjoint hk hii'
-
-/-- Every staging cell lies in the first `k^3` rows or columns. -/
-theorem stagingCells_prefix {n k : ℕ} (hk : 2 ≤ k) {i : GroupIndex k} {c : Cell n}
-    (h : c ∈ stagingCells i) : c.1.val < k^3 ∨ c.2.val < k^3 := by
-  rcases (mem_stagingCells i c).mp h with hA | hB | ⟨j, hC⟩
-  · exact Or.inr (mem_stagingA i c |>.mp hA).2
-  · left
-    rw [(mem_stagingB i c |>.mp hB).1]
-    have hi : i.val < k^2 := by simpa [pow_two] using i.isLt
-    exact hi.trans_le (square_le_cube k hk)
-  · exact Or.inr (stagingC_col_lt_cube hk hC)
-
 /-- The staging area leaves the rectangle below row `k²` and to the right of
 column `k³` free for representative routing. -/
 theorem stagingCells_compressed {n k : ℕ} (hk : 2 ≤ k)

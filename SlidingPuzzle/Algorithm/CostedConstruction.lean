@@ -6,39 +6,10 @@ namespace SlidingPuzzle
 noncomputable section
 open Classical
 
-/-- A protected prefix with a dimension- and width-dependent budget. -/
-def PrefixCostBound (cost : ℕ → ℕ → ℕ) : Prop :=
-  ∀ {n : ℕ} [NeZero n] (B T : Board n), blank T = blank (target n) →
-    ∀ d, d+4 ≤ n → ∃ C : Board n, ∃ p : Path B C,
-      p.length ≤ cost n d ∧
-      ∀ x y : Fin n, x.val<d ∨ y.val<d → C (x,y)=T (x,y)
-
 /-- A local solver whose full cost is retained. -/
 def SolverCostBound (cost : ℕ → ℕ) : Prop :=
   ∀ {n : ℕ} [NeZero n], 8 ≤ n → ∀ B : ReachableBoard n,
     ∃ p : Path B.val (target n), p.length ≤ cost n
-
-theorem parberryPrefixCost : PrefixCostBound (fun n d => (15*n^2+3002*n+1)*d) := by
-  intro n _ B T hblank d hd
-  let e : Equiv.Perm (Tile n) := T.symm.trans (target n)
-  have he : e 0=0 := by
-    change target n (blank T)=0
-    rw [hblank]
-    simp [blank,position]
-  have hes : e.symm 0=0 := by
-    apply e.injective
-    simpa [he] using e.apply_symm_apply 0
-  obtain ⟨D,p,hp,hD⟩ := Parberry.exists_prefix (relabel B e) d hd
-  have hq : ∃ q : Path B (relabel D e.symm), q.length ≤ (15*n^2+3002*n+1)*d := by
-    have hh : ∃ q : Path (relabel (relabel B e) e.symm) (relabel D e.symm),
-        q.length ≤ (15*n^2+3002*n+1)*d := ⟨p.relabel e.symm hes,by simpa using hp⟩
-    rwa [relabel_relabel_symm] at hh
-  obtain ⟨q,hq⟩ := hq
-  refine ⟨relabel D e.symm,q,hq,?_⟩
-  intro x y hxy
-  change e.symm (D (x,y))=T (x,y)
-  rw [hD x y hxy]
-  simp [e]
 
 theorem parberrySolverCost : SolverCostBound (fun n => 5*n^3+1509*n^2+1505*n+4796) := by
   intro n _ hn B
@@ -46,108 +17,6 @@ theorem parberrySolverCost : SolverCostBound (fun n => 5*n^3+1509*n^2+1505*n+479
 
 section
 variable {n m : ℕ} [NeZero n] [NeZero m]
-theorem exists_prefix_group_path_with_blank_of_cost {cost : ℕ → ℕ → ℕ} {k : ℕ}
-    (hprefix : PrefixCostBound cost) (hk : 2 ≤ k) (B : Board n)
-    (d : ℕ) (hd : d+4 ≤ n) (s : Finset (Cell n))
-    (hs : ∀ c ∈ s, c.1.val<d ∨ c.2.val<d)
-    (required : {c // c ∈ s} → Partition.GroupIndex k)
-    (hcapacity : ∀ i, Fintype.card {c : {c // c ∈ s} // required c=i} ≤
-      (Partition.targetGroup (n := n) i).card) :
-    ∃ C : Board n, ∃ p : Path B C, p.length ≤ cost n d ∧
-      (∀ c : {c // c ∈ s}, C c.val ∈ Partition.targetGroup (required c)) ∧
-      d ≤ (blank C).1.val ∧ d ≤ (blank C).2.val := by
-  have hb : blank (target n) ∉ s := by
-    intro h
-    have hh := hs _ h
-    have he : blank (target n) =
-        (⟨n-1, Nat.sub_lt (NeZero.pos n) (by omega)⟩,
-         ⟨n-1, Nat.sub_lt (NeZero.pos n) (by omega)⟩) := by
-      apply (target n).injective
-      rw [target_bottomRight]
-      exact (target n).apply_symm_apply 0
-    rw [he] at hh
-    simp only at hh
-    omega
-  obtain ⟨T,hT,hassign⟩ := exists_board_with_group_assignment hk s hb required hcapacity
-  obtain ⟨C,p,hp,hC⟩ := hprefix B T hT d hd
-  refine ⟨C,p,hp,?_,?_⟩
-  · intro c
-    have he := hC c.val.1 c.val.2 (hs c.val c.property)
-    change C c.val=T c.val at he
-    rw [he]
-    exact hassign c
-  · have hnot : ¬ ((blank C).1.val < d ∨ (blank C).2.val < d) := by
-      intro h
-      have he : blank C = blank T := T.injective (by
-        rw [← hC (blank C).1 (blank C).2 h]
-        simp [blank, position])
-      rw [he, hT] at h
-      have ht : blank (target n) =
-          (⟨n-1, by have := NeZero.pos n; omega⟩,
-           ⟨n-1, by have := NeZero.pos n; omega⟩) := by
-        apply (target n).injective
-        rw [target_bottomRight]
-        simp [blank, position]
-      rw [ht] at h
-      simp only at h
-      omega
-    omega
-
-theorem exists_prefix_disjoint_group_path_with_blank_of_cost {cost : ℕ → ℕ → ℕ} {k : ℕ}
-    (hpath : PrefixCostBound cost) (hk : 2 ≤ k) (B : Board n)
-    (d : ℕ) (hd : d + 4 ≤ n) (s : Partition.GroupIndex k → Finset (Cell n))
-    (hdisjoint : (Set.univ : Set (Partition.GroupIndex k)).PairwiseDisjoint s)
-    (hprefix : ∀ (i : Partition.GroupIndex k) (c : Cell n), c ∈ s i →
-      c.1.val < d ∨ c.2.val < d)
-    (hcapacity : ∀ i : Partition.GroupIndex k,
-      (s i).card ≤ (Partition.targetGroup (n := n) i).card) :
-    ∃ C : Board n, ∃ p : Path B C, p.length ≤ cost n d ∧
-      (∀ (i : Partition.GroupIndex k) (c : Cell n), c ∈ s i →
-        C c ∈ Partition.targetGroup i) ∧
-      d ≤ (blank C).1.val ∧ d ≤ (blank C).2.val := by
-  let u : Finset (Cell n) := Finset.univ.biUnion s
-  have hu (c : Cell n) : c ∈ u ↔ ∃ i : Partition.GroupIndex k, c ∈ s i := by
-    simp [u]
-  let required : {c // c ∈ u} → Partition.GroupIndex k := fun c =>
-    Classical.choose (show ∃ i : Partition.GroupIndex k, c.val ∈ s i from (hu c.val).mp c.property)
-  have hrequired (c : {c // c ∈ u}) : c.val ∈ s (required c) := by
-    exact Classical.choose_spec
-      (show ∃ i : Partition.GroupIndex k, c.val ∈ s i from (hu c.val).mp c.property)
-  have hfib (i : Partition.GroupIndex k) :
-      Fintype.card {c : {c // c ∈ u} // required c = i} ≤ (s i).card := by
-    let e : {c : {c // c ∈ u} // required c = i} ↪ {c // c ∈ s i} :=
-      { toFun := fun c => ⟨c.val.val, by
-          have hi : c.val.val ∈ s (required c.val) := hrequired c.val
-          rw [c.property] at hi
-          exact hi⟩,
-        inj' := by
-          intro a b h
-          have hv : a.val.val = b.val.val :=
-            congrArg (fun z : {c // c ∈ s i} => z.val) h
-          apply Subtype.ext
-          apply Subtype.ext
-          exact hv }
-    calc
-      Fintype.card {c : {c // c ∈ u} // required c = i} ≤
-          Fintype.card {c // c ∈ s i} := Fintype.card_le_of_injective e e.injective
-      _ = (s i).card := Fintype.card_coe (s i)
-  have huprefix : ∀ c : Cell n, c ∈ u → c.1.val < d ∨ c.2.val < d := by
-    intro c hc
-    obtain ⟨i, hi⟩ := (hu c).mp hc
-    exact hprefix i c hi
-  obtain ⟨C, p, hp, hC, hb⟩ := exists_prefix_group_path_with_blank_of_cost hpath hk B d hd u huprefix required (by
-    intro i
-    exact (hfib i).trans (hcapacity i))
-  refine ⟨C, p, hp, ?_, hb⟩
-  intro i c hci
-  have hcu : c ∈ u := (hu c).mpr ⟨i, hci⟩
-  have hreq : required ⟨c, hcu⟩ = i := by
-    by_contra hne
-    exact (Finset.disjoint_left.mp
-      (hdisjoint (Set.mem_univ _) (Set.mem_univ _) hne))
-      (hrequired ⟨c, hcu⟩) hci
-  simpa [hreq] using hC ⟨c, hcu⟩
-
 theorem exists_solution_cubic_up_to_swap_of_cost {cost : ℕ → ℕ} (hsolver : SolverCostBound cost)
     (B : Board n) (hn : 8 ≤ n)
     (a b : Cell n) (hab : a ≠ b)
@@ -520,34 +389,6 @@ theorem exists_finish_path_of_cost {cost : ℕ → ℕ} (hsolver : SolverCostBou
   have hp' : p.length ≤ 2*k^4 := hp
   nlinarith
 
-theorem exists_representative_staging_path_of_cost {cost : ℕ → ℕ → ℕ} {k : ℕ}
-    (hprefix : PrefixCostBound cost) (hk : 2 ≤ k)
-    [NeZero (k^4)] (B : Board (k^4)) :
-    ∃ C : Board (k^4), ∃ p : Path B C,
-      p.length ≤ cost (k^4) (k^3) ∧
-      (∀ (i : GroupIndex k) (c : Cell (k^4)),
-        c ∈ stagingCells i → C c ∈ targetGroup i) ∧
-      (∀ i : GroupIndex k, i ≠ lastGroup k hk →
-        C (representativeSource hk i) ∈ targetGroup i) ∧
-      k^3 ≤ (blank C).1.val ∧ k^3 ≤ (blank C).2.val := by
-  have hg := preparation_geometry hk
-  obtain ⟨C,p,hp,hC,hb⟩ := exists_prefix_disjoint_group_path_with_blank_of_cost hprefix hk B (k^3)
-    (by omega) (representativeStagingCells hk) (representativeStagingCells_disjoint hk)
-    (by
-      intro i c hc
-      rcases (mem_representativeStagingCells hk i c).mp hc with hc | ⟨_,rfl⟩
-      · exact stagingCells_prefix hk hc
-      · left; change k^2 < k^3; omega)
-    (representativeStagingCells_capacity hk)
-  refine ⟨C,p,?_,?_,?_,hb⟩
-  · calc
-      p.length ≤ cost (k^4) (k^3) := hp
-      _ = cost (k^4) (k^3) := by ring
-  · intro i c hc
-    exact hC i c ((mem_representativeStagingCells hk i c).mpr (Or.inl hc))
-  · intro i hi
-    exact hC i _ ((mem_representativeStagingCells hk i _).mpr (Or.inr ⟨hi,rfl⟩))
-
 /-- A staging construction: all compressed quotas and representatives are
 filled, with the blank below row `k²` and right of column `k³`. The length bound
 is doubled so that half-integer leading coefficients are retained. -/
@@ -559,14 +400,6 @@ def RepresentativeStaging {k : ℕ} (hk : 2 ≤ k) [NeZero (k^4)] (L : ℕ) : Pr
     (∀ i : GroupIndex k, i ≠ lastGroup k hk →
       C (representativeSource hk i) ∈ targetGroup i) ∧
     k^2+1 ≤ (blank C).1.val ∧ k^3 ≤ (blank C).2.val
-
-theorem representativeStaging_of_cost {cost : ℕ → ℕ → ℕ} {k : ℕ}
-    (hprefix : PrefixCostBound cost) (hk : 2 ≤ k) [NeZero (k^4)] :
-    RepresentativeStaging hk (2*cost (k^4) (k^3)) := by
-  intro B
-  have hg := preparation_geometry hk
-  obtain ⟨C,p,hp,hs,hr,hb1,hb2⟩ := exists_representative_staging_path_of_cost hprefix hk B
-  exact ⟨C,p,by omega,hs,hr,by omega,hb2⟩
 
 theorem exists_staging_representative_row_path_with_blank_of_cost {k : ℕ}
     (hk : 2 ≤ k) [NeZero (k^4)] {L : ℕ} (hstaging : RepresentativeStaging hk L)

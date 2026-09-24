@@ -16,13 +16,6 @@ def LeadingBudget.eval (b : LeadingBudget) (k : ℕ) : ℕ :=
 def LeadingBudget.add (a b : LeadingBudget) : LeadingBudget :=
   ⟨a.leading+b.leading,a.remainder+b.remainder⟩
 
-/-- One extra leading unit absorbs a complete remainder once k is large enough. -/
-theorem LeadingBudget.absorb (b : LeadingBudget) {k : ℕ} (hk : b.remainder ≤ k) :
-    b.eval k ≤ (b.leading+1)*k^11 := by
-  have h := Nat.mul_le_mul_right (k^10) hk
-  dsimp [LeadingBudget.eval]
-  nlinarith
-
 /-- Actual legal paths, uniformly over boards, with a separate remainder. The
 budget bounds twice the inefficient moves, so half-integer leading
 coefficients are retained exactly. -/

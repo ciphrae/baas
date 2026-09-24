@@ -1,4 +1,5 @@
-import SlidingPuzzle.Moves.Strips
+import SlidingPuzzle.Bridge.Words
+import Zhong.Algorithm.Lift
 
 /-! Legal subarray translations with explicit length and preservation guarantees. -/
 namespace SlidingPuzzle
@@ -43,42 +44,4 @@ theorem exists_row_translation_with_blank (B : Board n) (ro co M t : ℕ)
     rw [Zhong.trace_downWord (by omega) hM] at h
     simpa [Zhong.blockStrip, Nat.add_assoc] using h
 
-/-- The row-translation interface without its optional blank endpoint. -/
-theorem exists_row_translation (B : Board n) (ro co M t : ℕ)
-    (hr : ro+t+3 ≤ n) (hc : co+M ≤ n) (hM : 1<M)
-    (hb : blank B = (⟨ro+2,by omega⟩,⟨co,by omega⟩)) :
-    ∃ C : Board n, ∃ p : Path B C,
-      p.length ≤ t*(6*M+3) ∧
-      (∀ c : Fin M, C (⟨ro+t,by omega⟩,⟨co+c.val,by omega⟩) =
-        B (⟨ro,by omega⟩,⟨co+c.val,by omega⟩)) ∧
-      (∀ x : Cell n, x.1.val<ro ∨ ro+t+3≤x.1.val ∨
-        x.2.val<co ∨ co+M≤x.2.val → C x=B x) := by
-  obtain ⟨C,p,hp,hrow,hfix,_⟩ := exists_row_translation_with_blank B ro co M t hr hc hM hb
-  exact ⟨C,p,hp,hrow,hfix⟩
-
-private theorem block_column_word_length (H t K : ℕ) (hH : 1<H) :
-    (Zhong.blockColWord H t K).length=K*(t*(6*H+4)+1) := by
-  induction K with
-  | zero => simp [Zhong.blockColWord]
-  | succ K ih =>
-      simp only [Zhong.blockColWord,List.length_append,List.length_replicate,
-        Zhong.rightWord_length hH,ih]
-      ring
-
-/-- Translate a block of data columns to the right using one scratch row.
-Data outside the source-to-destination band remains fixed. -/
-theorem exists_column_block_translation (B : Board n) (ro co H K t : ℕ)
-    (hr : ro+H≤n) (hH : 1<H) (hc : co+K+t+3≤n)
-    (hb : blank B=(⟨ro,by omega⟩,⟨co+K+1,by omega⟩)) :
-    ∃ C : Board n, ∃ p : Path B C,
-      p.length ≤ K*(t*(6*H+4)+1) ∧
-      (∀ (j : ℕ) (hj : j<K) (r : Fin n), ro+1≤r.val → r.val<ro+H →
-        C (r,⟨co+t+j,by omega⟩)=B (r,⟨co+j,by omega⟩)) ∧
-      (∀ x : Cell n, ro+1≤x.1.val → x.1.val<ro+H →
-        (x.2.val<co ∨ co+t+K≤x.2.val) → C x=B x) := by
-  let : NeZero (n*n) := ⟨Nat.mul_ne_zero (NeZero.ne n) (NeZero.ne n)⟩
-  obtain ⟨p,hp⟩ := path_of_zhong_word B (Zhong.blockColWord H t K)
-  obtain ⟨he,hfix⟩ := Zhong.blockColWord_spec hr hH hc B hb
-  refine ⟨Zhong.actSeq B (Zhong.blockColWord H t K),p,?_,he,hfix⟩
-  simpa [block_column_word_length H t K hH] using hp
 end SlidingPuzzle

@@ -83,23 +83,6 @@ theorem Step.manhattan_le {n : ℕ} [NeZero n] {B C : Board n} (h : Step B C) :
   have hd := h.manhattan_delta
   omega
 
-/-- Integer form of the exact one-step change. -/
-theorem Step.manhattan_delta_int {n : ℕ} [NeZero n] {B C : Board n} (h : Step B C) :
-    (manhattan C : ℤ) - manhattan B = 1 ∨
-      (manhattan C : ℤ) - manhattan B = -1 := by
-  have hd := h.manhattan_delta
-  omega
-
-/-- Real form of the exact one-step change. -/
-theorem Step.manhattan_delta_real {n : ℕ} [NeZero n] {B C : Board n} (h : Step B C) :
-    (manhattan C : ℝ) - manhattan B = 1 ∨
-      (manhattan C : ℝ) - manhattan B = -1 := by
-  rcases h.manhattan_delta with hd | hd
-  · left
-    exact_mod_cast (show (manhattan C : ℤ) - manhattan B = 1 by omega)
-  · right
-    exact_mod_cast (show (manhattan C : ℤ) - manhattan B = -1 by omega)
-
 namespace Path
 
 variable {n : ℕ} [NeZero n] {A B : Board n}

@@ -164,34 +164,6 @@ theorem applicableFrom_flipReflRow0Word {c : Fin m} (l : ℕ) (hc : 2 * l + 1 �
 
 /-! ### Board forms -/
 
-/-- **Lemma 2, blank in row `1`, target to the left, board form.** -/
-theorem flipReflJumpWord_effect {c : Fin m} (l : ℕ) (hc : 2 * l ≤ c.val)
-    [NeZero (2 * m)] (B : Board 2 m) (hblank : blank B = bot c) :
-    actSeq B (flipReflJumpWord l)
-      = (Equiv.swap (bot c) (top (⟨c.val - 2 * l, by omega⟩ : Fin m))).trans B := by
-  rw [actSeq_eq_permOf, hblank, permOf_flipReflJumpWord l hc]
-
-/-- **Lemma 2, same row, target to the left, board form.** -/
-theorem reflRow0Word_effect {c : Fin m} (l : ℕ) (hc : 2 * l + 1 ≤ c.val)
-    [NeZero (2 * m)] (B : Board 2 m) (hblank : blank B = top c) :
-    actSeq B (reflRow0Word l)
-      = (Equiv.swap (top c) (top (⟨c.val - (2 * l + 1), by omega⟩ : Fin m))).trans B := by
-  rw [actSeq_eq_permOf, hblank, permOf_reflRow0Word l hc]
-
-/-- **Lemma 2, lower row, to the right, board form.** -/
-theorem flipRow0Word_effect {c : Fin m} (l : ℕ) (hc : c.val + 2 * l + 1 < m)
-    [NeZero (2 * m)] (B : Board 2 m) (hblank : blank B = bot c) :
-    actSeq B (flipRow0Word l)
-      = (Equiv.swap (bot c) (bot (⟨c.val + 2 * l + 1, hc⟩ : Fin m))).trans B := by
-  rw [actSeq_eq_permOf, hblank, permOf_flipRow0Word l hc]
-
-/-- **Lemma 2, lower row, to the left, board form.** -/
-theorem flipReflRow0Word_effect {c : Fin m} (l : ℕ) (hc : 2 * l + 1 ≤ c.val)
-    [NeZero (2 * m)] (B : Board 2 m) (hblank : blank B = bot c) :
-    actSeq B (flipReflRow0Word l)
-      = (Equiv.swap (bot c) (bot (⟨c.val - (2 * l + 1), by omega⟩ : Fin m))).trans B := by
-  rw [actSeq_eq_permOf, hblank, permOf_flipReflRow0Word l hc]
-
 /-! ### Lengths -/
 
 @[simp] theorem flipReflJumpWord_length (l : ℕ) :
@@ -368,30 +340,5 @@ theorem strip_place_four {p u v w : Cell 2 m}
   · rw [List.length_append, List.length_append, List.length_append]; omega
 
 /-! ### The content effects of the placement chains -/
-
-/-- The two-jump chain `p → c → a` moves the content of `a` to `c`. -/
-theorem strip_place_two_content {p c a : Cell 2 m}
-    (hpc : (p.1.val + p.2.val + c.1.val + c.2.val) % 2 = 1)
-    (hca : (c.1.val + c.2.val + a.1.val + a.2.val) % 2 = 1)
-    (hap : a ≠ p) (hac : a ≠ c) :
-    ∃ σ : List Dir, ApplicableFrom p σ ∧ permOf p σ c = a ∧ σ.length ≤ 24 * m + 2 := by
-  obtain ⟨σ, hapσ, hperm, hlen⟩ := strip_place_two hpc hca
-  refine ⟨σ, hapσ, ?_, hlen⟩
-  rw [hperm, Equiv.Perm.mul_apply, Equiv.swap_apply_left,
-      Equiv.swap_apply_of_ne_of_ne hap hac]
-
-/-- The closed four-jump chain `p → u → v → w → p` moves the content of `w` to `u`. -/
-theorem strip_place_four_content {p u v w : Cell 2 m}
-    (hpu : (p.1.val + p.2.val + u.1.val + u.2.val) % 2 = 1)
-    (huv : (u.1.val + u.2.val + v.1.val + v.2.val) % 2 = 1)
-    (hvw : (v.1.val + v.2.val + w.1.val + w.2.val) % 2 = 1)
-    (hwp : (w.1.val + w.2.val + p.1.val + p.2.val) % 2 = 1)
-    (hpv : p ≠ v) (hpw : p ≠ w) (hpu' : p ≠ u) :
-    ∃ σ : List Dir, ApplicableFrom p σ ∧ permOf p σ w = u ∧ σ.length ≤ 48 * m + 4 := by
-  obtain ⟨σ, hapσ, hperm, hlen⟩ := strip_place_four hpu huv hvw hwp
-  refine ⟨σ, hapσ, ?_, hlen⟩
-  rw [hperm, Equiv.Perm.mul_apply, Equiv.Perm.mul_apply, Equiv.Perm.mul_apply,
-      Equiv.swap_apply_left, Equiv.swap_apply_of_ne_of_ne hpv hpw,
-      Equiv.swap_apply_of_ne_of_ne hpu' hpv, Equiv.swap_apply_left]
 
 end Zhong

@@ -99,30 +99,4 @@ theorem diagonalRun_spec (d a b : ℕ) (ha : a+d+1 < n) (hb : b+d < m) :
         · have hh := ihs z hz
           omega
 
-/-- A checked public-model path for diagonal tile transport. -/
-theorem exists_diagonal_path {n : ℕ} [NeZero n] (B : Board n)
-    (d a b : ℕ) (ha : a+d+1 < n) (hb : b+d < n)
-    (hblank : blank B = (⟨a+d,by omega⟩,⟨b+d,by omega⟩)) :
-    ∃ C : Board n, ∃ p : Path B C,
-      p.length ≤ 6*d ∧ blank C = (⟨a,by omega⟩,⟨b,by omega⟩) ∧
-      C (⟨a+1,by omega⟩,⟨b,by omega⟩) = B (⟨a+d+1,ha⟩,⟨b+d,hb⟩) ∧
-      ∀ x, x.1.val < a ∨ a+d+1 < x.1.val ∨ x.2.val < b ∨ b+d < x.2.val →
-        C x = B x := by
-  obtain ⟨_,ht,hp,hs⟩ := diagonalRun_spec (n := n) (m := n) d a b ha hb
-  obtain ⟨p,hlen⟩ := path_of_zhong_word B (diagonalRun d)
-  refine ⟨Zhong.actSeq B (diagonalRun d),p,by simpa using hlen,?_,?_,?_⟩
-  · change Zhong.blank (Zhong.actSeq B (diagonalRun d)) = _
-    rw [Zhong.blank_actSeq]
-    change trace (blank B) (diagonalRun d) = _
-    rw [hblank,ht]
-  · rw [Zhong.actSeq_eq_permOf]
-    change B (permOf (blank B) (diagonalRun d) _) = _
-    rw [hblank,hp]
-  · intro x hx
-    rw [Zhong.actSeq_eq_permOf]
-    change B (permOf (blank B) (diagonalRun d) x) = B x
-    rw [hblank,permOf_apply_of_not_mem_traceSet]
-    intro hmem
-    have hh := hs x hmem
-    omega
 end SlidingPuzzle.Parberry
