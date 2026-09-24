@@ -1,0 +1,17 @@
+name = "slidingPuzzle"
+version = "0.1.0"
+defaultTargets = ["SlidingPuzzle"]
+
+[leanOptions]
+autoImplicit = false
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "v4.33.1"
+
+[[lean_lib]]
+name = "SlidingPuzzle"
+
+[[lean_lib]]
+name = "Zhong"
