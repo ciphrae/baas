@@ -111,11 +111,27 @@ initially holds off-diagonal tiles (`weighted_rowOff_move`). The rightmost
 column's surcharge is therefore at most `k*s²*3s`, lower order
 (`weighted_boardMatrix_le`).
 
-**Arrangement.** The two exchange schedules (vertical corridors `V(i,j) ↔ V(j,i)`,
-then horizontal slices) use the paper's shared staging: both families are staged
-in the top row, exchanged by the row-shift word `θ_m`, and unstaged by the reverse
-path (`Moves/BulkExchange.lean`). The families may be reordered internally, so
+**Arrangement.** Two exchange schedules: vertical corridors `V(i,j) ↔ V(j,i)`,
+then horizontal slices. Both stage the two families, exchange them with the
+row-shift word `θ_m`, and undo the staging by its reverse path, which restores
+every tile the staging disturbed. The families may be reordered internally, so
 odd family sizes cause no parity problem.
+
+- *Horizontal slices* use the paper's shared staging in the top row of the board
+  (`Moves/BulkExchange.lean`). There are only `k³s` such tiles, so this is lower
+  order.
+- *Vertical corridors* move one family next to the other
+  (`Moves/FamilySwap.lean`, `exists_vertical_arrangement_path_near`). Since the
+  staging is undone, it only needs to track the two families. The family in the
+  lower-numbered column is shifted sideways, one column at a time, by protected
+  column shifts (`6m+5` moves per column). The family further down is then
+  carried along its own column by a conveyor (`Moves/Conveyor.lean`): the blank
+  walks through the segment, shifting it by one, and returns along the
+  neighbouring column, `2m+3` moves per row. The two adjacent columns are
+  exchanged, and the staging is reversed. A pair costs about
+  `2m·(6·Δcol + 2·Δrow)`. Square coordinates of two groups differ by `k/3` on
+  average (`3·∑_{a,b<k}|a-b| = k³-k`, `Arrangement/Cost.lean`), so the total is
+  `(8/3)·k⁵s² + O(k·s³)` (`sum_vcost_le`), against `24·k⁵s²` for top-row staging.
 
 **Finish.** Squares are not locally solvable in general. As permitted by
 Section 3.2 (p. 137), each nonfinal square is solved up to one transposition,
@@ -157,18 +173,18 @@ after the prefix (`Algorithm/Residual*.lean`). Then
 `O(n²·k) = O(x¹⁰)`.
 
 **Choice of `k`.** With `k ≈ c*x`, twice the leading inefficiency is
-`(A'/c + 47*c³)*x¹¹`, where `A' = 16` with the Parberry Finish (one level) and
+`(A'/c + 26*c³)*x¹¹`, where `A' = 16` with the Parberry Finish (one level) and
 `A' = 11` with the recursive Finish (two levels). The minimizer is
-`c = (A'/141)^(1/4)`, and at the optimum the constant is
-`(4/3)*A^(3/4)*(3P)^(1/4)` for halved coefficients `A = A'/2` and `P = 23.5`.
+`c = (A'/78)^(1/4)`, and at the optimum the constant is
+`(4/3)*A^(3/4)*(3P)^(1/4)` for halved coefficients `A = A'/2` and `P = 13`.
 
 | Level | `c` | Constant | Where |
 | --- | --- | ---: | --- |
-| One (Parberry Finish) | `7/12` | `96/7 + 16121/3456 ≈ 18.38` | `GeneralSize.exists_solution_explicit` |
-| Two (recursive Finish) | `9/17` | `187/18 + 34263/9826 ≈ 13.876` | `TwoLevel.exists_solution_two_level` |
+| One (Parberry Finish) | `2/3` | `12 + 104/27 ≈ 15.86` | `GeneralSize.exists_solution_explicit` |
+| Two (recursive Finish) | `3/5` | `55/6 + 351/125 ≈ 11.975` | `TwoLevel.exists_solution_two_level` |
 
-With two levels a unit saved in Transport is worth about `1.89` and a unit saved
-in Preparation or Arrangement about `0.15`.
+With two levels a unit saved in Transport is worth about `1.63` and a unit saved
+in Preparation or Arrangement about `0.23`.
 
 The paper instead rounds `n` down to a fourth power, leaving up to
 `4*n^(3/4)` outer layers whose Parberry prefix costs `60*n^(11/4)`. Rounding
@@ -180,27 +196,31 @@ Leading coefficients of the inefficient moves:
 
 | Source | Coefficient | Where |
 | --- | ---: | --- |
-| Arrangement (length 24, halved) | `12*k⁵s²` | `Admissible.arrangement_bound` |
+| Arrangement (length 3, halved) | `1.5*k⁵s²` | `Admissible.arrangement_bound` |
 | Preparation: staging 7.5, vertical spreading 4 | `11.5*k⁵s²` | `Admissible.preparation_phase` |
 | Transport | `5.5*k²s³` | `Admissible.transport_phase` |
 | Finish (recursive solver, charged by inefficiency) | lower order | `TwoLevel.recursiveSolver` |
-| **Total**, with `k = ⌊9x/17⌋` | **`13.876*n^(11/4)`** | `TwoLevel.exists_solution_two_level` |
+| **Total**, with `k = ⌊3x/5⌋` | **`11.975*n^(11/4)`** | `TwoLevel.exists_solution_two_level` |
 
 Lower-order terms are collected in one `k*s³` envelope, plus the inner level's
 error, and absorbed (as `O(n^(41/16))`) only in `uniformApproximation`.
 
 ## Directions for improvement
 
-Given the weights above, Transport is the phase worth attacking.
-
-- **Arrangement (12, weight 0.15).** Families are staged at the top row of the board, so each
-  exchanged tile travels up to `n` twice. Staging nearer to the squares involved,
-  or accounting for the tiles' progress toward their targets, would reduce it.
-- **Staging (7.5, weight 0.15).** The staging prefix places exact tiles, although only group
-  membership is needed.
-- **Transport (5.5, weight 1.89).** The entry slide, horizontal travel and
-  vertical travel each cost up to `s` per transfer, the exit `2.5*s`.
-- **Vertical spreading (4, weight 0.15).** Charging the translations at half their length
+- **Transport (5.5, weight 1.63).** The entry slide, horizontal travel and
+  vertical travel each cost up to `s` per transfer, the exit `2.5*s`. Choosing
+  the exit side with a look-ahead to the next transfer's direction could save
+  part of the horizontal travel, but a same-column transfer followed by a
+  different-column one gives conflicting preferences.
+- **Staging (7.5, weight 0.23).** The staging prefix places exact tiles, although only group
+  membership is needed. Moving rows of tiles along their own row costs about 2
+  moves per tile and cell, against 5–6 for single carries, which staging does not
+  exploit.
+- **Vertical spreading (4, weight 0.23).** Charging the translations at half their length
   plus displacement needs a complete description of their effect on the band.
+- **Arrangement sideways moves (1.5, weight 0.23).** Families move sideways at
+  `6` per cell and along their axis at `2`; turning a column into a row for the
+  sideways leg costs only `O(s)` per tile, so the leading term could drop to
+  about `(4/3)*k⁵s²`.
 - **Parberry placements.** Tracking Manhattan changes through the `Zhong` words
   would let carried tiles' own moves count as efficient in staging.

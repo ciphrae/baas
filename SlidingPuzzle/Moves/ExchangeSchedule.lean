@@ -169,4 +169,120 @@ theorem exists_involution_region_path_active_of_exchange {α : Type*} [Decidable
     simpa [he] using hinit i hi x hx
   · exact hC i (Finset.mem_filter.mpr ⟨hi,he⟩) x hx
 
+/-- The schedule with a cost depending on the pair: exchanging `S i` with
+`S (τ i)` costs at most `κ i + κ (τ i)`, from a board whose blank is at its
+initial position. -/
+theorem exists_involution_region_path_of_pair_exchange {α : Type*} [DecidableEq α]
+    (B : Board n) (S : α → Finset (Cell n))
+    (τ : α → α) (hτ : Function.Involutive τ)
+    (hdis : ∀ i j, i ≠ j → Disjoint (S i) (S j))
+    (κ : α → ℕ)
+    (hexchange : ∀ i, τ i ≠ i → ∀ D : Board n, blank D = blank B →
+      ∀ (P Q : Tile n → Prop), (∀ x ∈ S i, P (D x)) → (∀ x ∈ S (τ i), Q (D x)) →
+      ∃ C : Board n, ∃ p : Path D C,
+        p.length ≤ κ i + κ (τ i) ∧ blank C = blank D ∧
+        (∀ x ∈ S i, Q (C x)) ∧ (∀ x ∈ S (τ i), P (C x)) ∧
+        ∀ x, x ∉ S i → x ∉ S (τ i) → C x = D x)
+    (P : α → Tile n → Prop) (s : Finset α)
+    (hclosed : ∀ i ∈ s, τ i ∈ s)
+    (hinit : ∀ i ∈ s, ∀ x ∈ S i, P (τ i) (B x)) :
+    ∃ C : Board n, ∃ p : Path B C,
+      p.length ≤ ∑ i ∈ s.filter (fun i => τ i ≠ i), κ i ∧ blank C = blank B ∧
+      (∀ i ∈ s, ∀ x ∈ S i, P i (C x)) ∧
+      (∀ x, (∀ i ∈ s, x ∉ S i) → C x = B x) := by
+  classical
+  revert hclosed hinit
+  induction s using Finset.strongInductionOn
+  rename_i s ih
+  intro hclosed hinit
+  by_cases hempty : s = ∅
+  · subst s
+    exact ⟨B,Path.nil B,by simp,rfl,by simp,fun _ _ => rfl⟩
+  obtain ⟨i,hi⟩ := Finset.nonempty_iff_ne_empty.mpr hempty
+  by_cases hfixed : τ i = i
+  · let t := s.erase i
+    have ht : t ⊂ s := Finset.erase_ssubset hi
+    have htclosed : ∀ j ∈ t, τ j ∈ t := by
+      intro j hj
+      obtain ⟨hji,hjs⟩ := Finset.mem_erase.mp hj
+      apply Finset.mem_erase.mpr
+      refine ⟨?_,hclosed j hjs⟩
+      intro he
+      apply hji
+      calc j = τ (τ j) := (hτ j).symm
+           _ = i := by rw [he,hfixed]
+    obtain ⟨C,p,hp,hbC,hC,hfix⟩ := ih t ht htclosed
+      (fun j hj => hinit j (Finset.mem_of_mem_erase hj))
+    refine ⟨C,p,hp.trans (Finset.sum_le_sum_of_subset (Finset.filter_subset_filter _
+      (Finset.erase_subset _ _))),hbC,?_,?_⟩
+    · intro j hj x hx
+      by_cases hji : j=i
+      · subst j
+        rw [hfix x (by
+          intro j hj
+          exact fun hxj => Finset.disjoint_left.mp (hdis i j (Finset.mem_erase.mp hj).1.symm) hx hxj)]
+        simpa [hfixed] using hinit i hi x hx
+      · exact hC j (Finset.mem_erase.mpr ⟨hji,hj⟩) x hx
+    · intro x hx
+      exact hfix x (fun j hj => hx j (Finset.mem_of_mem_erase hj))
+  · let j := τ i
+    have hj : j ∈ s := hclosed i hi
+    have hij : i ≠ j := Ne.symm hfixed
+    let t := (s.erase i).erase j
+    have ht : t ⊂ s := (Finset.erase_subset _ _).trans_ssubset (Finset.erase_ssubset hi)
+    have htmem {a : α} : a ∈ t ↔ a ≠ j ∧ a ≠ i ∧ a ∈ s := by
+      simp [t,Finset.mem_erase]
+    have htclosed : ∀ a ∈ t, τ a ∈ t := by
+      intro a ha
+      obtain ⟨haj,hai,has⟩ := htmem.mp ha
+      apply htmem.mpr
+      refine ⟨?_,?_,hclosed a has⟩
+      · intro he
+        exact hai (hτ.injective he)
+      · intro he
+        apply haj
+        calc a = τ (τ a) := (hτ a).symm
+             _ = j := by rw [he]
+    obtain ⟨D,p,hp,hbD,hD,hfix⟩ := ih t ht htclosed
+      (fun a ha => hinit a (htmem.mp ha).2.2)
+    have hDi (x : Cell n) (hx : x ∈ S i) : D x = B x := by
+      apply hfix
+      intro a ha hxa
+      exact Finset.disjoint_left.mp (hdis i a (htmem.mp ha).2.1.symm) hx hxa
+    have hDj (x : Cell n) (hx : x ∈ S j) : D x = B x := by
+      apply hfix
+      intro a ha hxa
+      exact Finset.disjoint_left.mp (hdis j a (htmem.mp ha).1.symm) hx hxa
+    obtain ⟨C,q,hq,hbC,hCi,hCj,hCfix⟩ := hexchange i hfixed D hbD (P j) (P i)
+      (fun x hx => by rw [hDi x hx]; exact hinit i hi x hx)
+      (fun x hx => by rw [hDj x hx]; simpa [j,hτ i] using hinit j hj x hx)
+    refine ⟨C,p.append q,?_,hbC.trans hbD,?_,?_⟩
+    · rw [Path.length_append]
+      have hjne : τ j ≠ j := by simp only [j, hτ i]; exact hij
+      have hsplit : ∑ a ∈ s.filter (fun a => τ a ≠ a), κ a =
+          ∑ a ∈ t.filter (fun a => τ a ≠ a), κ a + κ i + κ (τ i) := by
+        have hi' : i ∈ s.filter (fun a => τ a ≠ a) := Finset.mem_filter.mpr ⟨hi, hfixed⟩
+        have hj' : j ∈ (s.filter (fun a => τ a ≠ a)).erase i :=
+          Finset.mem_erase.mpr ⟨hij.symm, Finset.mem_filter.mpr ⟨hj, hjne⟩⟩
+        have hset : ((s.filter (fun a => τ a ≠ a)).erase i).erase j =
+            t.filter (fun a => τ a ≠ a) := by
+          ext a
+          simp only [t, Finset.mem_erase, Finset.mem_filter]
+          tauto
+        rw [← Finset.sum_erase_add _ _ hi', ← Finset.sum_erase_add _ _ hj', hset]
+        ring
+      rw [hsplit]
+      omega
+    · intro a ha x hx
+      by_cases hai : a=i
+      · subst a; exact hCi x hx
+      by_cases haj : a=j
+      · subst a; exact hCj x hx
+      rw [hCfix x (fun hxi => Finset.disjoint_left.mp (hdis a i hai) hx hxi)
+        (fun hxj => Finset.disjoint_left.mp (hdis a j haj) hx hxj)]
+      exact hD a (htmem.mpr ⟨haj,hai,ha⟩) x hx
+    · intro x hx
+      rw [hCfix x (hx i hi) (hx j hj)]
+      exact hfix x (fun a ha => hx a (htmem.mp ha).2.2)
+
 end SlidingPuzzle
