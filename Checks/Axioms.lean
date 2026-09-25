@@ -13,7 +13,7 @@ import SlidingPuzzle
 #print axioms SlidingPuzzle.Algorithm.exists_solution_two_level
 #print axioms SlidingPuzzle.Algorithm.exists_solution_explicit
 #print axioms SlidingPuzzle.Algorithm.exists_admissible_solution
-#print axioms SlidingPuzzle.Algorithm.exists_admissible_solution_of_solver
+#print axioms SlidingPuzzle.Algorithm.exists_admissible_solution_of_solver_ineff
 
 -- The four phases
 #print axioms SlidingPuzzle.Algorithm.preparation_phase

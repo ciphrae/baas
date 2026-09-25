@@ -3,23 +3,24 @@ import SlidingPuzzle.DistanceEstimates
 
 /-! # Two levels: the explicit bound as the local solver of Finish
 
-Finish solves `k²` squares of side `s` with a local solver whose cost must hold
-for every board of side `s`. Since every board has `M ≤ s³`
-(`manhattan_le_cube`), the one-level bound `optimalLength_le_explicit` is such a
-solver with cost `s³ + O(s^(11/4))`, against `5*s³ + O(s²)` for the Parberry
-solver. Finish then contributes `k²s³` instead of `5*k²s³` to twice the
-inefficiency, which becomes `13*k²s³ + 47*k⁵s² + O(k*s³) + O(k²s^(11/4))`.
+Finish solves `k²` squares of side `s` with a local solver. The one-level
+algorithm is such a solver, with inefficiency `O(s^(11/4))` (`recursiveSolver`).
+Charging the whole suffix by inefficiency
+(`exists_admissible_solution_of_solver_ineff`), Finish contributes only
+`O(k²s^(11/4))`, and twice the inefficiency is
+`12*k²s³ + 47*k⁵s² + O(k*s³) + O(k²s^(11/4))`: Transport alone remains in the
+`k²s³` term.
 
-With `y = n^(1/16)`, `x = y⁴ = n^(1/4)`, `k = ⌊11x/20⌋` and `s = ⌊n/k⌋`:
+With `y = n^(1/16)`, `x = y⁴ = n^(1/4)`, `k = ⌊27x/50⌋` and `s = ⌊n/k⌋`:
 
-* `k²s³ ≤ (20/11)x¹¹ + 4x¹⁰`, `k⁵s² ≤ (1331/8000)x¹¹`, `k*s³ ≤ 4x¹⁰`;
+* `k²s³ ≤ (50/27)x¹¹ + 4x¹⁰`, `k⁵s² ≤ (19683/125000)x¹¹`, `k*s³ ≤ 4x¹⁰`;
 * `s ≥ x³`, so `s^(1/4) ≥ y³` and `k²s^(11/4) ≤ k²s³/y³ ≤ 2y⁴¹`.
 
-The factor `11/20` is close to the minimizer `(13/141)^(1/4) ≈ 0.551` of
-`13/c + 47c³`. For every `n ≥ 25⁴`,
+The factor `27/50` is close to the minimizer `(12/141)^(1/4) ≈ 0.540` of
+`12/c + 47c³`. For every `n ≥ 30⁴`,
 
 ```text
-inefficiency ≤ 15.73*n^(11/4) + 158375*n^(41/16)      (exists_solution_two_level)
+inefficiency ≤ 14.812*n^(11/4) + 191121*n^(41/16)      (exists_solution_two_level)
 ```
 
 The remainder exponent `41/16` comes from the inner level's `s^(11/4)`. -/
@@ -33,30 +34,39 @@ noncomputable def recursiveCost (m : ℕ) : ℕ :=
     m^3+⌈38.49*Real.rpow (m : ℝ) (11/4 : ℝ)+125330*Real.rpow (m : ℝ) (5/2 : ℝ)⌉₊
   else 5*m^3+1509*m^2+1505*m+4796
 
-theorem recursiveSolverCost : SolverCostBound recursiveCost := by
+/-- The inefficiency of the one-level algorithm on a board of side `m`. -/
+noncomputable def recursiveIneff (m : ℕ) : ℕ :=
+  if 10000 ≤ m then
+    ⌈19.25*Real.rpow (m : ℝ) (11/4 : ℝ)+62665*Real.rpow (m : ℝ) (5/2 : ℝ)⌉₊
+  else 5*m^3+1509*m^2+1505*m+4796
+
+theorem recursiveSolver : SolverBound recursiveCost recursiveIneff := by
   intro m _ hm B
-  obtain ⟨p,hp⟩ := shortest_witness B
-  refine ⟨p,?_⟩
-  unfold recursiveCost
-  split_ifs with h
-  · have h1 := optimalLength_le_explicit h B
-    have h2 := manhattan_le_cube_real B.val
-    have h3 := Nat.le_ceil (38.49*Real.rpow (m : ℝ) (11/4 : ℝ)+
-      125330*Real.rpow (m : ℝ) (5/2 : ℝ))
-    rw [← hp] at h1
-    have : (p.length : ℝ) ≤ ((m^3+⌈38.49*Real.rpow (m : ℝ) (11/4 : ℝ)+
-        125330*Real.rpow (m : ℝ) (5/2 : ℝ)⌉₊ : ℕ) : ℝ) := by
-      push_cast; linarith
-    exact_mod_cast this
-  · obtain ⟨q,hq⟩ := parberrySolverCost hm B
-    rw [hp]
-    exact (optimalLength_le_path_length B q).trans hq
+  by_cases h : 10000 ≤ m
+  · obtain ⟨p,hpi,hpl⟩ := exists_solution_explicit h B
+    refine ⟨p,?_,?_⟩
+    · unfold recursiveCost
+      rw [if_pos h]
+      have h2 := manhattan_le_cube_real B.val
+      have h3 := Nat.le_ceil (38.49*Real.rpow (m : ℝ) (11/4 : ℝ)+
+        125330*Real.rpow (m : ℝ) (5/2 : ℝ))
+      have : (p.length : ℝ) ≤ ((m^3+⌈38.49*Real.rpow (m : ℝ) (11/4 : ℝ)+
+          125330*Real.rpow (m : ℝ) (5/2 : ℝ)⌉₊ : ℕ) : ℝ) := by
+        push_cast; linarith
+      exact_mod_cast this
+    · unfold recursiveIneff
+      rw [if_pos h]
+      exact_mod_cast hpi.trans (Nat.le_ceil _)
+  · obtain ⟨q,hq,hqi⟩ := parberrySolverCost hm B
+    refine ⟨q,?_,?_⟩
+    · unfold recursiveCost; rw [if_neg h]; exact hq
+    · unfold recursiveIneff; rw [if_neg h]; exact hqi
 
 /-- Prefix and residual combined, with the recursive Finish solver. -/
 theorem optimalLength_le_of_residual_two_level {n k : ℕ} [NeZero n]
     (B : ReachableBoard n) (hk : 2 ≤ k) (hlo : k^4 ≤ n) :
     optimalLength B ≤ manhattan B.val + 12*(k^2*(n/k)^3)+47*(k^5*(n/k)^2)+
-      14100*(k*(n/k)^3)+(k^2*recursiveCost (n/k)+9354*k^2*(k*(n/k))) +
+      32812*(k*(n/k)^3)+2*(k^2*recursiveIneff (n/k)) +
       2*((15*n^2+3002*n+1)*(n-k*(n/k))) := by
   have hdims := residual_dims hk hlo
   have hm4 := hdims.two_le_n
@@ -72,10 +82,10 @@ theorem optimalLength_le_of_residual_two_level {n k : ℕ} [NeZero n]
     exact ⟨r.append p⟩
   have hreachA : Reachable A :=
     residual_reachable (by omega : 2 ≤ k*(n/k)) (n-k*(n/k)) hd C hC A hA hreachC
-  obtain ⟨q,hq⟩ := exists_admissible_solution_of_solver recursiveSolverCost hdims A hreachA
+  obtain ⟨q,hq⟩ := exists_admissible_solution_of_solver_ineff recursiveSolver hdims A hreachA
   rw [hside] at hq
-  have hq' : q.length ≤ manhattan A+(12*(k^2*(n/k)^3)+47*(k^5*(n/k)^2)+14100*(k*(n/k)^3)+
-      (k^2*recursiveCost (n/k)+9354*k^2*(k*(n/k)))) := by
+  have hq' : q.length ≤ manhattan A+(12*(k^2*(n/k)^3)+47*(k^5*(n/k)^2)+32812*(k*(n/k)^3)+
+      2*(k^2*recursiveIneff (n/k))) := by
     omega
   have h := optimalLength_le_prefix_residual_solution B (n-k*(n/k)) hd C p hC A hA q hq'
   omega
@@ -102,14 +112,13 @@ private theorem quarter_facts' (m : ℕ) :
 
 set_option maxHeartbeats 1000000 in
 /-- The cost terms in powers of `y = n^(1/16)`. -/
-private theorem two_level_terms {n k : ℕ} (hn : 25^4 ≤ n) (hlo : 160000*k^4 ≤ 14641*n)
-    (hhi : 14641*n < 160000*(k+1)^4) :
+private theorem two_level_terms {n k : ℕ} (hn : 30^4 ≤ n) (hlo : 6250000*k^4 ≤ 531441*n)
+    (hhi : 531441*n < 6250000*(k+1)^4) :
     let y := Real.rpow (n : ℝ) (1/16 : ℝ)
-    ((k^2*(n/k)^3 : ℕ) : ℝ) ≤ 20/11*y^44+4*y^40 ∧
-      ((k^5*(n/k)^2 : ℕ) : ℝ) ≤ 1331/8000*y^44 ∧ ((k*(n/k)^3 : ℕ) : ℝ) ≤ 4*y^40 ∧
+    ((k^2*(n/k)^3 : ℕ) : ℝ) ≤ 50/27*y^44+4*y^40 ∧
+      ((k^5*(n/k)^2 : ℕ) : ℝ) ≤ 19683/125000*y^44 ∧ ((k*(n/k)^3 : ℕ) : ℝ) ≤ 4*y^40 ∧
       (((15*n^2+3002*n+1)*(n-k*(n/k)) : ℕ) : ℝ) ≤ 103*y^40 ∧
-      ((k^2*recursiveCost (n/k) : ℕ) : ℝ) ≤ ((k^2*(n/k)^3 : ℕ) : ℝ)+250738*y^41 ∧
-      ((9354*k^2*(k*(n/k)) : ℕ) : ℝ) ≤ 9354*y^40 := by
+      ((k^2*recursiveIneff (n/k) : ℕ) : ℝ) ≤ 125370*y^41 := by
   intro y
   obtain ⟨hy0, hy16, -, -⟩ := sixteenth_facts n
   change 0 ≤ y at hy0
@@ -118,18 +127,18 @@ private theorem two_level_terms {n k : ℕ} (hn : 25^4 ≤ n) (hlo : 160000*k^4 
   have hx0 : 0 ≤ x := by positivity
   have hnR : (n : ℝ) = x^4 := by rw [hxdef, ← hy16]; ring
   clear_value x y
-  have hkx : 20*(k : ℝ) ≤ 11*x := by
-    have h : (20*(k : ℝ))^4 ≤ (11*x)^4 := by
-      have : (160000*(k : ℝ)^4) ≤ 14641*n := by exact_mod_cast hlo
+  have hkx : 50*(k : ℝ) ≤ 27*x := by
+    have h : (50*(k : ℝ))^4 ≤ (27*x)^4 := by
+      have : (6250000*(k : ℝ)^4) ≤ 531441*n := by exact_mod_cast hlo
       rw [hnR] at this; nlinarith
     exact le_of_pow_le_pow_left₀ (by norm_num) (by positivity) h
-  have hxk : 11*x < 20*((k : ℝ)+1) := by
-    have h : (11*x)^4 < (20*((k : ℝ)+1))^4 := by
-      have : 14641*(n : ℝ) < 160000*((k : ℝ)+1)^4 := by exact_mod_cast hhi
+  have hxk : 27*x < 50*((k : ℝ)+1) := by
+    have h : (27*x)^4 < (50*((k : ℝ)+1))^4 := by
+      have : 531441*(n : ℝ) < 6250000*((k : ℝ)+1)^4 := by exact_mod_cast hhi
       rw [hnR] at this; nlinarith
     exact lt_of_pow_lt_pow_left₀ 4 (by positivity) h
-  have hx25 : (25 : ℝ) ≤ x := by
-    have h : (25 : ℝ)^4 ≤ x^4 := by rw [← hnR]; exact_mod_cast hn
+  have hx25 : (30 : ℝ) ≤ x := by
+    have h : (30 : ℝ)^4 ≤ x^4 := by rw [← hnR]; exact_mod_cast hn
     exact le_of_pow_le_pow_left₀ (by norm_num) hx0 h
   have hy1 : (1 : ℝ) ≤ y := by
     by_contra h
@@ -157,14 +166,14 @@ private theorem two_level_terms {n k : ℕ} (hn : 25^4 ≤ n) (hlo : 160000*k^4 
   have hx40 : x^10 = y^40 := by rw [hxdef]; ring
   have hx44 : x^11 = y^44 := by rw [hxdef]; ring
   -- `k²s³` and `k*s³`.
-  have ha : (k : ℝ)^2*(s : ℝ)^3 ≤ 20/11*x^11+4*x^10 := by
-    have hkey : x^2 ≤ (k : ℝ)*(20/11*x+4) := by nlinarith
-    have hmul : (k : ℝ)*((k : ℝ)^2*(s : ℝ)^3) ≤ (k : ℝ)*(20/11*x^11+4*x^10) := by
+  have ha : (k : ℝ)^2*(s : ℝ)^3 ≤ 50/27*x^11+4*x^10 := by
+    have hkey : x^2 ≤ (k : ℝ)*(50/27*x+4) := by nlinarith
+    have hmul : (k : ℝ)*((k : ℝ)^2*(s : ℝ)^3) ≤ (k : ℝ)*(50/27*x^11+4*x^10) := by
       calc (k : ℝ)*((k : ℝ)^2*(s : ℝ)^3) = ((k : ℝ)*s)^3 := by ring
         _ ≤ x^12 := hcubeR
         _ = x^10*x^2 := by ring
-        _ ≤ x^10*((k : ℝ)*(20/11*x+4)) := mul_le_mul_of_nonneg_left hkey hx10
-        _ = (k : ℝ)*(20/11*x^11+4*x^10) := by ring
+        _ ≤ x^10*((k : ℝ)*(50/27*x+4)) := mul_le_mul_of_nonneg_left hkey hx10
+        _ = (k : ℝ)*(50/27*x^11+4*x^10) := by ring
     exact le_of_mul_le_mul_left hmul (by linarith)
   have hc : (k : ℝ)*(s : ℝ)^3 ≤ 4*x^10 := by
     have hkey : x^2 ≤ 4*(k : ℝ)^2 := by nlinarith
@@ -179,24 +188,24 @@ private theorem two_level_terms {n k : ℕ} (hn : 25^4 ≤ n) (hlo : 160000*k^4 
   have hsx : x^3 ≤ (s : ℝ) := by
     have h1 : (n : ℝ) < k*((s : ℝ)+1) := by exact_mod_cast hks1
     rw [hnR] at h1
-    have h2 : x^4 ≤ (11/20*x)*((s : ℝ)+1) := by nlinarith
+    have h2 : x^4 ≤ (27/50*x)*((s : ℝ)+1) := by nlinarith
     have hx3 : 1 ≤ x^3/20 := by
-      have : (25 : ℝ)^3 ≤ x^3 := pow_le_pow_left₀ (by norm_num) hx25 3
+      have : (30 : ℝ)^3 ≤ x^3 := pow_le_pow_left₀ (by norm_num) hx25 3
       linarith
     nlinarith
   have hs10 : 10000 ≤ s := by
-    have : (25 : ℝ)^3 ≤ x^3 := pow_le_pow_left₀ (by norm_num) hx25 3
+    have : (30 : ℝ)^3 ≤ x^3 := pow_le_pow_left₀ (by norm_num) hx25 3
     have : (10000 : ℝ) ≤ s := by linarith
     exact_mod_cast this
-  refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨?_, ?_, ?_, ?_, ?_⟩
   · push_cast; rw [← hx40, ← hx44]; exact ha
   · push_cast
-    have hk3 : (k : ℝ)^3 ≤ 1331/8000*x^3 := by
+    have hk3 : (k : ℝ)^3 ≤ 19683/125000*x^3 := by
       have := pow_le_pow_left₀ (by positivity) hkx 3
       nlinarith
     calc (k : ℝ)^5*(s : ℝ)^2 = (k : ℝ)^3*((k : ℝ)*s)^2 := by ring
-      _ ≤ 1331/8000*x^3*x^8 := mul_le_mul hk3 hsqR (by positivity) (by positivity)
-      _ = 1331/8000*y^44 := by rw [← hx44]; ring
+      _ ≤ 19683/125000*x^3*x^8 := mul_le_mul hk3 hsqR (by positivity) (by positivity)
+      _ = 19683/125000*y^44 := by rw [← hx44]; ring
   · push_cast; rw [← hx40]; exact hc
   · have hd : n-k*s < k := by
       have h := Nat.mod_add_div n k
@@ -224,12 +233,12 @@ private theorem two_level_terms {n k : ℕ} (hn : 25^4 ≤ n) (hlo : 160000*k^4 
       _ = 15*x^9+3002*x^5+x := by rw [hnR]; ring
       _ ≤ 103*x^10 := by nlinarith
   · -- The inner level's remainder.
-    have hcost : (recursiveCost s : ℝ) ≤ (s : ℝ)^3+(38.49*Real.rpow (s : ℝ) (11/4 : ℝ)+
-        125330*Real.rpow (s : ℝ) (5/2 : ℝ)+1) := by
-      unfold recursiveCost
+    have hcost : (recursiveIneff s : ℝ) ≤ 19.25*Real.rpow (s : ℝ) (11/4 : ℝ)+
+        62665*Real.rpow (s : ℝ) (5/2 : ℝ)+1 := by
+      unfold recursiveIneff
       rw [if_pos hs10]
-      have := Nat.ceil_lt_add_one (show 0 ≤ 38.49*Real.rpow (s : ℝ) (11/4 : ℝ)+
-        125330*Real.rpow (s : ℝ) (5/2 : ℝ) by
+      have := Nat.ceil_lt_add_one (show 0 ≤ 19.25*Real.rpow (s : ℝ) (11/4 : ℝ)+
+        62665*Real.rpow (s : ℝ) (5/2 : ℝ) by
           have := Real.rpow_nonneg (Nat.cast_nonneg s) (11/4 : ℝ)
           have := Real.rpow_nonneg (Nat.cast_nonneg s) (5/2 : ℝ)
           positivity)
@@ -246,9 +255,9 @@ private theorem two_level_terms {n k : ℕ} (hn : 25^4 ≤ n) (hlo : 160000*k^4 
       exact le_of_pow_le_pow_left₀ (by norm_num) ht0 h
     have hk2s3 : (k : ℝ)^2*t^12 ≤ 2*y^44 := by
       have h1 : t^12 = (s : ℝ)^3 := by rw [← ht4]; ring
-      have h2 : 4*x^10 ≤ 2/11*x^11 := by
-        have h3 : x^10*4 ≤ x^10*(2/11*x) := mul_le_mul_of_nonneg_left (by linarith) hx10
-        linarith [show x^10*(2/11*x) = 2/11*x^11 by ring]
+      have h2 : 4*x^10 ≤ 4/27*x^11 := by
+        have h3 : x^10*4 ≤ x^10*(4/27*x) := mul_le_mul_of_nonneg_left (by linarith) hx10
+        linarith [show x^10*(4/27*x) = 4/27*x^11 by ring]
       rw [h1, ← hx44]
       linarith
     have hy3 : 0 < y^3 := by positivity
@@ -280,38 +289,30 @@ private theorem two_level_terms {n k : ℕ} (hn : 25^4 ≤ n) (hlo : 160000*k^4 
         calc (y^4)^2 = y^8 := by ring
           _ ≤ y^41 := pow_le_pow_right₀ hy1 (by norm_num)
       linarith
-    rw [Nat.cast_mul, Nat.cast_mul, Nat.cast_pow, Nat.cast_pow]
+    rw [Nat.cast_mul, Nat.cast_pow]
     have hk2 : (0 : ℝ) ≤ (k : ℝ)^2 := by positivity
-    calc (k : ℝ)^2*(recursiveCost s : ℝ) ≤ (k : ℝ)^2*((s : ℝ)^3+(38.49*t^11+125330*t^10+1)) :=
+    calc (k : ℝ)^2*(recursiveIneff s : ℝ) ≤ (k : ℝ)^2*(19.25*t^11+62665*t^10+1) :=
           mul_le_mul_of_nonneg_left hcost hk2
-      _ = (k : ℝ)^2*(s : ℝ)^3+(38.49*((k : ℝ)^2*t^11)+125330*((k : ℝ)^2*t^10)+(k : ℝ)^2) := by
-          ring
-      _ ≤ (k : ℝ)^2*(s : ℝ)^3+250738*y^41 := by
+      _ = 19.25*((k : ℝ)^2*t^11)+62665*((k : ℝ)^2*t^10)+(k : ℝ)^2 := by ring
+      _ ≤ 125370*y^41 := by
           have hy41 : (0 : ℝ) ≤ y^41 := by positivity
+          have e : (19.25 : ℝ) = 1925/100 := by norm_num
+          rw [e]
           linarith only [hA, hB, hC, hy41]
-  · push_cast
-    have : (k : ℝ)^2*((k : ℝ)*s) ≤ y^40 := by
-      have h1 : (k : ℝ)*s ≤ x^4 := by
-        have : ((k*s : ℕ) : ℝ) ≤ n := by exact_mod_cast hks
-        push_cast at this; linarith
-      have h2 : (k : ℝ)^2 ≤ x^2 := pow_le_pow_left₀ hk0 (by linarith) 2
-      calc (k : ℝ)^2*((k : ℝ)*s) ≤ x^2*x^4 := mul_le_mul h2 h1 (by positivity) (by positivity)
-        _ = y^24 := by rw [hxdef]; ring
-        _ ≤ y^40 := pow_le_pow_right₀ hy1 (by norm_num)
-    linarith
 
 /-- An explicit bound on OPT with the recursive Finish solver. -/
 theorem optimalLength_le_two_level {n : ℕ} [NeZero n]
-    (hn : 25^4 ≤ n) (B : ReachableBoard n) :
+    (hn : 30^4 ≤ n) (B : ReachableBoard n) :
     (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ)+
-      31.46*Real.rpow (n : ℝ) (11/4 : ℝ)+316750*Real.rpow (n : ℝ) (41/16 : ℝ) := by
-  obtain ⟨k,hk,hlo,hhi⟩ := exists_scaled_dimension 14641 160000 (by norm_num) (by omega) (n := n)
+      29.624*Real.rpow (n : ℝ) (11/4 : ℝ)+382242*Real.rpow (n : ℝ) (41/16 : ℝ) := by
+  obtain ⟨k,hk,hlo,hhi⟩ := exists_scaled_dimension 531441 6250000 (by norm_num) (by omega)
+    (n := n)
   have hnat := optimalLength_le_of_residual_two_level B hk (by linarith)
   have hreal : (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ)+
-      12*((k^2*(n/k)^3 : ℕ) : ℝ)+47*((k^5*(n/k)^2 : ℕ) : ℝ)+14100*((k*(n/k)^3 : ℕ) : ℝ)+
-      (((k^2*recursiveCost (n/k) : ℕ) : ℝ)+((9354*k^2*(k*(n/k)) : ℕ) : ℝ))+
+      12*((k^2*(n/k)^3 : ℕ) : ℝ)+47*((k^5*(n/k)^2 : ℕ) : ℝ)+32812*((k*(n/k)^3 : ℕ) : ℝ)+
+      2*((k^2*recursiveIneff (n/k) : ℕ) : ℝ)+
       2*(((15*n^2+3002*n+1)*(n-k*(n/k)) : ℕ) : ℝ) := by exact_mod_cast hnat
-  obtain ⟨ha, hb, hc, hd, he, hf⟩ := two_level_terms hn hlo hhi
+  obtain ⟨ha, hb, hc, hd, he⟩ := two_level_terms hn hlo hhi
   obtain ⟨hy0, -, h44, h41⟩ := sixteenth_facts n
   rw [← h44, ← h41]
   set y := Real.rpow (n : ℝ) (1/16 : ℝ)
@@ -327,14 +328,14 @@ theorem optimalLength_le_two_level {n : ℕ} [NeZero n]
   nlinarith
 
 /-- The two-level bound as a legal solution: inefficiency at most
-`15.73*n^(11/4) + 158375*n^(41/16)` for every `n ≥ 25⁴`. -/
+`14.812*n^(11/4) + 191121*n^(41/16)` for every `n ≥ 30⁴`. -/
 theorem exists_solution_two_level {n : ℕ} [NeZero n]
-    (hn : 25^4 ≤ n) (B : ReachableBoard n) :
+    (hn : 30^4 ≤ n) (B : ReachableBoard n) :
     ∃ p : Path B.val (target n),
-      (p.inefficientMoves : ℝ) ≤ 15.73*Real.rpow (n : ℝ) (11/4 : ℝ)+
-        158375*Real.rpow (n : ℝ) (41/16 : ℝ) ∧
-      (p.length : ℝ) ≤ (manhattan B.val : ℝ)+31.46*Real.rpow (n : ℝ) (11/4 : ℝ)+
-        316750*Real.rpow (n : ℝ) (41/16 : ℝ) := by
+      (p.inefficientMoves : ℝ) ≤ 14.812*Real.rpow (n : ℝ) (11/4 : ℝ)+
+        191121*Real.rpow (n : ℝ) (41/16 : ℝ) ∧
+      (p.length : ℝ) ≤ (manhattan B.val : ℝ)+29.624*Real.rpow (n : ℝ) (11/4 : ℝ)+
+        382242*Real.rpow (n : ℝ) (41/16 : ℝ) := by
   obtain ⟨p,hp⟩ := shortest_witness B
   have hlength := optimalLength_le_two_level hn B
   rw [← hp] at hlength
@@ -358,20 +359,20 @@ theorem sixteenth_gap_absorb (R n : ℕ) (hn : R^16 ≤ n^3) :
   calc (R : ℝ)*y^41 ≤ y^3*y^41 := mul_le_mul_of_nonneg_right hR (by positivity)
     _ = y^44 := by ring
 
-/-- For large `n`, `OPT ≤ M + 32.46*n^(11/4)`. The threshold is not optimized. -/
+/-- For large `n`, `OPT ≤ M + 30.624*n^(11/4)`. The threshold is not optimized. -/
 theorem optimalLength_le_eventually_two_level {n : ℕ} [NeZero n]
-    (hn : 316750^6 ≤ n) (B : ReachableBoard n) :
-    (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ)+32.46*Real.rpow (n : ℝ) (11/4 : ℝ) := by
+    (hn : 382242^6 ≤ n) (B : ReachableBoard n) :
+    (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ)+30.624*Real.rpow (n : ℝ) (11/4 : ℝ) := by
   have h := optimalLength_le_two_level (le_trans (by norm_num) hn) B
-  have hr := sixteenth_gap_absorb 316750 n (by
-    calc 316750^16 ≤ (316750^6)^3 := by norm_num
+  have hr := sixteenth_gap_absorb 382242 n (by
+    calc 382242^16 ≤ (382242^6)^3 := by norm_num
       _ ≤ n^3 := Nat.pow_le_pow_left hn 3)
   norm_num only [Nat.cast_ofNat] at hr
   linarith
 
 /-- The boardwise bound required by Proposition 9. -/
 theorem uniformApproximation : UniformApproximation := by
-  refine ⟨32.46,by norm_num,316750^6,?_⟩
+  refine ⟨30.624,by norm_num,382242^6,?_⟩
   intro n hn hn2
   letI : NeZero n := ⟨by omega⟩
   intro B

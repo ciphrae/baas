@@ -3,6 +3,7 @@ import SlidingPuzzle.Algorithm.Preparation
 import SlidingPuzzle.Algorithm.Arrangement
 import SlidingPuzzle.Algorithm.Finish
 import SlidingPuzzle.Algorithm.Transport
+import SlidingPuzzle.Algorithm.BoardCounts
 
 /-! # The algorithm on admissible boards
 
@@ -270,24 +271,98 @@ theorem exists_admissible_solution {n k : ℕ} (hk : Dims n k) [NeZero n]
   obtain ⟨p,hi,hl⟩ := (preparation_transport_phase hk).exists_solution hfinish B hB
   refine ⟨p,?_,?_⟩ <;> dsimp [LeadingBudget.eval,LeadingBudget.add] at * <;> omega
 
-/-- The same with an arbitrary local solver in Finish, whose cost is kept
-explicit: `k²` local solves of side `s` plus `9354*k²n` for access and parity. -/
-theorem exists_admissible_solution_of_solver {cost : ℕ → ℕ} (hsolver : SolverCostBound cost)
+/-- Two cells of one square are at most `2s` apart. -/
+private theorem square_gridDistance_le {n k : ℕ} {i : GroupIndex k} {a b : Cell n}
+    (ha : square i a) (hb : square i b) : gridDistance a b ≤ 2*side n k := by
+  obtain ⟨ha1, ha2, ha3, ha4⟩ := ha
+  obtain ⟨hb1, hb2, hb3, hb4⟩ := hb
+  simp only [Nat.add_mul, Nat.one_mul] at ha2 ha4 hb2 hb4
+  simp only [gridDistance, Nat.dist]
+  omega
+
+/-- Arrangement raises the potential by little: reservoirs are unchanged, and
+every tile of a sorted board is within `2s` of its target. -/
+theorem arrangement_manhattan {n k : ℕ} (hk : Dims n k) (B C : Board n)
+    (hres : ∀ (i : GroupIndex k) x, reservoir i x → C x = B x)
+    (hsorted : SquaresSorted (k := k) C) :
+    manhattan C ≤ manhattan B+(2*k^2*n*side n k+2*k^4*side n k^2) := by
+  have hcell : ∀ x, cellCost C x ≤ 2*side n k := by
+    intro x
+    obtain ⟨j, hj⟩ := square_covers hk x
+    unfold cellCost
+    split_ifs with h0
+    · omega
+    · have hg := (mem_targetGroup j (C x)).mp (hsorted j x hj h0)
+      exact square_gridDistance_le hj hg.2
+  rw [manhattan_eq_sum_cellCost C, manhattan_eq_sum_cellCost B,
+    sum_regions hk (cellCost C), sum_regions hk (cellCost B)]
+  have hR : ∑ i : GroupIndex k, ∑ c ∈ reservoirCells i, cellCost C c =
+      ∑ i : GroupIndex k, ∑ c ∈ reservoirCells i, cellCost B c := by
+    apply Finset.sum_congr rfl
+    intro i _
+    apply Finset.sum_congr rfl
+    intro c hc
+    simp only [cellCost, hres i c ((mem_reservoirCells i c).mp hc)]
+  have hH : ∑ i : GroupIndex k, ∑ c ∈ horizontalCells i, cellCost C c ≤
+      k^2*n*(2*side n k) := by
+    calc _ ≤ ∑ _i : GroupIndex k, n*(2*side n k) := by
+          apply Finset.sum_le_sum
+          intro i _
+          calc _ ≤ ∑ _c ∈ horizontalCells (n := n) i, 2*side n k :=
+                Finset.sum_le_sum (fun c _ => hcell c)
+            _ = n*(2*side n k) := by simp [card_horizontal hk i]
+      _ = k^2*n*(2*side n k) := by simp [Finset.card_univ, pow_two]; ring
+  have hV : ∑ i : GroupIndex k, ∑ j : GroupIndex k, ∑ c ∈ verticalCells i j, cellCost C c ≤
+      k^4*side n k*(2*side n k) := by
+    calc _ ≤ ∑ _i : GroupIndex k, ∑ _j : GroupIndex k, side n k*(2*side n k) := by
+          apply Finset.sum_le_sum
+          intro i _
+          apply Finset.sum_le_sum
+          intro j _
+          calc _ ≤ ∑ _c ∈ verticalCells (n := n) i j, 2*side n k :=
+                Finset.sum_le_sum (fun c _ => hcell c)
+            _ = (side n k-k)*(2*side n k) := by simp [card_vertical hk i j]
+            _ ≤ side n k*(2*side n k) := Nat.mul_le_mul_right _ (Nat.sub_le _ _)
+      _ = k^4*side n k*(2*side n k) := by simp [Finset.card_univ]; ring
+  have e1 : k^2*n*(2*side n k) = 2*k^2*n*side n k := by ring
+  have e2 : k^4*side n k*(2*side n k) = 2*k^4*side n k^2 := by ring
+  omega
+
+/-- The whole suffix charged by inefficiency: Arrangement by its length plus
+its small potential increase (`arrangement_manhattan`), Finish by the local
+solver's inefficiency. Twice the inefficiency is at most
+`12*k²s³ + 47*k⁵s² + 32812*k*s³ + 2*k²*ineff s`. -/
+theorem exists_admissible_solution_of_solver_ineff {cost ineff : ℕ → ℕ}
+    (hsolver : SolverBound cost ineff)
     {n k : ℕ} (hk : Dims n k) [NeZero n] (B : Board n) (hB : Reachable B) :
     ∃ p : Path B (target n),
-      p.length ≤ manhattan B+12*(k^2*side n k^3)+47*(k^5*side n k^2)+14100*(k*side n k^3)+
-        (k^2*cost (side n k)+9354*k^2*n) := by
-  have hfinish (C : Board n) (hC : Transported hk C) :
-      ∃ q : Path C (target n), q.length ≤
-        (LeadingBudget.mk 0 24 4100).eval k (side n k)+(k^2*cost (side n k)+9354*k^2*n) := by
-    obtain ⟨D,p,hD,hp⟩ := arrangement_bound hk C hC
-    obtain ⟨q,hq⟩ := exists_finish_path hsolver hk D hD
-    refine ⟨p.append q,?_⟩
-    rw [Path.length_append]
-    omega
-  obtain ⟨p,-,hl⟩ := (preparation_transport_phase hk).exists_solution hfinish B hB
-  refine ⟨p,?_⟩
-  dsimp [LeadingBudget.eval] at hl
+      p.length ≤ manhattan B+12*(k^2*side n k^3)+47*(k^5*side n k^2)+32812*(k*side n k^3)+
+        2*(k^2*ineff (side n k)) := by
+  obtain ⟨C,p,hC,hp⟩ := preparation_transport_phase hk B hB
+  obtain ⟨D,q,hq,hblank,hsorted,hres⟩ := exists_arrangement_path hk C hC.clear hC.sorted
+  have hD : Arranged hk D := Arranged.of_path hC.reachable q hsorted (by
+    rw [hblank]; exact reservoir_subset_square hC.blank_last)
+  obtain ⟨r,-,hri⟩ := exists_finish_path hsolver hk D hD
+  have hM := arrangement_manhattan hk C D hres hsorted
+  have hqbal := q.length_add_manhattan
+  have ha := arrangement_arith hk.two_le hk.cube_le
+  rw [hk.mul_side] at ha
+  obtain ⟨m2,m3,-,-,-,-,m8,-,-,-,-,-⟩ := monomials hk.two_le hk.cube_le
+  have e1 : 2*k^2*n*side n k = 2*(k^3*side n k^2) := by
+    have h := hk.mul_side
+    generalize side n k = s at h ⊢
+    subst h; ring
+  have e2 : 9354*k^2*n = 9354*(k^3*side n k) := by
+    have h := hk.mul_side
+    generalize side n k = s at h ⊢
+    subst h; ring
+  have e3 : 2*k^4*side n k^2 = 2*(k^4*side n k^2) := by ring
+  rw [e1, e3] at hM
+  rw [e2] at hri
+  refine ⟨p.append (q.append r),?_⟩
+  rw [Path.solution_length]
+  simp only [Path.inefficientMoves_append]
+  dsimp [LeadingBudget.eval] at hp
   omega
 
 end SlidingPuzzle.Algorithm
