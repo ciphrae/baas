@@ -6,18 +6,22 @@ import SlidingPuzzle.Parberry.Prefix
 
 /-! # Arbitrary board sides
 
-Let `k = ⌊n^(1/4)⌋ ≥ 2` and `s = ⌊n/k⌋ ≥ k³`. Solve the outer
+Let `x = n^(1/4)`, `k = ⌊5x/8⌋ ≥ 2` and `s = ⌊n/k⌋ ≥ k³`. Solve the outer
 `d = n - k*s < k` rows and columns with the Parberry prefix and the remaining
-`k*s × k*s` board with `exists_admissible_solution`. With `x = n^(1/4)`,
+`k*s × k*s` board with `exists_admissible_solution`, whose doubled inefficiency
+is `23*k²s³ + 47*k⁵s² + O(k*s³)`. Here
 
-* `k²s³ ≤ n³/k ≤ x¹¹ + 2x¹⁰` because `k > x - 1`,
+* `k²s³ ≤ n³/k ≤ (8/5)x¹¹ + 4x¹⁰` because `k > 5x/8 - 1`,
+* `k⁵s² ≤ k³n² ≤ (125/512)x¹¹` because `k ≤ 5x/8`,
 * `k*s³ ≤ 4x¹⁰` because `k ≥ x/2`,
 * the prefix costs at most `103x¹⁰` because `d < k ≤ x`.
 
-This gives, for every `n ≥ 16`,
+The factor `5/8` is close to the minimizer `(23/141)^(1/4) ≈ 0.636` of
+`23/c + 47c³`; the paper's choice `c = 1` gives `70` instead of `48.28`.
+For every `n ≥ 4096`,
 
 ```text
-inefficiency ≤ 35*n^(11/4) + 62701*n^(5/2)      (exists_solution_explicit)
+inefficiency ≤ 24.14*n^(11/4) + 62677*n^(5/2)      (exists_solution_explicit)
 ```
 
 The remainder is absorbed only in `uniformApproximation`, at an unoptimized
@@ -39,7 +43,8 @@ theorem residual_dims {n k : ℕ} (hk : 2 ≤ k) (hlo : k^4 ≤ n) : Dims (k*(n/
 /-- Prefix and residual combined: an OPT bound in terms of `k` and `n`. -/
 theorem optimalLength_le_of_residual {n k : ℕ} [NeZero n]
     (B : ReachableBoard n) (hk : 2 ≤ k) (hlo : k^4 ≤ n) :
-    optimalLength B ≤ manhattan B.val + 70*(k^2*(n/k)^3)+31264*(k*(n/k)^3) +
+    optimalLength B ≤ manhattan B.val + 23*(k^2*(n/k)^3)+47*(k^5*(n/k)^2)+
+      31264*(k*(n/k)^3) +
       2*((15*n^2+3002*n+1)*(n-k*(n/k))) := by
   have hdims := residual_dims hk hlo
   have hm4 := hdims.two_le_n
@@ -57,7 +62,8 @@ theorem optimalLength_le_of_residual {n k : ℕ} [NeZero n]
     residual_reachable (by omega : 2 ≤ k*(n/k)) (n-k*(n/k)) hd C hC A hA hreachC
   obtain ⟨q,_,hq⟩ := exists_admissible_solution hdims A hreachA
   rw [hside] at hq
-  have hq' : q.length ≤ manhattan A+(70*(k^2*(n/k)^3)+31264*(k*(n/k)^3)) := by omega
+  have hq' : q.length ≤ manhattan A+(23*(k^2*(n/k)^3)+47*(k^5*(n/k)^2)+31264*(k*(n/k)^3)) := by
+    omega
   have h := optimalLength_le_prefix_residual_solution B (n-k*(n/k)) hd C p hC A hA q hq'
   omega
 
@@ -71,42 +77,60 @@ private theorem quarter_facts (n : ℕ) :
   · convert (Real.rpow_mul_natCast (Nat.cast_nonneg n) (1/4 : ℝ) 11).symm using 1 <;> norm_num
   · convert (Real.rpow_mul_natCast (Nat.cast_nonneg n) (1/4 : ℝ) 10).symm using 1 <;> norm_num
 
-/-- The three cost terms in powers of `x = n^(1/4)`. -/
-private theorem residual_terms {n k : ℕ} (hn : 16 ≤ n) (hk : 2 ≤ k) (hlo : k^4 ≤ n)
-    (hhi : n < (k+1)^4) :
+/-- The four cost terms in powers of `x = n^(1/4)`. -/
+private theorem residual_terms {n k : ℕ} (hn : 4096 ≤ n) (hlo : 4096*k^4 ≤ 625*n)
+    (hhi : 625*n < 4096*(k+1)^4) :
     let x := Real.rpow (n : ℝ) (1/4 : ℝ)
-    ((k^2*(n/k)^3 : ℕ) : ℝ) ≤ x^11+2*x^10 ∧ ((k*(n/k)^3 : ℕ) : ℝ) ≤ 4*x^10 ∧
+    ((k^2*(n/k)^3 : ℕ) : ℝ) ≤ 8/5*x^11+4*x^10 ∧
+      ((k^5*(n/k)^2 : ℕ) : ℝ) ≤ 125/512*x^11 ∧ ((k*(n/k)^3 : ℕ) : ℝ) ≤ 4*x^10 ∧
       (((15*n^2+3002*n+1)*(n-k*(n/k)) : ℕ) : ℝ) ≤ 103*x^10 := by
   intro x
   obtain ⟨hx0, hx4, -, -⟩ := quarter_facts n
-  have hkR : (2 : ℝ) ≤ k := by exact_mod_cast hk
-  have hkx : (k : ℝ) ≤ x := by
-    have h : (k : ℝ)^4 ≤ x^4 := by rw [hx4]; exact_mod_cast hlo
-    exact le_of_pow_le_pow_left₀ (by norm_num) hx0 h
-  have hxk : x < (k : ℝ)+1 := by
-    have h : x^4 < ((k : ℝ)+1)^4 := by rw [hx4]; exact_mod_cast hhi
+  have hnR : (n : ℝ) = x^4 := hx4.symm
+  have hkx : 8*(k : ℝ) ≤ 5*x := by
+    have h : (8*(k : ℝ))^4 ≤ (5*x)^4 := by
+      have : (4096*(k : ℝ)^4) ≤ 625*n := by exact_mod_cast hlo
+      rw [hnR] at this; nlinarith
+    exact le_of_pow_le_pow_left₀ (by norm_num) (by positivity) h
+  have hxk : 5*x < 8*((k : ℝ)+1) := by
+    have h : (5*x)^4 < (8*((k : ℝ)+1))^4 := by
+      have : 625*(n : ℝ) < 4096*((k : ℝ)+1)^4 := by exact_mod_cast hhi
+      rw [hnR] at this; nlinarith
     exact lt_of_pow_lt_pow_left₀ 4 (by positivity) h
-  have hx2 : (2 : ℝ) ≤ x := le_trans hkR hkx
+  have hx8 : (8 : ℝ) ≤ x := by
+    have h : (8 : ℝ)^4 ≤ x^4 := by rw [hx4]; norm_num; exact_mod_cast hn
+    exact le_of_pow_le_pow_left₀ (by norm_num) hx0 h
+  have hk0 : (0 : ℝ) ≤ k := Nat.cast_nonneg _
+  have hxk2 : x ≤ 2*(k : ℝ) := by linarith
+  have hk1 : (1 : ℝ) ≤ k := by linarith
   set s := n/k with hsdef
   have hks : k*s ≤ n := Nat.mul_div_le n k
-  have hcube : ((k*s)^3 : ℕ) ≤ n^3 := Nat.pow_le_pow_left hks 3
+  have hsqR : ((k : ℝ)*s)^2 ≤ x^8 := by
+    have : ((k*s)^2 : ℕ) ≤ n^2 := Nat.pow_le_pow_left hks 2
+    have : ((k : ℝ)*s)^2 ≤ (n : ℝ)^2 := by exact_mod_cast this
+    rw [hnR] at this; linarith [show (x^4)^2 = x^8 by ring]
   have hcubeR : ((k : ℝ)*s)^3 ≤ x^12 := by
-    have : ((k : ℝ)*s)^3 ≤ (n : ℝ)^3 := by exact_mod_cast hcube
-    calc ((k : ℝ)*s)^3 ≤ (n : ℝ)^3 := this
-      _ = (x^4)^3 := by rw [hx4]
-      _ = x^12 := by ring
-  have hs0 : (0 : ℝ) ≤ s := Nat.cast_nonneg _
+    have : ((k*s)^3 : ℕ) ≤ n^3 := Nat.pow_le_pow_left hks 3
+    have : ((k : ℝ)*s)^3 ≤ (n : ℝ)^3 := by exact_mod_cast this
+    rw [hnR] at this; linarith [show (x^4)^3 = x^12 by ring]
   have hx10 : (0 : ℝ) ≤ x^10 := by positivity
-  refine ⟨?_, ?_, ?_⟩
+  refine ⟨?_, ?_, ?_, ?_⟩
   · push_cast
-    have hkey : x^2 ≤ (k : ℝ)*(x+2) := by nlinarith
-    have hmul : (k : ℝ)*((k : ℝ)^2*(s : ℝ)^3) ≤ (k : ℝ)*(x^11+2*x^10) := by
+    have hkey : x^2 ≤ (k : ℝ)*(8/5*x+4) := by nlinarith
+    have hmul : (k : ℝ)*((k : ℝ)^2*(s : ℝ)^3) ≤ (k : ℝ)*(8/5*x^11+4*x^10) := by
       calc (k : ℝ)*((k : ℝ)^2*(s : ℝ)^3) = ((k : ℝ)*s)^3 := by ring
         _ ≤ x^12 := hcubeR
         _ = x^10*x^2 := by ring
-        _ ≤ x^10*((k : ℝ)*(x+2)) := mul_le_mul_of_nonneg_left hkey hx10
-        _ = (k : ℝ)*(x^11+2*x^10) := by ring
+        _ ≤ x^10*((k : ℝ)*(8/5*x+4)) := mul_le_mul_of_nonneg_left hkey hx10
+        _ = (k : ℝ)*(8/5*x^11+4*x^10) := by ring
     exact le_of_mul_le_mul_left hmul (by linarith)
+  · push_cast
+    have hk3 : (k : ℝ)^3 ≤ 125/512*x^3 := by
+      have := pow_le_pow_left₀ (by positivity) hkx 3
+      nlinarith
+    calc (k : ℝ)^5*(s : ℝ)^2 = (k : ℝ)^3*((k : ℝ)*s)^2 := by ring
+      _ ≤ 125/512*x^3*x^8 := mul_le_mul hk3 hsqR (by positivity) (by positivity)
+      _ = 125/512*x^11 := by ring
   · push_cast
     have hkey : x^2 ≤ 4*(k : ℝ)^2 := by nlinarith
     have hmul : (k : ℝ)^2*((k : ℝ)*(s : ℝ)^3) ≤ (k : ℝ)^2*(4*x^10) := by
@@ -119,20 +143,21 @@ private theorem residual_terms {n k : ℕ} (hn : 16 ≤ n) (hk : 2 ≤ k) (hlo :
   · have hd : n-k*s < k := by
       have h := Nat.mod_add_div n k
       rw [← hsdef] at h
-      have := Nat.mod_lt n (by omega : 0 < k)
+      have := Nat.mod_lt n (by exact_mod_cast (by linarith : (0 : ℝ) < k) : 0 < k)
       omega
-    have hdR : ((n-k*s : ℕ) : ℝ) ≤ x := le_trans (by exact_mod_cast hd.le) hkx
-    have hnR : (n : ℝ) = x^4 := hx4.symm
+    have hdR : ((n-k*s : ℕ) : ℝ) ≤ x := by
+      have : ((n-k*s : ℕ) : ℝ) ≤ k := by exact_mod_cast hd.le
+      linarith
     have hA : (0 : ℝ) ≤ 15*(n : ℝ)^2+3002*n+1 := by positivity
     have h9 : 2*x^9 ≤ x^10 := by
       have : 0 ≤ x^9 := by positivity
       nlinarith
     have h5 : 32*x^5 ≤ x^10 := by
-      have h25 : (2 : ℝ)^5 ≤ x^5 := pow_le_pow_left₀ (by norm_num) hx2 5
+      have h25 : (2 : ℝ)^5 ≤ x^5 := pow_le_pow_left₀ (by norm_num) (by linarith) 5
       have : 0 ≤ x^5 := by positivity
       nlinarith
     have h1 : 512*x ≤ x^10 := by
-      have h29 : (2 : ℝ)^9 ≤ x^9 := pow_le_pow_left₀ (by norm_num) hx2 9
+      have h29 : (2 : ℝ)^9 ≤ x^9 := pow_le_pow_left₀ (by norm_num) (by linarith) 9
       nlinarith
     push_cast
     calc (15*(n : ℝ)^2+3002*n+1)*((n-k*s : ℕ) : ℝ) ≤ (15*(n : ℝ)^2+3002*n+1)*x :=
@@ -142,28 +167,29 @@ private theorem residual_terms {n k : ℕ} (hn : 16 ≤ n) (hk : 2 ≤ k) (hlo :
 
 /-- An explicit two-term bound on OPT, uniform in the input board. -/
 theorem optimalLength_le_explicit {n : ℕ} [NeZero n]
-    (hn : 16 ≤ n) (B : ReachableBoard n) :
+    (hn : 4096 ≤ n) (B : ReachableBoard n) :
     (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ)+
-      70*Real.rpow (n : ℝ) (11/4 : ℝ)+125402*Real.rpow (n : ℝ) (5/2 : ℝ) := by
-  obtain ⟨k,hk,hlo,hhi,_⟩ := exists_fourth_power_dimension hn
-  have hnat := optimalLength_le_of_residual B hk hlo
+      48.28*Real.rpow (n : ℝ) (11/4 : ℝ)+125354*Real.rpow (n : ℝ) (5/2 : ℝ) := by
+  obtain ⟨k,hk,hlo,hhi⟩ := exists_scaled_dimension hn
+  have hnat := optimalLength_le_of_residual B hk (by linarith)
   have hreal : (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ)+
-      70*((k^2*(n/k)^3 : ℕ) : ℝ)+31264*((k*(n/k)^3 : ℕ) : ℝ)+
+      23*((k^2*(n/k)^3 : ℕ) : ℝ)+47*((k^5*(n/k)^2 : ℕ) : ℝ)+31264*((k*(n/k)^3 : ℕ) : ℝ)+
       2*(((15*n^2+3002*n+1)*(n-k*(n/k)) : ℕ) : ℝ) := by exact_mod_cast hnat
-  obtain ⟨ha, hb, hc⟩ := residual_terms hn hk hlo hhi
-  obtain ⟨-, -, h11, h10⟩ := quarter_facts n
+  obtain ⟨ha, hb, hc, hd⟩ := residual_terms hn hlo hhi
+  obtain ⟨hx0, -, h11, h10⟩ := quarter_facts n
   rw [← h11, ← h10]
+  have : (0 : ℝ) ≤ (Real.rpow (n : ℝ) (1/4 : ℝ))^11 := by positivity
   linarith
 
 /-- The explicit bound as a legal solution: inefficiency at most
-`35*n^(11/4) + 62701*n^(5/2)` for every `n ≥ 16`. -/
+`24.14*n^(11/4) + 62677*n^(5/2)` for every `n ≥ 4096`. -/
 theorem exists_solution_explicit {n : ℕ} [NeZero n]
-    (hn : 16 ≤ n) (B : ReachableBoard n) :
+    (hn : 4096 ≤ n) (B : ReachableBoard n) :
     ∃ p : Path B.val (target n),
-      (p.inefficientMoves : ℝ) ≤ 35*Real.rpow (n : ℝ) (11/4 : ℝ)+
-        62701*Real.rpow (n : ℝ) (5/2 : ℝ) ∧
-      (p.length : ℝ) ≤ (manhattan B.val : ℝ)+70*Real.rpow (n : ℝ) (11/4 : ℝ)+
-        125402*Real.rpow (n : ℝ) (5/2 : ℝ) := by
+      (p.inefficientMoves : ℝ) ≤ 24.14*Real.rpow (n : ℝ) (11/4 : ℝ)+
+        62677*Real.rpow (n : ℝ) (5/2 : ℝ) ∧
+      (p.length : ℝ) ≤ (manhattan B.val : ℝ)+48.28*Real.rpow (n : ℝ) (11/4 : ℝ)+
+        125354*Real.rpow (n : ℝ) (5/2 : ℝ) := by
   obtain ⟨p,hp⟩ := shortest_witness B
   have hlength := optimalLength_le_explicit hn B
   rw [← hp] at hlength
@@ -190,18 +216,19 @@ theorem quarter_gap_absorb (R n : ℕ) (hn : R^4 ≤ n) :
       convert (Real.rpow_add_of_nonneg (Nat.cast_nonneg n)
         (by norm_num : (0 : ℝ) ≤ 1/4) (by norm_num : (0 : ℝ) ≤ 5/2)).symm using 1 <;> norm_num
 
-/-- For large `n`, `OPT ≤ M + 71*n^(11/4)`. The threshold is not optimized. -/
+/-- For large `n`, `OPT ≤ M + 50*n^(11/4)`. The threshold is not optimized. -/
 theorem optimalLength_le_eventually {n : ℕ} [NeZero n]
-    (hn : max 16 (125402^4) ≤ n) (B : ReachableBoard n) :
-    (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ)+71*Real.rpow (n : ℝ) (11/4 : ℝ) := by
-  have h := optimalLength_le_explicit (le_trans (le_max_left _ _) hn) B
-  have hr := quarter_gap_absorb 125402 n (le_trans (le_max_right _ _) hn)
+    (hn : 125354^4 ≤ n) (B : ReachableBoard n) :
+    (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ)+50*Real.rpow (n : ℝ) (11/4 : ℝ) := by
+  have h := optimalLength_le_explicit (le_trans (by norm_num) hn) B
+  have hr := quarter_gap_absorb 125354 n hn
+  have : (0 : ℝ) ≤ Real.rpow (n : ℝ) (11/4 : ℝ) := Real.rpow_nonneg (Nat.cast_nonneg _) _
   norm_num only [Nat.cast_ofNat] at hr
   linarith
 
 /-- The boardwise bound required by Proposition 9. -/
 theorem uniformApproximation : UniformApproximation := by
-  refine ⟨71,by norm_num,max 16 (125402^4),?_⟩
+  refine ⟨50,by norm_num,125354^4,?_⟩
   intro n hn hn2
   letI : NeZero n := ⟨by omega⟩
   intro B

@@ -8,38 +8,41 @@ import SlidingPuzzle.Algorithm.Transport
 
 Composes the four phases of Section 4 into a solution of every reachable board
 of side `n = k*s` with `s = side n k ≥ k³` (`Dims n k`). The paper's case is
-`n = k⁴`, `s = k³`. Costs are tracked as `A*k²s³ + B*k*s³` (`LeadingBudget`):
-`k²s³` is the paper's `k¹¹`, and `B` is a deliberately loose envelope for all
-lower-order terms, each of which is at most `k*s³` because `s ≥ k³`.
+`n = k⁴`, `s = k³`. Costs are tracked as `A*k²s³ + C*k⁵s² + B*k*s³`
+(`LeadingBudget`). Both `k²s³ = n³/k` and `k⁵s² = k³n²` are the paper's `k¹¹`
+when `s = k³`; they are kept apart so that `GeneralSize` can balance them by
+the choice of `k`. `B` is a deliberately loose envelope for all lower-order
+terms, each of which is at most `k*s³` because `s ≥ k³`.
 
 Preparation and Transport are charged by inefficient moves (`CostedPhase`
 bounds *twice* that count, so half-integer coefficients are exact).
 Arrangement and Finish end at the target, so they are charged by length and
 halved once at the end (`CostedPhase.exists_solution`).
 
-| phase | bound | leading inefficiency |
-| --- | --- | --- |
-| Preparation | `2*ineff ≤ 23*k²s³ + 9100*k*s³` | 11.5 |
-| Transport | `2*ineff ≤ 18*k²s³ + 900*k*s³` | 9 |
-| Arrangement | `length ≤ 24*k²s³ + 4100*k*s³` | 12 |
-| Finish | `length ≤ 5*k²s³ + 17164*k*s³` | 2.5 |
+| phase | bound |
+| --- | --- |
+| Preparation | `2*ineff ≤ 23*k⁵s² + 9100*k*s³` |
+| Transport | `2*ineff ≤ 18*k²s³ + 900*k*s³` |
+| Arrangement | `length ≤ 24*k⁵s² + 4100*k*s³` |
+| Finish | `length ≤ 5*k²s³ + 17164*k*s³` |
 
-Total: `2*ineff ≤ 70*k²s³ + 31264*k*s³` (`exists_admissible_solution`). -/
+Total: `2*ineff ≤ 23*k²s³ + 47*k⁵s² + 31264*k*s³` (`exists_admissible_solution`). -/
 namespace SlidingPuzzle.Algorithm
 open SlidingPuzzle.Partition
 
-/-- A budget `leading*k²s³ + remainder*k*s³`. -/
+/-- A budget `cubic*k²s³ + corridor*k⁵s² + remainder*k*s³`. -/
 structure LeadingBudget where
-  leading : ℕ
+  cubic : ℕ
+  corridor : ℕ
   remainder : ℕ
 
 /-- The value of a budget for grid size `k` and square side `s`. -/
 def LeadingBudget.eval (b : LeadingBudget) (k s : ℕ) : ℕ :=
-  b.leading*(k^2*s^3)+b.remainder*(k*s^3)
+  b.cubic*(k^2*s^3)+b.corridor*(k^5*s^2)+b.remainder*(k*s^3)
 
 /-- Budgets add coefficientwise. -/
 def LeadingBudget.add (a b : LeadingBudget) : LeadingBudget :=
-  ⟨a.leading+b.leading,a.remainder+b.remainder⟩
+  ⟨a.cubic+b.cubic,a.corridor+b.corridor,a.remainder+b.remainder⟩
 
 /-- A phase from boards satisfying `pre` to boards satisfying `post`, realized
 by legal paths whose inefficient moves, doubled, fit in `budget`. -/
@@ -80,9 +83,9 @@ theorem CostedPhase.exists_solution {n k : ℕ} [NeZero n] {a b : LeadingBudget}
   rw [Path.solution_length]
   omega
 
-/-- Monomials below `k²s³` are at most `k*s³` when `s ≥ k³`. -/
+/-- Lower-order monomials are at most `k*s³` when `s ≥ k³`. -/
 private theorem monomials {k s : ℕ} (hk : 2 ≤ k) (hs : k^3 ≤ s) :
-    k^5*s^2 ≤ k^2*s^3 ∧ k^4*s^2 ≤ k*s^3 ∧ k^3*s^2 ≤ k*s^3 ∧ k^2*s^2 ≤ k*s^3 ∧
+    k^4*s^2 ≤ k*s^3 ∧ k^3*s^2 ≤ k*s^3 ∧ k^2*s^2 ≤ k*s^3 ∧
     k^6*s ≤ k*s^3 ∧ k^5*s ≤ k*s^3 ∧ k^4*s ≤ k*s^3 ∧ k^3*s ≤ k*s^3 ∧
     k^2*s ≤ k*s^3 ∧ k*s ≤ k*s^3 ∧ k^3 ≤ k*s^3 ∧ k^2 ≤ k*s^3 ∧ 1 ≤ k*s^3 := by
   have hk1 : 1 ≤ k := by omega
@@ -107,10 +110,7 @@ private theorem monomials {k s : ℕ} (hk : 2 ≤ k) (hs : k^3 ≤ s) :
   have hk13 : k ≤ s^3 := le_trans hk1' hs23
   have hs3 : s ≤ s^3 := le_trans hss hs23
   have h1s3 : 1 ≤ s^3 := le_trans hs1 hs3
-  refine ⟨?_,?_,?_,?_,?_,?_,?_,?_,?_,?_,?_,?_,?_⟩
-  · calc k^5*s^2 = k^2*s^2*k^3 := by ring
-      _ ≤ k^2*s^2*s := Nat.mul_le_mul_left _ hs
-      _ = k^2*s^3 := by ring
+  refine ⟨?_,?_,?_,?_,?_,?_,?_,?_,?_,?_,?_,?_⟩
   · calc k^4*s^2 = k*s^2*k^3 := by ring
       _ ≤ k*s^2*s := Nat.mul_le_mul_left _ hs
       _ = k*s^3 := by ring
@@ -145,8 +145,8 @@ private theorem monomials {k s : ℕ} (hk : 2 ≤ k) (hs : k^3 ≤ s) :
 
 private theorem preparation_arith {k s : ℕ} (hk : 2 ≤ k) (hs : k^3 ≤ s) :
     (k^3+(k^2+1))*(15*(k*s)^2+3002*(k*s)+1)+18*k^2*(k*s)+24*k^2*(k*s)^2+
-      k^5*(8*s^2+4*(k*s)+8*s) ≤ 23*(k^2*s^3)+9100*(k*s^3) := by
-  obtain ⟨m1,m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13⟩ := monomials hk hs
+      k^5*(8*s^2+4*(k*s)+8*s) ≤ 23*(k^5*s^2)+9100*(k*s^3) := by
+  obtain ⟨m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13⟩ := monomials hk hs
   have hexp : (k^3+(k^2+1))*(15*(k*s)^2+3002*(k*s)+1)+18*k^2*(k*s)+24*k^2*(k*s)^2+
       k^5*(8*s^2+4*(k*s)+8*s) =
       23*(k^5*s^2)+39*(k^4*s^2)+15*(k^2*s^2)+3002*(k^4*s)+3020*(k^3*s)+3002*(k*s)+
@@ -157,7 +157,7 @@ private theorem preparation_arith {k s : ℕ} (hk : 2 ≤ k) (hs : k^3 ≤ s) :
 private theorem transport_arith {k s : ℕ} (hk : 2 ≤ k) (hs : k^3 ≤ s) :
     2*((k*s)^2*(8*s+(26*(k+2)+s+(k-1)*(26*(k+3)))+69*k^2+13*k+189)) ≤
       18*(k^2*s^3)+900*(k*s^3) := by
-  obtain ⟨m1,m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13⟩ := monomials hk hs
+  obtain ⟨m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13⟩ := monomials hk hs
   have hcount : k-1+1=k := Nat.sub_add_cancel (by omega)
   have hv : (k-1)*(26*(k+3)) ≤ 26*k^2+52*k := by
     have heq : (k-1)*(k+3)+(k+3)=k*(k+3) := by
@@ -174,8 +174,8 @@ private theorem transport_arith {k s : ℕ} (hk : 2 ≤ k) (hs : k^3 ≤ s) :
 
 private theorem arrangement_arith {k s : ℕ} (hk : 2 ≤ k) (hs : k^3 ≤ s) :
     (24*(s-k)+2032)*(k^4-k^2)*(k*s)+(24*s+2032)*(k^3-k^2)*(k*s) ≤
-      24*(k^2*s^3)+4100*(k*s^3) := by
-  obtain ⟨m1,m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13⟩ := monomials hk hs
+      24*(k^5*s^2)+4100*(k*s^3) := by
+  obtain ⟨m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13⟩ := monomials hk hs
   have h₁ : (24*(s-k)+2032)*(k^4-k^2)*(k*s) ≤ (24*s+2032)*k^4*(k*s) := by
     gcongr <;> exact Nat.sub_le _ _
   have h₂ : (24*s+2032)*(k^3-k^2)*(k*s) ≤ (24*s+2032)*k^3*(k*s) := by
@@ -186,15 +186,15 @@ private theorem arrangement_arith {k s : ℕ} (hk : 2 ≤ k) (hs : k^3 ≤ s) :
 
 private theorem finish_arith {k s : ℕ} (hk : 2 ≤ k) (hs : k^3 ≤ s) :
     k^2*(5*s^3+1509*s^2+1505*s+4796)+9354*k^2*(k*s) ≤ 5*(k^2*s^3)+17164*(k*s^3) := by
-  obtain ⟨m1,m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13⟩ := monomials hk hs
+  obtain ⟨m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13⟩ := monomials hk hs
   have hexp : k^2*(5*s^3+1509*s^2+1505*s+4796)+9354*k^2*(k*s) =
       5*(k^2*s^3)+1509*(k^2*s^2)+1505*(k^2*s)+4796*k^2+9354*(k^3*s) := by ring
   rw [hexp]
   omega
 
-/-- Preparation: staging `7.5*k²s³`, vertical spreading `4*k²s³`. -/
+/-- Preparation: staging `7.5*k⁵s²`, vertical spreading `4*k⁵s²`. -/
 theorem preparation_phase {n k : ℕ} (hk : Dims n k) [NeZero n] :
-    CostedPhase (n := n) k ⟨23,9100⟩ Reachable (Prepared hk) := by
+    CostedPhase (n := n) k ⟨0,23,9100⟩ Reachable (Prepared hk) := by
   intro B hB
   obtain ⟨C,p,hp,hclear,hrep⟩ := exists_preparation_path hk (representativeStaging_mixed hk) B
   refine ⟨C,p,Prepared.of_path hB p hclear hrep,?_⟩
@@ -206,7 +206,7 @@ theorem preparation_phase {n k : ℕ} (hk : Dims n k) [NeZero n] :
 
 /-- Transport: at most `n²` transfers of `9*s + O(k²)` inefficient moves. -/
 theorem transport_phase {n k : ℕ} (hk : Dims n k) [NeZero n] :
-    CostedPhase (n := n) k ⟨18,900⟩ (Prepared hk) (Transported hk) := by
+    CostedPhase (n := n) k ⟨18,0,900⟩ (Prepared hk) (Transported hk) := by
   intro B hB
   have hstep := transportStepBound_of_vertical_bound hk (verticalTransportBound hk)
   obtain ⟨D,p,hD,hp⟩ := exists_transport_path_of_step_bound hk hstep B hB
@@ -216,11 +216,11 @@ theorem transport_phase {n k : ℕ} (hk : Dims n k) [NeZero n] :
   dsimp [LeadingBudget.eval]
   omega
 
-/-- Arrangement: two exchange schedules of total length `24*k²s³ + O(k*s³)`. -/
+/-- Arrangement: two exchange schedules of total length `24*k⁵s² + O(k*s³)`. -/
 theorem arrangement_bound {n k : ℕ} (hk : Dims n k) [NeZero n]
     (B : Board n) (hB : Transported hk B) :
     ∃ C : Board n, ∃ p : Path B C, Arranged hk C ∧
-      p.length ≤ (LeadingBudget.mk 24 4100).eval k (side n k) := by
+      p.length ≤ (LeadingBudget.mk 0 24 4100).eval k (side n k) := by
   obtain ⟨C,p,hp,hblank,hsorted,_⟩ := exists_arrangement_path hk B hB.clear hB.sorted
   refine ⟨C,p,Arranged.of_path hB.reachable p hsorted (by
     rw [hblank]; exact reservoir_subset_square hB.blank_last),?_⟩
@@ -233,7 +233,7 @@ theorem arrangement_bound {n k : ℕ} (hk : Dims n k) [NeZero n]
 `5*k²s³ + O(k*s³)` moves including access and parity repair. -/
 theorem finish_bound {n k : ℕ} (hk : Dims n k) [NeZero n]
     (B : Board n) (hB : Arranged hk B) :
-    ∃ p : Path B (target n), p.length ≤ (LeadingBudget.mk 5 17164).eval k (side n k) := by
+    ∃ p : Path B (target n), p.length ≤ (LeadingBudget.mk 5 0 17164).eval k (side n k) := by
   obtain ⟨p,hp⟩ := exists_finish_path parberrySolverCost hk B hB
   refine ⟨p,?_⟩
   have h := finish_arith hk.two_le hk.cube_le
@@ -242,14 +242,15 @@ theorem finish_bound {n k : ℕ} (hk : Dims n k) [NeZero n]
   omega
 
 /-- Every reachable board of admissible dimensions has a solution with at most
-`35*k²s³ + 15632*k*s³` inefficient moves, where `s = side n k`. -/
+`(23*k²s³ + 47*k⁵s²)/2 + 15632*k*s³` inefficient moves, where `s = side n k`. -/
 theorem exists_admissible_solution {n k : ℕ} (hk : Dims n k) [NeZero n]
     (B : Board n) (hB : Reachable B) :
     ∃ p : Path B (target n),
-      2*p.inefficientMoves ≤ 70*(k^2*side n k^3)+31264*(k*side n k^3) ∧
-      p.length ≤ manhattan B+70*(k^2*side n k^3)+31264*(k*side n k^3) := by
+      2*p.inefficientMoves ≤ 23*(k^2*side n k^3)+47*(k^5*side n k^2)+31264*(k*side n k^3) ∧
+      p.length ≤ manhattan B+23*(k^2*side n k^3)+47*(k^5*side n k^2)+
+        31264*(k*side n k^3) := by
   have hfinish (C : Board n) (hC : Transported hk C) :
-      ∃ q : Path C (target n), q.length ≤ (LeadingBudget.mk 29 21264).eval k (side n k) := by
+      ∃ q : Path C (target n), q.length ≤ (LeadingBudget.mk 5 24 21264).eval k (side n k) := by
     obtain ⟨D,p,hD,hp⟩ := arrangement_bound hk C hC
     obtain ⟨q,hq⟩ := finish_bound hk D hD
     refine ⟨p.append q,?_⟩

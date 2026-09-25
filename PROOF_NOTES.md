@@ -54,7 +54,10 @@ for `k` horizontal corridor rows and `k²` vertical corridor columns per square,
 and for the compressed staging area of width `k³`. So the partition is stated
 for squares of side `s = side n k = n/k` subject to `Dims n k`: `2 ≤ k`,
 `k³ ≤ s` and `k*s = n`. Every phase is proved in this generality, with costs
-of the form `A*k²s³ + O(k*s³)` (`k²s³` is the paper's `k¹¹`).
+of the form `A*k²s³ + C*k⁵s² + O(k*s³)`. Both monomials are the paper's `k¹¹`
+when `s = k³`, but they scale differently in `k` for fixed `n`: `k²s³ = n³/k`
+(Transport, Finish) and `k⁵s² = k³n²` (Preparation, Arrangement, which move
+the `k³n` corridor tiles a distance of order `n`).
 
 **Preparation.** Every group's corridor quota is staged in the first `k³`
 columns and the first `k²` rows (`Preparation/Staging.lean`), together with one
@@ -107,13 +110,23 @@ Parberry-style solver with `5*n³ + O(n²)` moves (`Parberry/Solver.lean`).
 
 ## Arbitrary sides
 
-For a board of side `n ≥ 16`, take `k = ⌊n^(1/4)⌋` and `s = ⌊n/k⌋`, so that
-`s ≥ k³`. The outer `d = n - k*s < k` rows and columns are solved by the
-Parberry prefix and the remaining `k*s × k*s` board by the admissible-board
-algorithm. The residual board is reachable and its Manhattan distance equals
-the original board's after the prefix (`Algorithm/Residual*.lean`). With
-`x = n^(1/4)`: `k²s³ ≤ n³/k ≤ x¹¹ + 2x¹⁰` (since `k > x - 1`),
-`k*s³ ≤ 4x¹⁰`, and the prefix costs `O(n²·k) = O(x¹⁰)`.
+For a board of side `n ≥ 4096`, let `x = n^(1/4)`, take `k = ⌊5x/8⌋` and
+`s = ⌊n/k⌋`, so that `s ≥ k³` (`exists_scaled_dimension`). The outer
+`d = n - k*s < k` rows and columns are solved by the Parberry prefix and the
+remaining `k*s × k*s` board by the admissible-board algorithm. The residual
+board is reachable and its Manhattan distance equals the original board's
+after the prefix (`Algorithm/Residual*.lean`). Then
+`k²s³ ≤ n³/k ≤ (8/5)x¹¹ + 4x¹⁰` (since `k > 5x/8 - 1`),
+`k⁵s² ≤ k³n² ≤ (125/512)x¹¹`, `k*s³ ≤ 4x¹⁰`, and the prefix costs
+`O(n²·k) = O(x¹⁰)`.
+
+**Choice of `k`.** With `k ≈ c*x`, twice the leading inefficiency is
+`(23/c + 47*c³)*x¹¹`, minimized at `c = (23/141)^(1/4) ≈ 0.636` with value
+`≈ 48.25`. The rational choice `c = 5/8` gives `184/5 + 5875/512 ≈ 48.27`;
+the paper's `c = 1` gives `70`. At the optimum the constant is
+`(4/3)*A^(3/4)*(3P)^(1/4)` for halved coefficients `A = 11.5` (of `n³/k`) and
+`P = 23.5` (of `k³n²`), so a unit saved in Transport or Finish is worth about
+`1.57` and a unit saved in Preparation or Arrangement about `0.26`.
 
 The paper instead rounds `n` down to a fourth power, leaving up to
 `4*n^(3/4)` outer layers whose Parberry prefix costs `60*n^(11/4)`. Rounding
@@ -121,30 +134,33 @@ to a multiple of `k` removes this term entirely.
 
 ## Constant accounting
 
-Leading coefficient of the inefficient moves, in units of `k²s³ ≈ n^(11/4)`:
+Leading coefficients of the inefficient moves:
 
 | Source | Coefficient | Where |
 | --- | ---: | --- |
-| Arrangement (length 24, halved) | 12 | `Admissible.arrangement_bound` |
-| Preparation: staging 7.5, vertical spreading 4 | 11.5 | `Admissible.preparation_phase` |
-| Transport | 9 | `Admissible.transport_phase` |
-| Finish (length 5, halved) | 2.5 | `Admissible.finish_bound` |
-| **Total** | **35** | `GeneralSize.exists_solution_explicit` |
+| Arrangement (length 24, halved) | `12*k⁵s²` | `Admissible.arrangement_bound` |
+| Preparation: staging 7.5, vertical spreading 4 | `11.5*k⁵s²` | `Admissible.preparation_phase` |
+| Transport | `9*k²s³` | `Admissible.transport_phase` |
+| Finish (length 5, halved) | `2.5*k²s³` | `Admissible.finish_bound` |
+| **Total**, with `k = ⌊5x/8⌋` | **`24.14*n^(11/4)`** | `GeneralSize.exists_solution_explicit` |
 
 Lower-order terms are collected in one `k*s³` (respectively `n^(5/2)`) envelope
 and absorbed only in `uniformApproximation`.
 
 ## Directions for improvement
 
-- **Arrangement (12).** Families are staged at the top row of the board, so each
+Given the weights above, Transport and Finish are the phases worth attacking:
+halving the Transport exit alone would bring the constant to about `19.2`.
+
+- **Arrangement (12, weight 0.26).** Families are staged at the top row of the board, so each
   exchanged tile travels up to `n` twice. Staging nearer to the squares involved,
   or accounting for the tiles' progress toward their targets, would reduce it.
-- **Staging (7.5).** The staging prefix places exact tiles, although only group
+- **Staging (7.5, weight 0.26).** The staging prefix places exact tiles, although only group
   membership is needed.
-- **Transport exit (6 of 9).** Carrying toward the nearer of the two corridor
+- **Transport exit (6 of 9, weight 1.57).** Carrying toward the nearer of the two corridor
   sides would halve most exits. Rightmost squares have only one side, so this
   needs per-reservoir transfer counts from the count run.
-- **Vertical spreading (4).** Charging the translations at half their length
+- **Vertical spreading (4, weight 0.26).** Charging the translations at half their length
   plus displacement needs a complete description of their effect on the band.
 - **Parberry placements.** Tracking Manhattan changes through the `Zhong` words
   would let carried tiles' own moves count as efficient in Finish and staging.

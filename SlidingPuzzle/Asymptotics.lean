@@ -32,13 +32,4 @@ theorem error_isBigO_rpow_eleven_fourths
       by linarith [mul_le_mul_of_nonneg_left (nat_sq_le_rpow_eleven_fourths hn1) hC]
     _ = (C + K) * Real.rpow (n : ℝ) (11 / 4 : ℝ) := by ring
 
-/-- The width lost by rounding a dimension down to a fourth power is cubic. -/
-theorem fourth_power_gap_le {n k : ℕ} (hk : 1 ≤ k) (hn : n < (k + 1) ^ 4) :
-    n - k ^ 4 ≤ 15 * k ^ 3 := by
-  have h1 : k ≤ k ^ 2 := by nlinarith
-  have h2 : k ^ 2 ≤ k ^ 3 := by nlinarith [Nat.mul_le_mul_left k h1]
-  have h3 : 1 ≤ k ^ 3 := by omega
-  have hg : (k + 1) ^ 4 ≤ k ^ 4 + 15 * k ^ 3 := by nlinarith
-  omega
-
 end SlidingPuzzle
