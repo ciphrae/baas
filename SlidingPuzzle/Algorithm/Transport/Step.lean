@@ -28,13 +28,13 @@ square, descends and exits. The exit side, left through the source square's own
 corridor or right through its neighbour's, is chosen against both the tile's
 position and the direction of the next transfer, which the count run already
 determines. With the state potential (`transferPotential`), doubled horizontal
-travel and exit together cost at most `6*s` on average; the rightmost column of
-squares, which has no right side, pays `4*s` more. -/
+travel and exit together cost at most `5*s` on average; the rightmost column of
+squares, which has no right side, pays `8*s` more. -/
 theorem transportStepBoundAmortized_of_vertical_bound {n k E : ℕ} [NeZero n]
     (hk : Dims n k)
     (hvertical : VerticalTransportBound (n := n) hk E) :
-    TransportStepBoundAmortized (n := n) hk (fun r => 4*side n k+E+80*k^2+13*k+200+
-      if (groupCol (transportIndex k hk r)).val+1 = k then 4*side n k else 0) := by
+    TransportStepBoundAmortized (n := n) hk (fun r => 7*side n k+2*E+160*k^2+26*k+800+
+      if (groupCol (transportIndex k hk r)).val+1 = k then 8*side n k else 0) := by
   classical
   intro A₀ hA₀ i j hi₀ hchoice₀
   obtain ⟨A, p₀, hA, hi, htop, hcolA, hmat₀, hlen₀⟩ :=
@@ -164,7 +164,7 @@ theorem transportStepBoundAmortized_of_vertical_bound {n k E : ℕ} [NeZero n]
   set dL := b.2.val-(groupCol J).val*s with hdL
   set dR := (groupCol J).val*s+s-b.2.val with hdR
   have hPLs : PL ≤ 2*s+2*k^2+6 := by simp only [PL]; split_ifs <;> omega
-  have hHsum : HL+10*dL+PL+(HR+10*dR+PR) ≤ 12*s+2*Ψ+2*k^2+12 := by
+  have hHsum : HL+8*dL+PL+(HR+8*dR+PR) ≤ 10*s+2*Ψ+2*k^2+12 := by
     rcases lt_trichotomy (groupCol I).val (groupCol J).val with h | h | h
     · have hg := hgap _ _ h
       have hL : c ≤ colL := by omega
@@ -178,7 +178,7 @@ theorem transportStepBoundAmortized_of_vertical_bound {n k E : ℕ} [NeZero n]
       have hL : ¬ c ≤ colL := by omega
       have hR : ¬ c ≤ colR := by omega
       simp only [HL, HR, if_neg hL, if_neg hR, hΨ', if_neg (not_lt.mpr h.le), if_pos h]; omega
-  have hHL : HL+10*dL+PL ≤ 13*s+Ψ+2*k^2+12 := by
+  have hHL : HL+8*dL+PL ≤ 13*s+Ψ+2*k^2+12 := by
     rcases lt_trichotomy (groupCol I).val (groupCol J).val with h | h | h
     · have hg := hgap _ _ h
       have hL : c ≤ colL := by omega
@@ -193,12 +193,12 @@ theorem transportStepBoundAmortized_of_vertical_bound {n k E : ℕ} [NeZero n]
   have hmain : ∃ D : Board n, ∃ p : Path A D, Clear (k := k) D ∧ reservoir J (blank D) ∧
       boardMatrix hk D = boardMatrix hk (swapCells A (blank A) b) ∧
       2*p.inefficientMoves+statePotential hk D (boardMatrix hk D) j ≤
-        26*(k+1)+2*E+2*(75*k^2+177)+6*s+Ψ+k^2+6+
+        26*(k+1)+2*E+2*(75*k^2+300)+5*s+Ψ+k^2+6+
           (if (groupCol J).val+1 = k then 8*s else 0) := by
     have hMD : ∀ D : Board n, boardMatrix hk D = boardMatrix hk (swapCells A (blank A) b) →
         boardMatrix hk D = M' := by
       intro D h; rw [h, hmatrixSwap, hmat₀]
-    by_cases hright : (groupCol J).val+1 < k ∧ HR+10*dR+PR ≤ HL+10*dL+PL
+    by_cases hright : (groupCol J).val+1 < k ∧ HR+8*dR+PR ≤ HL+8*dL+PL
     · let J' : GroupIndex k := finProdFinEquiv (groupRow J, ⟨(groupCol J).val+1, hright.1⟩)
       have hrowJ : groupRow J' = groupRow J := by simp [J', groupRow]
       have hcolJ : (groupCol J').val = (groupCol J).val+1 := by simp [J', groupCol]
@@ -212,7 +212,7 @@ theorem transportStepBoundAmortized_of_vertical_bound {n k E : ℕ} [NeZero n]
         refine ⟨by rw [hrowJ]; exact hb1, by rw [hrowJ, Nat.add_mul, Nat.one_mul]; exact hb2,
           le_rfl, by simp only [bc, Nat.add_mul, Nat.one_mul, ← hs]; omega⟩
       obtain ⟨D, p, hD, hbD, hmD, hQ, hpr, hpl⟩ := hroute J' bc hbc rfl
-        (5*dR+75*k^2+177) (fun c' => ((groupCol J).val+1)*s ≤ c'+3) (by
+        (4*dR+75*k^2+300) (fun c' => ((groupCol J).val+1)*s ≤ c'+3) (by
           intro C hAC hCV hrow
           obtain ⟨D, q, h1, h2, h3, h4, h5⟩ :=
             exists_transport_exit_right hk A C hA I J J' hrowJ hcolJ hAC b hb ht hCV hrow
@@ -227,7 +227,7 @@ theorem transportStepBoundAmortized_of_vertical_bound {n k E : ℕ} [NeZero n]
       split_ifs at hle hsum with h1 <;>
         [have := hpr h1; have := hpl (not_le.mp h1)] <;> split_ifs <;> omega
     · obtain ⟨D, p, hD, hbD, hmD, hQ, hpr, hpl⟩ := hroute J b hb rfl
-        (5*dL+75*k^2+177) (fun c' => c' ≤ (groupCol J).val*s+k^2+2) (by
+        (4*dL+75*k^2+300) (fun c' => c' ≤ (groupCol J).val*s+k^2+2) (by
           intro C hAC hCV hrow
           obtain ⟨D, q, h1, h2, h3, h4, h5⟩ :=
             exists_transport_exit_left hk A C hA I J hAC b hb ht hCV hrow
@@ -257,7 +257,7 @@ theorem transportStepBoundAmortized_of_vertical_bound {n k E : ℕ} [NeZero n]
     rw [Nat.add_mul, Nat.one_mul] at hres
     have hrow0 : (groupRow I).val*s+k ≤ (blank A).1.val := hi.1
     change 2*(p₀.inefficientMoves+p.inefficientMoves)+_ ≤
-      2*(4*s+E+80*k^2+13*k+200+(if (groupCol J).val+1 = k then 4*s else 0))+Ψ
+      7*s+2*E+160*k^2+26*k+800+(if (groupCol J).val+1 = k then 8*s else 0)+Ψ
     split_ifs at hp ⊢ <;> omega
 
 end

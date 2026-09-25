@@ -35,6 +35,34 @@ theorem manhattan_le_of_agree (B C : Board n) (U : Finset (Cell n))
     simp only [cellCost, h x (by simpa using hx)]
   omega
 
+/-- A board obtained by moving tiles within `U` has potential at most the old
+one plus the total distance the tiles of `U` moved. -/
+theorem manhattan_le_of_displacement (B C : Board n) (U : Finset (Cell n))
+    (h : ∀ x, x ∉ U → C x = B x) :
+    manhattan C ≤ manhattan B + ∑ x ∈ U, gridDistance x (position B (C x)) := by
+  rw [manhattan_eq_sum_cellCost, manhattan_eq_sum_cellCost]
+  have hpt : ∀ x, cellCost C x ≤
+      cellCost B (position B (C x)) + gridDistance x (position B (C x)) := by
+    intro x
+    have hB : B (position B (C x)) = C x := by simp [position]
+    unfold cellCost
+    rw [hB]
+    split_ifs
+    · omega
+    · simp only [gridDistance, Nat.dist]; omega
+  have hsum : ∑ x, gridDistance x (position B (C x)) =
+      ∑ x ∈ U, gridDistance x (position B (C x)) := by
+    rw [← Finset.sum_subset (Finset.subset_univ U)]
+    intro x _ hx
+    rw [h x hx]; simp [position]
+  calc ∑ x, cellCost C x
+      ≤ ∑ x, (cellCost B (position B (C x)) + gridDistance x (position B (C x))) :=
+        Finset.sum_le_sum (fun x _ => hpt x)
+    _ = ∑ x, cellCost B x + ∑ x ∈ U, gridDistance x (position B (C x)) := by
+        rw [Finset.sum_add_distrib, ← hsum]
+        congr 1
+        exact Equiv.sum_comp (C.trans B.symm) (cellCost B)
+
 /-- Exchanging two tile names changes the potential by at most twice the
 distance between their targets. -/
 theorem manhattan_relabel_swap_le (X : Board n) (a b : Tile n) (ha : a.val ≠ 0)

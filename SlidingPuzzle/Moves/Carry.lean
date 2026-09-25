@@ -1,7 +1,7 @@
 import SlidingPuzzle.Moves.Local
 
 /-! Explicit blank words: the final blank position, and executability of any
-adjacent chain. The walk-and-carry word built from them is in `ExitCarry.lean`. -/
+adjacent chain. -/
 namespace SlidingPuzzle
 noncomputable section
 

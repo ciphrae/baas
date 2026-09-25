@@ -52,7 +52,7 @@ theorem statePotential_le {n k : ℕ} [NeZero n] (hk : Dims n k) (B : Board n)
   · omega
 
 /-- A transfer amortized by the state potential: its doubled inefficiency plus
-the potential of the next state is at most `2*E j` plus the potential of this
+the potential of the next state is at most `E j` plus the potential of this
 transfer. -/
 def TransportStepBoundAmortized {n k : ℕ} [NeZero n] (hk : Dims n k)
     (E : Fin (k*k-1+1) → ℕ) : Prop :=
@@ -63,7 +63,7 @@ def TransportStepBoundAmortized {n k : ℕ} [NeZero n] (hk : Dims n k)
       Clear (k := k) D ∧ reservoir (transportIndex k hk j) (blank D) ∧
       boardMatrix hk D = TransportCounts.move (boardMatrix hk B) i j ∧
       2*p.inefficientMoves+statePotential hk D (boardMatrix hk D) j ≤
-        2*E j+transferPotential (n := n) (blank B).2.val (transportIndex k hk i)
+        E j+transferPotential (n := n) (blank B).2.val (transportIndex k hk i)
           (transportIndex k hk j)
 
 /-- Realize a count run with an amortized step: the potentials telescope. -/
@@ -75,8 +75,8 @@ theorem exists_path_of_count_run_amortized {n k : ℕ} {E : Fin (k*k-1+1) → �
     (hblank : reservoir (transportIndex k hk i) (blank B)) :
     ∃ D : Board n, ∃ p : Path B D,
       Clear (k := k) D ∧ reservoir (transportIndex k hk j) (blank D) ∧
-      boardMatrix hk D = N ∧ 2*p.inefficientMoves + 2*∑ r, TransportCounts.rowOff N r * E r ≤
-        2*∑ r, TransportCounts.rowOff M r * E r + statePotential hk B M i := by
+      boardMatrix hk D = N ∧ 2*p.inefficientMoves + ∑ r, TransportCounts.rowOff N r * E r ≤
+        ∑ r, TransportCounts.rowOff M r * E r + statePotential hk B M i := by
   induction hrun generalizing B with
   | nil =>
     exact ⟨B, .nil B, hclear, hblank, hmatrix, by simp [Path.inefficientMoves]⟩
@@ -97,7 +97,7 @@ theorem exists_transport_path_of_step_bound_amortized {n k : ℕ} {E : Fin (k*k-
     [NeZero n] (hk : Dims n k) (hstep : TransportStepBoundAmortized (n := n) hk E)
     (B : Board n) (hB : Prepared hk B) :
     ∃ D : Board n, ∃ p : Path B D, Transported hk D ∧
-      2*p.inefficientMoves ≤ 2*∑ r, TransportCounts.rowOff (boardMatrix hk B) r * E r +
+      2*p.inefficientMoves ≤ ∑ r, TransportCounts.rowOff (boardMatrix hk B) r * E r +
         statePotential hk B (boardMatrix hk B) (Classical.choose
           (clear_board_count_run_quadratic hk B hB.clear hB.representatives)) := by
   obtain ⟨N, j, t, hi, hrun, ht, _hj, hN⟩ :=
