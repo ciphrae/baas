@@ -18,14 +18,16 @@ no `sorry`, no custom axioms, and no hypotheses standing in for mathematical
 steps.
 
 The algorithmic heart is an explicit boardwise bound
-(`Algorithm.exists_solution_explicit`): for every `n ≥ 10000`, every reachable
+(`Algorithm.exists_solution_two_level`): for every `n ≥ 25⁴`, every reachable
 board has a legal solution with at most
 
 ```text
-19.25*n^(11/4) + 62665*n^(5/2)
+15.73*n^(11/4) + 158375*n^(41/16)
 ```
 
-inefficient moves, i.e. of length at most `Manhattan + 38.49*n^(11/4) + 125330*n^(5/2)`.
+inefficient moves, i.e. of length at most `Manhattan + 31.46*n^(11/4) + 316750*n^(41/16)`.
+The one-level algorithm alone gives `19.25*n^(11/4) + 62665*n^(5/2)` for
+`n ≥ 10000` (`Algorithm.exists_solution_explicit`).
 
 ## Building
 
@@ -57,6 +59,7 @@ The main results depend only on `propext`, `Classical.choice` and `Quot.sound`.
 | `SlidingPuzzle/Algorithm/Finish/`, `Finish` | Phase IV |
 | `SlidingPuzzle/Algorithm/Admissible` | The four phases composed on boards of side `k*s`, `s ≥ k³` |
 | `SlidingPuzzle/Algorithm/GeneralSize` | Reduction of arbitrary sides to admissible ones |
+| `SlidingPuzzle/Algorithm/TwoLevel` | The one-level bound as the Finish solver; the final boardwise bound |
 | `Zhong/` | Word-level puzzle library from an earlier formalization attempt: reachability criterion, orbit statistics, move words |
 
 ## Proof outline
@@ -80,13 +83,19 @@ bounded by `17*k²s³ + 47*k⁵s² + 31264*k*s³`:
 | Preparation | Stage corridor tiles with a column prefix, spread them into the corridors | `11.5*k⁵s²` |
 | Transport | Algorithm 4: move tiles between reservoirs through the corridors, at most `n²` transfers, each leaving through the nearer side of its reservoir | `6*k²s³` |
 | Arrangement | Exchange corridor families so every tile is in its own square (length 24, halved) | `12*k⁵s²` |
-| Finish | Solve each square with the Parberry solver (length 5, halved) | `2.5*k²s³` |
+| Finish | Solve each square with a local solver: Parberry (length `5s³`), or the one-level algorithm (length `s³ + O(s^(11/4))`), halved | `2.5*k²s³` or `0.5*k²s³` |
 
 *Arbitrary sides* (`Algorithm/GeneralSize`). Take `k = ⌊(3/5)*n^(1/4)⌋` and
 `s = ⌊n/k⌋ ≥ k³`. Only the outer `n - k*s < k` layers need the Parberry prefix,
 which is lower order. With `k ≈ c*n^(1/4)` the leading inefficiency is
 `(8.5/c + 23.5*c³)*n^(11/4)`; `c = 3/5` is close to the minimizer and gives
 `19.25` (the paper's `c = 1` gives `32`).
+
+*Two levels* (`Algorithm/TwoLevel`). Every board of side `s` has `M ≤ s³`, so
+the one-level bound is itself a local solver for Finish with cost
+`s³ + O(s^(11/4))`. Finish then costs `0.5*k²s³`, and `c = 11/20` gives
+`(6.5/c + 23.5*c³)*n^(11/4) ≤ 15.73*n^(11/4)`. The inner level's error adds a
+term `O(n^(41/16))`, still of lower order.
 
 [`PROOF_NOTES.md`](PROOF_NOTES.md) relates each step to the paper, records where
 the formalization departs from the printed argument, and lists directions for

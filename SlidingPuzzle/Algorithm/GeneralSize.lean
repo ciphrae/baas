@@ -170,7 +170,7 @@ theorem optimalLength_le_explicit {n : ℕ} [NeZero n]
     (hn : 10000 ≤ n) (B : ReachableBoard n) :
     (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ)+
       38.49*Real.rpow (n : ℝ) (11/4 : ℝ)+125330*Real.rpow (n : ℝ) (5/2 : ℝ) := by
-  obtain ⟨k,hk,hlo,hhi⟩ := exists_scaled_dimension hn
+  obtain ⟨k,hk,hlo,hhi⟩ := exists_scaled_dimension 81 625 (by norm_num) (by omega) (n := n)
   have hnat := optimalLength_le_of_residual B hk (by linarith)
   have hreal : (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ)+
       17*((k^2*(n/k)^3 : ℕ) : ℝ)+47*((k^5*(n/k)^2 : ℕ) : ℝ)+31264*((k*(n/k)^3 : ℕ) : ℝ)+
@@ -226,13 +226,5 @@ theorem optimalLength_le_eventually {n : ℕ} [NeZero n]
   have : (0 : ℝ) ≤ Real.rpow (n : ℝ) (11/4 : ℝ) := Real.rpow_nonneg (Nat.cast_nonneg _) _
   norm_num only [Nat.cast_ofNat] at hr
   linarith
-
-/-- The boardwise bound required by Proposition 9. -/
-theorem uniformApproximation : UniformApproximation := by
-  refine ⟨40,by norm_num,125330^4,?_⟩
-  intro n hn hn2
-  letI : NeZero n := ⟨by omega⟩
-  intro B
-  exact optimalLength_le_eventually hn B
 
 end SlidingPuzzle.Algorithm

@@ -10,8 +10,10 @@ import SlidingPuzzle
 
 -- The boardwise bounds
 #print axioms SlidingPuzzle.Algorithm.uniformApproximation
+#print axioms SlidingPuzzle.Algorithm.exists_solution_two_level
 #print axioms SlidingPuzzle.Algorithm.exists_solution_explicit
 #print axioms SlidingPuzzle.Algorithm.exists_admissible_solution
+#print axioms SlidingPuzzle.Algorithm.exists_admissible_solution_of_solver
 
 -- The four phases
 #print axioms SlidingPuzzle.Algorithm.preparation_phase

@@ -66,17 +66,17 @@ theorem CostedPhase.comp {n k : ℕ} [NeZero n] {a b : LeadingBudget}
 /-- Append a solving suffix of bounded length. A path ending at the target has
 at most half of its moves inefficient, so the suffix is charged at half its
 length. -/
-theorem CostedPhase.exists_solution {n k : ℕ} [NeZero n] {a b : LeadingBudget}
-    {pre mid : Board n → Prop} (h : CostedPhase k a pre mid)
-    (hfinish : ∀ C, mid C → ∃ q : Path C (target n), q.length ≤ b.eval k (side n k))
+theorem CostedPhase.exists_solution {n k : ℕ} [NeZero n] {a : LeadingBudget}
+    {pre mid : Board n → Prop} (h : CostedPhase k a pre mid) {F : ℕ}
+    (hfinish : ∀ C, mid C → ∃ q : Path C (target n), q.length ≤ F)
     (B : Board n) (hB : pre B) :
     ∃ p : Path B (target n),
-      2*p.inefficientMoves ≤ a.eval k (side n k)+b.eval k (side n k) ∧
-      p.length ≤ manhattan B+a.eval k (side n k)+b.eval k (side n k) := by
+      2*p.inefficientMoves ≤ a.eval k (side n k)+F ∧
+      p.length ≤ manhattan B+a.eval k (side n k)+F := by
   obtain ⟨C,p,hC,hp⟩ := h B hB
   obtain ⟨q,hq⟩ := hfinish C hC
   have hhalf := q.inefficientMoves_le_half_length
-  have hi : 2*(p.append q).inefficientMoves ≤ a.eval k (side n k)+b.eval k (side n k) := by
+  have hi : 2*(p.append q).inefficientMoves ≤ a.eval k (side n k)+F := by
     rw [Path.inefficientMoves_append]
     omega
   refine ⟨p.append q,hi,?_⟩
@@ -234,6 +234,11 @@ theorem arrangement_bound {n k : ℕ} (hk : Dims n k) [NeZero n]
   dsimp [LeadingBudget.eval]
   omega
 
+/-- Preparation followed by Transport. -/
+theorem preparation_transport_phase {n k : ℕ} (hk : Dims n k) [NeZero n] :
+    CostedPhase (n := n) k ⟨12,23,10000⟩ Reachable (Transported hk) :=
+  (preparation_phase hk).comp (transport_phase hk)
+
 /-- Finish: `k²` local solves of side `s` with the Parberry solver,
 `5*k²s³ + O(k*s³)` moves including access and parity repair. -/
 theorem finish_bound {n k : ℕ} (hk : Dims n k) [NeZero n]
@@ -262,8 +267,27 @@ theorem exists_admissible_solution {n k : ℕ} (hk : Dims n k) [NeZero n]
     rw [Path.length_append]
     dsimp [LeadingBudget.eval] at *
     omega
-  obtain ⟨p,hi,hl⟩ := ((preparation_phase hk).comp (transport_phase hk)).exists_solution
-    hfinish B hB
+  obtain ⟨p,hi,hl⟩ := (preparation_transport_phase hk).exists_solution hfinish B hB
   refine ⟨p,?_,?_⟩ <;> dsimp [LeadingBudget.eval,LeadingBudget.add] at * <;> omega
+
+/-- The same with an arbitrary local solver in Finish, whose cost is kept
+explicit: `k²` local solves of side `s` plus `9354*k²n` for access and parity. -/
+theorem exists_admissible_solution_of_solver {cost : ℕ → ℕ} (hsolver : SolverCostBound cost)
+    {n k : ℕ} (hk : Dims n k) [NeZero n] (B : Board n) (hB : Reachable B) :
+    ∃ p : Path B (target n),
+      p.length ≤ manhattan B+12*(k^2*side n k^3)+47*(k^5*side n k^2)+14100*(k*side n k^3)+
+        (k^2*cost (side n k)+9354*k^2*n) := by
+  have hfinish (C : Board n) (hC : Transported hk C) :
+      ∃ q : Path C (target n), q.length ≤
+        (LeadingBudget.mk 0 24 4100).eval k (side n k)+(k^2*cost (side n k)+9354*k^2*n) := by
+    obtain ⟨D,p,hD,hp⟩ := arrangement_bound hk C hC
+    obtain ⟨q,hq⟩ := exists_finish_path hsolver hk D hD
+    refine ⟨p.append q,?_⟩
+    rw [Path.length_append]
+    omega
+  obtain ⟨p,-,hl⟩ := (preparation_transport_phase hk).exists_solution hfinish B hB
+  refine ⟨p,?_⟩
+  dsimp [LeadingBudget.eval] at hl
+  omega
 
 end SlidingPuzzle.Algorithm

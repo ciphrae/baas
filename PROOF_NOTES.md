@@ -116,12 +116,20 @@ Section 3.2 (p. 137), each nonfinal square is solved up to one transposition,
 which is paired with a transposition of two buffer tiles in the final square to
 give an even permutation (`Finish.lean`). The blank is borrowed from the global
 target corner. The final square is solvable because the whole board is
-reachable (`Algorithm/ResidualReachability.lean`). The local solver is a
-Parberry-style solver with `5*n³ + O(n²)` moves (`Parberry/Solver.lean`).
+reachable (`Algorithm/ResidualReachability.lean`). The local solver is
+abstract (`SolverCostBound`): its cost must hold for every board of side `s`.
+The Parberry-style solver gives `5*s³ + O(s²)` moves (`Parberry/Solver.lean`).
+
+*Two levels* (`Algorithm/TwoLevel.lean`). Every board of side `s` has `M ≤ s³`
+(`manhattan_le_cube`), so the one-level explicit bound is a local solver with
+cost `s³ + 38.49*s^(11/4) + 125330*s^(5/2)` for `s ≥ 10000` (`recursiveCost`).
+Finish then costs `k²s³ + O(k²s^(11/4))` in length. Since `s ≥ x³` with
+`x = n^(1/4)`, the inner error is `O(x^(41/4)) = O(n^(41/16))`. No induction is
+needed: the outer level uses the inner bound only through Finish.
 
 ## Arbitrary sides
 
-For a board of side `n ≥ 10000`, let `x = n^(1/4)`, take `k = ⌊3x/5⌋` and
+For a board of side `n ≥ 10000`, let `x = n^(1/4)`, take `k = ⌊3x/5⌋` (one level) and
 `s = ⌊n/k⌋`, so that `s ≥ k³` (`exists_scaled_dimension`). The outer
 `d = n - k*s < k` rows and columns are solved by the Parberry prefix and the
 remaining `k*s × k*s` board by the admissible-board algorithm. The residual
@@ -132,12 +140,18 @@ after the prefix (`Algorithm/Residual*.lean`). Then
 `O(n²·k) = O(x¹⁰)`.
 
 **Choice of `k`.** With `k ≈ c*x`, twice the leading inefficiency is
-`(17/c + 47*c³)*x¹¹`, minimized at `c = (17/141)^(1/4) ≈ 0.589` with value
-`≈ 38.47`. The rational choice `c = 3/5` gives `85/3 + 1269/125 ≈ 38.49`;
-the paper's `c = 1` gives `64`. At the optimum the constant is
-`(4/3)*A^(3/4)*(3P)^(1/4)` for halved coefficients `A = 8.5` (of `n³/k`) and
-`P = 23.5` (of `k³n²`), so a unit saved in Transport or Finish is worth about
-`1.70` and a unit saved in Preparation or Arrangement about `0.20`.
+`(A'/c + 47*c³)*x¹¹`, where `A' = 17` with the Parberry Finish (one level) and
+`A' = 13` with the recursive Finish (two levels). The minimizer is
+`c = (A'/141)^(1/4)`, and at the optimum the constant is
+`(4/3)*A^(3/4)*(3P)^(1/4)` for halved coefficients `A = A'/2` and `P = 23.5`.
+
+| Level | `c` | Constant | Where |
+| --- | --- | ---: | --- |
+| One (Parberry Finish) | `3/5` | `85/6 + 1269/250 ≈ 19.25` | `GeneralSize.exists_solution_explicit` |
+| Two (recursive Finish) | `11/20` | `130/11 + 62557/16000 ≈ 15.73` | `TwoLevel.exists_solution_two_level` |
+
+With two levels a unit saved in Transport is worth about `1.82` and a unit saved
+in Preparation or Arrangement about `0.17`.
 
 The paper instead rounds `n` down to a fourth power, leaving up to
 `4*n^(3/4)` outer layers whose Parberry prefix costs `60*n^(11/4)`. Rounding
@@ -152,24 +166,24 @@ Leading coefficients of the inefficient moves:
 | Arrangement (length 24, halved) | `12*k⁵s²` | `Admissible.arrangement_bound` |
 | Preparation: staging 7.5, vertical spreading 4 | `11.5*k⁵s²` | `Admissible.preparation_phase` |
 | Transport | `6*k²s³` | `Admissible.transport_phase` |
-| Finish (length 5, halved) | `2.5*k²s³` | `Admissible.finish_bound` |
-| **Total**, with `k = ⌊3x/5⌋` | **`19.25*n^(11/4)`** | `GeneralSize.exists_solution_explicit` |
+| Finish (length `s³` per square with the recursive solver, halved) | `0.5*k²s³` | `TwoLevel.recursiveSolverCost` |
+| **Total**, with `k = ⌊11x/20⌋` | **`15.73*n^(11/4)`** | `TwoLevel.exists_solution_two_level` |
 
-Lower-order terms are collected in one `k*s³` (respectively `n^(5/2)`) envelope
-and absorbed only in `uniformApproximation`.
+Lower-order terms are collected in one `k*s³` envelope, plus the inner level's
+error, and absorbed (as `O(n^(41/16))`) only in `uniformApproximation`.
 
 ## Directions for improvement
 
-Given the weights above, Transport and Finish are the phases worth attacking.
+Given the weights above, Transport is the phase worth attacking.
 
-- **Arrangement (12, weight 0.20).** Families are staged at the top row of the board, so each
+- **Arrangement (12, weight 0.17).** Families are staged at the top row of the board, so each
   exchanged tile travels up to `n` twice. Staging nearer to the squares involved,
   or accounting for the tiles' progress toward their targets, would reduce it.
-- **Staging (7.5, weight 0.20).** The staging prefix places exact tiles, although only group
+- **Staging (7.5, weight 0.17).** The staging prefix places exact tiles, although only group
   membership is needed.
 - **Transport (6).** The entry slide, horizontal travel, vertical travel and
-  exit each cost up to `s` per transfer (weight 1.70).
-- **Vertical spreading (4, weight 0.20).** Charging the translations at half their length
+  exit each cost up to `s` per transfer (weight 1.82).
+- **Vertical spreading (4, weight 0.17).** Charging the translations at half their length
   plus displacement needs a complete description of their effect on the band.
 - **Parberry placements.** Tracking Manhattan changes through the `Zhong` words
-  would let carried tiles' own moves count as efficient in Finish and staging.
+  would let carried tiles' own moves count as efficient in staging.

@@ -1,4 +1,4 @@
-import SlidingPuzzle.Algorithm.GeneralSize
+import SlidingPuzzle.Algorithm.TwoLevel
 import SlidingPuzzle.Bridge.Statistics
 
 /-! # Proposition 9
@@ -9,7 +9,7 @@ optimal solution length is `(2/3)*n³ + O(n^(11/4))` and the maximum (God's
 number) is `n³ + O(n^(11/4))`.
 
 The boardwise bound `Algorithm.uniformApproximation` comes from the partition
-algorithm; `Algorithm.exists_solution_explicit` states it with explicit
+algorithm; `Algorithm.exists_solution_two_level` states it with explicit
 constants. The Manhattan estimates come from `Bridge.Statistics`. -/
 open Filter Asymptotics
 
