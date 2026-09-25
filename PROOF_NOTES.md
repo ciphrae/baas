@@ -103,9 +103,25 @@ each transfer is realized by a legal path (`Transport/Realization.lean`).
   moves are inefficient. The proof is an induction on `d` that follows the
   first walked tile, whose displacement partly cancels in the next carry.
 
-A transfer costs at most `5.5*s + O(k²)` inefficient moves: one `s` each for
-the entry slide, horizontal travel and vertical travel, and `2.5*s` for the
-exit, plus `3*s` if the source lies in the rightmost column. Off-diagonal counts never
+- *Look-ahead:* horizontal travel is inefficient only inside the square the
+  blank starts from, so it costs the distance from the blank's column to that
+  square's edge in the direction of travel (`exists_horizontal_transport_slide_dir'`).
+  The blank's column is where the previous exit left it, next to the left or
+  right edge. The count run is deterministic (`Chooses.unique`), so when a
+  transfer exits, the next source is already known. The exit side minimises
+  `10·d_side + 2·horizontal + Ψ_next`, where the potential `Ψ`
+  (`transferPotential`) is twice the distance to the edge facing the next
+  source, or `s` if the next source is in the same column of squares. Summing
+  the two options gives `cost_L + cost_R ≤ 12s + 2Ψ_now + O(k²)` in every case,
+  so the cheaper one satisfies `2·(exit + horizontal) + Ψ_next ≤ 6s + Ψ_now + O(k²)`
+  (`transportStepBoundAmortized_of_vertical_bound`). The potentials telescope
+  along the run (`exists_path_of_count_run_amortized`). A small game analysis
+  shows `3s` per transfer is optimal for one-step look-ahead, against `3.5s`
+  without it.
+
+A transfer costs at most `5*s + O(k²)` inefficient moves on average: one `s`
+each for the entry slide and vertical travel, `3*s` for exit and horizontal
+travel together, plus `4*s` if the source lies in the rightmost column. Off-diagonal counts never
 increase, so a reservoir is the source of at most as many transfers as it
 initially holds off-diagonal tiles (`weighted_rowOff_move`). The rightmost
 column's surcharge is therefore at most `k*s²*3s`, lower order
@@ -173,18 +189,18 @@ after the prefix (`Algorithm/Residual*.lean`). Then
 `O(n²·k) = O(x¹⁰)`.
 
 **Choice of `k`.** With `k ≈ c*x`, twice the leading inefficiency is
-`(A'/c + 26*c³)*x¹¹`, where `A' = 16` with the Parberry Finish (one level) and
-`A' = 11` with the recursive Finish (two levels). The minimizer is
+`(A'/c + 26*c³)*x¹¹`, where `A' = 15` with the Parberry Finish (one level) and
+`A' = 10` with the recursive Finish (two levels). The minimizer is
 `c = (A'/78)^(1/4)`, and at the optimum the constant is
 `(4/3)*A^(3/4)*(3P)^(1/4)` for halved coefficients `A = A'/2` and `P = 13`.
 
 | Level | `c` | Constant | Where |
 | --- | --- | ---: | --- |
-| One (Parberry Finish) | `2/3` | `12 + 104/27 ≈ 15.86` | `GeneralSize.exists_solution_explicit` |
-| Two (recursive Finish) | `3/5` | `55/6 + 351/125 ≈ 11.975` | `TwoLevel.exists_solution_two_level` |
+| One (Parberry Finish) | `2/3` | `45/4 + 104/27 ≈ 15.11` | `GeneralSize.exists_solution_explicit` |
+| Two (recursive Finish) | `3/5` | `25/3 + 351/125 ≈ 11.14` | `TwoLevel.exists_solution_two_level` |
 
-With two levels a unit saved in Transport is worth about `1.63` and a unit saved
-in Preparation or Arrangement about `0.23`.
+With two levels a unit saved in Transport is worth about `1.67` and a unit saved
+in Preparation or Arrangement about `0.21`.
 
 The paper instead rounds `n` down to a fourth power, leaving up to
 `4*n^(3/4)` outer layers whose Parberry prefix costs `60*n^(11/4)`. Rounding
@@ -198,27 +214,24 @@ Leading coefficients of the inefficient moves:
 | --- | ---: | --- |
 | Arrangement (length 3, halved) | `1.5*k⁵s²` | `Admissible.arrangement_bound` |
 | Preparation: staging 7.5, vertical spreading 4 | `11.5*k⁵s²` | `Admissible.preparation_phase` |
-| Transport | `5.5*k²s³` | `Admissible.transport_phase` |
+| Transport | `5*k²s³` | `Admissible.transport_phase` |
 | Finish (recursive solver, charged by inefficiency) | lower order | `TwoLevel.recursiveSolver` |
-| **Total**, with `k = ⌊3x/5⌋` | **`11.975*n^(11/4)`** | `TwoLevel.exists_solution_two_level` |
+| **Total**, with `k = ⌊3x/5⌋` | **`11.145*n^(11/4)`** | `TwoLevel.exists_solution_two_level` |
 
 Lower-order terms are collected in one `k*s³` envelope, plus the inner level's
 error, and absorbed (as `O(n^(41/16))`) only in `uniformApproximation`.
 
 ## Directions for improvement
 
-- **Transport (5.5, weight 1.63).** The entry slide, horizontal travel and
-  vertical travel each cost up to `s` per transfer, the exit `2.5*s`. Choosing
-  the exit side with a look-ahead to the next transfer's direction could save
-  part of the horizontal travel, but a same-column transfer followed by a
-  different-column one gives conflicting preferences.
-- **Staging (7.5, weight 0.23).** The staging prefix places exact tiles, although only group
+- **Transport (5, weight 1.67).** The entry slide and vertical travel each cost
+  up to `s` per transfer, exit and horizontal travel `3*s` together.
+- **Staging (7.5, weight 0.21).** The staging prefix places exact tiles, although only group
   membership is needed. Moving rows of tiles along their own row costs about 2
   moves per tile and cell, against 5–6 for single carries, which staging does not
   exploit.
-- **Vertical spreading (4, weight 0.23).** Charging the translations at half their length
+- **Vertical spreading (4, weight 0.21).** Charging the translations at half their length
   plus displacement needs a complete description of their effect on the band.
-- **Arrangement sideways moves (1.5, weight 0.23).** Families move sideways at
+- **Arrangement sideways moves (1.5, weight 0.21).** Families move sideways at
   `6` per cell and along their axis at `2`; turning a column into a row for the
   sideways leg costs only `O(s)` per tile, so the leading term could drop to
   about `(4/3)*k⁵s²`.

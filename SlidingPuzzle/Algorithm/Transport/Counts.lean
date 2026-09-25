@@ -31,6 +31,11 @@ def move (C : CountMatrix m) (i j : Fin (m + 1)) : CountMatrix m :=
 def Chooses (C : CountMatrix m) (i j : Fin (m + 1)) : Prop :=
   j ≠ i ∧ 0 < C j i ∧ ∀ r, r ≠ i → 0 < C r i → j ≤ r
 
+/-- The minimum-source rule determines the source. -/
+theorem Chooses.unique {C : CountMatrix m} {i j j' : Fin (m + 1)} (h : Chooses C i j)
+    (h' : Chooses C i j') : j = j' :=
+  le_antisymm (h.2.2 j' h'.1 h'.2.1) (h'.2.2 j h.1 h.2.1)
+
 theorem move_at_source (C : CountMatrix m) {i j : Fin (m + 1)} (_hji : j ≠ i) :
     move C i j j i = C j i - 1 := by
   simp [move]

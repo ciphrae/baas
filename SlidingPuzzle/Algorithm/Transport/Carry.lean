@@ -83,7 +83,7 @@ theorem exists_transport_exit_core [NeZero n] (hk : Dims n k)
     (hparz : (c'.1.val+c'.2.val+z.1.val+z.2.val) % 2 = 1) (L Dm : ℕ)
     (hwalk : ∀ X : Board n, blank X = e → ∃ Y cs, Executes X cs Y ∧ cs.length ≤ L ∧
       manhattan Y ≤ manhattan X+Dm ∧ blank Y = e ∧ Y z = X b ∧ ∀ x ∈ cs, reservoir j x) :
-    ∃ D : Board n, ∃ p : Path S D, Clear (k := k) D ∧ reservoir j (blank D) ∧
+    ∃ D : Board n, ∃ p : Path S D, Clear (k := k) D ∧ blank D = z ∧
       boardMatrix hk D = boardMatrix hk (swapCells S (blank S) b) ∧
       p.length ≤ 50*(Nat.dist (blank S).2.val e.2.val+1)+L+1+
         25*(Nat.dist c'.2.val z.2.val+1) ∧
@@ -182,7 +182,7 @@ theorem exists_transport_exit_core [NeZero n] (hk : Dims n k)
       rw [hDS x (fun h => vertical_not_reservoir hk hx h) hxc hxc']
       exact ((hAS x m).mp (Or.inl (hA.2 l m x hx))).resolve_right
         (fun h => hxc (h.1.trans hcdef.symm))
-  · rw [hbD]; exact hz
+  · exact hbD
   · funext r g
     have h₂ := congrFun (congrFun hmat₂ r) g
     unfold boardMatrix at h₂ ⊢
@@ -282,7 +282,8 @@ theorem exists_transport_carry_exit [NeZero n] (hk : Dims n k)
     ∃ D : Board n, ∃ p : Path S D, Clear (k := k) D ∧ reservoir j (blank D) ∧
       boardMatrix hk D = boardMatrix hk (swapCells S (blank S) b) ∧
       p.length ≤ 6*(b.2.val-(groupCol j).val*side n k)+75*k^2+176 ∧
-      p.inefficientMoves ≤ 5*(b.2.val-(groupCol j).val*side n k)+75*k^2+177 := by
+      p.inefficientMoves ≤ 5*(b.2.val-(groupCol j).val*side n k)+75*k^2+177 ∧
+      (blank D).2.val ≤ (groupCol j).val*side n k+k^2+2 := by
   obtain ⟨-, hk2, -, -, -⟩ := hk.facts
   have hiLt : i.val < k^2 := by simp [pow_two]
   have hcolEnd : ((groupCol j).val+1)*side n k ≤ n := by
@@ -363,9 +364,10 @@ theorem exists_transport_carry_exit [NeZero n] (hk : Dims n k)
     simp only [Nat.dist]; dsimp [c', z, w, L, δ]; split_ifs <;> omega
   have : w ≥ (groupCol j).val*side n k := by dsimp [w, L]; omega
   have h6 : b.2.val-1-w ≤ b.2.val-(groupCol j).val*side n k := by omega
-  refine ⟨D, p, hD, hbD, hm, hl.trans (by nlinarith), ?_⟩
-  rw [← hcdef] at hi
-  nlinarith
+  refine ⟨D, p, hD, hbD ▸ hz, hm, hl.trans (by nlinarith), ?_, ?_⟩
+  · rw [← hcdef] at hi
+    nlinarith
+  · rw [hbD]; dsimp [z, w, L, δ]; split_ifs <;> omega
 
 /-- Exit to the right: the blank descends the vertical corridor `V(j',i)` of the
 square `j'` right of the source square `j`, and the tile is carried rightwards. -/
@@ -379,7 +381,8 @@ theorem exists_transport_carry_exit_right [NeZero n] (hk : Dims n k)
     ∃ D : Board n, ∃ p : Path S D, Clear (k := k) D ∧ reservoir j (blank D) ∧
       boardMatrix hk D = boardMatrix hk (swapCells S (blank S) b) ∧
       p.length ≤ 6*(((groupCol j).val+1)*side n k-b.2.val)+75*k^2+176 ∧
-      p.inefficientMoves ≤ 5*(((groupCol j).val+1)*side n k-b.2.val)+75*k^2+177 := by
+      p.inefficientMoves ≤ 5*(((groupCol j).val+1)*side n k-b.2.val)+75*k^2+177 ∧
+      ((groupCol j).val+1)*side n k ≤ (blank D).2.val+3 := by
   obtain ⟨-, hk2, -, -, -⟩ := hk.facts
   have hiLt : i.val < k^2 := by simp [pow_two]
   have hbv := hb
@@ -460,9 +463,10 @@ theorem exists_transport_carry_exit_right [NeZero n] (hk : Dims n k)
   have h6 : w-1-b.2.val ≤ (groupCol j).val*side n k+side n k-b.2.val := by
     dsimp [w, E]; omega
   simp only [Nat.add_mul, Nat.one_mul]
-  refine ⟨D, p, hD, hbD, hm, hl.trans (by nlinarith), ?_⟩
-  rw [← hcdef] at hi
-  nlinarith
+  refine ⟨D, p, hD, hbD ▸ hz, hm, hl.trans (by nlinarith), ?_, ?_⟩
+  · rw [← hcdef] at hi
+    nlinarith
+  · rw [hbD]; dsimp [z, w, E, δ]; split_ifs <;> omega
 
 /-- The exit through the source square's own vertical corridor: carry the tile
 when it lies deep in its reservoir, and jump directly when it is already next
@@ -474,12 +478,13 @@ theorem exists_transport_exit_left [NeZero n] (hk : Dims n k)
     (hrow : (blank S).1 = b.1) :
     ∃ D : Board n, ∃ p : Path S D, Clear (k := k) D ∧ reservoir j (blank D) ∧
       boardMatrix hk D = boardMatrix hk (swapCells A (blank A) b) ∧
-      p.inefficientMoves ≤ 5*(b.2.val-(groupCol j).val*side n k)+75*k^2+177 := by
+      p.inefficientMoves ≤ 5*(b.2.val-(groupCol j).val*side n k)+75*k^2+177 ∧
+      (blank D).2.val ≤ (groupCol j).val*side n k+k^2+2 := by
   have hbS : b ≠ blank S := fun h => vertical_not_reservoir hk hblank (h ▸ hb)
   by_cases hx : (groupCol j).val*side n k+k^2+2 ≤ b.2.val
-  · obtain ⟨D, p, hD, hbD, hm, -, hi⟩ :=
+  · obtain ⟨D, p, hD, hbD, hm, -, hi, hcD⟩ :=
       exists_transport_carry_exit hk A S hA i j hAS b hb ht hblank hrow hx
-    refine ⟨D, p, hD, hbD, ?_, hi⟩
+    refine ⟨D, p, hD, hbD, ?_, hi, hcD⟩
     rw [hm]
     have hsb : S b ∈ targetGroup i := hAS.mem_targetGroup ht hbS
     exact GroupEquivalent.boardMatrix_eq_swap hk i A _ b ht
@@ -487,7 +492,8 @@ theorem exists_transport_exit_left [NeZero n] (hk : Dims n k)
   · obtain ⟨D, p, hD, hAD, hp⟩ :=
       exists_transport_exit_path hk A S hA i j hAS b hb ht rfl hblank hrow
     have hbD : reservoir j (blank D) := by rw [hD]; exact hb
-    refine ⟨D, p, hAD.clear hk hA hbD, hbD, hAD.boardMatrix_eq_swap hk i A D b ht hD, ?_⟩
+    refine ⟨D, p, hAD.clear hk hA hbD, hbD, hAD.boardMatrix_eq_swap hk i A D b ht hD, ?_,
+      by rw [hD]; omega⟩
     have hiLt : i.val < k^2 := by simp [pow_two]
     have hcol := hblank.2.2
     have hb3 := hb.2.2.1
@@ -505,12 +511,13 @@ theorem exists_transport_exit_right [NeZero n] (hk : Dims n k)
     (hrow : (blank S).1 = b.1) :
     ∃ D : Board n, ∃ p : Path S D, Clear (k := k) D ∧ reservoir j (blank D) ∧
       boardMatrix hk D = boardMatrix hk (swapCells A (blank A) b) ∧
-      p.inefficientMoves ≤ 5*(((groupCol j).val+1)*side n k-b.2.val)+75*k^2+177 := by
+      p.inefficientMoves ≤ 5*(((groupCol j).val+1)*side n k-b.2.val)+75*k^2+177 ∧
+      ((groupCol j).val+1)*side n k ≤ (blank D).2.val+3 := by
   have hbS : b ≠ blank S := fun h => vertical_not_reservoir hk hblank (h ▸ hb)
   by_cases hx : b.2.val+3 ≤ ((groupCol j).val+1)*side n k
-  · obtain ⟨D, p, hD, hbD, hm, -, hi⟩ :=
+  · obtain ⟨D, p, hD, hbD, hm, -, hi, hcD⟩ :=
       exists_transport_carry_exit_right hk A S hA i j j' hrowj hcolj hAS b hb ht hblank hrow hx
-    refine ⟨D, p, hD, hbD, ?_, hi⟩
+    refine ⟨D, p, hD, hbD, ?_, hi, hcD⟩
     rw [hm]
     have hsb : S b ∈ targetGroup i := hAS.mem_targetGroup ht hbS
     exact GroupEquivalent.boardMatrix_eq_swap hk i A _ b ht
@@ -518,7 +525,8 @@ theorem exists_transport_exit_right [NeZero n] (hk : Dims n k)
   · obtain ⟨D, p, hD, hAD, hp⟩ :=
       exists_transport_exit_path hk A S hA i j hAS b hb ht hrowj hblank hrow
     have hbD : reservoir j (blank D) := by rw [hD]; exact hb
-    refine ⟨D, p, hAD.clear hk hA hbD, hbD, hAD.boardMatrix_eq_swap hk i A D b ht hD, ?_⟩
+    refine ⟨D, p, hAD.clear hk hA hbD, hbD, hAD.boardMatrix_eq_swap hk i A D b ht hD, ?_,
+      by rw [hD]; simp only [Nat.add_mul, Nat.one_mul] at hx ⊢; omega⟩
     have hiLt : i.val < k^2 := by simp [pow_two]
     have hcol := hblank.2.2
     rw [hcolj] at hcol
