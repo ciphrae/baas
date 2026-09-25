@@ -8,8 +8,9 @@ tile never changes column before it is transported, and each can be charged,
 once, according to its column: the exit through the nearer side of its square
 and the next transfer's horizontal travel from its cell (`exitWeight`). The
 blank's own column pays for the horizontal travel of the transfer about to
-start (`blankWeight`). Averaged over the columns of a square, the weight is
-`3.5*s`, against `5*s` per transfer for the look-ahead charge it replaces. -/
+start (`blankWeight`). Weights are doubled inefficiencies. Averaged over the
+columns of a square, the weight is `3.5*s`, against `5*s` per transfer for the
+look-ahead charge it replaces. -/
 namespace SlidingPuzzle.Partition
 noncomputable section
 open Classical

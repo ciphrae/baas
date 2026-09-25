@@ -22,11 +22,11 @@ The algorithmic heart is an explicit boardwise bound
 board has a legal solution with at most
 
 ```text
-8.45*n^(11/4) + 237854*n^(41/16)
+7.08*n^(11/4) + 237843*n^(41/16)
 ```
 
-inefficient moves, i.e. of length at most `Manhattan + 16.90*n^(11/4) + 475708*n^(41/16)`.
-The one-level algorithm alone gives `12.86*n^(11/4) + 78255*n^(5/2)` for
+inefficient moves, i.e. of length at most `Manhattan + 14.15*n^(11/4) + 475686*n^(41/16)`.
+The one-level algorithm alone gives `11.73*n^(11/4) + 78252*n^(5/2)` for
 `n ≥ 12⁴` (`Algorithm.exists_solution_explicit`).
 
 ## Building
@@ -75,21 +75,21 @@ reachable boards is `n³ + O(n²)`. So it suffices to show
 horizontal and vertical corridors and a reservoir. The construction only needs
 squares of side `s ≥ k³` (`Partition.Dims`), so it applies to every board of
 side `n = k*s`. The phases cost two different monomials, `k²s³ = n³/k` and
-`k⁵s² = k³n²`, which agree only when `s = k³`. Twice the inefficient moves are
-bounded by `12*k²s³ + 26*k⁵s² + 39064*k*s³`:
+`k⁵s² = k³n²`, which agree only when `s = k³`. Four times the inefficient moves
+are bounded by `21*k²s³ + 52*k⁵s² + 78128*k*s³`:
 
 | Phase | What it does | Leading inefficiency |
 | --- | --- | ---: |
 | Preparation | Stage corridor tiles with a column prefix, spread them into the corridors | `11.5*k⁵s²` |
-| Transport | Algorithm 4: move tiles between reservoirs through the corridors, at most `n²` transfers, each entering the corridor row above or below its reservoir and leaving through the side of the source reservoir that is best given the tile and the next transfer, by a three-row carry | `3.5*k²s³` |
+| Transport | Algorithm 4: move tiles between reservoirs through the corridors, at most `n²` transfers, each entering the corridor row above or below its reservoir and leaving through the side of the source reservoir nearer the tile, by a three-row carry that the blank undoes on its way back, so that misplaced tiles never change column and are charged once each by their column | `2.75*k²s³` |
 | Arrangement | Exchange corridor families so every tile is in its own square, moving one family next to the other (length `8/3`, rounded up to 3 and halved; at two levels, less the potential decrease `2/3`, halved) | `1.5*k⁵s²`, or `k⁵s²` |
 | Finish | Solve each square with a local solver: Parberry (length `5s³`, halved), or the one-level algorithm (inefficiency `O(s^(11/4))`) | `2.5*k²s³`, or lower order |
 
 *Arbitrary sides* (`Algorithm/GeneralSize`). Take `k = ⌊(2/3)*n^(1/4)⌋` and
 `s = ⌊n/k⌋ ≥ k³`. Only the outer `n - k*s < k` layers need the Parberry prefix,
 which is lower order. With `k ≈ c*n^(1/4)` the leading inefficiency is
-`(6/c + 13*c³)*n^(11/4)`; `c = 2/3` is close to the minimizer and gives
-`12.86` (the paper's `c = 1` gives `19`).
+`(5.25/c + 13*c³)*n^(11/4)`; `c = 2/3` is close to the minimizer and gives
+`11.73` (the paper's `c = 1` gives `18.25`).
 
 *Two levels* (`Algorithm/TwoLevel`). The one-level algorithm is itself a local
 solver for Finish, with inefficiency `O(s^(11/4))`. Charging Arrangement and
@@ -97,7 +97,7 @@ Finish by inefficiency rather than by half their length, Finish becomes lower
 order, and Arrangement costs its length less the potential decrease: it moves
 every vertical corridor tile into its own square, about `(2/3)*k⁵s²` in total,
 and leaves the reservoirs alone. Then `c = 6/11` gives
-`(3.5/c + 12.5*c³)*n^(11/4) ≤ 8.45*n^(11/4)`. The inner level's error
+`(2.75/c + 12.5*c³)*n^(11/4) ≤ 7.08*n^(11/4)`. The inner level's error
 adds a term `O(n^(41/16))`, still of lower order.
 
 [`PROOF_NOTES.md`](PROOF_NOTES.md) relates each step to the paper, records where
