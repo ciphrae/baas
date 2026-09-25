@@ -293,6 +293,16 @@ is `(4/3)*A^(3/4)*(3P)^(1/4)` with `A = 3.5` (Transport) and `P = 12.5`
   should cut this substantially. Alternatively, charge the translations at half
   their length plus displacement, which needs a complete description of their
   effect on the band.
+- **Preparation charged by displacement.** Preparation is charged at its full
+  length (`ineff ≤ length`). Since `2*ineff = length + ΔM` and `ΔM` is at most
+  the net displacement of the tiles (`manhattan_le_of_displacement`), a
+  cheaper charge needs the exact effect of the moves. The protected shift `θ_M`
+  (length `6M+2`) displaces tiles by `4M-2` in total, so vertical spreading
+  would cost `5/3` of its length instead of `2`: `4 → 3.33` (constant about
+  `−0.11`). The staged tiles also move toward their targets on average
+  (`ΔM ≈ −(1/6)*k⁵s²` for them), which would give about `3` (`−0.17`). Both need
+  the full effect of chunked column translations, which is only partly
+  recorded now (`exists_chunked_column_translation`).
 - **Staging (7.5).** The staging prefix (Parberry column and row solves)
   places exact tiles, although only group membership is needed, and charges
   about `7.5*n` per tile regardless of position. Bulk moves are much cheaper:
