@@ -114,6 +114,7 @@ theorem exists_oriented_corridor_path
     ∃ C : Board n, ∃ p : Path B C,
       blank C = corridorCell vertical backwards fixed b ∧ p.length = b.val - a.val ∧
       p.inefficientMoves ≤ hi - lo ∧
+      p.inefficientMoves ≤ (if backwards then n - lo else hi) - a.val ∧
       (∀ x : Fin n, a ≤ x → x ≤ b → x ≠ b →
         C (corridorCell vertical backwards fixed x) ∈ S) ∧
       (∀ c : Cell n, (∀ x : Fin n, a ≤ x → x ≤ b →
@@ -139,7 +140,7 @@ theorem exists_oriented_corridor_path
         ↓reduceIte, gridDistance, Fin.rev, Nat.dist] at ht' hcap ⊢ <;> omega
   obtain ⟨C, p, hb, hp, he, hg, hf⟩ :=
     exists_increasing_corridor_path line hinj hadj S cap hefficient a b hab B hblank hgroup
-  refine ⟨C, p, hb, hp, he.trans ?_, hg, hf⟩
+  refine ⟨C, p, hb, hp, he.trans ?_, he, hg, hf⟩
   cases vertical <;> cases backwards <;>
     simp_all [cap, corridorCoordinate, corridorCell, Fin.rev] <;> omega
 

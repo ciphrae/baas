@@ -1,5 +1,6 @@
 import SlidingPuzzle.Moves.Corridor
 import SlidingPuzzle.Algorithm.Partition
+import SlidingPuzzle.Algorithm.Accounting
 
 /-! The straight-corridor estimate in Algorithm 4, Fact 3: a slide of tiles
 from group `i`, starting in square `i`, has at most `k³` inefficient moves. -/
@@ -20,6 +21,9 @@ theorem exists_group_corridor_path {n k : ℕ} [NeZero n]
     ∃ C : Board n, ∃ p : Path B C,
       blank C = corridorCell vertical backwards fixed b ∧ p.length = b.val - a.val ∧
       p.inefficientMoves ≤ side n k ∧
+      p.inefficientMoves ≤ (if backwards then n - (if vertical then (groupRow i).val * side n k
+        else (groupCol i).val * side n k) else (if vertical then (groupRow i).val * side n k
+        else (groupCol i).val * side n k) + side n k) - a.val ∧
       (∀ x : Fin n, a ≤ x → x ≤ b → x ≠ b →
         C (corridorCell vertical backwards fixed x) ∈ targetGroup i) ∧
       (∀ c : Cell n, (∀ x : Fin n, a ≤ x → x ≤ b →
@@ -50,19 +54,22 @@ private theorem exists_horizontal_group_slide_oriented {n k : ℕ} [NeZero n]
     (hg : ∀ c : Cell n, c.1 = r → c ≠ blank B → B c ∈ targetGroup i) :
     ∃ C : Board n, ∃ p : Path B C,
       blank C = corridorCell false backwards r b ∧ p.inefficientMoves ≤ side n k ∧
+      p.inefficientMoves ≤ (if backwards then n - (groupCol i).val * side n k
+        else (groupCol i).val * side n k + side n k) - a.val ∧
+      p.inefficientMoves ≤ b.val - a.val ∧
       (∀ c : Cell n, c.1 = r → c ≠ blank C → C c ∈ targetGroup i) ∧
       (∀ c : Cell n, c.1 ≠ r → C c = B c) := by
   let line := corridorCell false backwards r
   have hinj : Function.Injective line := by
     intro x y h
     cases backwards <;> simpa [line, corridorCell] using h
-  obtain ⟨C, p, hc, _hp, he, hseg, hfix⟩ :=
+  obtain ⟨C, p, hc, hp, he, hdir, hseg, hfix⟩ :=
     exists_group_corridor_path i false backwards r a b hab B hb hs (by
       intro x _ _ hxa
       apply hg _ (by simp [corridorCell])
       rw [hb]
       exact fun h => hxa (hinj h))
-  refine ⟨C, p, hc, he, ?_, ?_⟩
+  refine ⟨C, p, hc, he, by simpa using hdir, hp ▸ p.inefficientMoves_le_length, ?_, ?_⟩
   · intro c hrow hne
     let x := if backwards then c.2.rev else c.2
     have hcell : line x = c := by
@@ -90,6 +97,35 @@ private theorem exists_horizontal_group_slide_oriented {n k : ℕ} [NeZero n]
     intro x _ _ hcx
     exact hrow (by simpa [corridorCell] using congrArg Prod.fst hcx)
 
+/-- The horizontal slide with a start-dependent bound: moving right from column
+`a` costs at most the distance to the square's right edge, moving left at most
+one more than the distance to its left edge. -/
+theorem exists_horizontal_transport_slide_dir' {n k : ℕ} [NeZero n]
+    (i : GroupIndex k) (B : Board n) (r a b : Fin n)
+    (hb : blank B = (r, a)) (hs : square i (blank B))
+    (hg : ∀ c : Cell n, c.1 = r → c ≠ blank B → B c ∈ targetGroup i) :
+    ∃ C : Board n, ∃ p : Path B C,
+      blank C = (r, b) ∧ p.inefficientMoves ≤ side n k ∧
+      (a ≤ b → p.inefficientMoves ≤ (groupCol i).val * side n k + side n k - a.val) ∧
+      (a ≤ b → p.inefficientMoves ≤ b.val - a.val) ∧
+      (b < a → p.inefficientMoves ≤ a.val + 1 - (groupCol i).val * side n k) ∧
+      (∀ c : Cell n, c.1 = r → c ≠ blank C → C c ∈ targetGroup i) ∧
+      (∀ c : Cell n, c.1 ≠ r → C c = B c) := by
+  by_cases hab : a ≤ b
+  · obtain ⟨C, p, hc, he, hdir, hlen, hg', hf⟩ := exists_horizontal_group_slide_oriented i false r
+      a b hab B (by simpa [corridorCell] using hb) hs hg
+    refine ⟨C, p, by simpa [corridorCell] using hc, he, fun _ => by simpa using hdir,
+      fun _ => hlen, fun h => absurd hab (not_le.mpr h), hg', hf⟩
+  · have hrev : a.rev ≤ b.rev := by simp only [Fin.le_def, Fin.rev]; omega
+    obtain ⟨C, p, hc, he, hdir, -, hg', hf⟩ := exists_horizontal_group_slide_oriented i true r
+      a.rev b.rev hrev B (by simpa [corridorCell] using hb) hs hg
+    refine ⟨C, p, by simpa [corridorCell] using hc, he, fun h => absurd h hab,
+      fun h => absurd h hab, fun _ => ?_, hg', hf⟩
+    simp only [↓reduceIte, Fin.val_rev] at hdir
+    have := a.isLt
+    omega
+
+
 /-- Algorithm 4's horizontal slide (step (ii)), after the blank has entered
 `H_i`. It can go to any column, preserves the corridor's group membership
 except at the new blank, fixes all other rows, and costs at most `k³`
@@ -102,14 +138,8 @@ theorem exists_horizontal_transport_slide {n k : ℕ} [NeZero n]
       blank C = (r, b) ∧ p.inefficientMoves ≤ side n k ∧
       (∀ c : Cell n, c.1 = r → c ≠ blank C → C c ∈ targetGroup i) ∧
       (∀ c : Cell n, c.1 ≠ r → C c = B c) := by
-  by_cases hab : a ≤ b
-  · simpa only [corridorCell, Bool.false_eq_true, ↓reduceIte] using
-      exists_horizontal_group_slide_oriented i false r a b hab B
-        (by simpa [corridorCell] using hb) hs hg
-  · have hrev : a.rev ≤ b.rev := by simp only [Fin.le_def, Fin.rev]; omega
-    simpa only [corridorCell, ↓reduceIte, Bool.false_eq_true, Fin.rev_rev] using
-      exists_horizontal_group_slide_oriented i true r a.rev b.rev hrev B
-        (by simpa [corridorCell] using hb) hs hg
+  obtain ⟨C, p, hc, he, -, -, -, hg', hf⟩ := exists_horizontal_transport_slide_dir' i B r a b hb hs hg
+  exact ⟨C, p, hc, he, hg', hf⟩
 
 end
 end SlidingPuzzle.Partition
