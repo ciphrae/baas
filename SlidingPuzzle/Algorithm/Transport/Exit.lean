@@ -16,11 +16,12 @@ theorem exists_transport_exit_cell {n k : ℕ} (hk : Dims n k)
       (c.1.val+c.2.val+b.1.val+b.2.val)%2 = 1 ∧
       Nat.dist c.1.val b.1.val ≤ 1 := by
   have hk3 : k+2 ≤ side n k := hk.k_add_two_le
-  let lo := (groupRow j).val*side n k+k
+  let lo := (groupRow j).val*side n k+2*k
   let hi := ((groupRow j).val+1)*side n k
-  have hwidth : lo+2 ≤ hi := by dsimp [lo, hi]; nlinarith
+  have hk2 : 2*k+2 ≤ side n k := by have := hk.sq_add_le; nlinarith [hk.two_le]
+  have hwidth : lo+2 ≤ hi := by dsimp [lo, hi]; rw [Nat.add_mul]; omega
   have har : lo ≤ a.1.val ∧ a.1.val < hi := by
-    have h1 := ha.1; have h2 := ha.2.1; rw [hrowj] at h1 h2; exact ⟨h1, h2⟩
+    have h1 := ha.1; have h2 := ha.2.1; rw [hrowj] at h1 h2; exact ⟨h1, by dsimp [hi]; omega⟩
   let r := if (a.1.val+a.2.val+b.1.val+b.2.val)%2 = 1 then a.1.val
     else if a.1.val+1 < hi then a.1.val+1 else a.1.val-1
   have hr : lo ≤ r ∧ r < hi ∧ Nat.dist a.1.val r ≤ 1 := by
@@ -31,12 +32,14 @@ theorem exists_transport_exit_cell {n k : ℕ} (hk : Dims n k)
     · have hbrow := b.1.isLt
       have hnhi : hi ≤ n := by
         calc
-          hi ≤ k*side n k := Nat.mul_le_mul_right _ (groupRow j).isLt
+          hi ≤ (groupRow j).val*side n k+side n k := by dsimp [hi]; rw [Nat.add_mul]; omega
+          _ = ((groupRow j).val+1)*side n k := by ring
+          _ ≤ k*side n k := Nat.mul_le_mul_right _ (groupRow j).isLt
           _ = n := hk.mul_side
       omega
     · have := a.1.isLt; omega
   let c : Cell n := (⟨r, hrn⟩, a.2)
-  refine ⟨c, ⟨by rw [hrowj]; exact hr.1, by rw [hrowj]; exact hr.2.1, ha.2.2⟩, rfl, ?_, ?_, ?_⟩
+  refine ⟨c, ⟨by rw [hrowj]; exact hr.1, by rw [hrowj]; have := hr.2.1; dsimp [c, hi] at this ⊢; omega, ha.2.2⟩, rfl, ?_, ?_, ?_⟩
   · simpa [c, gridDistance] using hr.2.2
   · dsimp [c, r]; split_ifs <;> omega
   · have hv := congrArg Fin.val hrow

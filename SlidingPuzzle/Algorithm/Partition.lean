@@ -7,10 +7,14 @@ The board of side `n = k*s` is divided into a `k × k` grid of squares of side
 here any `s ≥ k³` is allowed (`Dims`), which lets arbitrary board sides be
 reduced to this case with fewer than `k` outer layers.
 
-In square `i` (block row `groupRow i`, block column `groupCol i`), the first `k`
-rows are the horizontal corridors of the squares in that block row, the first
-`k²` columns of the remaining rows are the vertical corridors `V(i,j)`, and the
-rest is the reservoir. The blank is kept separate from target groups. -/
+In square `i` (block row `groupRow i`, block column `groupCol i`), the first
+`2k` rows are horizontal corridors, the first `k²` columns of the remaining rows
+are the vertical corridors `V(i,j)`, and the rest is the reservoir. The
+horizontal corridor `H_i` has two full rows: row `b` of its own band (as in the
+paper) and row `k+b` of the band below, `b = groupCol i` (cyclically, so the
+last band's second rows lie in the first band). The second row lets a transfer
+leave its band downward without crossing it. The blank is kept separate from
+target groups. -/
 namespace SlidingPuzzle
 namespace Partition
 
@@ -71,19 +75,27 @@ theorem Dims.cube_le_n {n k : ℕ} (h : Dims n k) : k^3 ≤ n := by
 def groupRow {k : ℕ} (i : GroupIndex k) : Fin k := (finProdFinEquiv.symm i).1
 def groupCol {k : ℕ} (i : GroupIndex k) : Fin k := (finProdFinEquiv.symm i).2
 
-/-- The horizontal corridor `H_i`: one full board row. -/
+/-- The band below band `a`, cyclically. -/
+def nextBand (k a : ℕ) : ℕ := (a + 1) % k
+
+/-- The upper (`low = false`) or lower (`low = true`) row of `H_i`. -/
+def corridorRow {n k : ℕ} (i : GroupIndex k) (low : Bool) : ℕ :=
+  if low then nextBand k (groupRow i).val * side n k + k + (groupCol i).val
+  else (groupRow i).val * side n k + (groupCol i).val
+
+/-- The horizontal corridor `H_i`: two full board rows. -/
 def horizontal {n k : ℕ} (i : GroupIndex k) (c : Cell n) : Prop :=
-  c.1.val = (groupRow i).val * side n k + (groupCol i).val
+  c.1.val = corridorRow (n := n) i false ∨ c.1.val = corridorRow (n := n) i true
 
 /-- The vertical corridor `V(i,j)` in square `i`, reserved for group `j`. -/
 def vertical {n k : ℕ} (i j : GroupIndex k) (c : Cell n) : Prop :=
-  (groupRow i).val * side n k + k ≤ c.1.val ∧
+  (groupRow i).val * side n k + 2 * k ≤ c.1.val ∧
   c.1.val < ((groupRow i).val + 1) * side n k ∧
   c.2.val = (groupCol i).val * side n k + j.val
 
 /-- The reservoir of square `i`. -/
 def reservoir {n k : ℕ} (i : GroupIndex k) (c : Cell n) : Prop :=
-  (groupRow i).val * side n k + k ≤ c.1.val ∧
+  (groupRow i).val * side n k + 2 * k ≤ c.1.val ∧
   c.1.val < ((groupRow i).val + 1) * side n k ∧
   (groupCol i).val * side n k + k^2 ≤ c.2.val ∧
   c.2.val < ((groupCol i).val + 1) * side n k
@@ -124,12 +136,52 @@ private theorem block_lt {n k : ℕ} (hd : Dims n k) (x : Fin n) :
     x.val < n := x.isLt
     _ = k * side n k := hd.mul_side.symm
 
+private theorem side_ge {n k : ℕ} (hd : Dims n k) : k ≤ side n k ∧ k^2 < side n k := by
+  obtain ⟨hk2, h2, h3, hs, -⟩ := hd.facts
+  constructor <;> nlinarith
+
+private theorem two_k_lt_side {n k : ℕ} (hd : Dims n k) : 2*k < side n k := by
+  obtain ⟨hk2, h2, h3, hs, -⟩ := hd.facts
+  nlinarith
+
+theorem nextBand_lt {k : ℕ} (hk : 2 ≤ k) (a : ℕ) : nextBand k a < k :=
+  Nat.mod_lt _ (by omega)
+
+/-- The two rows of `H_i` in terms of the band and the offset within it. -/
+theorem horizontal_iff {n k : ℕ} (hd : Dims n k) (i : GroupIndex k) (c : Cell n) :
+    horizontal i c ↔
+      (c.1.val / side n k = (groupRow i).val ∧ c.1.val % side n k = (groupCol i).val) ∨
+      (c.1.val / side n k = nextBand k (groupRow i).val ∧
+        c.1.val % side n k = k + (groupCol i).val) := by
+  have hs := two_k_lt_side hd
+  have hb := (groupCol i).isLt
+  have hxd := Nat.div_add_mod' c.1.val (side n k)
+  have hx := Nat.mod_lt c.1.val (show 0 < side n k by omega)
+  unfold horizontal corridorRow
+  simp only [Bool.false_eq_true, ↓reduceIte]
+  constructor
+  · rintro (h | h)
+    · left
+      have hd' : c.1.val / side n k = (groupRow i).val :=
+        Nat.div_eq_of_lt_le (by omega) (by rw [Nat.add_mul]; omega)
+      refine ⟨hd', ?_⟩
+      rw [hd'] at hxd; omega
+    · right
+      have hd' : c.1.val / side n k = nextBand k (groupRow i).val :=
+        Nat.div_eq_of_lt_le (by omega) (by rw [Nat.add_mul]; omega)
+      refine ⟨hd', ?_⟩
+      rw [hd'] at hxd; omega
+  · rintro (⟨hd', h⟩ | ⟨hd', h⟩) <;> rw [hd'] at hxd
+    · left; omega
+    · right; omega
+
 /-- Every cell belongs to one of the three region families. -/
 theorem covers {n k : ℕ} (hd : Dims n k) (c : Cell n) :
     (∃ i : GroupIndex k, horizontal i c) ∨
     (∃ i j : GroupIndex k, vertical i j c) ∨
     (∃ i : GroupIndex k, reservoir i c) := by
   obtain ⟨hk2, -, -, hs3, -⟩ := hd.facts
+  have hsg := two_k_lt_side hd
   let a : Fin k := ⟨c.1.val / side n k, block_lt hd c.1⟩
   let b : Fin k := ⟨c.2.val / side n k, block_lt hd c.2⟩
   have hk3 : 0 < side n k := lt_of_lt_of_le (by positivity) hs3
@@ -139,26 +191,30 @@ theorem covers {n k : ℕ} (hd : Dims n k) (c : Cell n) :
   have hyd := Nat.div_add_mod' c.2.val (side n k)
   by_cases hH : c.1.val % side n k < k
   · left
-    refine ⟨finProdFinEquiv (a, ⟨c.1.val % side n k, hH⟩), ?_⟩
-    simpa [horizontal, groupRow, groupCol, a] using hxd.symm
+    refine ⟨finProdFinEquiv (a, ⟨c.1.val % side n k, hH⟩), (horizontal_iff hd _ c).mpr ?_⟩
+    simp [groupRow, groupCol, a]
+  by_cases hH' : c.1.val % side n k < 2*k
+  · left
+    let a' : Fin k := ⟨(a.val + (k-1)) % k, Nat.mod_lt _ (by omega)⟩
+    refine ⟨finProdFinEquiv (a', ⟨c.1.val % side n k - k, by omega⟩),
+      (horizontal_iff hd _ c).mpr (Or.inr ?_)⟩
+    simp only [groupRow, groupCol, Equiv.symm_apply_apply, a', nextBand]
+    refine ⟨?_, by omega⟩
+    have ha := a.isLt
+    change c.1.val / side n k = ((c.1.val / side n k + (k-1)) % k + 1) % k
+    rw [Nat.add_mod, Nat.mod_mod, ← Nat.add_mod,
+      show c.1.val / side n k + (k-1) + 1 = c.1.val / side n k + k by omega,
+      Nat.add_mod_right, Nat.mod_eq_of_lt ha]
   · by_cases hV : c.2.val % side n k < k*k
     · right; left
       refine ⟨finProdFinEquiv (a,b), ⟨c.2.val % side n k, hV⟩, ?_⟩
       simp only [vertical, groupRow, groupCol, Equiv.symm_apply_apply, a, b, Nat.add_mul, Nat.one_mul]
-      constructor
-      · omega
-      constructor
-      · omega
-      · exact hyd.symm
+      refine ⟨by omega, by omega, hyd.symm⟩
     · right; right
       refine ⟨finProdFinEquiv (a,b), ?_⟩
       simp only [reservoir, groupRow, groupCol, Equiv.symm_apply_apply, a, b, Nat.add_mul, Nat.one_mul]
       have hkk : k*k = k^2 := by ring
-      constructor
-      · omega
-      constructor
-      · omega
-      constructor <;> omega
+      refine ⟨by omega, by omega, by omega, by omega⟩
 
 /-- In a clear state the blank lies in a reservoir. -/
 theorem blank_in_reservoir {n k : ℕ} [NeZero n]
@@ -175,16 +231,17 @@ theorem blank_in_reservoir {n k : ℕ} [NeZero n]
     exact (zero_not_mem_targetGroup j h).elim
   · exact hR
 
-private theorem side_ge {n k : ℕ} (hd : Dims n k) : k ≤ side n k ∧ k^2 < side n k := by
-  obtain ⟨hk2, h2, h3, hs, -⟩ := hd.facts
-  constructor <;> nlinarith
-
 theorem horizontal_mod {n k : ℕ} (hd : Dims n k) {i : GroupIndex k} {c : Cell n}
-    (h : horizontal i c) : c.1.val % side n k < k := by
-  have hb : (groupCol i).val < side n k := (groupCol i).isLt.trans_le (side_ge hd).1
-  rw [horizontal] at h
-  rw [h]
-  simp [Nat.add_mod, Nat.mod_eq_of_lt hb]
+    (h : horizontal i c) : c.1.val % side n k < 2*k := by
+  have hb := (groupCol i).isLt
+  rcases (horizontal_iff hd i c).mp h with h | h <;> omega
+
+theorem horizontal_of_corridorRow {n k : ℕ} {i : GroupIndex k} (low : Bool)
+    {c : Cell n} (h : c.1.val = corridorRow (n := n) i low) : horizontal i c := by
+  unfold horizontal
+  cases low
+  · exact Or.inl h
+  · exact Or.inr h
 
 private theorem row_div {n k : ℕ} (_hd : Dims n k) {i : GroupIndex k} {c : Cell n}
     (hl : (groupRow i).val * side n k ≤ c.1.val)
@@ -199,8 +256,8 @@ private theorem col_div {n k : ℕ} {i : GroupIndex k} {c : Cell n}
   Nat.div_eq_of_lt_le hl hu
 
 theorem vertical_row_mod {n k : ℕ} (hd : Dims n k) {i j : GroupIndex k} {c : Cell n}
-    (h : vertical i j c) : k ≤ c.1.val % side n k := by
-  have hd := row_div hd (by have := h.1; omega) h.2.1
+    (h : vertical i j c) : 2*k ≤ c.1.val % side n k := by
+  have hd := row_div (i := i) hd (by have := h.1; omega) h.2.1
   have he := Nat.div_add_mod' c.1.val (side n k)
   rw [hd] at he
   have := h.1
@@ -214,8 +271,8 @@ theorem vertical_col_mod {n k : ℕ} (hd : Dims n k) {i j : GroupIndex k} {c : C
   simpa [Nat.add_mod, Nat.mod_eq_of_lt hj3] using hj
 
 theorem reservoir_row_mod {n k : ℕ} (hd : Dims n k) {i : GroupIndex k} {c : Cell n}
-    (h : reservoir i c) : k ≤ c.1.val % side n k := by
-  have hd := row_div hd (by have := h.1; omega) h.2.1
+    (h : reservoir i c) : 2*k ≤ c.1.val % side n k := by
+  have hd := row_div (i := i) hd (by have := h.1; omega) h.2.1
   have he := Nat.div_add_mod' c.1.val (side n k)
   rw [hd] at he
   have := h.1
@@ -313,28 +370,29 @@ theorem vertical_unique {n k : ℕ} (hd : Dims n k) {i j i' j' : GroupIndex k} {
 
 theorem horizontal_unique {n k : ℕ} (hd : Dims n k) {i j : GroupIndex k} {c : Cell n}
     (hi : horizontal i c) (hj : horizontal j c) : i=j := by
-  have hi' : c.1.val / side n k = (groupRow i).val := by
-    apply row_div hd
-    · have := hi; unfold horizontal at this; omega
-    · have hb := (groupCol i).isLt.trans_le (side_ge hd).1
-      unfold horizontal at hi
-      simp only [Nat.add_mul, Nat.one_mul]
-      omega
-  have hj' : c.1.val / side n k = (groupRow j).val := by
-    apply row_div hd
-    · have := hj; unfold horizontal at this; omega
-    · have hb := (groupCol j).isLt.trans_le (side_ge hd).1
-      unfold horizontal at hj
-      simp only [Nat.add_mul, Nat.one_mul]
-      omega
-  have hr : groupRow i = groupRow j := Fin.ext (hi'.symm.trans hj')
-  have hc : groupCol i = groupCol j := by
-    apply Fin.ext
-    unfold horizontal at hi hj
-    rw [hr] at hi
-    omega
-  apply finProdFinEquiv.symm.injective
-  exact Prod.ext hr hc
+  have hbi := (groupCol i).isLt
+  have hbj := (groupCol j).isLt
+  have hri := (groupRow i).isLt
+  have hrj := (groupRow j).isLt
+  have hk := hd.two_le
+  have hnext : ∀ a b : ℕ, a < k → b < k → nextBand k a = nextBand k b → a = b := by
+    intro a b ha hb h
+    unfold nextBand at h
+    by_cases ha' : a + 1 = k <;> by_cases hb' : b + 1 = k
+    · omega
+    · rw [ha', Nat.mod_self, Nat.mod_eq_of_lt (by omega)] at h; omega
+    · rw [hb', Nat.mod_self, Nat.mod_eq_of_lt (by omega)] at h; omega
+    · rw [Nat.mod_eq_of_lt (by omega), Nat.mod_eq_of_lt (by omega)] at h; omega
+  rcases (horizontal_iff hd i c).mp hi with ⟨h1, h2⟩ | ⟨h1, h2⟩ <;>
+    rcases (horizontal_iff hd j c).mp hj with ⟨h1', h2'⟩ | ⟨h1', h2'⟩
+  · apply finProdFinEquiv.symm.injective
+    exact Prod.ext (Fin.ext (h1.symm.trans h1'))
+      (Fin.ext (show (groupCol i).val = (groupCol j).val by omega))
+  · omega
+  · omega
+  · apply finProdFinEquiv.symm.injective
+    exact Prod.ext (Fin.ext (hnext _ _ hri hrj (h1.symm.trans h1')))
+      (Fin.ext (show (groupCol i).val = (groupCol j).val by omega))
 
 end Partition
 end SlidingPuzzle

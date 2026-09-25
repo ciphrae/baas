@@ -30,7 +30,7 @@ def reservoirCount {n k : ℕ} (B : Board n) (i j : GroupIndex k) : ℕ :=
 theorem reservoirCount_row {n k : ℕ} [NeZero n] (hd : Dims n k)
     (B : Board n) (i : GroupIndex k) :
     (∑ j : GroupIndex k, reservoirCount B i j) +
-      (if reservoir i (blank B) then 1 else 0) = (side n k-k)*(side n k-k^2) := by
+      (if reservoir i (blank B) then 1 else 0) = (side n k-2*k)*(side n k-k^2) := by
   have hz (c : Cell n) : (B c).val=0 ↔ c=blank B := by
     constructor
     · intro h
@@ -150,10 +150,10 @@ theorem clear_corridor_count {n k : ℕ} (hd : Dims n k)
     (∑ i : GroupIndex k, ∑ c ∈ horizontalCells i,
       if B c ∈ targetGroup j then 1 else 0) +
     (∑ i : GroupIndex k, ∑ l : GroupIndex k, ∑ c ∈ verticalCells i l,
-      if B c ∈ targetGroup j then 1 else 0) = n + k^2*(side n k-k) := by
+      if B c ∈ targetGroup j then 1 else 0) = 2*n + k^2*(side n k-2*k) := by
   have hh (i : GroupIndex k) :
       (∑ c ∈ horizontalCells i, if B c ∈ targetGroup j then 1 else 0) =
-        if i=j then n else 0 := by
+        if i=j then 2*n else 0 := by
     calc
       _ = ∑ _c ∈ horizontalCells (n := n) i, if i=j then 1 else 0 := by
         apply Finset.sum_congr rfl
@@ -162,7 +162,7 @@ theorem clear_corridor_count {n k : ℕ} (hd : Dims n k)
       _ = _ := by split_ifs <;> simp [card_horizontal hd]
   have hv (i l : GroupIndex k) :
       (∑ c ∈ verticalCells i l, if B c ∈ targetGroup j then 1 else 0) =
-        if l=j then side n k-k else 0 := by
+        if l=j then side n k-2*k else 0 := by
     calc
       _ = ∑ _c ∈ verticalCells (n := n) i l, if l=j then 1 else 0 := by
         apply Finset.sum_congr rfl
@@ -176,17 +176,17 @@ theorem clear_corridor_count {n k : ℕ} (hd : Dims n k)
 theorem reservoirCount_column {n k : ℕ} [NeZero n] (hd : Dims n k)
     (B : Board n) (hB : Clear (k := k) B) (j : GroupIndex k) :
     (∑ i : GroupIndex k, reservoirCount B i j) +
-      (if square j (blank (target n)) then 1 else 0) = (side n k-k)*(side n k-k^2) := by
+      (if square j (blank (target n)) then 1 else 0) = (side n k-2*k)*(side n k-k^2) := by
   have htotal := sum_regions hd (fun c : Cell n => if B c ∈ targetGroup j then 1 else 0)
   rw [board_targetGroup_count B j, clear_corridor_count hd B hB j] at htotal
   have hcard := card_targetGroup hd j
   obtain ⟨hk, h2, h3, hs3, hks⟩ := hd.facts
-  have hcap : (side n k-k)*(side n k-k^2) + (n+k^2*(side n k-k)) = side n k^2 := by
-    have h1 : k ≤ side n k := by nlinarith
+  have hcap : (side n k-2*k)*(side n k-k^2) + (2*n+k^2*(side n k-2*k)) = side n k^2 := by
+    have h1 : 2*k ≤ side n k := by nlinarith
     have h2 : k^2 ≤ side n k := by nlinarith
     have hks' : (k : ℤ) * (side n k : ℤ) = n := by exact_mod_cast hks
     zify [h1, h2]
-    linear_combination -hks'
+    linear_combination -2*hks'
   unfold reservoirCount
   omega
 

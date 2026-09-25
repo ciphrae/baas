@@ -14,12 +14,12 @@ def vcol (n k : ℕ) (ij : GroupIndex k × GroupIndex k) : ℕ :=
 
 /-- The top row of the vertical corridor `V(i,j)`. -/
 def vrow (n k : ℕ) (ij : GroupIndex k × GroupIndex k) : ℕ :=
-  (groupRow ij.1).val*side n k+k
+  (groupRow ij.1).val*side n k+2*k
 
 /-- The budget of one side of the exchange `V(i,j) ↔ V(j,i)`. -/
 def vcost (n k : ℕ) (ij : GroupIndex k × GroupIndex k) : ℕ :=
-  4*n+Nat.dist (vcol n k ij) (vcol n k ij.swap)*(6*(side n k-k)+5)+
-    Nat.dist (vrow n k ij) (vrow n k ij.swap)*(2*(side n k-k)+3)+3*(side n k-k)+1
+  4*n+Nat.dist (vcol n k ij) (vcol n k ij.swap)*(6*(side n k-2*k)+5)+
+    Nat.dist (vrow n k ij) (vrow n k ij.swap)*(2*(side n k-2*k)+3)+3*(side n k-2*k)+1
 
 private theorem mul_gap {a b s : ℕ} (h : a < b) : a*s+s ≤ b*s := by
   have := Nat.mul_le_mul_right s (show a+1 ≤ b by omega)
@@ -28,7 +28,7 @@ private theorem mul_gap {a b s : ℕ} (h : a < b) : a*s+s ≤ b*s := by
 omit [NeZero n] in
 private theorem mem_vertical_param (hk : Dims n k) (ij : GroupIndex k × GroupIndex k)
     (x : Cell n) (hx : vertical ij.1 ij.2 x) :
-    ∃ t, ∃ ht : t < side n k-k,
+    ∃ t, ∃ ht : t < side n k-2*k,
       x = (⟨vrow n k ij+t, by
         have := hk.k_add_two_le; have h := block_end_le hk (groupRow ij.1)
         simp only [vrow, Nat.add_mul, Nat.one_mul] at *; omega⟩,
@@ -42,7 +42,7 @@ private theorem mem_vertical_param (hk : Dims n k) (ij : GroupIndex k × GroupIn
 
 omit [NeZero n] in
 private theorem vertical_of_param (hk : Dims n k) (ij : GroupIndex k × GroupIndex k)
-    (t : ℕ) (ht : t < side n k-k) (h1 : vrow n k ij+t < n) (h2 : vcol n k ij < n) :
+    (t : ℕ) (ht : t < side n k-2*k) (h1 : vrow n k ij+t < n) (h2 : vcol n k ij < n) :
     vertical ij.1 ij.2 ((⟨vrow n k ij+t, h1⟩, ⟨vcol n k ij, h2⟩) : Cell n) := by
   refine ⟨?_, ?_, rfl⟩ <;> simp only [vrow, Nat.add_mul, Nat.one_mul] at * <;> omega
 
@@ -60,7 +60,8 @@ theorem exists_vertical_arrangement_path_near (hk : Dims n k) (B : Board n)
   obtain ⟨hk2, hk2', hk3, hks, hkn⟩ := hk.facts
   have hsq := hk.sq_add_le
   have hkk := hk.k_add_two_le
-  set m := side n k-k with hmdef
+  have h2k : 2*k+2 ≤ side n k := by nlinarith
+  set m := side n k-2*k with hmdef
   let S : GroupIndex k × GroupIndex k → Finset (Cell n) := fun ij => verticalCells ij.1 ij.2
   have hdis : ∀ i j, i ≠ j → Disjoint (S i) (S j) := by
     intro i j hij
@@ -93,8 +94,8 @@ theorem exists_vertical_arrangement_path_near (hk : Dims n k) (B : Board n)
     set r₂ := vrow n k (j, i) with hr₂d
     have hc₁ : c₁ = (groupCol i).val*side n k+j.val := by rw [hc₁d]; rfl
     have hc₂ : c₂ = (groupCol j).val*side n k+i.val := by rw [hc₂d]; rfl
-    have hr₁ : r₁ = (groupRow i).val*side n k+k := by rw [hr₁d]; rfl
-    have hr₂ : r₂ = (groupRow j).val*side n k+k := by rw [hr₂d]; rfl
+    have hr₁ : r₁ = (groupRow i).val*side n k+2*k := by rw [hr₁d]; rfl
+    have hr₂ : r₂ = (groupRow j).val*side n k+2*k := by rw [hr₂d]; rfl
     -- Column facts.
     have hgap : ∀ a b : Fin k, a.val < b.val → a.val*side n k+side n k ≤ b.val*side n k :=
       fun a b h => mul_gap h
@@ -210,7 +211,7 @@ theorem sum_vcost_le (hk : Dims n k) :
   classical
   obtain ⟨hk2, hk2', hk3, hks, hkn⟩ := hk.facts
   set s := side n k with hsdef
-  set m := s-k with hm
+  set m := s-2*k with hm
   have hms : m ≤ s := Nat.sub_le _ _
   have hidx : ∀ x : GroupIndex k, x.val < k^2 := fun x => by simpa [pow_two] using x.isLt
   -- Pointwise bounds.

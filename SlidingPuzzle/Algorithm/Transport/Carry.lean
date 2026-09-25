@@ -262,9 +262,9 @@ theorem exists_transport_exit_core [NeZero n] (hk : Dims n k)
 
 /-- Three consecutive rows of a reservoir band, the last being `O`. -/
 theorem exists_carry_rows (hk : Dims n k) (j : GroupIndex k) (O : Fin n)
-    (hO : (groupRow j).val*side n k+k ≤ O.val ∧ O.val < (groupRow j).val*side n k+side n k) :
+    (hO : (groupRow j).val*side n k+2*k ≤ O.val ∧ O.val < (groupRow j).val*side n k+side n k) :
     ∃ row : ℕ → Fin n, StripCol row 2 ∧ row 2 = O ∧ ∀ r ≤ 2,
-      (groupRow j).val*side n k+k ≤ (row r).val ∧
+      (groupRow j).val*side n k+2*k ≤ (row r).val ∧
         (row r).val < (groupRow j).val*side n k+side n k := by
   have hkk : k^2+k+2 ≤ side n k := hk.sq_add_le
   have hk2 : k ≤ k^2 := by have := hk.two_le; nlinarith
@@ -272,6 +272,7 @@ theorem exists_carry_rows (hk : Dims n k) (j : GroupIndex k) (O : Fin n)
   simp only [Nat.add_mul, Nat.one_mul] at hblock
   have hOn := O.isLt
   have h4 : 4 ≤ k^2 := hk.facts.2.1
+  have h2k : 2*k ≤ k^2 := by nlinarith [hk.two_le]
   by_cases h : O.val+2 < (groupRow j).val*side n k+side n k
   · refine ⟨fun r => ⟨min (O.val+2-r) (n-1), by omega⟩, ?_, ?_, ?_⟩
     · intro a b ha hb; dsimp only; simp only [Nat.dist]; omega
@@ -293,7 +294,7 @@ theorem exists_transport_shift_exit [NeZero n] (hk : Dims n k)
     (hAS : GroupEquivalent i A S) (b : Cell n) (hb : reservoir j b)
     (ht : A b ∈ targetGroup i) (hblank : vertical jc i (blank S))
     (hrow : (blank S).1 = b.1) (col : ℕ → Fin n) (m : ℕ) (hcol : StripCol col (m+1))
-    (hres : ∀ c ≤ m+1, ∀ x : Cell n, (groupRow j).val*side n k+k ≤ x.1.val →
+    (hres : ∀ c ≤ m+1, ∀ x : Cell n, (groupRow j).val*side n k+2*k ≤ x.1.val →
       x.1.val < (groupRow j).val*side n k+side n k → x.2 = col c → reservoir j x)
     (hbcol : b.2 = col (m+1)) (hpar : ((blank S).2.val+(col 0).val) % 2 = 1)
     (hnear : Nat.dist (blank S).2.val (col 0).val ≤ k^2+2) :
@@ -307,7 +308,7 @@ theorem exists_transport_shift_exit [NeZero n] (hk : Dims n k)
   obtain ⟨row, hrowS, hrow2, hrowin⟩ := exists_carry_rows hk j b.1 ⟨hb1, hb2⟩
   obtain ⟨c, hc⟩ : ∃ c, blank S = c := ⟨_, rfl⟩
   rw [hc] at hblank hrow hpar hnear
-  have hband : ∀ r ≤ 2, (groupRow jc).val*side n k+k ≤ (row r).val ∧
+  have hband : ∀ r ≤ 2, (groupRow jc).val*side n k+2*k ≤ (row r).val ∧
       (row r).val < ((groupRow jc).val+1)*side n k := by
     intro r hr; rw [hrowj, Nat.add_mul, Nat.one_mul]; exact hrowin r hr
   -- Step to the adjacent corridor row `row 1`.

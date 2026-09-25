@@ -15,7 +15,9 @@ theorem exists_group_corridor_path {n k : ℕ} [NeZero n]
     (i : GroupIndex k) (vertical backwards : Bool) (fixed a b : Fin n)
     (hab : a ≤ b) (B : Board n)
     (hblank : blank B = corridorCell vertical backwards fixed a)
-    (hstart : square i (blank B))
+    (hstart : (if vertical then (groupRow i).val else (groupCol i).val) * side n k ≤
+      corridorCoordinate vertical (blank B) ∧ corridorCoordinate vertical (blank B) <
+      ((if vertical then (groupRow i).val else (groupCol i).val) + 1) * side n k)
     (hgroup : ∀ x : Fin n, a ≤ x → x ≤ b → x ≠ a →
       B (corridorCell vertical backwards fixed x) ∈ targetGroup i) :
     ∃ C : Board n, ∃ p : Path B C,
@@ -40,9 +42,11 @@ theorem exists_group_corridor_path {n k : ℕ} [NeZero n]
   have hs : lo ≤ corridorCoordinate vertical (corridorCell vertical backwards fixed a) ∧
       corridorCoordinate vertical (corridorCell vertical backwards fixed a) < lo + side n k := by
     rw [← hblank]
-    cases vertical <;> simp only [lo, corridorCoordinate, Bool.false_eq_true, ↓reduceIte]
-    · exact ⟨hstart.2.2.1, by have := hstart.2.2.2; nlinarith⟩
-    · exact ⟨hstart.1, by have := hstart.2.1; nlinarith⟩
+    have h1 := hstart.1
+    have h2 := hstart.2
+    simp only [Nat.add_mul, Nat.one_mul] at h2
+    cases vertical <;> simp only [lo, Bool.false_eq_true, ↓reduceIte] at h1 h2 ⊢ <;>
+      exact ⟨h1, h2⟩
   simpa only [Nat.add_sub_cancel_left, Finset.mem_coe] using
     exists_oriented_corridor_path vertical backwards fixed a b hab
       (targetGroup (n := n) i : Set (Tile n)) lo (lo + side n k) ht hs B hblank hgroup
@@ -50,7 +54,8 @@ theorem exists_group_corridor_path {n k : ℕ} [NeZero n]
 private theorem exists_horizontal_group_slide_oriented {n k : ℕ} [NeZero n]
     (i : GroupIndex k) (backwards : Bool) (r a b : Fin n) (hab : a ≤ b)
     (B : Board n) (hb : blank B = corridorCell false backwards r a)
-    (hs : square i (blank B))
+    (hs : (groupCol i).val * side n k ≤ (blank B).2.val ∧
+      (blank B).2.val < ((groupCol i).val + 1) * side n k)
     (hg : ∀ c : Cell n, c.1 = r → c ≠ blank B → B c ∈ targetGroup i) :
     ∃ C : Board n, ∃ p : Path B C,
       blank C = corridorCell false backwards r b ∧ p.inefficientMoves ≤ side n k ∧
@@ -64,7 +69,8 @@ private theorem exists_horizontal_group_slide_oriented {n k : ℕ} [NeZero n]
     intro x y h
     cases backwards <;> simpa [line, corridorCell] using h
   obtain ⟨C, p, hc, hp, he, hdir, hseg, hfix⟩ :=
-    exists_group_corridor_path i false backwards r a b hab B hb hs (by
+    exists_group_corridor_path i false backwards r a b hab B hb
+      (by simpa [corridorCoordinate] using hs) (by
       intro x _ _ hxa
       apply hg _ (by simp [corridorCell])
       rw [hb]
@@ -102,7 +108,8 @@ private theorem exists_horizontal_group_slide_oriented {n k : ℕ} [NeZero n]
 one more than the distance to its left edge. -/
 theorem exists_horizontal_transport_slide_dir' {n k : ℕ} [NeZero n]
     (i : GroupIndex k) (B : Board n) (r a b : Fin n)
-    (hb : blank B = (r, a)) (hs : square i (blank B))
+    (hb : blank B = (r, a)) (hs : (groupCol i).val * side n k ≤ (blank B).2.val ∧
+      (blank B).2.val < ((groupCol i).val + 1) * side n k)
     (hg : ∀ c : Cell n, c.1 = r → c ≠ blank B → B c ∈ targetGroup i) :
     ∃ C : Board n, ∃ p : Path B C,
       blank C = (r, b) ∧ p.inefficientMoves ≤ side n k ∧
@@ -132,7 +139,8 @@ except at the new blank, fixes all other rows, and costs at most `k³`
 inefficient moves. No `Clear` assumption is imposed while the blank is in H_i. -/
 theorem exists_horizontal_transport_slide {n k : ℕ} [NeZero n]
     (i : GroupIndex k) (B : Board n) (r a b : Fin n)
-    (hb : blank B = (r, a)) (hs : square i (blank B))
+    (hb : blank B = (r, a)) (hs : (groupCol i).val * side n k ≤ (blank B).2.val ∧
+      (blank B).2.val < ((groupCol i).val + 1) * side n k)
     (hg : ∀ c : Cell n, c.1 = r → c ≠ blank B → B c ∈ targetGroup i) :
     ∃ C : Board n, ∃ p : Path B C,
       blank C = (r, b) ∧ p.inefficientMoves ≤ side n k ∧

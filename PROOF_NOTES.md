@@ -48,9 +48,19 @@ The partition (Section 4.1, pp. 138–139) is defined directly in
 `b_i*k³ + j` exactly as printed. Group membership excludes the blank; the phase
 states (`Algorithm/PhaseStates.lean`) record the blank's location separately.
 
+**Departure: two rows per horizontal corridor.** The paper's `H_i` is row
+`b_i` of the band `a_i` of square `i`. Here `H_i` has a second row, row `k+b_i`
+of the band below (cyclically, so the last band's second rows lie in the first
+band). Each band starts with `2k` corridor rows: its own groups' upper rows,
+then the lower rows of the band above; vertical corridors and reservoirs lose
+`k` rows. A transfer can then leave its reservoir through the side facing the
+source: upward through the upper row, downward through the lower row, which
+lies just below the band's reservoirs. The corridor quotas grow by `n` tiles
+per group, which only changes lower-order terms.
+
 **Generalization.** The paper uses `n = k⁴` and squares of side `k³`. Nothing
 in the construction needs the square side to be exactly `k³`: it needs room
-for `k` horizontal corridor rows and `k²` vertical corridor columns per square,
+for `2k` horizontal corridor rows and `k²` vertical corridor columns per square,
 and for the compressed staging area of width `k³`. So the partition is stated
 for squares of side `s = side n k = n/k` subject to `Dims n k`: `2 ≤ k`,
 `k³ ≤ s` and `k*s = n`. Every phase is proved in this generality, with costs
@@ -60,9 +70,11 @@ when `s = k³`, but they scale differently in `k` for fixed `n`: `k²s³ = n³/k
 the `k³n` corridor tiles a distance of order `n`).
 
 **Preparation.** Every group's corridor quota is staged in the first `k³`
-columns and the first `k²` rows (`Preparation/Staging.lean`), together with one
-spare tile per nonfinal group in row `k²`. A mixed prefix solves the first `k³`
-columns (transposed row solver) and then `k²+1` rows (`Parberry/MixedPrefix.lean`),
+columns and the first `2k²` rows (`Preparation/Staging.lean`), together with one
+spare tile per nonfinal group in row `2k²`. Staged row `ρ` belongs in row
+`ρ/(2k)*s + ρ%(2k)`, i.e. the corridor rows with bands compressed to height
+`2k` (`stagedRow`). A mixed prefix solves the first `k³`
+columns (transposed row solver) and then `2k²+1` rows (`Parberry/MixedPrefix.lean`),
 toward any target that assigns the right groups (`Allocation.lean`). The spares
 are translated into the last reservoir, where the count algorithm needs them for
 its margins. The staged rows are spread into the horizontal corridors by a
@@ -80,9 +92,18 @@ each transfer is realized by a legal path (`Transport/Realization.lean`).
   `GroupEquivalent` treats the blank as a tile of the moving group until it
   reaches the source reservoir.
 - A transfer may also permute tiles inside a reservoir, since only counts
-  matter. The blank first slides to the top of its reservoir
-  (`Transport/ReservoirSlide.lean`), so the entry jump crosses only the corridor
-  rows. At the exit it carries the source tile to the corridor side of the
+  matter. The blank first slides to the top or bottom row of its reservoir
+  (`Transport/ReservoirSlide.lean`), so the entry jump crosses at most `2k`
+  corridor rows.
+- *Upper or lower row:* toward a source in a band above, the blank enters the
+  upper row of `H_i` and travels up; toward a band below, the lower row and
+  travels down. Either way every ordinary vertical slide moves a tile of group
+  `i` toward its own band, so only the entry slide costs, at most `s`. Within
+  the band, the row is chosen by the sum of the blank's and the tile's
+  distances to it; the two sums add up to `2s`, so the smaller is at most `s`
+  (`transportStepBoundAmortized_of_vertical_bound`, `verticalTransportBound`).
+  The last band's lower row lies at the top of the board, so within the last
+  band only the upper row is used, at most `2s`. At the exit it carries the source tile to the corridor side of the
   reservoir (`Transport/Carry.lean`), then exchanges it into the corridor with
   short jumps.
 - Long straight corridor slides cost at most `s` inefficient moves: after the
@@ -136,23 +157,30 @@ each transfer is realized by a legal path (`Transport/Realization.lean`).
   on that side) lowers the offline value to about `2.28s`, but not the
   one-step value, since the same-column case dominates.
 
-A transfer costs at most `4.5*s + O(k²)` inefficient moves on average: one `s`
-each for the entry slide and vertical travel, `2.5*s` for exit and horizontal
-travel together, plus `4*s` if the source lies in the rightmost column. Off-diagonal counts never
+A transfer costs at most `3.5*s + O(k²)` inefficient moves on average: `s`
+for the entry slide and vertical travel together, `2.5*s` for exit and
+horizontal travel together, plus `4*s` if the source lies in the rightmost
+column and `s` if it lies in the last band. Off-diagonal counts never
 increase, so a reservoir is the source of at most as many transfers as it
-initially holds off-diagonal tiles (`weighted_rowOff_move`). The rightmost
-column's surcharge is therefore at most `k*s²*3s`, lower order
-(`weighted_boardMatrix_le`).
+initially holds off-diagonal tiles (`weighted_rowOff_move`). The surcharges
+are therefore paid at most `k*s²` times each, lower order
+(`weighted_boardMatrix_le₂`).
 
 **Arrangement.** Two exchange schedules: vertical corridors `V(i,j) ↔ V(j,i)`,
-then horizontal slices. Both stage the two families, exchange them with the
+then horizontal corridor rows. Both stage the two families, exchange them with the
 row-shift word `θ_m`, and undo the staging by its reverse path, which restores
 every tile the staging disturbed. The families may be reordered internally, so
 odd family sizes cause no parity problem.
 
-- *Horizontal slices* use the paper's shared staging in the top row of the board
-  (`Moves/BulkExchange.lean`). There are only `k³s` such tiles, so this is lower
-  order.
+- *Horizontal rows* are cut into slots, one row of one square each, and use the
+  paper's shared staging in the top row of the board (`Moves/BulkExchange.lean`).
+  An upper slot of band `x`, row `o`, column block `d` holds group `(x,o)` and
+  is exchanged with slot `(x,d,o)`, as in the paper. A lower slot holds group
+  `(x-1,o)`, which belongs in the band above, so the lower slots are moved by
+  two rounds of exchanges: transpose `o` and `d` and reflect the band
+  `x ↦ -x`, then reflect it again, `x ↦ k-1-x`; together they move each slot
+  up one band (`Arrangement/Horizontal.lean`). There are only `2k³s` such
+  tiles, so this is lower order.
 - *Vertical corridors* move one family next to the other
   (`Moves/FamilySwap.lean`, `exists_vertical_arrangement_path_near`). Since the
   staging is undone, it only needs to track the two families. The family in the
@@ -184,7 +212,7 @@ most twice the distance between their targets
 twice the access length (`Path.exists_conjugated_efficient`).
 
 *Two levels* (`Algorithm/TwoLevel.lean`). The one-level explicit bound is a
-local solver with inefficiency `14.36*s^(11/4) + 59859*s^(5/2)` for `s ≥ 12⁴`
+local solver with inefficiency `12.86*s^(11/4) + 78255*s^(5/2)` for `s ≥ 12⁴`
 (`recursiveSolver`). The suffix after Transport is then charged by inefficiency
 (`exists_admissible_solution_of_solver_ineff`): Arrangement by its length plus
 its potential increase, which is at most `2s` per non-reservoir cell because
@@ -206,18 +234,18 @@ after the prefix (`Algorithm/Residual*.lean`). Then
 `O(n²·k) = O(x¹⁰)`.
 
 **Choice of `k`.** With `k ≈ c*x`, twice the leading inefficiency is
-`(A'/c + 26*c³)*x¹¹`, where `A' = 14` with the Parberry Finish (one level) and
-`A' = 9` with the recursive Finish (two levels). The minimizer is
+`(A'/c + 26*c³)*x¹¹`, where `A' = 12` with the Parberry Finish (one level) and
+`A' = 7` with the recursive Finish (two levels). The minimizer is
 `c = (A'/78)^(1/4)`, and at the optimum the constant is
 `(4/3)*A^(3/4)*(3P)^(1/4)` for halved coefficients `A = A'/2` and `P = 13`.
 
 | Level | `c` | Constant | Where |
 | --- | --- | ---: | --- |
-| One (Parberry Finish) | `2/3` | `21/2 + 104/27 ≈ 14.36` | `GeneralSize.exists_solution_explicit` |
-| Two (recursive Finish) | `7/12` | `54/7 + 4459/1728 ≈ 10.295` | `TwoLevel.exists_solution_two_level` |
+| One (Parberry Finish) | `2/3` | `9 + 104/27 ≈ 12.86` | `GeneralSize.exists_solution_explicit` |
+| Two (recursive Finish) | `6/11` | `77/12 + 2808/1331 ≈ 8.53` | `TwoLevel.exists_solution_two_level` |
 
-With two levels a unit saved in Transport is worth about `1.72` and a unit saved
-in Preparation or Arrangement about `0.20`.
+With two levels a unit saved in Transport is worth about `1.83` and a unit saved
+in Preparation or Arrangement about `0.16`.
 
 The paper instead rounds `n` down to a fourth power, leaving up to
 `4*n^(3/4)` outer layers whose Parberry prefix costs `60*n^(11/4)`. Rounding
@@ -231,9 +259,9 @@ Leading coefficients of the inefficient moves:
 | --- | ---: | --- |
 | Arrangement (length 3, halved) | `1.5*k⁵s²` | `Admissible.arrangement_bound` |
 | Preparation: staging 7.5, vertical spreading 4 | `11.5*k⁵s²` | `Admissible.preparation_phase` |
-| Transport | `4.5*k²s³` | `Admissible.transport_phase` |
+| Transport | `3.5*k²s³` | `Admissible.transport_phase` |
 | Finish (recursive solver, charged by inefficiency) | lower order | `TwoLevel.recursiveSolver` |
-| **Total**, with `k = ⌊7x/12⌋` | **`10.295*n^(11/4)`** | `TwoLevel.exists_solution_two_level` |
+| **Total**, with `k = ⌊6x/11⌋` | **`8.53*n^(11/4)`** | `TwoLevel.exists_solution_two_level` |
 
 Lower-order terms are collected in one `k*s³` envelope, plus the inner level's
 error, and absorbed (as `O(n^(41/16))`) only in `uniformApproximation`.
@@ -241,11 +269,11 @@ error, and absorbed (as `O(n^(41/16))`) only in `uniformApproximation`.
 ## Directions for improvement
 
 Coefficients are halved (inefficiency units). At the balanced `k` the constant
-is `(4/3)*A^(3/4)*(3P)^(1/4)` with `A = 4.5` (Transport) and `P = 13`
+is `(4/3)*A^(3/4)*(3P)^(1/4)` with `A = 3.5` (Transport) and `P = 13`
 (Preparation 11.5, Arrangement 1.5), so one unit saved in `A` is worth about
-`1.72` and one unit in `P` about `0.20`.
+`1.83` and one unit in `P` about `0.16`.
 
-- **Arrangement sideways leg (1.5 → about 0.67; constant about −0.2).** Families
+- **Arrangement sideways leg (1.5 → about 0.67; constant about −0.14).** Families
   move sideways at `6` moves per tile and cell (protected column shifts) but along
   their own axis at `2` (conveyor). Turning a column family into a row costs
   only `O(s)` per tile, which is lower order. So the sideways leg could run as a
@@ -268,28 +296,20 @@ is `(4/3)*A^(3/4)*(3P)^(1/4)` with `A = 4.5` (Transport) and `P = 13`
   of the right group, like the Arrangement change, is another option; so is
   tracking Manhattan changes through the `Zhong` placement words, so that carried
   tiles' own moves count as efficient.
-- **Transport (4.5, weight 1.72).** Per transfer: entry slide up to `s`, vertical
-  travel up to `s`, exit plus horizontal travel `2.5*s` on average (with
-  look-ahead, which is optimal for this cost model). Ideas:
-  - *Horizontal corridors in the middle of each band (4.5 → 3.5, constant
-    about 8.53).* The entry slide (from the exit row to `H_i` at the top of the
-    band) and the vertical travel (down through band `a_i`) are each up to `s`
-    because `H_i` sits at the top of its band. With the `k` corridor rows of a
-    band in its middle, both are at most `s/2`, and their sum at most `s` in
-    every case. This changes the partition (reservoirs and vertical corridors
-    split in two), so every phase needs revisiting, though the costs of
-    Preparation and Arrangement change only in lower-order terms.
-  - The entry slide moves the blank from the exit row to the top of its
-    reservoir. Choosing among several tiles of the right group in the source
-    reservoir (by row as well as column) could shorten it on average, though not
-    in the worst case.
-  - Vertical travel is inefficient only within the starting band; the same
-    edge-facing potential used for horizontal travel might apply to the row the
-    blank enters `H_i` from.
+- **Transport (3.5, weight 1.83).** Per transfer: entry slide and vertical
+  travel together up to `s` (upper and lower corridor rows), exit plus
+  horizontal travel `2.5*s` on average (with look-ahead, which is optimal for
+  this cost model). Ideas:
+  - The entry slide moves the blank from the exit row, the source tile's row,
+    to the reservoir's side facing the next source. Choosing among several
+    tiles of the right group in the source reservoir, by row as well as column,
+    could shorten it on average, though not in the worst case.
+  - The exit costs `4` per cell of carry, optimal for walk-and-carry words
+    (see above); the game value `2.5*s` is optimal given that cost.
 - **Finish (lower order at two levels).** Nothing to gain at the leading order.
   The inner level contributes the `O(n^(41/16))` remainder; a third level would
   not change the leading constant.
 - **Remainder and thresholds.** The explicit bounds use loose envelopes (`k*s³`
   with coefficients near `3*10⁴`), and `uniformApproximation` absorbs the
-  `n^(41/16)` term only at `n ≥ 365386^6`. Tightening these doesn't affect the
+  `n^(41/16)` term only at `n ≥ 475764^6`. Tightening these doesn't affect the
   asymptotic constant.

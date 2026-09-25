@@ -4,7 +4,7 @@ import SlidingPuzzle.Algorithm.Arrangement.Horizontal
 
 /-! Phase III (Arrangement). Exchange the vertical corridors pairwise, moving one
 family next to the other (`exists_vertical_arrangement_path_near`), then the
-horizontal slices, so that every tile lies in its own square. Reservoirs and the
+horizontal corridor rows, so that every tile lies in its own square. Reservoirs and the
 blank are restored. -/
 namespace SlidingPuzzle
 noncomputable section
@@ -17,7 +17,7 @@ theorem exists_arrangement_path (hk : Dims n k) (B : Board n)
     (hclear : Clear (k := k) B) (hsorted : ReservoirSorted (k := k) B)
     (hblank : ∃ g : GroupIndex k, reservoir g (blank B)) :
     ∃ C : Board n, ∃ p : Path B C,
-      p.length ≤ 3*(k^5*side n k^2)+22*(k*side n k^3) + (24*side n k+2032)*(k^3-k^2)*n ∧
+      p.length ≤ 3*(k^5*side n k^2)+22*(k*side n k^3) + (24*side n k+2032)*(4*k^3)*n ∧
       blank C = blank B ∧
       SquaresSorted (k := k) C ∧
       ∀ (i : GroupIndex k) x, reservoir i x → C x = B x := by
@@ -35,12 +35,8 @@ theorem exists_arrangement_path (hk : Dims n k) (B : Board n)
     exact Nat.add_le_add hp' hq
   · intro i x hxi hnonzero
     rcases covers hk x with ⟨j,hxH⟩ | ⟨j,l,hxV⟩ | ⟨j,hxR⟩
-    · let a : SliceIndex k := (j,groupCol i)
-      have hxa : x ∈ horizontalSliceCells a.1 a.2 := by
-        apply (mem_horizontalSliceCells _ _ _).mpr
-        exact ⟨hxH,hxi.2.2⟩
-      have he : sliceDestination a = i :=
-        square_unique hk (horizontalSlice_subset_square hk a hxa) hxi
+    · obtain ⟨a, hxa⟩ := exists_slot_of_horizontal hk hxH
+      have he : slotGroup a = i := square_unique hk (slotCells_subset_square hk a hxa) hxi
       rw [← he]
       exact hCH a x hxa
     · have he : j=i := square_unique hk (vertical_subset_square hk hxV) hxi

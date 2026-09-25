@@ -3,8 +3,8 @@ import SlidingPuzzle.Algorithm.Preparation.Representatives
 import SlidingPuzzle.Parberry.MixedPrefix
 
 /-! Staging with a mixed prefix. The compressed staging quotas lie in the first
-`k³` columns or the first `k²` rows, and the representatives lie in row `k²`.
-Solving `k³` columns and `k²+1` rows costs about `7.5*k³n²` moves; solving `k³`
+`k³` columns or the first `2k²` rows, and the representatives lie in row `2k²`.
+Solving `k³` columns and `2k²+1` rows costs about `7.5*k³n²` moves; solving `k³`
 complete layers would cost twice as much. -/
 namespace SlidingPuzzle
 noncomputable section
@@ -119,10 +119,10 @@ end
 namespace Partition
 
 theorem representativeStaging_mixed {n k : ℕ} (hk : Dims n k) [NeZero n] :
-    RepresentativeStaging hk ((k^3+(k^2+1))*(15*n^2+3002*n+1)) := by
+    RepresentativeStaging hk ((k^3+(2*k^2+1))*(15*n^2+3002*n+1)) := by
   intro B
   have hg := preparation_geometry hk
-  obtain ⟨C,p,hp,hC,hb⟩ := exists_mixed_disjoint_group_path hk B (by omega) (k^2+1) (k^3)
+  obtain ⟨C,p,hp,hC,hb⟩ := exists_mixed_disjoint_group_path hk B (by omega) (2*k^2+1) (k^3)
     (by omega) (by omega) (representativeStagingCells hk) (representativeStagingCells_disjoint hk)
     (by
       intro i c hc
@@ -130,7 +130,7 @@ theorem representativeStaging_mixed {n k : ℕ} (hk : Dims n k) [NeZero n] :
       · rcases stagingCells_compressed hk hc with h | h
         · left; omega
         · right; exact h
-      · left; change k^2 < k^2+1; omega)
+      · left; change 2*k^2 < 2*k^2+1; omega)
     (representativeStagingCells_capacity hk)
   refine ⟨C,p,hp,?_,?_,hb⟩
   · intro i c hc

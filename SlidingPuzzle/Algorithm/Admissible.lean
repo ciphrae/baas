@@ -22,12 +22,12 @@ halved once at the end (`CostedPhase.exists_solution`).
 
 | phase | bound |
 | --- | --- |
-| Preparation | `2*ineff ≤ 23*k⁵s² + 9100*k*s³` |
-| Transport | `2*ineff ≤ 9*k²s³ + 1500*k*s³` |
-| Arrangement | `length ≤ 3*k⁵s² + 2100*k*s³` |
+| Preparation | `2*ineff ≤ 23*k⁵s² + 12200*k*s³` |
+| Transport | `2*ineff ≤ 7*k²s³ + 1400*k*s³` |
+| Arrangement | `length ≤ 3*k⁵s² + 8300*k*s³` |
 | Finish | `length ≤ 5*k²s³ + 17164*k*s³` |
 
-Total: `2*ineff ≤ 14*k²s³ + 26*k⁵s² + 29864*k*s³` (`exists_admissible_solution`). -/
+Total: `2*ineff ≤ 12*k²s³ + 26*k⁵s² + 39064*k*s³` (`exists_admissible_solution`). -/
 namespace SlidingPuzzle.Algorithm
 open SlidingPuzzle.Partition
 
@@ -145,47 +145,46 @@ private theorem monomials {k s : ℕ} (hk : 2 ≤ k) (hs : k^3 ≤ s) :
       _ ≤ k*s^3 := Nat.mul_le_mul hk1 h1s3
 
 private theorem preparation_arith {k s : ℕ} (hk : 2 ≤ k) (hs : k^3 ≤ s) :
-    (k^3+(k^2+1))*(15*(k*s)^2+3002*(k*s)+1)+18*k^2*(k*s)+24*k^2*(k*s)^2+
-      k^5*(8*s^2+4*(k*s)+8*s) ≤ 23*(k^5*s^2)+9100*(k*s^3) := by
+    (k^3+(2*k^2+1))*(15*(k*s)^2+3002*(k*s)+1)+18*k^2*(k*s)+48*k^2*(k*s)^2+
+      k^5*(8*s^2+4*(k*s)+8*s) ≤ 23*(k^5*s^2)+12200*(k*s^3) := by
   obtain ⟨m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13⟩ := monomials hk hs
-  have hexp : (k^3+(k^2+1))*(15*(k*s)^2+3002*(k*s)+1)+18*k^2*(k*s)+24*k^2*(k*s)^2+
+  have hexp : (k^3+(2*k^2+1))*(15*(k*s)^2+3002*(k*s)+1)+18*k^2*(k*s)+48*k^2*(k*s)^2+
       k^5*(8*s^2+4*(k*s)+8*s) =
-      23*(k^5*s^2)+39*(k^4*s^2)+15*(k^2*s^2)+3002*(k^4*s)+3020*(k^3*s)+3002*(k*s)+
-        4*(k^6*s)+8*(k^5*s)+k^3+k^2+1 := by ring
+      23*(k^5*s^2)+78*(k^4*s^2)+15*(k^2*s^2)+3002*(k^4*s)+6022*(k^3*s)+3002*(k*s)+
+        4*(k^6*s)+8*(k^5*s)+k^3+2*k^2+1 := by ring
   rw [hexp]
   omega
 
 private theorem transport_arith {k s : ℕ} (hk : 2 ≤ k) (hs : k^3 ≤ s) :
-    (k*s)^2*(7*s+2*(26*(k+2)+s+(k-1)*(26*(k+3)))+160*k^2+26*k+800)+k*s^2*(8*s)+
-      (2*s+2) ≤ 9*(k^2*s^3)+1500*(k*s^3) := by
+    (k*s)^2*(7*s+2*(26*(2*k+2)+(k-1)*(26*(2*k+3)))+160*k^2+60*k+800)+k*s^2*(8*s)+
+      k*s^2*(2*s)+(2*s+2) ≤ 7*(k^2*s^3)+1400*(k*s^3) := by
   obtain ⟨m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13⟩ := monomials hk hs
   have hcount : k-1+1=k := Nat.sub_add_cancel (by omega)
-  have hv : (k-1)*(26*(k+3)) ≤ 26*k^2+52*k := by
-    have heq : (k-1)*(k+3)+(k+3)=k*(k+3) := by
-      calc (k-1)*(k+3)+(k+3) = (k-1+1)*(k+3) := by ring
-        _ = k*(k+3) := by rw [hcount]
+  have hv : (k-1)*(26*(2*k+3)) ≤ 52*k^2+26*k := by
+    have heq : (k-1)*(2*k+3)+(2*k+3)=k*(2*k+3) := by
+      calc (k-1)*(2*k+3)+(2*k+3) = (k-1+1)*(2*k+3) := by ring
+        _ = k*(2*k+3) := by rw [hcount]
     nlinarith
-  have he : 7*s+2*(26*(k+2)+s+(k-1)*(26*(k+3)))+160*k^2+26*k+800 ≤
-      9*s+212*k^2+182*k+904 := by
-    generalize (k-1)*(26*(k+3)) = t at hv ⊢
+  have he : 7*s+2*(26*(2*k+2)+(k-1)*(26*(2*k+3)))+160*k^2+60*k+800 ≤
+      7*s+264*k^2+216*k+904 := by
+    generalize (k-1)*(26*(2*k+3)) = t at hv ⊢
     generalize k^2 = q at hv ⊢
     omega
   have hmul := Nat.mul_le_mul_left ((k*s)^2) he
-  have hexp : (k*s)^2*(9*s+212*k^2+182*k+904) =
-      9*(k^2*s^3)+212*(k^4*s^2)+182*(k^3*s^2)+904*(k^2*s^2) := by ring
+  have hexp : (k*s)^2*(7*s+264*k^2+216*k+904) =
+      7*(k^2*s^3)+264*(k^4*s^2)+216*(k^3*s^2)+904*(k^2*s^2) := by ring
   have hexp' : k*s^2*(8*s) = 8*(k*s^3) := by ring
+  have hexp'' : k*s^2*(2*s) = 2*(k*s^3) := by ring
   have hs1 : s ≤ k*s^3 := le_trans (Nat.le_mul_of_pos_left s (by omega)) m10
   rw [hexp] at hmul
-  rw [hexp']
+  rw [hexp', hexp'']
   linarith
 
 private theorem arrangement_arith {k s : ℕ} (hk : 2 ≤ k) (hs : k^3 ≤ s) :
-    3*(k^5*s^2)+22*(k*s^3)+(24*s+2032)*(k^3-k^2)*(k*s) ≤
-      3*(k^5*s^2)+2100*(k*s^3) := by
+    3*(k^5*s^2)+22*(k*s^3)+(24*s+2032)*(4*k^3)*(k*s) ≤
+      3*(k^5*s^2)+8300*(k*s^3) := by
   obtain ⟨m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13⟩ := monomials hk hs
-  have h₂ : (24*s+2032)*(k^3-k^2)*(k*s) ≤ (24*s+2032)*k^3*(k*s) := by
-    gcongr; exact Nat.sub_le _ _
-  have hexp : (24*s+2032)*k^3*(k*s) = 24*(k^4*s^2)+2032*(k^4*s) := by ring
+  have hexp : (24*s+2032)*(4*k^3)*(k*s) = 96*(k^4*s^2)+8128*(k^4*s) := by ring
   omega
 
 private theorem finish_arith {k s : ℕ} (hk : 2 ≤ k) (hs : k^3 ≤ s) :
@@ -198,7 +197,7 @@ private theorem finish_arith {k s : ℕ} (hk : 2 ≤ k) (hs : k^3 ≤ s) :
 
 /-- Preparation: staging `7.5*k⁵s²`, vertical spreading `4*k⁵s²`. -/
 theorem preparation_phase {n k : ℕ} (hk : Dims n k) [NeZero n] :
-    CostedPhase (n := n) k ⟨0,23,9100⟩ Reachable (Prepared hk) := by
+    CostedPhase (n := n) k ⟨0,23,12200⟩ Reachable (Prepared hk) := by
   intro B hB
   obtain ⟨C,p,hp,hclear,hrep⟩ := exists_preparation_path hk (representativeStaging_mixed hk) B
   refine ⟨C,p,Prepared.of_path hB p hclear hrep,?_⟩
@@ -208,23 +207,24 @@ theorem preparation_phase {n k : ℕ} (hk : Dims n k) [NeZero n] :
   dsimp [LeadingBudget.eval]
   omega
 
-/-- Transport: at most `n²` transfers of `4.5*s + O(k²)` inefficient moves on
+/-- Transport: at most `n²` transfers of `3.5*s + O(k²)` inefficient moves on
 average (amortized over the look-ahead exit choice), plus `4*s` for each of the
-at most `k*s²` transfers out of the rightmost column. -/
+at most `k*s²` transfers out of the rightmost column and `s` for each of those
+out of the last band. -/
 theorem transport_phase {n k : ℕ} (hk : Dims n k) [NeZero n] :
-    CostedPhase (n := n) k ⟨9,0,1500⟩ (Prepared hk) (Transported hk) := by
+    CostedPhase (n := n) k ⟨7,0,1400⟩ (Prepared hk) (Transported hk) := by
   intro B hB
   have hstep := transportStepBoundAmortized_of_vertical_bound hk (verticalTransportBound hk)
   obtain ⟨D,p,hD,hp⟩ := exists_transport_path_of_step_bound_amortized hk hstep B hB
   refine ⟨D,p,hD,?_⟩
-  have hw := weighted_boardMatrix_le hk B
-    (7*side n k+2*(26*(k+2)+side n k+(k-1)*(26*(k+3)))+160*k^2+26*k+800) (8*side n k)
+  have hw := weighted_boardMatrix_le₂ hk B
+    (7*side n k+2*(26*(2*k+2)+(k-1)*(26*(2*k+3)))+160*k^2+60*k+800) (8*side n k) (2*side n k)
   have hpot := statePotential_le hk B (boardMatrix hk B) _
     (Classical.choose_spec (Classical.choose_spec
       (clear_board_count_run_quadratic hk B hB.clear hB.representatives))).choose_spec.choose_spec.1
   have hp' : 2*p.inefficientMoves ≤ (k*side n k)^2*
-      (7*side n k+2*(26*(k+2)+side n k+(k-1)*(26*(k+3)))+160*k^2+26*k+800)+
-      k*side n k^2*(8*side n k)+(2*side n k+2) := by
+      (7*side n k+2*(26*(2*k+2)+(k-1)*(26*(2*k+3)))+160*k^2+60*k+800)+
+      k*side n k^2*(8*side n k)+k*side n k^2*(2*side n k)+(2*side n k+2) := by
     rw [hk.mul_side]; omega
   have h := transport_arith hk.two_le hk.cube_le
   dsimp [LeadingBudget.eval]
@@ -234,7 +234,7 @@ theorem transport_phase {n k : ℕ} (hk : Dims n k) [NeZero n] :
 theorem arrangement_bound {n k : ℕ} (hk : Dims n k) [NeZero n]
     (B : Board n) (hB : Transported hk B) :
     ∃ C : Board n, ∃ p : Path B C, Arranged hk C ∧
-      p.length ≤ (LeadingBudget.mk 0 3 2100).eval k (side n k) := by
+      p.length ≤ (LeadingBudget.mk 0 3 8300).eval k (side n k) := by
   obtain ⟨C,p,hp,hblank,hsorted,_⟩ := exists_arrangement_path hk B hB.clear hB.sorted
     ⟨_, hB.blank_last⟩
   refine ⟨C,p,Arranged.of_path hB.reachable p hsorted (by
@@ -246,7 +246,7 @@ theorem arrangement_bound {n k : ℕ} (hk : Dims n k) [NeZero n]
 
 /-- Preparation followed by Transport. -/
 theorem preparation_transport_phase {n k : ℕ} (hk : Dims n k) [NeZero n] :
-    CostedPhase (n := n) k ⟨9,23,10600⟩ Reachable (Transported hk) :=
+    CostedPhase (n := n) k ⟨7,23,13600⟩ Reachable (Transported hk) :=
   (preparation_phase hk).comp (transport_phase hk)
 
 /-- Finish: `k²` local solves of side `s` with the Parberry solver,
@@ -262,15 +262,15 @@ theorem finish_bound {n k : ℕ} (hk : Dims n k) [NeZero n]
   omega
 
 /-- Every reachable board of admissible dimensions has a solution with at most
-`(14*k²s³ + 26*k⁵s²)/2 + 14932*k*s³` inefficient moves, where `s = side n k`. -/
+`(12*k²s³ + 26*k⁵s²)/2 + 19532*k*s³` inefficient moves, where `s = side n k`. -/
 theorem exists_admissible_solution {n k : ℕ} (hk : Dims n k) [NeZero n]
     (B : Board n) (hB : Reachable B) :
     ∃ p : Path B (target n),
-      2*p.inefficientMoves ≤ 14*(k^2*side n k^3)+26*(k^5*side n k^2)+29864*(k*side n k^3) ∧
-      p.length ≤ manhattan B+14*(k^2*side n k^3)+26*(k^5*side n k^2)+
-        29864*(k*side n k^3) := by
+      2*p.inefficientMoves ≤ 12*(k^2*side n k^3)+26*(k^5*side n k^2)+39064*(k*side n k^3) ∧
+      p.length ≤ manhattan B+12*(k^2*side n k^3)+26*(k^5*side n k^2)+
+        39064*(k*side n k^3) := by
   have hfinish (C : Board n) (hC : Transported hk C) :
-      ∃ q : Path C (target n), q.length ≤ (LeadingBudget.mk 5 3 19264).eval k (side n k) := by
+      ∃ q : Path C (target n), q.length ≤ (LeadingBudget.mk 5 3 25464).eval k (side n k) := by
     obtain ⟨D,p,hD,hp⟩ := arrangement_bound hk C hC
     obtain ⟨q,hq⟩ := finish_bound hk D hD
     refine ⟨p.append q,?_⟩
@@ -294,7 +294,7 @@ every tile of a sorted board is within `2s` of its target. -/
 theorem arrangement_manhattan {n k : ℕ} (hk : Dims n k) (B C : Board n)
     (hres : ∀ (i : GroupIndex k) x, reservoir i x → C x = B x)
     (hsorted : SquaresSorted (k := k) C) :
-    manhattan C ≤ manhattan B+(2*k^2*n*side n k+2*k^4*side n k^2) := by
+    manhattan C ≤ manhattan B+(4*k^2*n*side n k+2*k^4*side n k^2) := by
   have hcell : ∀ x, cellCost C x ≤ 2*side n k := by
     intro x
     obtain ⟨j, hj⟩ := square_covers hk x
@@ -313,14 +313,14 @@ theorem arrangement_manhattan {n k : ℕ} (hk : Dims n k) (B C : Board n)
     intro c hc
     simp only [cellCost, hres i c ((mem_reservoirCells i c).mp hc)]
   have hH : ∑ i : GroupIndex k, ∑ c ∈ horizontalCells i, cellCost C c ≤
-      k^2*n*(2*side n k) := by
-    calc _ ≤ ∑ _i : GroupIndex k, n*(2*side n k) := by
+      k^2*(2*n)*(2*side n k) := by
+    calc _ ≤ ∑ _i : GroupIndex k, (2*n)*(2*side n k) := by
           apply Finset.sum_le_sum
           intro i _
           calc _ ≤ ∑ _c ∈ horizontalCells (n := n) i, 2*side n k :=
                 Finset.sum_le_sum (fun c _ => hcell c)
-            _ = n*(2*side n k) := by simp [card_horizontal hk i]
-      _ = k^2*n*(2*side n k) := by simp [Finset.card_univ, pow_two]; ring
+            _ = (2*n)*(2*side n k) := by simp [card_horizontal hk i]
+      _ = k^2*(2*n)*(2*side n k) := by simp [Finset.card_univ, pow_two]; ring
   have hV : ∑ i : GroupIndex k, ∑ j : GroupIndex k, ∑ c ∈ verticalCells i j, cellCost C c ≤
       k^4*side n k*(2*side n k) := by
     calc _ ≤ ∑ _i : GroupIndex k, ∑ _j : GroupIndex k, side n k*(2*side n k) := by
@@ -330,22 +330,22 @@ theorem arrangement_manhattan {n k : ℕ} (hk : Dims n k) (B C : Board n)
           intro j _
           calc _ ≤ ∑ _c ∈ verticalCells (n := n) i j, 2*side n k :=
                 Finset.sum_le_sum (fun c _ => hcell c)
-            _ = (side n k-k)*(2*side n k) := by simp [card_vertical hk i j]
+            _ = (side n k-2*k)*(2*side n k) := by simp [card_vertical hk i j]
             _ ≤ side n k*(2*side n k) := Nat.mul_le_mul_right _ (Nat.sub_le _ _)
       _ = k^4*side n k*(2*side n k) := by simp [Finset.card_univ]; ring
-  have e1 : k^2*n*(2*side n k) = 2*k^2*n*side n k := by ring
+  have e1 : k^2*(2*n)*(2*side n k) = 4*k^2*n*side n k := by ring
   have e2 : k^4*side n k*(2*side n k) = 2*k^4*side n k^2 := by ring
   omega
 
 /-- The whole suffix charged by inefficiency: Arrangement by its length plus
 its small potential increase (`arrangement_manhattan`), Finish by the local
 solver's inefficiency. Twice the inefficiency is at most
-`9*k²s³ + 26*k⁵s² + 31412*k*s³ + 2*k²*ineff s`. -/
+`7*k²s³ + 26*k⁵s² + 40614*k*s³ + 2*k²*ineff s`. -/
 theorem exists_admissible_solution_of_solver_ineff {cost ineff : ℕ → ℕ}
     (hsolver : SolverBound cost ineff)
     {n k : ℕ} (hk : Dims n k) [NeZero n] (B : Board n) (hB : Reachable B) :
     ∃ p : Path B (target n),
-      p.length ≤ manhattan B+9*(k^2*side n k^3)+26*(k^5*side n k^2)+31412*(k*side n k^3)+
+      p.length ≤ manhattan B+7*(k^2*side n k^3)+26*(k^5*side n k^2)+40614*(k*side n k^3)+
         2*(k^2*ineff (side n k)) := by
   obtain ⟨C,p,hC,hp⟩ := preparation_transport_phase hk B hB
   obtain ⟨D,q,hq,hblank,hsorted,hres⟩ := exists_arrangement_path hk C hC.clear hC.sorted
@@ -358,7 +358,7 @@ theorem exists_admissible_solution_of_solver_ineff {cost ineff : ℕ → ℕ}
   have ha := arrangement_arith hk.two_le hk.cube_le
   rw [hk.mul_side] at ha
   obtain ⟨m2,m3,-,-,-,-,m8,-,-,-,-,-⟩ := monomials hk.two_le hk.cube_le
-  have e1 : 2*k^2*n*side n k = 2*(k^3*side n k^2) := by
+  have e1 : 4*k^2*n*side n k = 4*(k^3*side n k^2) := by
     have h := hk.mul_side
     generalize side n k = s at h ⊢
     subst h; ring

@@ -30,7 +30,8 @@ theorem exists_banded_vertical_route {n k : ℕ} [NeZero n]
     (hblank : blank B = corridorCell true backwards column a) :
     ∃ D : Board n, ∃ p : Path B D,
       blank D = corridorCell true backwards column b ∧ GroupEquivalent i A D ∧
-      p.inefficientMoves ≤ cap-a.val + (t.val-s.val)*(26*(L+U+3)) := by
+      p.inefficientMoves ≤ cap-a.val + (t.val-s.val)*(26*(L+U+3)) ∧
+      (s = t → p.inefficientMoves ≤ b.val-a.val) := by
   let line := corridorCell true backwards column
   have hinj : Function.Injective line := by
     intro x y h
@@ -44,13 +45,13 @@ theorem exists_banded_vertical_route {n k : ℕ} [NeZero n]
     have hst' : s = t := Fin.ext (by omega)
     subst s
     have hab : a ≤ b := by change a.val ≤ b.val; omega
-    obtain ⟨D, p, hD, hBD, hp⟩ := exists_group_corridor_route hk i line hinj hadj cap
+    obtain ⟨D, p, hD, hBD, hp, hp'⟩ := exists_group_corridor_route hk i line hinj hadj cap
       hefficient a b hab B hblank (by
         intro x hax hxb hxa
         apply hAB.mem_targetGroup _ (by rw [hblank]; exact fun h => hxa (hinj h))
         exact hfamily t x (by change a.val ≤ x.val at hax; omega)
           (by change x.val ≤ b.val at hxb; omega))
-    exact ⟨D, p, hD, hAB.trans hBD, by simpa using hp⟩
+    exact ⟨D, p, hD, hAB.trans hBD, by simpa using hp, fun _ => hp'⟩
   | succ d ih =>
     have hslt : s.val < t.val := by omega
     have hsbound : (s.val+1)*K ≤ n := by
@@ -63,7 +64,7 @@ theorem exists_banded_vertical_route {n k : ℕ} [NeZero n]
       rw [ha]
       simp only [Nat.add_mul, Nat.one_mul]
       omega
-    obtain ⟨C, p, hC, hBC, hp⟩ := exists_group_corridor_route hk i line hinj hadj cap
+    obtain ⟨C, p, hC, hBC, hp, -⟩ := exists_group_corridor_route hk i line hinj hadj cap
       hefficient a z haz B hblank (by
         intro x hax hxz hxa
         apply hAB.mem_targetGroup _ (by rw [hblank]; exact fun h => hxa (hinj h))
@@ -120,11 +121,12 @@ theorem exists_banded_vertical_route {n k : ℕ} [NeZero n]
     have hs't : s' ≤ t := by change s.val+1 ≤ t.val; omega
     have hcap' : cap ≤ (s'.val+1)*K := hcap.trans (Nat.mul_le_mul_right K (by
       dsimp [s']; omega))
-    obtain ⟨D, v, hD, hAD, hv⟩ := ih s' hs't a' rfl hcap' F (hAC.trans hCF) hF (by
+    obtain ⟨D, v, hD, hAD, hv, -⟩ := ih s' hs't a' rfl hcap' F (hAC.trans hCF) hF (by
       dsimp [s']; omega)
     have hzero : cap-a'.val = 0 := by dsimp [a', s']; omega
     rw [hzero, Nat.zero_add] at hv
-    refine ⟨D, p.append (q.append v), hD, hAD, ?_⟩
+    refine ⟨D, p.append (q.append v), hD, hAD, ?_, fun h => absurd h (by
+      intro h'; have := congrArg Fin.val h'; omega)⟩
     simp only [Path.inefficientMoves_append]
     calc
       _ ≤ (cap-a.val) + 26*(L+U+3) + d*(26*(L+U+3)) := by omega

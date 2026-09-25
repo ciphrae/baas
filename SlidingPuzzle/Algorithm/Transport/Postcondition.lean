@@ -93,7 +93,7 @@ theorem clear_reservoirSorted_blank_in_lastReservoir {n k : ℕ} [NeZero n]
     intro c _ _ r hrc
     exact hall r c hrc
   obtain ⟨hblast, _⟩ := TransportCounts.terminal_of_margins (boardMatrix hk B) b
-    ((side n k-k)*(side n k-k^2)) (boardMatrix_margins hk B hclear b hb) hinvariant hincoming
+    ((side n k-2*k)*(side n k-k^2)) (boardMatrix_margins hk B hclear b hb) hinvariant hincoming
   rw [← transportIndex_last k hk, ← hblast]
   exact hb
 

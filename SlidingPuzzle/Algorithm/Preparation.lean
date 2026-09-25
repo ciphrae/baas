@@ -28,14 +28,14 @@ theorem exists_staging_representative_row_path {n k : ℕ}
   have hk2 : 1 < k^2 := by nlinarith
   obtain ⟨A,p,hp,hstage,hrep,hbr,hbc⟩ := hstaging B
   let access : Cell n :=
-    (⟨k^2+2,by omega⟩,⟨n-k^2,by omega⟩)
+    (⟨2*k^2+2,by omega⟩,⟨n-k^2,by omega⟩)
   obtain ⟨D,q,hblank,hq,hfix⟩ := exists_blank_access_path_preserving A access
   have hqstage (i : GroupIndex k) (c : Cell n) (hc : c ∈ stagingCells i) :
       D c = A c := by
     apply hfix
     rcases stagingCells_compressed hk hc with hr | hcol
     · left
-      change c.1.val < min (blank A).1.val (k^2+2)
+      change c.1.val < min (blank A).1.val (2*k^2+2)
       exact lt_min (by omega) (by omega)
     · right; right; left
       change c.2.val < min (blank A).2.val (n-k^2)
@@ -43,10 +43,10 @@ theorem exists_staging_representative_row_path {n k : ℕ}
   have hqrep (i : GroupIndex k) : D (representativeSource hk i) = A (representativeSource hk i) := by
     apply hfix
     left
-    change k^2 < min (blank A).1.val (k^2+2)
+    change 2*k^2 < min (blank A).1.val (2*k^2+2)
     exact lt_min (by omega) (by omega)
-  obtain ⟨E,s,hs,hrow,hsfix,hsblank⟩ := exists_row_translation_with_blank D (k^2) (n-k^2)
-    (k^2) (n-3-k^2) (by omega) (by omega) hk2 hblank
+  obtain ⟨E,s,hs,hrow,hsfix,hsblank⟩ := exists_row_translation_with_blank D (2*k^2) (n-k^2)
+    (k^2) (n-3-2*k^2) (by omega) (by omega) hk2 hblank
   have hEstage (i : GroupIndex k) (c : Cell n) (hc : c ∈ stagingCells i) :
       E c ∈ targetGroup i := by
     rw [hsfix c, hqstage i c hc]
@@ -58,7 +58,7 @@ theorem exists_staging_representative_row_path {n k : ℕ}
       E (⟨n-3,by omega⟩,(representativeSource hk i).2) ∈ targetGroup i := by
     have hil : i.val < k^2 := by simp [pow_two]
     have hh := hrow ⟨i.val,hil⟩
-    have hroweq : k^2 + (n-3-k^2) = n-3 := by omega
+    have hroweq : 2*k^2 + (n-3-2*k^2) = n-3 := by omega
     simp only [hroweq] at hh
     change E (⟨n-3,by omega⟩,(representativeSource hk i).2) =
       D (representativeSource hk i) at hh
@@ -76,21 +76,21 @@ theorem exists_staging_representative_row_path {n k : ℕ}
     have hk2' := hk.two_le
     have hsbound : s.length ≤ 7*k^2*n := by
       calc
-        s.length ≤ (n-3-k^2)*(6*k^2+3) := hs
+        s.length ≤ (n-3-2*k^2)*(6*k^2+3) := hs
         _ ≤ n*(7*k^2) := Nat.mul_le_mul (by omega) (by nlinarith)
         _ = 7*k^2*n := by ring
     have hkn : n ≤ k^2*n := Nat.le_mul_of_pos_left n (by positivity)
     simp only [Path.length_append]
     nlinarith
   · rw [hsblank]
-    change k^2+(n-3-k^2)+2 = n-1 ∧ n-k^2 = n-k^2
+    change 2*k^2+(n-3-2*k^2)+2 = n-1 ∧ n-k^2 = n-k^2
     omega
 
 theorem exists_horizontal_prepared_path {n k : ℕ}
     (hk : Dims n k) [NeZero n] {L : ℕ} (hstaging : RepresentativeStaging hk L)
     (B : Board n) :
     ∃ C : Board n, ∃ p : Path B C,
-      2*p.length ≤ L+18*k^2*n+24*k^2*n^2 ∧ (blank C).1.val = n-1 ∧
+      2*p.length ≤ L+18*k^2*n+48*k^2*n^2 ∧ (blank C).1.val = n-1 ∧
       (∀ (i : GroupIndex k) (c : Cell n), horizontal i c → C c ∈ targetGroup i) ∧
       (∀ (j i : GroupIndex k) (c : Cell n), c ∈ stagingC j i → C c ∈ targetGroup i) ∧
       (∀ i : GroupIndex k, i ≠ lastGroup k hk → C (representativeDestination hk i) ∈ targetGroup i) ∧
@@ -140,19 +140,20 @@ theorem exists_vertical_band_path {n k : ℕ} (hk : Dims n k) [NeZero n]
     ∃ C : Board n, ∃ p : Path B C,
       2*p.length ≤ k^4*(8*side n k^2+4*n+8*side n k) ∧ blank C = blank B ∧
       (∀ (r : Fin n) (c : Fin (k^3)),
-        a*side n k+k ≤ r.val → r.val < (a+1)*side n k →
+        a*side n k+2*k ≤ r.val → r.val < (a+1)*side n k →
         C (r,⟨verticalDestination (side n k) k c.val,by
           have := verticalDestination_bounds hk c.val c.isLt; omega⟩) =
         B (r,⟨c.val,by have := vertical_geometry hk; have := c.isLt; omega⟩)) ∧
       (∀ x : Cell n, ¬ verticalPreparationBand k a x ∨ n-k^2 ≤ x.2.val → C x = B x) := by
   have hg := vertical_geometry hk
   have hk2 := hk.two_le
+  have h2k : 2*k+2 ≤ side n k := by have := hk.sq_add_le; nlinarith
   have hblock : (a+1)*side n k ≤ n := hk.block_le ⟨a, ha⟩
-  have hrows : a*side n k+k+(side n k-k) = (a+1)*side n k := by
+  have hrows : a*side n k+2*k+(side n k-2*k) = (a+1)*side n k := by
     rw [Nat.add_mul, Nat.one_mul]
     omega
-  obtain ⟨C,p,hp,hbC,hcol,hfix⟩ := exists_descending_column_schedule_var B (a*side n k+k)
-    (side n k-k) (k^3) (side n k) (fun i => i/k^2) (by omega) (by omega) (by omega)
+  obtain ⟨C,p,hp,hbC,hcol,hfix⟩ := exists_descending_column_schedule_var B (a*side n k+2*k)
+    (side n k-2*k) (k^3) (side n k) (fun i => i/k^2) (by omega) (by omega) (by omega)
     (verticalDestination (side n k) k) (verticalDestination_strictMono hk2 (by omega)) (by
       intro i hi
       have hh := verticalDestination_bounds hk i hi
@@ -165,8 +166,8 @@ theorem exists_vertical_band_path {n k : ℕ} (hk : Dims n k) [NeZero n]
   refine ⟨C,p,?_,hbC,?_,?_⟩
   · have hsum := sum_div_sq_le hk2
     set t := ∑ i ∈ Finset.range (k^3), i/k^2
-    have hW : 4*n+side n k*(2*side n k+6*(side n k-k)+8) ≤ 8*side n k^2+4*n+8*side n k := by
-      have h1 : 2*side n k+6*(side n k-k)+8 ≤ 8*side n k+8 := by omega
+    have hW : 4*n+side n k*(2*side n k+6*(side n k-2*k)+8) ≤ 8*side n k^2+4*n+8*side n k := by
+      have h1 : 2*side n k+6*(side n k-2*k)+8 ≤ 8*side n k+8 := by omega
       have h2 := Nat.mul_le_mul_left (side n k) h1
       have h3 : side n k*(8*side n k+8) = 8*side n k^2+8*side n k := by ring
       omega
@@ -175,11 +176,11 @@ theorem exists_vertical_band_path {n k : ℕ} (hk : Dims n k) [NeZero n]
     have hmul := Nat.mul_le_mul_right (8*side n k^2+4*n+8*side n k) (show 2*t ≤ k^4 by omega)
     nlinarith
   · intro r c hrlo hrhi
-    let j : Fin (side n k-k) := ⟨r.val-(a*side n k+k),by omega⟩
+    let j : Fin (side n k-2*k) := ⟨r.val-(a*side n k+2*k),by omega⟩
     have hh := hcol c.val c.isLt j
-    have he : (⟨a*side n k+k+j.val,by omega⟩ : Fin n) = r := by
+    have he : (⟨a*side n k+2*k+j.val,by omega⟩ : Fin n) = r := by
       apply Fin.ext
-      change a*side n k+k+(r.val-(a*side n k+k)) = r.val
+      change a*side n k+2*k+(r.val-(a*side n k+2*k)) = r.val
       omega
     simpa only [he] using hh
   · intro x hx
@@ -198,7 +199,7 @@ theorem exists_vertical_spread_prefix {n k : ℕ} (hk : Dims n k) [NeZero n]
     ∃ C : Board n, ∃ p : Path B C,
       2*p.length ≤ R*(k^4*(8*side n k^2+4*n+8*side n k)) ∧ blank C = blank B ∧
       (∀ (a : ℕ) (ha : a < R) (r : Fin n) (c : Fin (k^3)),
-        a*side n k+k ≤ r.val → r.val < (a+1)*side n k →
+        a*side n k+2*k ≤ r.val → r.val < (a+1)*side n k →
         C (r,⟨verticalDestination (side n k) k c.val,by
           have := verticalDestination_bounds hk c.val c.isLt; omega⟩) =
         B (r,⟨c.val,by have := vertical_geometry hk; have := c.isLt; omega⟩)) ∧
@@ -300,7 +301,7 @@ theorem exists_preparation_path {n k : ℕ}
     (hk : Dims n k) [NeZero n] {L : ℕ} (hstaging : RepresentativeStaging hk L)
     (B : Board n) :
     ∃ C : Board n, ∃ p : Path B C,
-      2*p.length ≤ L+18*k^2*n+24*k^2*n^2+k^5*(8*side n k^2+4*n+8*side n k) ∧ Clear (k := k) C ∧ LastRepresentatives hk C := by
+      2*p.length ≤ L+18*k^2*n+48*k^2*n^2+k^5*(8*side n k^2+4*n+8*side n k) ∧ Clear (k := k) C ∧ LastRepresentatives hk C := by
   classical
   obtain ⟨A,p,hp,_,hH,hV,hR,hb⟩ := exists_horizontal_prepared_path hk hstaging B
   obtain ⟨C,q,hq,hclear,hfix⟩ := exists_vertical_preparation_path hk A hb hH hV

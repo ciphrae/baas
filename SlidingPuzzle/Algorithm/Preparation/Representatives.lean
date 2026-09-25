@@ -4,7 +4,7 @@ import SlidingPuzzle.Algorithm.Preparation.Staging
 
 /-! Stage the corridor quotas and install last-reservoir representatives.
 
-The spare tiles start on row `k²`, to the right of the compressed staging area.
+The spare tiles start on row `2k²`, to the right of the compressed staging area.
 A single row translation deposits them on row `n - 3` in the last reservoir.
 The access path and translation both preserve all original staging cells.
 This is a preparation subphase; spreading the staged corridors remains separate.
@@ -23,7 +23,7 @@ theorem preparation_geometry {n k : ℕ} (hk : Dims n k) :
 
 /-- Source of the spare representative for group `i`, outside the original quotas. -/
 def representativeSource {n k : ℕ} (hk : Dims n k) (i : GroupIndex k) : Cell n :=
-  (⟨k^2, by have := preparation_geometry hk; omega⟩,
+  (⟨2*k^2, by have := preparation_geometry hk; omega⟩,
    ⟨n-k^2+i.val, by
      have := preparation_geometry hk
      have hi : i.val < k^2 := by simp [pow_two]
@@ -34,7 +34,7 @@ private theorem representativeSource_not_staging {n k : ℕ} (hk : Dims n k)
   intro h
   have hh := stagingCells_compressed hk h
   have := preparation_geometry hk
-  change k^2 < k^2 ∨ n-k^2+i.val < k^3 at hh
+  change 2*k^2 < 2*k^2 ∨ n-k^2+i.val < k^3 at hh
   omega
 
 private theorem representativeSource_injective {n k : ℕ} (hk : Dims n k) :
@@ -100,12 +100,13 @@ theorem representative_destination_in_last_reservoir {n k : ℕ} (hk : Dims n k)
       (k-1)*side n k + side n k = (k-1+1)*side n k := by ring
       _ = k*side n k := by rw [Nat.sub_add_cancel (by omega : 1 ≤ k)]
       _ = n := hk.mul_side
+  have h2k : 2*k+3 ≤ side n k := by have := hk.sq_add_le; nlinarith
   simp only [reservoir, lastGroup, groupRow, groupCol, Equiv.symm_apply_apply,
     representativeDestination, representativeSource, Nat.add_mul, Nat.one_mul]
   omega
 
 /-- A staging construction: all compressed quotas and representatives are
-filled, with the blank below row `k²` and right of column `k³`. The length bound
+filled, with the blank below row `2k²` and right of column `k³`. The length bound
 is doubled so that half-integer leading coefficients are retained. -/
 def RepresentativeStaging {n k : ℕ} (hk : Dims n k) [NeZero n] (L : ℕ) : Prop :=
   ∀ B : Board n, ∃ C : Board n, ∃ p : Path B C,
@@ -114,7 +115,7 @@ def RepresentativeStaging {n k : ℕ} (hk : Dims n k) [NeZero n] (L : ℕ) : Pro
       c ∈ stagingCells i → C c ∈ targetGroup i) ∧
     (∀ i : GroupIndex k, i ≠ lastGroup k hk →
       C (representativeSource hk i) ∈ targetGroup i) ∧
-    k^2+1 ≤ (blank C).1.val ∧ k^3 ≤ (blank C).2.val
+    2*k^2+1 ≤ (blank C).1.val ∧ k^3 ≤ (blank C).2.val
 
 end
 end SlidingPuzzle.Partition

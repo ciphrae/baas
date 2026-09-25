@@ -11,7 +11,7 @@ def verticalDestination (s k i : ℕ) : ℕ := i/k^2*s+i%k^2
 
 /-- The data rows in the `a`-th block row, excluding horizontal corridors. -/
 def verticalPreparationBand {n : ℕ} (k a : ℕ) (c : Cell n) : Prop :=
-  a*side n k+k ≤ c.1.val ∧ c.1.val < (a+1)*side n k
+  a*side n k+2*k ≤ c.1.val ∧ c.1.val < (a+1)*side n k
 
 theorem vertical_geometry {n k : ℕ} (hk : Dims n k) :
     4 ≤ k^2 ∧ 2*k^2 ≤ k^3 ∧ k+2 ≤ side n k ∧ k^3 ≤ n ∧ 2*k^2 ≤ side n k := by

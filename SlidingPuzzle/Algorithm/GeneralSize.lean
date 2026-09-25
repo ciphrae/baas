@@ -9,19 +9,19 @@ import SlidingPuzzle.Parberry.Prefix
 Let `x = n^(1/4)`, `k = ⌊2x/3⌋ ≥ 2 and `s = ⌊n/k⌋ ≥ k³`. Solve the outer
 `d = n - k*s < k` rows and columns with the Parberry prefix and the remaining
 `k*s × k*s` board with `exists_admissible_solution`, whose doubled inefficiency
-is `14*k²s³ + 26*k⁵s² + O(k*s³)`. Here
+is `12*k²s³ + 26*k⁵s² + O(k*s³)`. Here
 
 * `k²s³ ≤ n³/k ≤ (3/2)x¹¹ + 4x¹⁰` because `k > 2x/3 - 1`,
 * `k⁵s² ≤ k³n² ≤ (8/27)x¹¹` because `k ≤ 2x/3`,
 * `k*s³ ≤ 4x¹⁰` because `k ≥ x/2`,
 * the prefix costs at most `103x¹⁰` because `d < k ≤ x`.
 
-The factor `2/3` is close to the minimizer `(14/78)^(1/4) ≈ 0.651` of
-`14/c + 26c³`; the paper's choice `c = 1` gives `40` instead of `28.71`.
+The factor `2/3` is close to the minimizer `(12/78)^(1/4) ≈ 0.626` of
+`12/c + 26c³`; the paper's choice `c = 1` gives `38` instead of `25.71`.
 For every `n ≥ 12⁴`,
 
 ```text
-inefficiency ≤ 14.36*n^(11/4) + 59859*n^(5/2)      (exists_solution_explicit)
+inefficiency ≤ 12.86*n^(11/4) + 78255*n^(5/2)      (exists_solution_explicit)
 ```
 
 This bound is also the local solver of Finish at the second level
@@ -43,8 +43,8 @@ theorem residual_dims {n k : ℕ} (hk : 2 ≤ k) (hlo : k^4 ≤ n) : Dims (k*(n/
 /-- Prefix and residual combined: an OPT bound in terms of `k` and `n`. -/
 theorem optimalLength_le_of_residual {n k : ℕ} [NeZero n]
     (B : ReachableBoard n) (hk : 2 ≤ k) (hlo : k^4 ≤ n) :
-    optimalLength B ≤ manhattan B.val + 14*(k^2*(n/k)^3)+26*(k^5*(n/k)^2)+
-      29864*(k*(n/k)^3) +
+    optimalLength B ≤ manhattan B.val + 12*(k^2*(n/k)^3)+26*(k^5*(n/k)^2)+
+      39064*(k*(n/k)^3) +
       2*((15*n^2+3002*n+1)*(n-k*(n/k))) := by
   have hdims := residual_dims hk hlo
   have hm4 := hdims.two_le_n
@@ -62,7 +62,7 @@ theorem optimalLength_le_of_residual {n k : ℕ} [NeZero n]
     residual_reachable (by omega : 2 ≤ k*(n/k)) (n-k*(n/k)) hd C hC A hA hreachC
   obtain ⟨q,_,hq⟩ := exists_admissible_solution hdims A hreachA
   rw [hside] at hq
-  have hq' : q.length ≤ manhattan A+(14*(k^2*(n/k)^3)+26*(k^5*(n/k)^2)+29864*(k*(n/k)^3)) := by
+  have hq' : q.length ≤ manhattan A+(12*(k^2*(n/k)^3)+26*(k^5*(n/k)^2)+39064*(k*(n/k)^3)) := by
     omega
   have h := optimalLength_le_prefix_residual_solution B (n-k*(n/k)) hd C p hC A hA q hq'
   omega
@@ -169,11 +169,11 @@ private theorem residual_terms {n k : ℕ} (hn : 12^4 ≤ n) (hlo : 81*k^4 ≤ 1
 theorem optimalLength_le_explicit {n : ℕ} [NeZero n]
     (hn : 12^4 ≤ n) (B : ReachableBoard n) :
     (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ)+
-      28.71*Real.rpow (n : ℝ) (11/4 : ℝ)+119718*Real.rpow (n : ℝ) (5/2 : ℝ) := by
+      25.71*Real.rpow (n : ℝ) (11/4 : ℝ)+156510*Real.rpow (n : ℝ) (5/2 : ℝ) := by
   obtain ⟨k,hk,hlo,hhi⟩ := exists_scaled_dimension 16 81 (by norm_num) (by omega) (n := n)
   have hnat := optimalLength_le_of_residual B hk (by linarith)
   have hreal : (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ)+
-      14*((k^2*(n/k)^3 : ℕ) : ℝ)+26*((k^5*(n/k)^2 : ℕ) : ℝ)+29864*((k*(n/k)^3 : ℕ) : ℝ)+
+      12*((k^2*(n/k)^3 : ℕ) : ℝ)+26*((k^5*(n/k)^2 : ℕ) : ℝ)+39064*((k*(n/k)^3 : ℕ) : ℝ)+
       2*(((15*n^2+3002*n+1)*(n-k*(n/k)) : ℕ) : ℝ) := by exact_mod_cast hnat
   obtain ⟨ha, hb, hc, hd⟩ := residual_terms hn hlo hhi
   obtain ⟨hx0, -, h11, h10⟩ := quarter_facts n
@@ -182,14 +182,14 @@ theorem optimalLength_le_explicit {n : ℕ} [NeZero n]
   linarith
 
 /-- The explicit bound as a legal solution: inefficiency at most
-`14.36*n^(11/4) + 59859*n^(5/2)` for every `n ≥ 12⁴`. -/
+`12.86*n^(11/4) + 78255*n^(5/2)` for every `n ≥ 12⁴`. -/
 theorem exists_solution_explicit {n : ℕ} [NeZero n]
     (hn : 12^4 ≤ n) (B : ReachableBoard n) :
     ∃ p : Path B.val (target n),
-      (p.inefficientMoves : ℝ) ≤ 14.36*Real.rpow (n : ℝ) (11/4 : ℝ)+
-        59859*Real.rpow (n : ℝ) (5/2 : ℝ) ∧
-      (p.length : ℝ) ≤ (manhattan B.val : ℝ)+28.71*Real.rpow (n : ℝ) (11/4 : ℝ)+
-        119718*Real.rpow (n : ℝ) (5/2 : ℝ) := by
+      (p.inefficientMoves : ℝ) ≤ 12.86*Real.rpow (n : ℝ) (11/4 : ℝ)+
+        78255*Real.rpow (n : ℝ) (5/2 : ℝ) ∧
+      (p.length : ℝ) ≤ (manhattan B.val : ℝ)+25.71*Real.rpow (n : ℝ) (11/4 : ℝ)+
+        156510*Real.rpow (n : ℝ) (5/2 : ℝ) := by
   obtain ⟨p,hp⟩ := shortest_witness B
   have hlength := optimalLength_le_explicit hn B
   rw [← hp] at hlength

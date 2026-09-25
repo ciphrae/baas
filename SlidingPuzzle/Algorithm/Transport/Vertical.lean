@@ -1,4 +1,5 @@
 import SlidingPuzzle.Moves.Corridor
+import SlidingPuzzle.Algorithm.Accounting
 import SlidingPuzzle.Algorithm.Transport.Labels
 
 /-! Vertical corridor segments with a remaining-distance budget. Segments
@@ -20,10 +21,11 @@ theorem exists_group_corridor_route {n k : ℕ} [NeZero n]
     (a b : Fin n) (hab : a ≤ b) (B : Board n) (hb : blank B = line a)
     (hg : ∀ x : Fin n, a ≤ x → x ≤ b → x ≠ a → B (line x) ∈ targetGroup i) :
     ∃ C : Board n, ∃ p : Path B C,
-      blank C = line b ∧ GroupEquivalent i B C ∧ p.inefficientMoves ≤ cap-a.val := by
-  obtain ⟨C, p, hC, _hp, he, hgroup, hfix⟩ := exists_increasing_corridor_path
+      blank C = line b ∧ GroupEquivalent i B C ∧ p.inefficientMoves ≤ cap-a.val ∧
+        p.inefficientMoves ≤ b.val-a.val := by
+  obtain ⟨C, p, hC, hp, he, hgroup, hfix⟩ := exists_increasing_corridor_path
     line hinj hadj (targetGroup (n := n) i : Set (Tile n)) cap hefficient a b hab B hb hg
-  refine ⟨C, p, hC, ?_, he⟩
+  refine ⟨C, p, hC, ?_, he, hp ▸ p.inefficientMoves_le_length⟩
   let S : Set (Cell n) := {c | ∃ x : Fin n, a ≤ x ∧ x ≤ b ∧ line x = c}
   apply groupEquivalent_of_region hk i B C S
     ⟨a, le_rfl, hab, hb.symm⟩ ⟨b, hab, le_rfl, hC.symm⟩

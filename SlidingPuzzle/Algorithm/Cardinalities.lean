@@ -7,11 +7,11 @@ namespace SlidingPuzzle.Partition
 noncomputable section
 open Classical
 
-private def axis (n lo hi : ℕ) : Finset (Fin n) := by
+def axis (n lo hi : ℕ) : Finset (Fin n) := by
   classical
   exact Finset.univ.filter fun x => lo ≤ x.val ∧ x.val < hi
 
-private theorem card_axis (n lo hi : ℕ) (hhi : hi ≤ n) :
+theorem card_axis (n lo hi : ℕ) (hhi : hi ≤ n) :
     (axis n lo hi).card = hi - lo := by
   classical
   unfold axis
@@ -23,7 +23,7 @@ private theorem card_axis (n lo hi : ℕ) (hhi : hi ≤ n) :
       right_inv := by intro x; apply Fin.ext; simp }
   exact (Fintype.card_congr e).trans (Fintype.card_fin _)
 
-private theorem card_rectangle {n : ℕ} (xl xh yl yh : ℕ) (hx : xh ≤ n) (hy : yh ≤ n) :
+theorem card_rectangle {n : ℕ} (xl xh yl yh : ℕ) (hx : xh ≤ n) (hy : yh ≤ n) :
     (Finset.univ.filter (fun c : Cell n =>
       xl ≤ c.1.val ∧ c.1.val < xh ∧ yl ≤ c.2.val ∧ c.2.val < yh)).card =
       (xh-xl)*(yh-yl) := by
@@ -64,34 +64,51 @@ def squareCells {n k : ℕ} (i : GroupIndex k) : Finset (Cell n) := by
   classical
   exact Finset.univ.filter (square i)
 
-/-- The part of a horizontal corridor in a single column block. -/
-def horizontalSliceCells {n k : ℕ} (i : GroupIndex k) (b : Fin k) : Finset (Cell n) := by
+/-- Two distinct rows over a column interval. -/
+theorem card_two_rows {n : ℕ} (r₁ r₂ yl yh : ℕ) (hr : r₁ ≠ r₂) (hr₁ : r₁ < n)
+    (hr₂ : r₂ < n) (hy : yh ≤ n) :
+    (Finset.univ.filter (fun c : Cell n =>
+      (c.1.val = r₁ ∨ c.1.val = r₂) ∧ yl ≤ c.2.val ∧ c.2.val < yh)).card = 2*(yh-yl) := by
   classical
-  exact Finset.univ.filter fun c => horizontal i c ∧
-    b.val*side n k ≤ c.2.val ∧ c.2.val < (b.val+1)*side n k
-
-@[simp] theorem mem_horizontalSliceCells {n k : ℕ} (i : GroupIndex k) (b : Fin k)
-    (c : Cell n) : c ∈ horizontalSliceCells i b ↔
-      horizontal i c ∧ b.val*side n k ≤ c.2.val ∧ c.2.val < (b.val+1)*side n k := by
-  simp [horizontalSliceCells]
-
-theorem card_horizontalSlice {n k : ℕ} (hd : Dims n k)
-    (i : GroupIndex k) (b : Fin k) : (horizontalSliceCells (n := n) i b).card = side n k := by
-  let r := (groupRow i).val*side n k+(groupCol i).val
-  have hr : r+1 ≤ n := by
-    have he := block_end_le hd (groupRow i)
-    have hb := (groupCol i).isLt
-    have hg := (side_ge' hd).1
-    dsimp [r]
-    nlinarith
-  have he : horizontalSliceCells (n := n) i b = Finset.univ.filter (fun c : Cell n =>
-      r ≤ c.1.val ∧ c.1.val < r+1 ∧ b.val*side n k ≤ c.2.val ∧ c.2.val < (b.val+1)*side n k) := by
-    ext c
-    simp only [mem_horizontalSliceCells,horizontal,Finset.mem_filter,Finset.mem_univ,true_and]
-    dsimp [r]
+  have he : (Finset.univ.filter (fun c : Cell n =>
+      (c.1.val = r₁ ∨ c.1.val = r₂) ∧ yl ≤ c.2.val ∧ c.2.val < yh)) =
+      Finset.univ.filter (fun c : Cell n =>
+        r₁ ≤ c.1.val ∧ c.1.val < r₁+1 ∧ yl ≤ c.2.val ∧ c.2.val < yh) ∪
+      Finset.univ.filter (fun c : Cell n =>
+        r₂ ≤ c.1.val ∧ c.1.val < r₂+1 ∧ yl ≤ c.2.val ∧ c.2.val < yh) := by
+    ext c; simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_union]; omega
+  rw [he, Finset.card_union_of_disjoint, card_rectangle _ _ _ _ (by omega) hy,
+    card_rectangle _ _ _ _ (by omega) hy]
+  · simp only [Nat.add_sub_cancel_left, one_mul]; ring
+  · apply Finset.disjoint_left.mpr
+    intro c h1 h2
+    simp only [Finset.mem_filter, Finset.mem_univ, true_and] at h1 h2
     omega
-  rw [he,card_rectangle r (r+1) _ _ hr (block_end_le hd b)]
-  simp [Nat.add_mul]
+
+/-- The two rows of `H_i` are distinct rows of the board. -/
+theorem horizontal_rows {n k : ℕ} (hd : Dims n k) (i : GroupIndex k) :
+    corridorRow (n := n) i false ≠ corridorRow (n := n) i true ∧
+    corridorRow (n := n) i false < n ∧ corridorRow (n := n) i true < n := by
+  have hb := (groupCol i).isLt
+  obtain ⟨hk2, h2, h3, hs, -⟩ := hd.facts
+  have h2k : 2*k < side n k := by nlinarith
+  have hn1 := nextBand_lt hk2 (groupRow i).val
+  have he := block_end_le hd (groupRow i)
+  have he' : (nextBand k (groupRow i).val+1)*side n k ≤ n := block_end_le hd ⟨_, hn1⟩
+  simp only [Nat.add_mul, Nat.one_mul] at he he'
+  unfold corridorRow
+  simp only [Bool.false_eq_true, ↓reduceIte, ]
+  refine ⟨fun h => ?_, by omega, by omega⟩
+  rcases lt_trichotomy (groupRow i).val (nextBand k (groupRow i).val) with hl | hl | hl
+  · have := Nat.mul_le_mul_right (side n k) (show (groupRow i).val+1 ≤ nextBand k (groupRow i).val by omega)
+    rw [Nat.add_mul, Nat.one_mul] at this; omega
+  · exfalso; unfold nextBand at hl
+    have hk := (groupRow i).isLt
+    rcases Nat.lt_or_ge ((groupRow i).val+1) k with h' | h'
+    · rw [Nat.mod_eq_of_lt h'] at hl; omega
+    · rw [show (groupRow i).val+1 = k by omega, Nat.mod_self] at hl; omega
+  · have := Nat.mul_le_mul_right (side n k) (show nextBand k (groupRow i).val+1 ≤ (groupRow i).val by omega)
+    rw [Nat.add_mul, Nat.one_mul] at this; omega
 
 @[simp] theorem mem_horizontalCells {n k : ℕ} (i : GroupIndex k) (c : Cell n) :
     c ∈ horizontalCells i ↔ horizontal i c := by classical simp [horizontalCells]
@@ -103,28 +120,21 @@ theorem card_horizontalSlice {n k : ℕ} (hd : Dims n k)
     c ∈ squareCells i ↔ square i c := by classical simp [squareCells]
 
 theorem card_horizontal {n k : ℕ} (hd : Dims n k) (i : GroupIndex k) :
-    (horizontalCells (n := n) i).card = n := by
+    (horizontalCells (n := n) i).card = 2*n := by
   classical
-  let r := (groupRow i).val*side n k+(groupCol i).val
-  have hrow : r+1 ≤ n := by
-    have he := block_end_le hd (groupRow i)
-    have hb := (groupCol i).isLt
-    have hg := (side_ge' hd).1
-    dsimp [r]
-    nlinarith
-  have he : horizontalCells (n := n) i =
-      Finset.univ.filter (fun c : Cell n => r ≤ c.1.val ∧ c.1.val < r+1 ∧
-        0 ≤ c.2.val ∧ c.2.val < n) := by
+  obtain ⟨h1, h2, h3⟩ := horizontal_rows hd i
+  have he : horizontalCells (n := n) i = Finset.univ.filter (fun c : Cell n =>
+      (c.1.val = corridorRow (n := n) i false ∨ c.1.val = corridorRow (n := n) i true) ∧
+      0 ≤ c.2.val ∧ c.2.val < n) := by
     ext c
-    simp only [mem_horizontalCells, horizontal, Finset.mem_filter, Finset.mem_univ, true_and]
+    simp only [mem_horizontalCells, Finset.mem_filter, Finset.mem_univ, true_and, horizontal]
     have := c.2.isLt
-    dsimp [r]
     omega
-  rw [he, card_rectangle r (r+1) 0 n hrow le_rfl]
+  rw [he, card_two_rows _ _ _ _ h1 h2 h3 le_rfl]
   simp
 
 theorem card_vertical {n k : ℕ} (hd : Dims n k) (i j : GroupIndex k) :
-    (verticalCells (n := n) i j).card = side n k-k := by
+    (verticalCells (n := n) i j).card = side n k-2*k := by
   classical
   let x := (groupRow i).val*side n k
   let y := (groupCol i).val*side n k+j.val
@@ -136,24 +146,31 @@ theorem card_vertical {n k : ℕ} (hd : Dims n k) (i j : GroupIndex k) :
     dsimp [y]
     nlinarith
   have he : verticalCells (n := n) i j =
-      Finset.univ.filter (fun c : Cell n => x+k ≤ c.1.val ∧
+      Finset.univ.filter (fun c : Cell n => x+2*k ≤ c.1.val ∧
         c.1.val < ((groupRow i).val+1)*side n k ∧ y ≤ c.2.val ∧ c.2.val < y+1) := by
     ext c
     simp only [mem_verticalCells, vertical, Finset.mem_filter, Finset.mem_univ, true_and]
     dsimp [x,y]
     omega
-  rw [he, card_rectangle (x+k) _ y (y+1) hx hy]
+  rw [he, card_rectangle (x+2*k) _ y (y+1) hx hy]
   dsimp [x]
-  simp [Nat.add_mul, Nat.add_sub_add_left]
+  simp only [Nat.add_mul, Nat.one_mul, Nat.add_sub_cancel_left, mul_one]
+  omega
 
 theorem card_reservoir {n k : ℕ} (hd : Dims n k) (i : GroupIndex k) :
-    (reservoirCells (n := n) i).card = (side n k-k)*(side n k-k^2) := by
+    (reservoirCells (n := n) i).card = (side n k-2*k)*(side n k-k^2) := by
   classical
-  unfold reservoirCells reservoir
-  have h := card_rectangle (n := n) ((groupRow i).val*side n k+k) (((groupRow i).val+1)*side n k)
+  have h := card_rectangle (n := n) ((groupRow i).val*side n k+2*k)
+    (((groupRow i).val+1)*side n k)
     ((groupCol i).val*side n k+k^2) (((groupCol i).val+1)*side n k)
     (block_end_le hd (groupRow i)) (block_end_le hd (groupCol i))
-  simpa [Nat.add_mul, Nat.add_sub_add_left] using h
+  have he : reservoirCells (n := n) i = Finset.univ.filter (fun c : Cell n =>
+      (groupRow i).val*side n k+2*k ≤ c.1.val ∧ c.1.val < ((groupRow i).val+1)*side n k ∧
+      (groupCol i).val*side n k+k^2 ≤ c.2.val ∧ c.2.val < ((groupCol i).val+1)*side n k) := by
+    ext c
+    simp only [mem_reservoirCells, reservoir, Finset.mem_filter, Finset.mem_univ, true_and]
+  rw [he, h, Nat.add_mul, Nat.add_mul, Nat.one_mul, Nat.add_sub_add_left,
+    Nat.add_sub_add_left]
 
 theorem card_square {n k : ℕ} (hd : Dims n k) (i : GroupIndex k) :
     (squareCells (n := n) i).card = side n k^2 := by

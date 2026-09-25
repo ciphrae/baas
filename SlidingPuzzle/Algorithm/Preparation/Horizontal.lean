@@ -30,26 +30,43 @@ theorem horizontalDestination_strictMono {s k : ℕ} (hk : 2 ≤ k) (hs : k+3 �
       _ ≤ horizontalDestination s k j := Nat.le_add_right _ _
 
 private theorem horizontalDestination_bounds {n k : ℕ} (hk : Dims n k)
-    (i : ℕ) (hi : i < k*k) :
-    i ≤ horizontalDestination (side n k) k i ∧ horizontalDestination (side n k) k i+4 ≤ n := by
+    (i : ℕ) (hi : i < 2*k*k) :
+    i ≤ horizontalDestination (side n k) (2*k) i ∧
+      horizontalDestination (side n k) (2*k) i+4 ≤ n := by
   have hk2 := hk.two_le
-  have hs := hk.k_add_two_le
   have hs3 := hk.sq_add_le
-  have hid := Nat.div_add_mod' i k
-  have himod := Nat.mod_lt i (by omega : 0 < k)
-  have hidiv : i/k < k := (Nat.div_lt_iff_lt_mul (by omega)).mpr hi
-  have hmul := Nat.mul_le_mul_left (i/k) (show k ≤ side n k by omega)
-  have hblock : i/k*side n k+side n k ≤ n := by
+  have h2k : 2*k+4 ≤ side n k := by nlinarith
+  have hid := Nat.div_add_mod' i (2*k)
+  have himod := Nat.mod_lt i (by omega : 0 < 2*k)
+  have hidiv : i/(2*k) < k := (Nat.div_lt_iff_lt_mul (by omega)).mpr (by
+    rw [Nat.mul_comm] at hi; simpa [Nat.mul_assoc, Nat.mul_comm, Nat.mul_left_comm] using hi)
+  have hmul := Nat.mul_le_mul_left (i/(2*k)) (show 2*k ≤ side n k by omega)
+  have hblock : i/(2*k)*side n k+side n k ≤ n := by
     calc
-      i/k*side n k+side n k = (i/k+1)*side n k := by ring
+      i/(2*k)*side n k+side n k = (i/(2*k)+1)*side n k := by ring
       _ ≤ k*side n k := Nat.mul_le_mul_right _ hidiv
       _ = n := hk.mul_side
-  have hkk : k ≤ k^2 := by nlinarith
   unfold horizontalDestination
   omega
 
-theorem horizontalDestination_group {n k : ℕ} (i : GroupIndex k) :
-    horizontalDestination (side n k) k i.val = (groupRow i).val*side n k+(groupCol i).val := rfl
+/-- The staged rows are sent to the rows of `H_i`. -/
+theorem horizontalDestination_stagedRow {n k : ℕ} (hk : Dims n k) (i : GroupIndex k)
+    (low : Bool) :
+    horizontalDestination (side n k) (2*k) (stagedRow k i low) = corridorRow (n := n) i low := by
+  have hb := (groupCol i).isLt
+  have hk2 := hk.two_le
+  have hdm : ∀ a o : ℕ, o < 2*k →
+      horizontalDestination (side n k) (2*k) (a*(2*k)+o) = a*side n k+o := by
+    intro a o ho
+    have h2 : 0 < 2*k := by omega
+    unfold horizontalDestination
+    rw [Nat.add_comm (a*(2*k)) o, Nat.add_mul_div_right _ _ h2, Nat.div_eq_of_lt ho,
+      Nat.add_mul_mod_self_right, Nat.mod_eq_of_lt ho]
+    ring
+  unfold stagedRow corridorRow
+  cases low <;> simp only [Bool.false_eq_true, ↓reduceIte]
+  · exact hdm _ _ (by omega)
+  · rw [Nat.add_assoc, hdm _ _ (by omega), Nat.add_assoc]
 
 /-- Fill all horizontal corridors from their staged rows. The compressed vertical
 quotas and explicit representative row survive, and the blank stays on the last row. -/
@@ -58,7 +75,7 @@ theorem exists_horizontal_preparation_path {n k : ℕ} (hk : Dims n k)
     (hstage : ∀ (i : GroupIndex k) (c : Cell n), c ∈ stagingCells i → B c ∈ targetGroup i)
     (hblank : (blank B).1.val = n-1) :
     ∃ C : Board n, ∃ p : Path B C,
-      p.length ≤ 12*n^2*k^2 ∧ blank C = blank B ∧
+      p.length ≤ 24*n^2*k^2 ∧ blank C = blank B ∧
       (∀ (i : GroupIndex k) (c : Cell n), horizontal i c → C c ∈ targetGroup i) ∧
       (∀ (j i : GroupIndex k) (c : Cell n), c ∈ stagingC j i → C c = B c) ∧
       (∀ i : GroupIndex k, C (representativeDestination hk i) = B (representativeDestination hk i)) := by
@@ -66,8 +83,9 @@ theorem exists_horizontal_preparation_path {n k : ℕ} (hk : Dims n k)
   have hk3 : 4 ≤ k^3 := by have := hk.two_le; omega
   have hwidth : k^3+4 ≤ n := by omega
   obtain ⟨C,p,hp,hb,hrow,hfix⟩ := exists_descending_row_schedule B (k^3) (n-k^3)
-    (k*k) (by omega) (by omega) (horizontalDestination (side n k) k)
-    (horizontalDestination_strictMono hk.two_le (by have := hk.k_add_two_le; omega))
+    (2*k*k) (by omega) (by omega) (horizontalDestination (side n k) (2*k))
+    (horizontalDestination_strictMono (by have := hk.two_le; omega)
+      (by have := hk.sq_add_le; have := hk.two_le; nlinarith))
     (by
       intro i hi
       have hh := horizontalDestination_bounds hk i hi
@@ -75,20 +93,25 @@ theorem exists_horizontal_preparation_path {n k : ℕ} (hk : Dims n k)
       omega)
   refine ⟨C,p,?_,hb,?_,?_,?_⟩
   · calc
-      p.length ≤ 12*n^2*(k*k) := hp
-      _ = 12*n^2*k^2 := by ring
+      p.length ≤ 12*n^2*(2*k*k) := hp
+      _ = 24*n^2*k^2 := by ring
   · intro i c hc
-    have hdest : c.1.val = horizontalDestination (side n k) k i.val := by
-      rw [horizontalDestination_group]
-      exact hc
     by_cases hcol : c.2.val < k^3
     · rw [hfix c (Or.inr (Or.inl hcol))]
       exact hstage i c ((mem_stagingCells i c).mpr
         (Or.inl ((mem_stagingA i c).mpr ⟨hc,hcol⟩)))
-    · let j : Fin (n-k^3) := ⟨c.2.val-k^3,by have := c.2.isLt; omega⟩
-      have hh := hrow i.val i.isLt j
-      have he : (⟨horizontalDestination (side n k) k i.val,by
-          have := horizontalDestination_bounds hk i.val i.isLt; omega⟩,
+    · obtain ⟨low, hlow⟩ : ∃ low, c.1.val = corridorRow (n := n) i low := by
+        rcases hc with h | h
+        · exact ⟨false, h⟩
+        · exact ⟨true, h⟩
+      have hρ := stagedRow_lt hk.two_le i low
+      have hρ' : stagedRow k i low < 2*k*k := by rw [pow_two] at hρ; linarith
+      have hdest : c.1.val = horizontalDestination (side n k) (2*k) (stagedRow k i low) := by
+        rw [horizontalDestination_stagedRow hk]; exact hlow
+      let j : Fin (n-k^3) := ⟨c.2.val-k^3,by have := c.2.isLt; omega⟩
+      have hh := hrow (stagedRow k i low) hρ' j
+      have he : (⟨horizontalDestination (side n k) (2*k) (stagedRow k i low),by
+          have := horizontalDestination_bounds hk _ hρ'; omega⟩,
           ⟨k^3+j.val,by have := c.2.isLt; dsimp [j]; omega⟩) = c := by
         apply Prod.ext <;> apply Fin.ext
         · exact hdest.symm
@@ -99,7 +122,10 @@ theorem exists_horizontal_preparation_path {n k : ℕ} (hk : Dims n k)
       apply (mem_stagingCells i _).mpr
       right; left
       apply (mem_stagingB i _).mpr
-      exact ⟨rfl,by simp only; omega⟩
+      refine ⟨?_, by simp only; omega⟩
+      cases low
+      · exact Or.inl rfl
+      · exact Or.inr rfl
   · intro j i c hc
     apply hfix
     right; left
@@ -115,7 +141,7 @@ theorem exists_horizontal_preparation_path {n k : ℕ} (hk : Dims n k)
     left
     intro j hj
     have hh := horizontalDestination_bounds hk j hj
-    change horizontalDestination (side n k) k j < n-3
+    change horizontalDestination (side n k) (2*k) j < n-3
     omega
 
 end
