@@ -233,7 +233,7 @@ theorem exists_shiftWord {n : ℕ} [NeZero n] (row col : ℕ → Fin n) (m : ℕ
     (mem_shiftWord m) (walk_shiftWord m) X hX
   have hM := manhattan_le_trace hrow hcol (1,0) (shiftWord m) hb (mem_shiftWord m) X Y hX hE hY
   simp only [trace_shiftWord] at hM hY
-  refine ⟨Y, _, hE, by simpa using length_shiftWord m, hM.trans
+  refine ⟨Y, _, hE, by simp [length_shiftWord m], hM.trans
     (Nat.add_le_add_left (sum_sdist_shiftEffect m) _), ?_, ?_, ?_⟩
   · have h0 : Y (row 1, col 0) = 0 := by
       have := hY (1,0) hb
@@ -245,5 +245,26 @@ theorem exists_shiftWord {n : ℕ} [NeZero n] (row col : ℕ → Fin n) (m : ℕ
   · intro x hx
     obtain ⟨c, hc, rfl⟩ := List.mem_map.mp hx
     exact ⟨c.1, c.2, (mem_shiftWord m c hc).1, (mem_shiftWord m c hc).2, rfl⟩
+
+open Strip in
+/-- `exists_shiftWord` with its exact effect: the rotation `shiftEffect` on the
+strip; nothing outside the strip changes. -/
+theorem exists_shiftWord_trace {n : ℕ} [NeZero n] (row col : ℕ → Fin n) (m : ℕ)
+    (hrow : StripCol row 2) (hcol : StripCol col (m+1)) (X : Board n)
+    (hX : blank X = (row 1, col 0)) :
+    ∃ Y : Board n, ∃ cs : List (Cell n), Executes X cs Y ∧ cs.length ≤ 6*m+6 ∧
+      (∀ q, region 2 (m+1) q → Y (emb row col q) = X (emb row col (shiftEffect m q))) ∧
+      (∀ x, (∀ q, region 2 (m+1) q → x ≠ emb row col q) → Y x = X x) := by
+  have hb : region 2 (m+1) (1,0) := by simp [region]
+  obtain ⟨Y, hE, hY⟩ := exists_executes_trace hrow hcol (1,0) (shiftWord m) hb
+    (mem_shiftWord m) (walk_shiftWord m) X hX
+  refine ⟨Y, _, hE, by simp [length_shiftWord m],
+    fun q hq => by rw [hY q hq, trace_shiftWord], ?_⟩
+  intro x hx
+  apply hE.preserves
+  · rw [hX]; exact hx (1,0) hb
+  · intro h
+    obtain ⟨c, hc, rfl⟩ := List.mem_map.mp h
+    exact hx c (mem_shiftWord m c hc) rfl
 
 end SlidingPuzzle

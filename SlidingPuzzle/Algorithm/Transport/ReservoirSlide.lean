@@ -1,4 +1,4 @@
-import SlidingPuzzle.Algorithm.Transport.BoardMatrix
+import SlidingPuzzle.Algorithm.Transport.Potential
 
 /-! Moves inside one reservoir. Transport only needs reservoir counts and clear
 corridors, so the blank may rearrange its own reservoir freely. -/
@@ -23,7 +23,8 @@ theorem boardMatrix_swap_same_reservoir {n k : ℕ} (hk : Dims n k) (B : Board n
     omega
 
 /-- Slide the blank along its column to any row `y` of its reservoir. Counts,
-clear corridors and every cell outside the reservoir are preserved. -/
+clear corridors, the charge of misplaced tiles (which stay in their column) and
+every cell outside the reservoir are preserved. -/
 theorem exists_reservoir_slide_path {n k : ℕ} [NeZero n] (hk : Dims n k)
     (B : Board n) (hB : Clear (k := k) B) (i : GroupIndex k)
     (hi : reservoir i (blank B)) (y : ℕ) (hy : (groupRow i).val*side n k+2*k ≤ y)
@@ -32,12 +33,13 @@ theorem exists_reservoir_slide_path {n k : ℕ} [NeZero n] (hk : Dims n k)
       Clear (k := k) C ∧ reservoir i (blank C) ∧
       (blank C).1.val = y ∧ (blank C).2 = (blank B).2 ∧
       boardMatrix hk C = boardMatrix hk B ∧
+      wrongPotential (k := k) C = wrongPotential (k := k) B ∧
       p.length = Nat.dist (blank B).1.val y ∧
       ∀ x : Cell n, ¬ reservoir i x → C x = B x := by
   generalize hm : Nat.dist (blank B).1.val y = m
   induction m generalizing B with
   | zero =>
-    refine ⟨B, .nil B, hB, hi, ?_, rfl, rfl, rfl, fun _ _ => rfl⟩
+    refine ⟨B, .nil B, hB, hi, ?_, rfl, rfl, rfl, rfl, fun _ _ => rfl⟩
     simp only [Nat.dist] at hm; omega
   | succ m ih =>
     have hlo := hi.1
@@ -55,13 +57,15 @@ theorem exists_reservoir_slide_path {n k : ℕ} [NeZero n] (hk : Dims n k)
     let B' := swapCells B (blank B) c
     have hB' : Clear (k := k) B' := clear_swap_reservoirs hk B hB hi hc
     have hb' : blank B' = c := blank_swapCells B c
-    obtain ⟨C, p, hC, hCi, hrow, hcol, hmat, hlen, hfix⟩ :=
+    obtain ⟨C, p, hC, hCi, hrow, hcol, hmat, hpot, hlen, hfix⟩ :=
       ih B' hB' (by rw [hb']; exact hc) (by
         rw [hb']; simp only [Nat.dist] at hm ⊢; dsimp [c, r]; split_ifs <;> omega)
-    refine ⟨C, (movePath B c hd).append p, hC, hCi, hrow, ?_, ?_, ?_, ?_⟩
+    refine ⟨C, (movePath B c hd).append p, hC, hCi, hrow, ?_, ?_, ?_, ?_, ?_⟩
     · rw [hcol, hb']
     · rw [hmat]
       exact boardMatrix_swap_same_reservoir hk B hi hc hne
+    · rw [hpot]
+      exact wrongPotential_swap_same hk B hi hc rfl
     · rw [Path.length_append, movePath_length, hlen]
       omega
     · intro x hx
