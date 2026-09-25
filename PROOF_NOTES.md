@@ -223,17 +223,50 @@ error, and absorbed (as `O(n^(41/16))`) only in `uniformApproximation`.
 
 ## Directions for improvement
 
-- **Transport (5, weight 1.67).** The entry slide and vertical travel each cost
-  up to `s` per transfer, exit and horizontal travel `3*s` together.
-- **Staging (7.5, weight 0.21).** The staging prefix places exact tiles, although only group
-  membership is needed. Moving rows of tiles along their own row costs about 2
-  moves per tile and cell, against 5–6 for single carries, which staging does not
-  exploit.
-- **Vertical spreading (4, weight 0.21).** Charging the translations at half their length
-  plus displacement needs a complete description of their effect on the band.
-- **Arrangement sideways moves (1.5, weight 0.21).** Families move sideways at
-  `6` per cell and along their axis at `2`; turning a column into a row for the
-  sideways leg costs only `O(s)` per tile, so the leading term could drop to
-  about `(4/3)*k⁵s²`.
-- **Parberry placements.** Tracking Manhattan changes through the `Zhong` words
-  would let carried tiles' own moves count as efficient in staging.
+Coefficients are halved (inefficiency units). At the balanced `k` the constant
+is `(4/3)*A^(3/4)*(3P)^(1/4)` with `A = 5` (Transport) and `P = 13`
+(Preparation 11.5, Arrangement 1.5), so one unit saved in `A` is worth about
+`1.67` and one unit in `P` about `0.21`.
+
+- **Arrangement sideways leg (1.5 → about 0.67; constant about −0.2).** Families
+  move sideways at `6` moves per tile and cell (protected column shifts) but along
+  their own axis at `2` (conveyor). Turning a column family into a row costs
+  only `O(s)` per tile, which is lower order. So the sideways leg could run as a
+  row conveyor, and the leading term would drop from `(8/3)*k⁵s²` to about
+  `(4/3)*k⁵s²`. This needs a column-to-row rearrangement lemma that tracks the
+  family and is otherwise free, since the staging is reversed anyway.
+- **Vertical spreading (4).** Staged columns move sideways into the vertical
+  corridors by chunked column translations (`6` per cell). With the conveyor and
+  family-swap machinery (`Moves/Conveyor.lean`, `Moves/FamilySwap.lean`),
+  moving them along their axis where possible, or converting them to rows,
+  should cut this substantially. Alternatively, charge the translations at half
+  their length plus displacement, which needs a complete description of their
+  effect on the band.
+- **Staging (7.5).** The staging prefix (Parberry column and row solves)
+  places exact tiles, although only group membership is needed, and charges
+  about `7.5*n` per tile regardless of position. Bulk moves are much cheaper:
+  moving `m` tiles one cell along their own row costs about `2m+3`, against
+  `5m` for single carries. Exploiting that needs the tiles grouped first, which
+  is the open difficulty. A redesign that fills each corridor from nearby tiles
+  of the right group, like the Arrangement change, is another option; so is
+  tracking Manhattan changes through the `Zhong` placement words, so that carried
+  tiles' own moves count as efficient.
+- **Transport (5, weight 1.67).** Per transfer: entry slide up to `s`, vertical
+  travel up to `s`, exit plus horizontal travel `3*s` on average (with
+  look-ahead). Ideas:
+  - Deeper look-ahead or a global choice of exit sides along the whole run; the
+    one-step game value is `3s`, so any gain must use more than one step.
+  - The entry slide moves the blank from the exit row to the top of its
+    reservoir. Choosing among several tiles of the right group in the source
+    reservoir (by row as well as column) could shorten it on average, though not
+    in the worst case.
+  - Vertical travel is inefficient only within the starting band; the same
+    edge-facing potential used for horizontal travel might apply to the row the
+    blank enters `H_i` from.
+- **Finish (lower order at two levels).** Nothing to gain at the leading order.
+  The inner level contributes the `O(n^(41/16))` remainder; a third level would
+  not change the leading constant.
+- **Remainder and thresholds.** The explicit bounds use loose envelopes (`k*s³`
+  with coefficients near `3*10⁴`), and `uniformApproximation` absorbs the
+  `n^(41/16)` term only at `n ≥ 359402^6`. Tightening these doesn't affect the
+  asymptotic constant.
