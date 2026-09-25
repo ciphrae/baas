@@ -88,6 +88,70 @@ theorem boardMatrix_mass_le {n k : ℕ} [NeZero n] (hk : Dims n k)
     _ = (k*side n k)^2 := by ring
     _ = n^2 := by rw [hk.mul_side]
 
+/-- Weighted off-diagonal mass for a cost that is `E₀` per transfer plus `X`
+for transfers out of the rightmost column of squares. Those reservoirs are only
+`k` of `k²`, so the surcharge totals at most `k*s²*X`. -/
+theorem weighted_boardMatrix_le {n k : ℕ} [NeZero n] (hk : Dims n k) (B : Board n)
+    (E₀ X : ℕ) :
+    ∑ r, TransportCounts.rowOff (boardMatrix hk B) r *
+        (E₀+if (groupCol (transportIndex k hk r)).val+1 = k then X else 0) ≤
+      n^2*E₀+k*(side n k)^2*X := by
+  have hrow (r : Fin (k*k-1+1)) : TransportCounts.rowOff (boardMatrix hk B) r ≤ side n k^2 := by
+    refine (TransportCounts.rowOff_le_rowSum _ r).trans ?_
+    have h := reservoirCount_row hk B (transportIndex k hk r)
+    unfold TransportCounts.rowSum boardMatrix
+    rw [(transportIndex k hk).sum_comp (fun c => reservoirCount B (transportIndex k hk r) c)]
+    have : (side n k-k)*(side n k-k^2) ≤ side n k^2 :=
+      calc _ ≤ side n k*side n k := Nat.mul_le_mul (Nat.sub_le _ _) (Nat.sub_le _ _)
+        _ = side n k^2 := (sq _).symm
+    split_ifs at h <;> omega
+  let P : GroupIndex k → Prop := fun g => (groupCol g).val+1 = k
+  have hsplit : ∑ r, TransportCounts.rowOff (boardMatrix hk B) r *
+      (E₀+if P (transportIndex k hk r) then X else 0) =
+      TransportCounts.offdiagMass (boardMatrix hk B)*E₀ +
+        ∑ r, TransportCounts.rowOff (boardMatrix hk B) r *
+          (if P (transportIndex k hk r) then X else 0) := by
+    rw [TransportCounts.offdiagMass_eq_sum_rowOff, Finset.sum_mul, ← Finset.sum_add_distrib]
+    apply Finset.sum_congr rfl
+    intro r _
+    ring
+  have hsurcharge : ∑ r, TransportCounts.rowOff (boardMatrix hk B) r *
+      (if P (transportIndex k hk r) then X else 0) ≤ k*(side n k)^2*X := by
+    calc
+      _ ≤ ∑ r, (fun g => if P g then side n k^2*X else 0) (transportIndex k hk r) := by
+        apply Finset.sum_le_sum
+        intro r _
+        dsimp only
+        split_ifs
+        · exact Nat.mul_le_mul_right _ (hrow r)
+        · simp
+      _ = ∑ g : GroupIndex k, (if P g then side n k^2*X else 0) :=
+        (transportIndex k hk).sum_comp (fun g => if P g then side n k^2*X else 0)
+      _ = ∑ q : Fin k × Fin k, (if P (finProdFinEquiv q) then side n k^2*X else 0) :=
+        (finProdFinEquiv.sum_comp (fun g => if P g then side n k^2*X else 0)).symm
+      _ = ∑ a : Fin k, ∑ b : Fin k, (if b.val+1 = k then side n k^2*X else 0) := by
+        rw [Fintype.sum_prod_type]
+        simp only [P, groupCol, Equiv.symm_apply_apply]
+      _ = k*(side n k)^2*X := by
+        have hk0 : 0 < k := by have := hk.two_le; omega
+        have hinner : ∑ b : Fin k, (if b.val+1 = k then side n k^2*X else 0) =
+            side n k^2*X := by
+          rw [Finset.sum_eq_single ⟨k-1, by omega⟩]
+          · simp; omega
+          · intro b _ hb
+            rw [if_neg]
+            intro h
+            exact hb (Fin.ext (by simp; omega))
+          · simp
+        simp only [hinner, Finset.sum_const, Finset.card_univ, Fintype.card_fin, smul_eq_mul]
+        ring
+  change ∑ r, TransportCounts.rowOff (boardMatrix hk B) r *
+      (E₀+if P (transportIndex k hk r) then X else 0) ≤ _
+  rw [hsplit]
+  have hmass := boardMatrix_mass_le hk B
+  have := Nat.mul_le_mul_right E₀ hmass
+  omega
+
 /-- The count run from a prepared board has at most `n²` transfers. -/
 theorem clear_board_count_run_quadratic {n k : ℕ} [NeZero n]
     (hk : Dims n k) (B : Board n) (hB : Clear (k := k) B)

@@ -182,6 +182,60 @@ theorem colSum_move_ne (C : CountMatrix m) {i j c : Fin (m + 1)} (hci : c ≠ i)
   intro r hr
   simp [move, hci]
 
+/-- The off-diagonal part of a row: units still to leave reservoir `r`. -/
+def rowOff (C : CountMatrix m) (r : Fin (m + 1)) : ℕ := ∑ c, if r = c then 0 else C r c
+
+theorem offdiagMass_eq_sum_rowOff (C : CountMatrix m) : offdiagMass C = ∑ r, rowOff C r := rfl
+
+theorem rowOff_le_rowSum (C : CountMatrix m) (r : Fin (m + 1)) : rowOff C r ≤ rowSum C r := by
+  apply Finset.sum_le_sum
+  intro c _
+  split <;> omega
+
+theorem rowOff_move_ne (C : CountMatrix m) {i j r : Fin (m + 1)} (hrj : r ≠ j) :
+    rowOff (move C i j) r = rowOff C r := by
+  apply Finset.sum_congr rfl
+  intro c _
+  by_cases hrc : r = c
+  · simp [hrc]
+  · simp only [hrc, ↓reduceIte, move, hrj, false_and]
+    split_ifs with h
+    · exact False.elim (hrc (h.1.trans h.2.symm))
+    · rfl
+
+theorem rowOff_move_source (C : CountMatrix m) {i j : Fin (m + 1)}
+    (hji : j ≠ i) (hpos : 0 < C j i) :
+    rowOff (move C i j) j + 1 = rowOff C j := by
+  unfold rowOff
+  rw [← Finset.sum_erase_add Finset.univ _ (Finset.mem_univ i)]
+  rw [← Finset.sum_erase_add Finset.univ (fun c => if j = c then 0 else C j c)
+    (Finset.mem_univ i)]
+  have hrest : ∑ c ∈ Finset.univ.erase i, (if j = c then 0 else move C i j j c) =
+      ∑ c ∈ Finset.univ.erase i, (if j = c then 0 else C j c) := by
+    apply Finset.sum_congr rfl
+    intro c hc
+    have hci : c ≠ i := (Finset.mem_erase.mp hc).1
+    simp [move, hji, hci]
+  rw [hrest]
+  simp only [hji, ↓reduceIte, move_at_source C hji]
+  omega
+
+/-- Each move uses one unit of its source row's off-diagonal mass, so the
+weighted mass pays for a source-dependent cost. -/
+theorem weighted_rowOff_move (C : CountMatrix m) (E : Fin (m + 1) → ℕ) {i j : Fin (m + 1)}
+    (hji : j ≠ i) (hpos : 0 < C j i) :
+    ∑ r, rowOff (move C i j) r * E r + E j = ∑ r, rowOff C r * E r := by
+  rw [← Finset.sum_erase_add Finset.univ _ (Finset.mem_univ j)]
+  rw [← Finset.sum_erase_add Finset.univ (fun r => rowOff C r * E r) (Finset.mem_univ j)]
+  have hrest : ∑ r ∈ Finset.univ.erase j, rowOff (move C i j) r * E r =
+      ∑ r ∈ Finset.univ.erase j, rowOff C r * E r := by
+    apply Finset.sum_congr rfl
+    intro r hr
+    rw [rowOff_move_ne C (Finset.mem_erase.mp hr).1]
+  rw [hrest, ← rowOff_move_source C hji hpos]
+  ring
+
+
 /-- If the last row has a zero in a non-last column, that whole column has no
 off-diagonal mass. -/
 def LastInvariant (C : CountMatrix m) : Prop :=

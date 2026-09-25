@@ -22,11 +22,11 @@ halved once at the end (`CostedPhase.exists_solution`).
 | phase | bound |
 | --- | --- |
 | Preparation | `2*ineff ≤ 23*k⁵s² + 9100*k*s³` |
-| Transport | `2*ineff ≤ 18*k²s³ + 900*k*s³` |
+| Transport | `2*ineff ≤ 12*k²s³ + 900*k*s³` |
 | Arrangement | `length ≤ 24*k⁵s² + 4100*k*s³` |
 | Finish | `length ≤ 5*k²s³ + 17164*k*s³` |
 
-Total: `2*ineff ≤ 23*k²s³ + 47*k⁵s² + 31264*k*s³` (`exists_admissible_solution`). -/
+Total: `2*ineff ≤ 17*k²s³ + 47*k⁵s² + 31264*k*s³` (`exists_admissible_solution`). -/
 namespace SlidingPuzzle.Algorithm
 open SlidingPuzzle.Partition
 
@@ -155,8 +155,8 @@ private theorem preparation_arith {k s : ℕ} (hk : 2 ≤ k) (hs : k^3 ≤ s) :
   omega
 
 private theorem transport_arith {k s : ℕ} (hk : 2 ≤ k) (hs : k^3 ≤ s) :
-    2*((k*s)^2*(8*s+(26*(k+2)+s+(k-1)*(26*(k+3)))+69*k^2+13*k+189)) ≤
-      18*(k^2*s^3)+900*(k*s^3) := by
+    2*((k*s)^2*(5*s+(26*(k+2)+s+(k-1)*(26*(k+3)))+75*k^2+13*k+189)+k*s^2*(3*s)) ≤
+      12*(k^2*s^3)+900*(k*s^3) := by
   obtain ⟨m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13⟩ := monomials hk hs
   have hcount : k-1+1=k := Nat.sub_add_cancel (by omega)
   have hv : (k-1)*(26*(k+3)) ≤ 26*k^2+52*k := by
@@ -164,11 +164,12 @@ private theorem transport_arith {k s : ℕ} (hk : 2 ≤ k) (hs : k^3 ≤ s) :
       calc (k-1)*(k+3)+(k+3) = (k-1+1)*(k+3) := by ring
         _ = k*(k+3) := by rw [hcount]
     nlinarith
-  have he : 8*s+(26*(k+2)+s+(k-1)*(26*(k+3)))+69*k^2+13*k+189 ≤
-      9*s+95*k^2+91*k+241 := by omega
+  have he : 5*s+(26*(k+2)+s+(k-1)*(26*(k+3)))+75*k^2+13*k+189 ≤
+      6*s+101*k^2+91*k+241 := by omega
   have hmul := Nat.mul_le_mul_left ((k*s)^2) he
-  have hexp : (k*s)^2*(9*s+95*k^2+91*k+241) =
-      9*(k^2*s^3)+95*(k^4*s^2)+91*(k^3*s^2)+241*(k^2*s^2) := by ring
+  have hexp : (k*s)^2*(6*s+101*k^2+91*k+241) =
+      6*(k^2*s^3)+101*(k^4*s^2)+91*(k^3*s^2)+241*(k^2*s^2) := by ring
+  have hexp' : k*s^2*(3*s) = 3*(k*s^3) := by ring
   rw [hexp] at hmul
   omega
 
@@ -204,13 +205,17 @@ theorem preparation_phase {n k : ℕ} (hk : Dims n k) [NeZero n] :
   dsimp [LeadingBudget.eval]
   omega
 
-/-- Transport: at most `n²` transfers of `9*s + O(k²)` inefficient moves. -/
+/-- Transport: at most `n²` transfers of `6*s + O(k²)` inefficient moves, plus
+`3*s` for each of the at most `k*s²` transfers out of the rightmost column. -/
 theorem transport_phase {n k : ℕ} (hk : Dims n k) [NeZero n] :
-    CostedPhase (n := n) k ⟨18,0,900⟩ (Prepared hk) (Transported hk) := by
+    CostedPhase (n := n) k ⟨12,0,900⟩ (Prepared hk) (Transported hk) := by
   intro B hB
   have hstep := transportStepBound_of_vertical_bound hk (verticalTransportBound hk)
   obtain ⟨D,p,hD,hp⟩ := exists_transport_path_of_step_bound hk hstep B hB
   refine ⟨D,p,hD,?_⟩
+  have hw := weighted_boardMatrix_le hk B
+    (5*side n k+(26*(k+2)+side n k+(k-1)*(26*(k+3)))+75*k^2+13*k+189) (3*side n k)
+  have hp' := hp.trans hw
   have h := transport_arith hk.two_le hk.cube_le
   rw [hk.mul_side] at h
   dsimp [LeadingBudget.eval]
@@ -242,12 +247,12 @@ theorem finish_bound {n k : ℕ} (hk : Dims n k) [NeZero n]
   omega
 
 /-- Every reachable board of admissible dimensions has a solution with at most
-`(23*k²s³ + 47*k⁵s²)/2 + 15632*k*s³` inefficient moves, where `s = side n k`. -/
+`(17*k²s³ + 47*k⁵s²)/2 + 15632*k*s³` inefficient moves, where `s = side n k`. -/
 theorem exists_admissible_solution {n k : ℕ} (hk : Dims n k) [NeZero n]
     (B : Board n) (hB : Reachable B) :
     ∃ p : Path B (target n),
-      2*p.inefficientMoves ≤ 23*(k^2*side n k^3)+47*(k^5*side n k^2)+31264*(k*side n k^3) ∧
-      p.length ≤ manhattan B+23*(k^2*side n k^3)+47*(k^5*side n k^2)+
+      2*p.inefficientMoves ≤ 17*(k^2*side n k^3)+47*(k^5*side n k^2)+31264*(k*side n k^3) ∧
+      p.length ≤ manhattan B+17*(k^2*side n k^3)+47*(k^5*side n k^2)+
         31264*(k*side n k^3) := by
   have hfinish (C : Board n) (hC : Transported hk C) :
       ∃ q : Path C (target n), q.length ≤ (LeadingBudget.mk 5 24 21264).eval k (side n k) := by

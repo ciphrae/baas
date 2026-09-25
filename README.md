@@ -18,14 +18,14 @@ no `sorry`, no custom axioms, and no hypotheses standing in for mathematical
 steps.
 
 The algorithmic heart is an explicit boardwise bound
-(`Algorithm.exists_solution_explicit`): for every `n ≥ 4096`, every reachable
+(`Algorithm.exists_solution_explicit`): for every `n ≥ 10000`, every reachable
 board has a legal solution with at most
 
 ```text
-24.14*n^(11/4) + 62677*n^(5/2)
+19.25*n^(11/4) + 62665*n^(5/2)
 ```
 
-inefficient moves, i.e. of length at most `Manhattan + 48.28*n^(11/4) + 125354*n^(5/2)`.
+inefficient moves, i.e. of length at most `Manhattan + 38.49*n^(11/4) + 125330*n^(5/2)`.
 
 ## Building
 
@@ -73,20 +73,20 @@ horizontal and vertical corridors and a reservoir. The construction only needs
 squares of side `s ≥ k³` (`Partition.Dims`), so it applies to every board of
 side `n = k*s`. The phases cost two different monomials, `k²s³ = n³/k` and
 `k⁵s² = k³n²`, which agree only when `s = k³`. Twice the inefficient moves are
-bounded by `23*k²s³ + 47*k⁵s² + 31264*k*s³`:
+bounded by `17*k²s³ + 47*k⁵s² + 31264*k*s³`:
 
 | Phase | What it does | Leading inefficiency |
 | --- | --- | ---: |
 | Preparation | Stage corridor tiles with a column prefix, spread them into the corridors | `11.5*k⁵s²` |
-| Transport | Algorithm 4: move tiles between reservoirs through the corridors, at most `n²` transfers | `9*k²s³` |
+| Transport | Algorithm 4: move tiles between reservoirs through the corridors, at most `n²` transfers, each leaving through the nearer side of its reservoir | `6*k²s³` |
 | Arrangement | Exchange corridor families so every tile is in its own square (length 24, halved) | `12*k⁵s²` |
 | Finish | Solve each square with the Parberry solver (length 5, halved) | `2.5*k²s³` |
 
-*Arbitrary sides* (`Algorithm/GeneralSize`). Take `k = ⌊(5/8)*n^(1/4)⌋` and
+*Arbitrary sides* (`Algorithm/GeneralSize`). Take `k = ⌊(3/5)*n^(1/4)⌋` and
 `s = ⌊n/k⌋ ≥ k³`. Only the outer `n - k*s < k` layers need the Parberry prefix,
 which is lower order. With `k ≈ c*n^(1/4)` the leading inefficiency is
-`(11.5/c + 23.5*c³)*n^(11/4)`; `c = 5/8` is close to the minimizer and gives
-`24.14` (the paper's `c = 1` gives `35`).
+`(8.5/c + 23.5*c³)*n^(11/4)`; `c = 3/5` is close to the minimizer and gives
+`19.25` (the paper's `c = 1` gives `32`).
 
 [`PROOF_NOTES.md`](PROOF_NOTES.md) relates each step to the paper, records where
 the formalization departs from the printed argument, and lists directions for
