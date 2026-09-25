@@ -4,7 +4,7 @@ import SlidingPuzzle.Parberry.MixedPrefix
 
 /-! Staging with a mixed prefix. The compressed staging quotas lie in the first
 `k³` columns or the first `k²` rows, and the representatives lie in row `k²`.
-Solving `k³` columns and `k²+1` rows costs about `7.5*k¹¹` moves; solving `k³`
+Solving `k³` columns and `k²+1` rows costs about `7.5*k³n²` moves; solving `k³`
 complete layers would cost twice as much. -/
 namespace SlidingPuzzle
 noncomputable section
@@ -13,7 +13,7 @@ open Classical
 section
 variable {n : ℕ} [NeZero n]
 
-theorem exists_mixed_group_path {k : ℕ} (hk : 2 ≤ k) (B : Board n) (hn : 4 ≤ n)
+theorem exists_mixed_group_path {k : ℕ} (hk : Partition.Dims n k) (B : Board n) (hn : 4 ≤ n)
     (r d : ℕ) (hd : d+4 ≤ n) (hr : r+2 ≤ n) (s : Finset (Cell n))
     (hs : ∀ c ∈ s, c.1.val<r ∨ c.2.val<d)
     (required : {c // c ∈ s} → Partition.GroupIndex k)
@@ -59,7 +59,7 @@ theorem exists_mixed_group_path {k : ℕ} (hk : 2 ≤ k) (B : Board n) (hn : 4 �
       omega
     omega
 
-theorem exists_mixed_disjoint_group_path {k : ℕ} (hk : 2 ≤ k) (B : Board n) (hn : 4 ≤ n)
+theorem exists_mixed_disjoint_group_path {k : ℕ} (hk : Partition.Dims n k) (B : Board n) (hn : 4 ≤ n)
     (r d : ℕ) (hd : d+4 ≤ n) (hr : r+2 ≤ n) (s : Partition.GroupIndex k → Finset (Cell n))
     (hdisjoint : (Set.univ : Set (Partition.GroupIndex k)).PairwiseDisjoint s)
     (hprefix : ∀ (i : Partition.GroupIndex k) (c : Cell n), c ∈ s i →
@@ -118,8 +118,8 @@ end
 
 namespace Partition
 
-theorem representativeStaging_mixed {k : ℕ} (hk : 2 ≤ k) [NeZero (k^4)] :
-    RepresentativeStaging hk ((k^3+(k^2+1))*(15*(k^4)^2+3002*k^4+1)) := by
+theorem representativeStaging_mixed {n k : ℕ} (hk : Dims n k) [NeZero n] :
+    RepresentativeStaging hk ((k^3+(k^2+1))*(15*n^2+3002*n+1)) := by
   intro B
   have hg := preparation_geometry hk
   obtain ⟨C,p,hp,hC,hb⟩ := exists_mixed_disjoint_group_path hk B (by omega) (k^2+1) (k^3)

@@ -33,7 +33,7 @@ theorem offdiagMass_eq_zero_iff {m : ℕ} (C : TransportCounts.CountMatrix m) :
 /-- A reservoir is sorted precisely when its concrete transport matrix has no
 off-diagonal mass. -/
 theorem reservoirSorted_iff_boardMatrix_offdiagMass_eq_zero {n k : ℕ} [NeZero n]
-    (hk : 2 ≤ k) (hn : n = k^4) (B : Board n) :
+    (hk : Dims n k) (B : Board n) :
     ReservoirSorted (k := k) B ↔
       TransportCounts.offdiagMass (boardMatrix hk B) = 0 := by
   constructor
@@ -55,7 +55,7 @@ theorem reservoirSorted_iff_boardMatrix_offdiagMass_eq_zero {n k : ℕ} [NeZero 
       exact (Finset.disjoint_left.mp (targetGroups_disjoint hk hrc')) hsorted' hgroup
     exact hrc ((transportIndex k hk).injective hindices)
   · intro hmass i a ha hnonzero
-    obtain ⟨j, hj⟩ := targetGroups_cover hk hn (B a) hnonzero
+    obtain ⟨j, hj⟩ := targetGroups_cover hk (B a) hnonzero
     by_cases hji : j = i
     · simpa [hji] using hj
     · have hrc : (transportIndex k hk).symm i ≠ (transportIndex k hk).symm j := by
@@ -72,15 +72,15 @@ theorem reservoirSorted_iff_boardMatrix_offdiagMass_eq_zero {n k : ℕ} [NeZero 
 /-- Once the corridors are clear and every nonblank reservoir tile is in its
 own target group, the blank occupies the final reservoir. -/
 theorem clear_reservoirSorted_blank_in_lastReservoir {n k : ℕ} [NeZero n]
-    (hk : 2 ≤ k) (hn : n = k^4) (B : Board n)
+    (hk : Dims n k) (B : Board n)
     (hclear : Clear (k := k) B) (hsorted : ReservoirSorted (k := k) B) :
     reservoir (lastGroup k hk) (blank B) := by
-  obtain ⟨i, hi⟩ := blank_in_reservoir hk hn B hclear
+  obtain ⟨i, hi⟩ := blank_in_reservoir hk B hclear
   let b := (transportIndex k hk).symm i
   have hb : reservoir (transportIndex k hk b) (blank B) := by
     simpa [b] using hi
   have hmass : TransportCounts.offdiagMass (boardMatrix hk B) = 0 :=
-    (reservoirSorted_iff_boardMatrix_offdiagMass_eq_zero hk hn B).mp hsorted
+    (reservoirSorted_iff_boardMatrix_offdiagMass_eq_zero hk B).mp hsorted
   have hall := (offdiagMass_eq_zero_iff _).mp hmass
   have hincoming : TransportCounts.incoming (boardMatrix hk B) b = 0 := by
     unfold TransportCounts.incoming
@@ -93,7 +93,7 @@ theorem clear_reservoirSorted_blank_in_lastReservoir {n k : ℕ} [NeZero n]
     intro c _ _ r hrc
     exact hall r c hrc
   obtain ⟨hblast, _⟩ := TransportCounts.terminal_of_margins (boardMatrix hk B) b
-    ((k^3-k)*(k^3-k^2)) (boardMatrix_margins hk hn B hclear b hb) hinvariant hincoming
+    ((side n k-k)*(side n k-k^2)) (boardMatrix_margins hk B hclear b hb) hinvariant hincoming
   rw [← transportIndex_last k hk, ← hblast]
   exact hb
 

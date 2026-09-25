@@ -10,12 +10,13 @@ noncomputable section
 open Classical
 namespace Partition
 section
-variable {k : ℕ} [NeZero (k^4)]
+variable {n k : ℕ} [NeZero n]
 
-theorem exists_arrangement_path (hk : 2 ≤ k) (B : Board (k^4))
+theorem exists_arrangement_path (hk : Dims n k) (B : Board n)
     (hclear : Clear (k := k) B) (hsorted : ReservoirSorted (k := k) B) :
-    ∃ C : Board (k^4), ∃ p : Path B C,
-      p.length ≤ (24*(k^3-k)+2032)*(k^4-k^2)*k^4 + (24*k^3+2032)*(k^3-k^2)*k^4 ∧ blank C = blank B ∧
+    ∃ C : Board n, ∃ p : Path B C,
+      p.length ≤ (24*(side n k-k)+2032)*(k^4-k^2)*n + (24*side n k+2032)*(k^3-k^2)*n ∧
+      blank C = blank B ∧
       SquaresSorted (k := k) C ∧
       ∀ (i : GroupIndex k) x, reservoir i x → C x = B x := by
   obtain ⟨D,p,hp,hbD,hDV,hDH,hDR⟩ := exists_vertical_arrangement_path hk B hclear
@@ -24,13 +25,13 @@ theorem exists_arrangement_path (hk : 2 ≤ k) (B : Board (k^4))
     rw [hDH i x hx]
     exact hclear.1 i x hx
   obtain ⟨C,q,hq,hbC,hCH,hCV,hCR⟩ := exists_horizontal_arrangement_path hk D hH
-  have hR (i : GroupIndex k) (x : Cell (k^4)) (hx : reservoir i x) : C x = B x :=
+  have hR (i : GroupIndex k) (x : Cell n) (hx : reservoir i x) : C x = B x :=
     (hCR i x hx).trans (hDR i x hx)
   refine ⟨C,p.append q,?_,hbC.trans hbD,?_,hR⟩
   · rw [Path.length_append]
     exact Nat.add_le_add hp hq
   · intro i x hxi hnonzero
-    rcases covers hk rfl x with ⟨j,hxH⟩ | ⟨j,l,hxV⟩ | ⟨j,hxR⟩
+    rcases covers hk x with ⟨j,hxH⟩ | ⟨j,l,hxV⟩ | ⟨j,hxR⟩
     · let a : SliceIndex k := (j,groupCol i)
       have hxa : x ∈ horizontalSliceCells a.1 a.2 := by
         apply (mem_horizontalSliceCells _ _ _).mpr

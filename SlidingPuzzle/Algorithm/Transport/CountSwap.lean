@@ -41,7 +41,7 @@ theorem reservoirCount_swap_balance {n k : ℕ} (B : Board n) (a b : Cell n)
   simpa only [reservoirCount,reservoirCells,Finset.sum_filter,ite_and,ite_self] using h
 
 /-- Reservoir swaps preserve the clear corridor condition. -/
-theorem clear_swap_reservoirs {n k : ℕ} (hk : 2 ≤ k) (B : Board n)
+theorem clear_swap_reservoirs {n k : ℕ} (hk : Dims n k) (B : Board n)
     (hB : Clear (k := k) B) {a b : Cell n} {i j : GroupIndex k}
     (ha : reservoir i a) (hb : reservoir j b) : Clear (k := k) (swapCells B a b) := by
   constructor
@@ -56,7 +56,7 @@ theorem clear_swap_reservoirs {n k : ℕ} (hk : 2 ≤ k) (B : Board n)
       (fun h => vertical_not_reservoir hk (h ▸ hc) hb)]
     exact hB.2 l m c hc
 /-- Exchanging the blank with an incoming tile gives exactly the count algorithm's update. -/
-theorem reservoirCount_transport_swap {n k : ℕ} [NeZero n] (hk : 2 ≤ k)
+theorem reservoirCount_transport_swap {n k : ℕ} [NeZero n] (hk : Dims n k)
     (B : Board n) {a b : Cell n} {i j : GroupIndex k}
     (ha : reservoir i a) (hb : reservoir j b) (hji : j ≠ i)
     (hblank : blank B=a) (ht : B b ∈ targetGroup i) (r c : GroupIndex k) :

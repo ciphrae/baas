@@ -22,10 +22,10 @@ The algorithmic heart is an explicit boardwise bound
 board has a legal solution with at most
 
 ```text
-95*n^(11/4) + 21527*n^(5/2)
+35*n^(11/4) + 62701*n^(5/2)
 ```
 
-inefficient moves, i.e. of length at most `Manhattan + 190*n^(11/4) + 43054*n^(5/2)`.
+inefficient moves, i.e. of length at most `Manhattan + 70*n^(11/4) + 125402*n^(5/2)`.
 
 ## Building
 
@@ -50,13 +50,13 @@ The main results depend only on `propext`, `Classical.choice` and `Quot.sound`.
 | `SlidingPuzzle/Proposition9`, `Main` | Proposition 9 from a boardwise bound; the final theorems |
 | `SlidingPuzzle/Moves/` | Generic legal-move constructions: jumps, carries, translations, exchanges, local solving |
 | `SlidingPuzzle/Parberry/` | A Parberry-style solver (`5*n³ + O(n²)`), row/column/layer prefixes |
-| `SlidingPuzzle/Algorithm/Partition`, … | The partition of Section 4.1 and its counts |
+| `SlidingPuzzle/Algorithm/Partition`, … | The partition of Section 4.1 (generalized to squares of side `s ≥ k³`) and its counts |
 | `SlidingPuzzle/Algorithm/Preparation/`, `Preparation` | Phase I |
 | `SlidingPuzzle/Algorithm/Transport/`, `Transport` | Phase II (Algorithm 4) |
 | `SlidingPuzzle/Algorithm/Arrangement/`, `Arrangement` | Phase III |
 | `SlidingPuzzle/Algorithm/Finish/`, `Finish` | Phase IV |
-| `SlidingPuzzle/Algorithm/FourthPower` | The four phases composed on `k⁴ × k⁴` boards |
-| `SlidingPuzzle/Algorithm/GeneralSize` | Reduction of arbitrary sides to fourth powers |
+| `SlidingPuzzle/Algorithm/Admissible` | The four phases composed on boards of side `k*s`, `s ≥ k³` |
+| `SlidingPuzzle/Algorithm/GeneralSize` | Reduction of arbitrary sides to admissible ones |
 | `Zhong/` | Word-level puzzle library from an earlier formalization attempt: reachability criterion, orbit statistics, move words |
 
 ## Proof outline
@@ -67,21 +67,23 @@ reachable boards is `n³ + O(n²)`. So it suffices to show
 `OPT(B) ≤ M(B) + C*n^(11/4)` for every reachable board, i.e. a solution with
 `O(n^(11/4))` inefficient moves.
 
-*Fourth powers* (`Algorithm/FourthPower`). For `n = k⁴` the board is divided into
-`k²` squares of side `k³`, one per target group, each with horizontal and
-vertical corridors and a reservoir. Twice the inefficient moves are bounded by
-`70*k¹¹ + 19030*k¹⁰`:
+*Admissible boards* (`Algorithm/Admissible`). The paper divides a board of side
+`n = k⁴` into `k²` squares of side `k³`, one per target group, each with
+horizontal and vertical corridors and a reservoir. The construction only needs
+squares of side `s ≥ k³` (`Partition.Dims`), so it applies to every board of
+side `n = k*s`. Twice the inefficient moves are bounded by
+`70*k²s³ + 31264*k*s³`:
 
-| Phase | What it does | Leading inefficiency |
+| Phase | What it does | Leading inefficiency (units of `k²s³`) |
 | --- | --- | ---: |
 | Preparation | Stage corridor tiles with a column prefix, spread them into the corridors | 11.5 |
-| Transport | Algorithm 4: move tiles between reservoirs through the corridors, at most `k⁸` transfers | 9 |
+| Transport | Algorithm 4: move tiles between reservoirs through the corridors, at most `n²` transfers | 9 |
 | Arrangement | Exchange corridor families so every tile is in its own square (length 24, halved) | 12 |
 | Finish | Solve each square with the Parberry solver (length 5, halved) | 2.5 |
 
-*Arbitrary sides* (`Algorithm/GeneralSize`). For `k⁴ ≤ n < (k+1)⁴`, solve the
-outer `n-k⁴ ≤ 4*n^(3/4)` layers with the Parberry prefix (`60*n^(11/4)`) and the
-remaining square as above: `35 + 60 = 95`.
+*Arbitrary sides* (`Algorithm/GeneralSize`). Take `k = ⌊n^(1/4)⌋` and
+`s = ⌊n/k⌋ ≥ k³`. Only the outer `n - k*s < k` layers need the Parberry prefix,
+which is lower order, and `k²s³ ≤ n^(11/4) + 2*n^(5/2)`: total `35`.
 
 [`PROOF_NOTES.md`](PROOF_NOTES.md) relates each step to the paper, records where
 the formalization departs from the printed argument, and lists directions for

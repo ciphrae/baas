@@ -19,29 +19,29 @@ theorem exists_group_corridor_path {n k : ℕ} [NeZero n]
       B (corridorCell vertical backwards fixed x) ∈ targetGroup i) :
     ∃ C : Board n, ∃ p : Path B C,
       blank C = corridorCell vertical backwards fixed b ∧ p.length = b.val - a.val ∧
-      p.inefficientMoves ≤ k^3 ∧
+      p.inefficientMoves ≤ side n k ∧
       (∀ x : Fin n, a ≤ x → x ≤ b → x ≠ b →
         C (corridorCell vertical backwards fixed x) ∈ targetGroup i) ∧
       (∀ c : Cell n, (∀ x : Fin n, a ≤ x → x ≤ b →
         c ≠ corridorCell vertical backwards fixed x) → C c = B c) := by
-  let lo := if vertical then (groupRow i).val * k^3 else (groupCol i).val * k^3
+  let lo := if vertical then (groupRow i).val * side n k else (groupCol i).val * side n k
   have ht : ∀ t ∈ (targetGroup (n := n) i : Set (Tile n)),
       lo ≤ corridorCoordinate vertical (position (target n) t) ∧
-        corridorCoordinate vertical (position (target n) t) < lo + k^3 := by
+        corridorCoordinate vertical (position (target n) t) < lo + side n k := by
     intro t ht
     have hs := (mem_targetGroup i t).mp ht |>.2
     cases vertical <;> simp only [lo, corridorCoordinate, Bool.false_eq_true, ↓reduceIte]
     · exact ⟨hs.2.2.1, by have := hs.2.2.2; nlinarith⟩
     · exact ⟨hs.1, by have := hs.2.1; nlinarith⟩
   have hs : lo ≤ corridorCoordinate vertical (corridorCell vertical backwards fixed a) ∧
-      corridorCoordinate vertical (corridorCell vertical backwards fixed a) < lo + k^3 := by
+      corridorCoordinate vertical (corridorCell vertical backwards fixed a) < lo + side n k := by
     rw [← hblank]
     cases vertical <;> simp only [lo, corridorCoordinate, Bool.false_eq_true, ↓reduceIte]
     · exact ⟨hstart.2.2.1, by have := hstart.2.2.2; nlinarith⟩
     · exact ⟨hstart.1, by have := hstart.2.1; nlinarith⟩
   simpa only [Nat.add_sub_cancel_left, Finset.mem_coe] using
     exists_oriented_corridor_path vertical backwards fixed a b hab
-      (targetGroup (n := n) i : Set (Tile n)) lo (lo + k^3) ht hs B hblank hgroup
+      (targetGroup (n := n) i : Set (Tile n)) lo (lo + side n k) ht hs B hblank hgroup
 
 private theorem exists_horizontal_group_slide_oriented {n k : ℕ} [NeZero n]
     (i : GroupIndex k) (backwards : Bool) (r a b : Fin n) (hab : a ≤ b)
@@ -49,7 +49,7 @@ private theorem exists_horizontal_group_slide_oriented {n k : ℕ} [NeZero n]
     (hs : square i (blank B))
     (hg : ∀ c : Cell n, c.1 = r → c ≠ blank B → B c ∈ targetGroup i) :
     ∃ C : Board n, ∃ p : Path B C,
-      blank C = corridorCell false backwards r b ∧ p.inefficientMoves ≤ k^3 ∧
+      blank C = corridorCell false backwards r b ∧ p.inefficientMoves ≤ side n k ∧
       (∀ c : Cell n, c.1 = r → c ≠ blank C → C c ∈ targetGroup i) ∧
       (∀ c : Cell n, c.1 ≠ r → C c = B c) := by
   let line := corridorCell false backwards r
@@ -99,7 +99,7 @@ theorem exists_horizontal_transport_slide {n k : ℕ} [NeZero n]
     (hb : blank B = (r, a)) (hs : square i (blank B))
     (hg : ∀ c : Cell n, c.1 = r → c ≠ blank B → B c ∈ targetGroup i) :
     ∃ C : Board n, ∃ p : Path B C,
-      blank C = (r, b) ∧ p.inefficientMoves ≤ k^3 ∧
+      blank C = (r, b) ∧ p.inefficientMoves ≤ side n k ∧
       (∀ c : Cell n, c.1 = r → c ≠ blank C → C c ∈ targetGroup i) ∧
       (∀ c : Cell n, c.1 ≠ r → C c = B c) := by
   by_cases hab : a ≤ b

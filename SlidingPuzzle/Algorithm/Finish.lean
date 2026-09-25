@@ -5,7 +5,7 @@ import SlidingPuzzle.Algorithm.Finish.Access
 import SlidingPuzzle.Moves.BorrowedSolve
 import SlidingPuzzle.Moves.BlockCorner
 
-/-! Phase IV (Finish). Each `k³ × k³` square is solved by a local solver, with
+/-! Phase IV (Finish). Each square of side `side n k` is solved by a local solver, with
 parity repaired by borrowing a tile, and the last square is solved in place.
 The local solver is abstract (`SolverCostBound`); the constructed Parberry-style
 solver supplies `5*n³+O(n²)`. -/
@@ -234,23 +234,23 @@ theorem exists_block_finish {cost : ℕ → ℕ} (hsolver : SolverCostBound cost
 end
 namespace Partition
 section
-variable {k : ℕ} [NeZero (k^4)]
+variable {n k : ℕ} [NeZero n]
 theorem exists_finish_one_square {cost : ℕ → ℕ} (hsolver : SolverCostBound cost)
-    (hk : 2 ≤ k) (B : Board (k^4))
-    (hB : SquaresSorted (k := k) B) (hb : blank B = blank (target (k^4)))
+    (hk : Dims n k) (B : Board n)
+    (hB : SquaresSorted (k := k) B) (hb : blank B = blank (target n))
     (i : GroupIndex k) (hi : i ≠ lastGroup k hk)
-    (u v : Cell (k^4)) (huv : u ≠ v)
+    (u v : Cell n) (huv : u ≠ v)
     (hu : square (lastGroup k hk) u) (hv : square (lastGroup k hk) v)
-    (hu0 : u ≠ blank (target (k^4))) (hv0 : v ≠ blank (target (k^4))) :
-    ∃ C : Board (k^4), ∃ p : Path B C,
-      p.length ≤ cost (k^3)+9352*k^4 ∧ blank C = blank B ∧ SquaresSorted (k := k) C ∧
-      (∀ x, square i x → C x = target (k^4) x) ∧
+    (hu0 : u ≠ blank (target n)) (hv0 : v ≠ blank (target n)) :
+    ∃ C : Board n, ∃ p : Path B C,
+      p.length ≤ cost (side n k)+9352*n ∧ blank C = blank B ∧ SquaresSorted (k := k) C ∧
+      (∀ x, square i x → C x = target n x) ∧
       (∀ (j : GroupIndex k), j ≠ i → j ≠ lastGroup k hk →
         ∀ x, square j x → C x = B x) := by
   classical
-  let : NeZero (k^3) := ⟨by positivity⟩
-  have hm : 8 ≤ k^3 := by nlinarith [Nat.pow_le_pow_left hk 3]
-  have hn : 4 ≤ k^4 := by nlinarith [Nat.pow_le_pow_left hk 4]
+  let : NeZero (side n k) := ⟨hk.side_pos.ne'⟩
+  have hm : 8 ≤ side n k := by have := hk.cube_le; have := Nat.pow_le_pow_left hk.two_le 3; omega
+  have hn : 4 ≤ n := hk.two_le_n
   have hBu : B u ≠ 0 := by
     intro h
     exact hu0 ((B.injective (h.trans (B.apply_symm_apply 0).symm)).trans hb)
@@ -263,13 +263,13 @@ theorem exists_finish_one_square {cost : ℕ → ℕ} (hsolver : SolverCostBound
   have hvout : v ∉ Set.range (squareEmbedding i) := by
     intro h
     exact hi (square_unique hk ((mem_range_squareEmbedding hk i v).mp h) hv)
-  obtain ⟨C,p,hp,hbC,hC,hbuf,hfix⟩ := exists_block_finish hsolver B (target (k^4)) hm hn
-    ((groupRow i).val*k^3) ((groupCol i).val*k^3)
-    (by simpa [Nat.add_mul] using square_block_end (groupRow i))
-    (by simpa [Nat.add_mul] using square_block_end (groupCol i)) hb
+  obtain ⟨C,p,hp,hbC,hC,hbuf,hfix⟩ := exists_block_finish hsolver B (target n) hm hn
+    ((groupRow i).val*side n k) ((groupCol i).val*side n k)
+    (by simpa [Nat.add_mul] using square_block_end (n := n) (groupRow i))
+    (by simpa [Nat.add_mul] using square_block_end (n := n) (groupCol i)) hb
     (squareEmbedding_target_nonzero hk i hi) (squaresSorted_block_labels hk B hB hb i hi)
     u v huv huout hvout hBu hBv
-  have hsolved (x : Cell (k^4)) (hx : square i x) : C x=target (k^4) x := by
+  have hsolved (x : Cell n) (hx : square i x) : C x=target n x := by
     obtain ⟨c,rfl⟩ := (mem_range_squareEmbedding hk i x).mpr hx
     exact hC c
   have hCu : C u ∈ targetGroup (lastGroup k hk) := by
@@ -310,19 +310,19 @@ theorem exists_finish_one_square {cost : ℕ → ℕ} (hsolver : SolverCostBound
       exact hjlast (square_unique hk hx hv)
 
 theorem exists_finish_square_schedule {cost : ℕ → ℕ} (hsolver : SolverCostBound cost)
-    (hk : 2 ≤ k) (B : Board (k^4))
-    (hB : SquaresSorted (k := k) B) (hb : blank B = blank (target (k^4)))
-    (u v : Cell (k^4)) (huv : u ≠ v)
+    (hk : Dims n k) (B : Board n)
+    (hB : SquaresSorted (k := k) B) (hb : blank B = blank (target n))
+    (u v : Cell n) (huv : u ≠ v)
     (hu : square (lastGroup k hk) u) (hv : square (lastGroup k hk) v)
-    (hu0 : u ≠ blank (target (k^4))) (hv0 : v ≠ blank (target (k^4))) :
-    ∃ C : Board (k^4), ∃ p : Path B C,
-      p.length ≤ (k*k-1)*(cost (k^3)+9352*k^4) ∧ blank C = blank B ∧ SquaresSorted (k := k) C ∧
-      ∀ (i : GroupIndex k), i ≠ lastGroup k hk → ∀ x, square i x → C x = target (k^4) x := by
+    (hu0 : u ≠ blank (target n)) (hv0 : v ≠ blank (target n)) :
+    ∃ C : Board n, ∃ p : Path B C,
+      p.length ≤ (k*k-1)*(cost (side n k)+9352*n) ∧ blank C = blank B ∧ SquaresSorted (k := k) C ∧
+      ∀ (i : GroupIndex k), i ≠ lastGroup k hk → ∀ x, square i x → C x = target n x := by
   classical
   have schedule (s : Finset (GroupIndex k)) (hs : lastGroup k hk ∉ s) :
-      ∃ C : Board (k^4), ∃ p : Path B C,
-        p.length ≤ s.card*(cost (k^3)+9352*k^4) ∧ blank C = blank B ∧ SquaresSorted (k := k) C ∧
-        ∀ i ∈ s, ∀ x, square i x → C x=target (k^4) x := by
+      ∃ C : Board n, ∃ p : Path B C,
+        p.length ≤ s.card*(cost (side n k)+9352*n) ∧ blank C = blank B ∧ SquaresSorted (k := k) C ∧
+        ∀ i ∈ s, ∀ x, square i x → C x=target n x := by
     induction s using Finset.induction_on with
     | empty => exact ⟨B,Path.nil B,by simp,rfl,hB,by simp⟩
     | @insert i s his ih =>
@@ -334,9 +334,9 @@ theorem exists_finish_square_schedule {cost : ℕ → ℕ} (hsolver : SolverCost
       refine ⟨C,p.append q,?_,hbC.trans hbD,hC,?_⟩
       · rw [Path.length_append,Finset.card_insert_of_notMem his]
         calc
-          p.length+q.length ≤ s.card*(cost (k^3)+9352*k^4)+(cost (k^3)+9352*k^4) :=
+          p.length+q.length ≤ s.card*(cost (side n k)+9352*n)+(cost (side n k)+9352*n) :=
             Nat.add_le_add hp hq
-          _ = (s.card+1)*(cost (k^3)+9352*k^4) := by ring
+          _ = (s.card+1)*(cost (side n k)+9352*n) := by ring
       · intro j hj x hx
         rcases Finset.mem_insert.mp hj with rfl | hj
         · exact hCi x hx
@@ -351,24 +351,25 @@ theorem exists_finish_square_schedule {cost : ℕ → ℕ} (hsolver : SolverCost
     exact hsolved i (by simp [hi]) x hx
 
 theorem exists_finish_path {cost : ℕ → ℕ} (hsolver : SolverCostBound cost)
-    (hk : 2 ≤ k) (B : Board (k^4)) (hB : Arranged hk B) :
-    ∃ p : Path B (target (k^4)), p.length ≤ k^2*cost (k^3)+9354*k^6 := by
-  let : NeZero (k^3) := ⟨by positivity⟩
-  have hm : 8 ≤ k^3 := by nlinarith [Nat.pow_le_pow_left hk 3]
+    (hk : Dims n k) (B : Board n) (hB : Arranged hk B) :
+    ∃ p : Path B (target n), p.length ≤ k^2*cost (side n k)+9354*k^2*n := by
+  let : NeZero (side n k) := ⟨hk.side_pos.ne'⟩
+  have hm : 8 ≤ side n k := by have := hk.cube_le; have := Nat.pow_le_pow_left hk.two_le 3; omega
   obtain ⟨A,p,hp,hbA,hA⟩ := exists_finish_blank_access hk B hB.sorted hB.blank_last
   obtain ⟨u,v,huv,hu,hv,hu0,hv0⟩ := exists_finish_buffers hk
   obtain ⟨D,q,hq,hbD,hD,hsolved⟩ := exists_finish_square_schedule hsolver hk A hA hbA
     u v huv hu hv hu0 hv0
-  let d := (k-1)*k^3
-  have hd : d+k^3=k^4 := by
+  have hk2 := hk.two_le
+  let d := (k-1)*side n k
+  have hd : d+side n k=n := by
     dsimp [d]
     have h := Nat.sub_add_cancel (by omega : 1 ≤ k)
     calc
-      (k-1)*k^3+k^3 = (k-1+1)*k^3 := by ring
-      _ = k^4 := by rw [h]; ring
-  have hprefix : ∀ x y : Fin (k^4), x.val<d ∨ y.val<d → D (x,y)=target (k^4) (x,y) := by
+      (k-1)*side n k+side n k = (k-1+1)*side n k := by ring
+      _ = n := by rw [h]; exact hk.mul_side
+  have hprefix : ∀ x y : Fin n, x.val<d ∨ y.val<d → D (x,y)=target n (x,y) := by
     intro x y hxy
-    obtain ⟨i,hi⟩ := square_covers hk rfl (x,y)
+    obtain ⟨i,hi⟩ := square_covers hk (x,y)
     apply hsolved i _ (x,y) hi
     intro he
     rw [he] at hi
@@ -385,15 +386,15 @@ theorem exists_finish_path {cost : ℕ → ℕ} (hsolver : SolverCostBound cost)
   refine ⟨(p.append q).append s,?_⟩
   simp only [Path.length_append,hs]
   have hcount : k*k-1+1 = k*k := Nat.sub_add_cancel (by nlinarith)
-  have htotal : q.length+r.length ≤ k^2*cost (k^3)+9352*(k*k-1)*k^4 := by
+  have htotal : q.length+r.length ≤ k^2*cost (side n k)+9352*(k*k-1)*n := by
     calc
-      q.length+r.length ≤ (k*k-1)*(cost (k^3)+9352*k^4)+cost (k^3) :=
+      q.length+r.length ≤ (k*k-1)*(cost (side n k)+9352*n)+cost (side n k) :=
         Nat.add_le_add hq hr
-      _ = (k*k-1+1)*cost (k^3)+9352*(k*k-1)*k^4 := by ring
-      _ = k^2*cost (k^3)+9352*(k*k-1)*k^4 := by rw [hcount]; ring
-  have hsub := Nat.mul_le_mul_right (k^4) (Nat.sub_le (k*k) 1)
-  have h46 : k^4 ≤ k^6 := Nat.pow_le_pow_right (by omega) (by omega)
-  have hp' : p.length ≤ 2*k^4 := hp
+      _ = (k*k-1+1)*cost (side n k)+9352*(k*k-1)*n := by ring
+      _ = k^2*cost (side n k)+9352*(k*k-1)*n := by rw [hcount]; ring
+  have hsub := Nat.mul_le_mul_right n (Nat.sub_le (k*k) 1)
+  have hkn : n ≤ k^2*n := Nat.le_mul_of_pos_left n (by positivity)
+  have hp' : p.length ≤ 2*n := hp
   nlinarith
 
 end

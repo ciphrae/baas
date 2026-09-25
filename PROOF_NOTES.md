@@ -41,12 +41,20 @@ The paper's bounds of the form `SOL ≤ D + α` (Section 5) need `2α` when `α`
 inefficient moves: moving a tile and back from the target gives length 2, `D = 0`,
 `α = 1`. The asymptotic statement is unaffected.
 
-## The algorithm on `k⁴ × k⁴` boards
+## The algorithm on admissible boards
 
 The partition (Section 4.1, pp. 138–139) is defined directly in
 `Algorithm/Partition.lean`, including the vertical corridor column
 `b_i*k³ + j` exactly as printed. Group membership excludes the blank; the phase
 states (`Algorithm/PhaseStates.lean`) record the blank's location separately.
+
+**Generalization.** The paper uses `n = k⁴` and squares of side `k³`. Nothing
+in the construction needs the square side to be exactly `k³`: it needs room
+for `k` horizontal corridor rows and `k²` vertical corridor columns per square,
+and for the compressed staging area of width `k³`. So the partition is stated
+for squares of side `s = side n k = n/k` subject to `Dims n k`: `2 ≤ k`,
+`k³ ≤ s` and `k*s = n`. Every phase is proved in this generality, with costs
+of the form `A*k²s³ + O(k*s³)` (`k²s³` is the paper's `k¹¹`).
 
 **Preparation.** Every group's corridor quota is staged in the first `k³`
 columns and the first `k²` rows (`Preparation/Staging.lean`), together with one
@@ -60,7 +68,7 @@ chunked column translations. Each column is moved in as many chunks as its own
 distance requires (`exists_descending_column_schedule_var`).
 
 **Transport.** Algorithm 4 is formalized as a count run on the reservoir matrix
-(`Transport/Counts.lean`), which terminates after at most `k⁸` transfers, and
+(`Transport/Counts.lean`), which terminates after at most `n²` transfers, and
 each transfer is realized by a legal path (`Transport/Realization.lean`).
 
 - *Departure:* a transfer realizes the count update, not a transposition of two
@@ -74,13 +82,13 @@ each transfer is realized by a legal path (`Transport/Realization.lean`).
   rows. At the exit it walks to the source tile and carries it to the corridor
   side of the reservoir with five-move carries (`Transport/Carry.lean`), then
   exchanges it into the corridor with short jumps.
-- Long straight corridor slides cost at most `k³` inefficient moves: after the
+- Long straight corridor slides cost at most `s` inefficient moves: after the
   destination interval, every slide moves a tile toward its target
   (`Moves/Corridor.lean`, Fact 3).
 - Restoring jumps are charged at half their length plus the jump distance
   (`Path.two_inefficientMoves_le_of_blank_swap`).
 
-A transfer costs at most `9*k³ + O(k²)` inefficient moves: one `k³` each for the
+A transfer costs at most `9*s + O(k²)` inefficient moves: one `s` each for the
 entry slide, horizontal travel and vertical travel, and six for the exit.
 
 **Arrangement.** The two exchange schedules (vertical corridors `V(i,j) ↔ V(j,i)`,
@@ -99,37 +107,38 @@ Parberry-style solver with `5*n³ + O(n²)` moves (`Parberry/Solver.lean`).
 
 ## Arbitrary sides
 
-For `k⁴ ≤ n < (k+1)⁴` the outer `d = n - k⁴` rows and columns are solved by the
-Parberry prefix and the remaining square by the fourth-power algorithm. The
-residual board is reachable and its Manhattan distance equals the original
-board's after the prefix (`Algorithm/Residual*.lean`). The prefix's inefficient
-moves are bounded by its length, `(15*n² + O(n))*d`, and `d ≤ 4*n^(3/4)`.
+For a board of side `n ≥ 16`, take `k = ⌊n^(1/4)⌋` and `s = ⌊n/k⌋`, so that
+`s ≥ k³`. The outer `d = n - k*s < k` rows and columns are solved by the
+Parberry prefix and the remaining `k*s × k*s` board by the admissible-board
+algorithm. The residual board is reachable and its Manhattan distance equals
+the original board's after the prefix (`Algorithm/Residual*.lean`). With
+`x = n^(1/4)`: `k²s³ ≤ n³/k ≤ x¹¹ + 2x¹⁰` (since `k > x - 1`),
+`k*s³ ≤ 4x¹⁰`, and the prefix costs `O(n²·k) = O(x¹⁰)`.
+
+The paper instead rounds `n` down to a fourth power, leaving up to
+`4*n^(3/4)` outer layers whose Parberry prefix costs `60*n^(11/4)`. Rounding
+to a multiple of `k` removes this term entirely.
 
 ## Constant accounting
 
-Leading coefficient of the inefficient moves, in units of `n^(11/4)`:
+Leading coefficient of the inefficient moves, in units of `k²s³ ≈ n^(11/4)`:
 
 | Source | Coefficient | Where |
 | --- | ---: | --- |
-| Size reduction (prefix, charged by length) | 60 | `GeneralSize.outer_layers_budget` |
-| Arrangement (length 24, halved) | 12 | `FourthPower.arrangement_bound` |
-| Preparation: staging 7.5, vertical spreading 4 | 11.5 | `FourthPower.preparation_phase` |
-| Transport | 9 | `FourthPower.transport_phase` |
-| Finish (length 5, halved) | 2.5 | `FourthPower.finish_bound` |
-| **Total** | **95** | `GeneralSize.exists_solution_explicit` |
+| Arrangement (length 24, halved) | 12 | `Admissible.arrangement_bound` |
+| Preparation: staging 7.5, vertical spreading 4 | 11.5 | `Admissible.preparation_phase` |
+| Transport | 9 | `Admissible.transport_phase` |
+| Finish (length 5, halved) | 2.5 | `Admissible.finish_bound` |
+| **Total** | **35** | `GeneralSize.exists_solution_explicit` |
 
-Lower-order terms are collected in one `k¹⁰` (respectively `n^(5/2)`) envelope
+Lower-order terms are collected in one `k*s³` (respectively `n^(5/2)`) envelope
 and absorbed only in `uniformApproximation`.
 
 ## Directions for improvement
 
-- **Size reduction (60).** The prefix is charged by its length. Two routes:
-  - Generalizing the partition from `k × k` squares of side `k³` to `a × a`
-    squares with `a ≈ k` would make `d < k³`, reducing 60 to about 15. Every
-    phase is currently stated for `n = k⁴`.
-  - Tracking Manhattan changes through the Parberry placements would charge
-    each carried tile's own moves as efficient (roughly 60 → 46). This needs
-    the effect of the `Zhong` words on all cells, not only the placed tile.
+- **Arrangement (12).** Families are staged at the top row of the board, so each
+  exchanged tile travels up to `n` twice. Staging nearer to the squares involved,
+  or accounting for the tiles' progress toward their targets, would reduce it.
 - **Staging (7.5).** The staging prefix places exact tiles, although only group
   membership is needed.
 - **Transport exit (6 of 9).** Carrying toward the nearer of the two corridor
@@ -137,3 +146,5 @@ and absorbed only in `uniformApproximation`.
   needs per-reservoir transfer counts from the count run.
 - **Vertical spreading (4).** Charging the translations at half their length
   plus displacement needs a complete description of their effect on the band.
+- **Parberry placements.** Tracking Manhattan changes through the `Zhong` words
+  would let carried tiles' own moves count as efficient in Finish and staging.

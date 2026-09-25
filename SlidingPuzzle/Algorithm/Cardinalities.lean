@@ -38,15 +38,15 @@ private theorem card_rectangle {n : ℕ} (xl xh yl yh : ℕ) (hx : xh ≤ n) (hy
     _ = (axis n xl xh).card * (axis n yl yh).card := Finset.card_product _ _
     _ = _ := by rw [card_axis n xl xh hx, card_axis n yl yh hy]
 
-private theorem cube_ge (k : ℕ) (hk : 2 ≤ k) : k ≤ k^3 ∧ k^2 ≤ k^3 := by
-  have h2 : k ≤ k^2 := by nlinarith
-  constructor <;> nlinarith [Nat.mul_le_mul_left k h2]
+private theorem side_ge' {n k : ℕ} (hd : Dims n k) : k ≤ side n k ∧ k^2 ≤ side n k := by
+  obtain ⟨hk2, h2, h3, hs, -⟩ := hd.facts
+  constructor <;> nlinarith
 
-private theorem block_end_le {n k : ℕ} (hn : n = k^4) (a : Fin k) :
-    (a.val+1)*k^3 ≤ n := by
+theorem block_end_le {n k : ℕ} (hd : Dims n k) (a : Fin k) :
+    (a.val+1)*side n k ≤ n := by
   calc
-    (a.val+1)*k^3 ≤ k*k^3 := Nat.mul_le_mul_right _ a.isLt
-    _ = n := by rw [hn]; ring
+    (a.val+1)*side n k ≤ k*side n k := Nat.mul_le_mul_right _ a.isLt
+    _ = n := hd.mul_side
 
 def horizontalCells {n k : ℕ} (i : GroupIndex k) : Finset (Cell n) := by
   classical
@@ -68,29 +68,29 @@ def squareCells {n k : ℕ} (i : GroupIndex k) : Finset (Cell n) := by
 def horizontalSliceCells {n k : ℕ} (i : GroupIndex k) (b : Fin k) : Finset (Cell n) := by
   classical
   exact Finset.univ.filter fun c => horizontal i c ∧
-    b.val*k^3 ≤ c.2.val ∧ c.2.val < (b.val+1)*k^3
+    b.val*side n k ≤ c.2.val ∧ c.2.val < (b.val+1)*side n k
 
 @[simp] theorem mem_horizontalSliceCells {n k : ℕ} (i : GroupIndex k) (b : Fin k)
     (c : Cell n) : c ∈ horizontalSliceCells i b ↔
-      horizontal i c ∧ b.val*k^3 ≤ c.2.val ∧ c.2.val < (b.val+1)*k^3 := by
+      horizontal i c ∧ b.val*side n k ≤ c.2.val ∧ c.2.val < (b.val+1)*side n k := by
   simp [horizontalSliceCells]
 
-theorem card_horizontalSlice {n k : ℕ} (hk : 2 ≤ k) (hn : n=k^4)
-    (i : GroupIndex k) (b : Fin k) : (horizontalSliceCells (n := n) i b).card = k^3 := by
-  let r := (groupRow i).val*k^3+(groupCol i).val
+theorem card_horizontalSlice {n k : ℕ} (hd : Dims n k)
+    (i : GroupIndex k) (b : Fin k) : (horizontalSliceCells (n := n) i b).card = side n k := by
+  let r := (groupRow i).val*side n k+(groupCol i).val
   have hr : r+1 ≤ n := by
-    have he := block_end_le hn (groupRow i)
+    have he := block_end_le hd (groupRow i)
     have hb := (groupCol i).isLt
-    have hg := (cube_ge k hk).1
+    have hg := (side_ge' hd).1
     dsimp [r]
     nlinarith
   have he : horizontalSliceCells (n := n) i b = Finset.univ.filter (fun c : Cell n =>
-      r ≤ c.1.val ∧ c.1.val < r+1 ∧ b.val*k^3 ≤ c.2.val ∧ c.2.val < (b.val+1)*k^3) := by
+      r ≤ c.1.val ∧ c.1.val < r+1 ∧ b.val*side n k ≤ c.2.val ∧ c.2.val < (b.val+1)*side n k) := by
     ext c
     simp only [mem_horizontalSliceCells,horizontal,Finset.mem_filter,Finset.mem_univ,true_and]
     dsimp [r]
     omega
-  rw [he,card_rectangle r (r+1) _ _ hr (block_end_le hn b)]
+  rw [he,card_rectangle r (r+1) _ _ hr (block_end_le hd b)]
   simp [Nat.add_mul]
 
 @[simp] theorem mem_horizontalCells {n k : ℕ} (i : GroupIndex k) (c : Cell n) :
@@ -102,14 +102,14 @@ theorem card_horizontalSlice {n k : ℕ} (hk : 2 ≤ k) (hn : n=k^4)
 @[simp] theorem mem_squareCells {n k : ℕ} (i : GroupIndex k) (c : Cell n) :
     c ∈ squareCells i ↔ square i c := by classical simp [squareCells]
 
-theorem card_horizontal {n k : ℕ} (hk : 2 ≤ k) (hn : n=k^4) (i : GroupIndex k) :
+theorem card_horizontal {n k : ℕ} (hd : Dims n k) (i : GroupIndex k) :
     (horizontalCells (n := n) i).card = n := by
   classical
-  let r := (groupRow i).val*k^3+(groupCol i).val
+  let r := (groupRow i).val*side n k+(groupCol i).val
   have hrow : r+1 ≤ n := by
-    have he := block_end_le hn (groupRow i)
+    have he := block_end_le hd (groupRow i)
     have hb := (groupCol i).isLt
-    have hg := (cube_ge k hk).1
+    have hg := (side_ge' hd).1
     dsimp [r]
     nlinarith
   have he : horizontalCells (n := n) i =
@@ -123,21 +123,21 @@ theorem card_horizontal {n k : ℕ} (hk : 2 ≤ k) (hn : n=k^4) (i : GroupIndex 
   rw [he, card_rectangle r (r+1) 0 n hrow le_rfl]
   simp
 
-theorem card_vertical {n k : ℕ} (hk : 2 ≤ k) (hn : n=k^4) (i j : GroupIndex k) :
-    (verticalCells (n := n) i j).card = k^3-k := by
+theorem card_vertical {n k : ℕ} (hd : Dims n k) (i j : GroupIndex k) :
+    (verticalCells (n := n) i j).card = side n k-k := by
   classical
-  let x := (groupRow i).val*k^3
-  let y := (groupCol i).val*k^3+j.val
-  have hx := block_end_le hn (groupRow i)
+  let x := (groupRow i).val*side n k
+  let y := (groupCol i).val*side n k+j.val
+  have hx := block_end_le hd (groupRow i)
   have hy : y+1 ≤ n := by
-    have he := block_end_le hn (groupCol i)
+    have he := block_end_le hd (groupCol i)
     have hj : j.val < k^2 := by simpa only [pow_two] using j.isLt
-    have hg := (cube_ge k hk).2
+    have hg := (side_ge' hd).2
     dsimp [y]
     nlinarith
   have he : verticalCells (n := n) i j =
       Finset.univ.filter (fun c : Cell n => x+k ≤ c.1.val ∧
-        c.1.val < ((groupRow i).val+1)*k^3 ∧ y ≤ c.2.val ∧ c.2.val < y+1) := by
+        c.1.val < ((groupRow i).val+1)*side n k ∧ y ≤ c.2.val ∧ c.2.val < y+1) := by
     ext c
     simp only [mem_verticalCells, vertical, Finset.mem_filter, Finset.mem_univ, true_and]
     dsimp [x,y]
@@ -146,22 +146,22 @@ theorem card_vertical {n k : ℕ} (hk : 2 ≤ k) (hn : n=k^4) (i j : GroupIndex 
   dsimp [x]
   simp [Nat.add_mul, Nat.add_sub_add_left]
 
-theorem card_reservoir {n k : ℕ} (hn : n=k^4) (i : GroupIndex k) :
-    (reservoirCells (n := n) i).card = (k^3-k)*(k^3-k^2) := by
+theorem card_reservoir {n k : ℕ} (hd : Dims n k) (i : GroupIndex k) :
+    (reservoirCells (n := n) i).card = (side n k-k)*(side n k-k^2) := by
   classical
   unfold reservoirCells reservoir
-  have h := card_rectangle (n := n) ((groupRow i).val*k^3+k) (((groupRow i).val+1)*k^3)
-    ((groupCol i).val*k^3+k^2) (((groupCol i).val+1)*k^3)
-    (block_end_le hn (groupRow i)) (block_end_le hn (groupCol i))
+  have h := card_rectangle (n := n) ((groupRow i).val*side n k+k) (((groupRow i).val+1)*side n k)
+    ((groupCol i).val*side n k+k^2) (((groupCol i).val+1)*side n k)
+    (block_end_le hd (groupRow i)) (block_end_le hd (groupCol i))
   simpa [Nat.add_mul, Nat.add_sub_add_left] using h
 
-theorem card_square {n k : ℕ} (hn : n=k^4) (i : GroupIndex k) :
-    (squareCells (n := n) i).card = k^6 := by
+theorem card_square {n k : ℕ} (hd : Dims n k) (i : GroupIndex k) :
+    (squareCells (n := n) i).card = side n k^2 := by
   classical
   unfold squareCells square
-  have h := card_rectangle (n := n) ((groupRow i).val*k^3) (((groupRow i).val+1)*k^3)
-    ((groupCol i).val*k^3) (((groupCol i).val+1)*k^3)
-    (block_end_le hn (groupRow i)) (block_end_le hn (groupCol i))
+  have h := card_rectangle (n := n) ((groupRow i).val*side n k) (((groupRow i).val+1)*side n k)
+    ((groupCol i).val*side n k) (((groupCol i).val+1)*side n k)
+    (block_end_le hd (groupRow i)) (block_end_le hd (groupCol i))
   convert h using 1 <;> simp [Nat.add_mul]; ring
 
 /-- Target groups are exactly the square's labels, with the blank removed. -/
@@ -180,11 +180,11 @@ theorem targetGroup_eq_image_erase {n k : ℕ} [NeZero n] (i : GroupIndex k) :
     simpa [position] using (mem_squareCells i c).mp hc
 
 /-- The only missing label in a square is its blank, when present. -/
-theorem card_targetGroup {n k : ℕ} [NeZero n] (hn : n=k^4) (i : GroupIndex k) :
-    (targetGroup (n := n) i).card + (if square i (blank (target n)) then 1 else 0) = k^6 := by
+theorem card_targetGroup {n k : ℕ} [NeZero n] (hd : Dims n k) (i : GroupIndex k) :
+    (targetGroup (n := n) i).card + (if square i (blank (target n)) then 1 else 0) = side n k^2 := by
   classical
-  have hc : ((squareCells (n := n) i).image (target n)).card = k^6 := by
-    rw [Finset.card_image_of_injective _ (target n).injective, card_square hn]
+  have hc : ((squareCells (n := n) i).image (target n)).card = side n k^2 := by
+    rw [Finset.card_image_of_injective _ (target n).injective, card_square hd]
   have hz : (0 : Tile n) ∈ (squareCells i).image (target n) ↔ square i (blank (target n)) := by
     constructor
     · intro h
@@ -209,23 +209,24 @@ theorem lastGroup_val (k : ℕ) (hk : 2 ≤ k) : (lastGroup k hk).val = k*k-1 :=
   have h2 : k*k-1+1=k*k := Nat.sub_add_cancel (by nlinarith)
   nlinarith
 
-theorem square_target_blank {n k : ℕ} [NeZero n] (hk : 2 ≤ k) (hn : n=k^4)
-    (j : GroupIndex k) : square j (blank (target n)) ↔ j=lastGroup k hk := by
+theorem square_target_blank {n k : ℕ} [NeZero n] (hd : Dims n k)
+    (j : GroupIndex k) : square j (blank (target n)) ↔ j=lastGroup k hd := by
   have hb : blank (target n) =
       (⟨n-1, Nat.sub_lt (NeZero.pos n) (by omega)⟩,
        ⟨n-1, Nat.sub_lt (NeZero.pos n) (by omega)⟩) := by
     apply (target n).injective
     rw [target_bottomRight]
     exact (target n).apply_symm_apply 0
-  have hlast : square (lastGroup k hk) (blank (target n)) := by
+  have hlast : square (lastGroup k hd) (blank (target n)) := by
     rw [hb]
     simp only [square,lastGroup,groupRow,groupCol,Equiv.symm_apply_apply]
-    have hp : 0<k^3 := by positivity
-    have hkm : k-1+1=k := by omega
-    have he : (k-1)*k^3+k^3=n := by nlinarith [show k*k^3=n by rw [hn]; ring]
-    have he' : (k-1+1)*k^3=n := by rw [hkm,hn]; ring
+    have hp : 0<side n k := hd.side_pos
+    have hkm : k-1+1=k := by have := hd.two_le; omega
+    have he' : (k-1+1)*side n k=n := by rw [hkm]; exact hd.mul_side
+    have he : (k-1)*side n k+side n k=n := by
+      have h := he'; rw [Nat.add_mul, Nat.one_mul] at h; exact h
     exact ⟨by omega, by omega, by omega, by omega⟩
-  exact ⟨fun h => square_unique hk h hlast, fun h => h ▸ hlast⟩
+  exact ⟨fun h => square_unique hd h hlast, fun h => h ▸ hlast⟩
 
 end
 end SlidingPuzzle.Partition

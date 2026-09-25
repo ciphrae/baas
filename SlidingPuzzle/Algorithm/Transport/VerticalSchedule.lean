@@ -12,7 +12,7 @@ open Classical
 The threshold `cap` lies before the end of the starting block, so all later
 ordinary slides are efficient. The result includes the actual legal path. -/
 theorem exists_banded_vertical_route {n k : ℕ} [NeZero n]
-    (hk : 2 ≤ k) (hn : 2 ≤ n) (K L U : ℕ) (hsize : n = k*K)
+    (hk : Dims n k) (hn : 2 ≤ n) (K L U : ℕ) (hsize : n = k*K)
     (hwidth : L+U+2 ≤ K) (i : GroupIndex k)
     (backwards : Bool) (column : Fin n) (cap : ℕ)
     (hefficient : ∀ (x y : Fin n) (t : Tile n), x.val+1 = y.val → cap ≤ x.val →

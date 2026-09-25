@@ -41,15 +41,4 @@ theorem fourth_power_gap_le {n k : ℕ} (hk : 1 ≤ k) (hn : n < (k + 1) ^ 4) :
   have hg : (k + 1) ^ 4 ≤ k ^ 4 + 15 * k ^ 3 := by nlinarith
   omega
 
-/-- A fourth-power subproblem has an error bounded by the ambient error scale. -/
-theorem pow_eleven_le_rpow_of_fourth_power_le {k n : ℕ} (hkn : k ^ 4 ≤ n) :
-    (k : ℝ) ^ 11 ≤ Real.rpow (n : ℝ) (11 / 4 : ℝ) := by
-  have hkn' : (k : ℝ) ^ 4 ≤ (n : ℝ) := by exact_mod_cast hkn
-  calc
-    (k : ℝ) ^ 11 = Real.rpow ((k : ℝ) ^ 4) (11 / 4 : ℝ) := by
-      rw [Real.rpow_eq_pow, ← Real.rpow_natCast_mul (Nat.cast_nonneg k) 4]
-      norm_num [Real.rpow_natCast]
-    _ ≤ Real.rpow (n : ℝ) (11 / 4 : ℝ) :=
-      Real.rpow_le_rpow (by positivity) hkn' (by norm_num)
-
 end SlidingPuzzle

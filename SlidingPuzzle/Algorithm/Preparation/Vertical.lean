@@ -1,35 +1,28 @@
-import SlidingPuzzle.Basic
+import SlidingPuzzle.Algorithm.Partition
 
 /-! Preparation step (iii): spread vertical quotas while preserving horizontal
-corridors and the explicit representative row. -/
+corridors and the explicit representative row. The staged columns `i < k³`
+move to the vertical corridor columns `i/k²*s + i%k²`, `s = side n k`. -/
 namespace SlidingPuzzle.Partition
 noncomputable section
 
 /-- Destination of a compressed column in a vertical data band. -/
-def verticalDestination (k i : ℕ) : ℕ := i/k^2*k^3+i%k^2
+def verticalDestination (s k i : ℕ) : ℕ := i/k^2*s+i%k^2
 
 /-- The data rows in the `a`-th block row, excluding horizontal corridors. -/
 def verticalPreparationBand {n : ℕ} (k a : ℕ) (c : Cell n) : Prop :=
-  a*k^3+k ≤ c.1.val ∧ c.1.val < (a+1)*k^3
+  a*side n k+k ≤ c.1.val ∧ c.1.val < (a+1)*side n k
 
-theorem vertical_geometry {k : ℕ} (hk : 2 ≤ k) :
-    4 ≤ k^2 ∧ 2*k^2 ≤ k^3 ∧ k+2 ≤ k^3 ∧ k^3 ≤ k^4 := by
-  have hsq : 4 ≤ k^2 := by nlinarith
-  have hksq : k ≤ k^2 := by nlinarith
-  have htwo : 2*k^2 ≤ k^3 := by
-    calc
-      2*k^2 ≤ k*k^2 := Nat.mul_le_mul_right _ hk
-      _ = k^3 := by ring
-  have hfour : k^3 ≤ k^4 := by
-    calc
-      k^3 ≤ k*k^3 := Nat.le_mul_of_pos_left _ (by omega)
-      _ = k^4 := by ring
+theorem vertical_geometry {n k : ℕ} (hk : Dims n k) :
+    4 ≤ k^2 ∧ 2*k^2 ≤ k^3 ∧ k+2 ≤ side n k ∧ k^3 ≤ n ∧ 2*k^2 ≤ side n k := by
+  obtain ⟨hk2, hsq, htwo, hs3, -⟩ := hk.facts
+  have := hk.k_add_two_le
+  have := hk.cube_le_n
   omega
 
-theorem verticalDestination_strictMono {k : ℕ} (hk : 2 ≤ k) :
-    StrictMono (verticalDestination k) := by
+theorem verticalDestination_strictMono {s k : ℕ} (hk : 2 ≤ k) (hs : k^2 ≤ s) :
+    StrictMono (verticalDestination s k) := by
   intro i j hij
-  have hg := vertical_geometry hk
   have hi := Nat.mod_lt i (by positivity : 0 < k^2)
   have hj := Nat.mod_lt j (by positivity : 0 < k^2)
   have hid := Nat.div_add_mod' i (k^2)
@@ -41,34 +34,35 @@ theorem verticalDestination_strictMono {k : ℕ} (hk : 2 ≤ k) :
     omega
   · have hdiv' : i/k^2+1 ≤ j/k^2 := by omega
     calc
-      verticalDestination k i < i/k^2*k^3+k^3 := by unfold verticalDestination; omega
-      _ = (i/k^2+1)*k^3 := by ring
-      _ ≤ j/k^2*k^3 := Nat.mul_le_mul_right _ hdiv'
-      _ ≤ verticalDestination k j := Nat.le_add_right _ _
+      verticalDestination s k i < i/k^2*s+s := by unfold verticalDestination; omega
+      _ = (i/k^2+1)*s := by ring
+      _ ≤ j/k^2*s := Nat.mul_le_mul_right _ hdiv'
+      _ ≤ verticalDestination s k j := Nat.le_add_right _ _
 
-theorem verticalDestination_bounds {k : ℕ} (hk : 2 ≤ k)
+theorem verticalDestination_bounds {n k : ℕ} (hk : Dims n k)
     (i : ℕ) (hi : i < k^3) :
-    i ≤ verticalDestination k i ∧ verticalDestination k i < k^4-k^2 ∧
-      verticalDestination k i+3 ≤ k^4 := by
+    i ≤ verticalDestination (side n k) k i ∧ verticalDestination (side n k) k i < n-k^2 ∧
+      verticalDestination (side n k) k i+3 ≤ n := by
   have hg := vertical_geometry hk
+  have hk2 := hk.two_le
   have hid := Nat.div_add_mod' i (k^2)
   have himod := Nat.mod_lt i (by positivity : 0 < k^2)
   have hidiv : i/k^2 < k := by
     apply (Nat.div_lt_iff_lt_mul (by positivity)).mpr
     simpa only [show k*k^2 = k^3 by ring] using hi
-  have hmul := Nat.mul_le_mul_left (i/k^2) (show k^2 ≤ k^3 by omega)
-  have hblock : i/k^2*k^3+k^3 ≤ k^4 := by
+  have hmul := Nat.mul_le_mul_left (i/k^2) (show k^2 ≤ side n k by omega)
+  have hblock : i/k^2*side n k+side n k ≤ n := by
     calc
-      i/k^2*k^3+k^3 = (i/k^2+1)*k^3 := by ring
-      _ ≤ k*k^3 := Nat.mul_le_mul_right _ hidiv
-      _ = k^4 := by ring
+      i/k^2*side n k+side n k = (i/k^2+1)*side n k := by ring
+      _ ≤ k*side n k := Nat.mul_le_mul_right _ hidiv
+      _ = n := hk.mul_side
   unfold verticalDestination
   omega
 
 theorem verticalPreparationBand_unique {n k a b : ℕ} {c : Cell n}
     (ha : verticalPreparationBand k a c) (hb : verticalPreparationBand k b c) : a = b := by
-  have hda : c.1.val/k^3 = a := Nat.div_eq_of_lt_le (by have := ha.1; omega) ha.2
-  have hdb : c.1.val/k^3 = b := Nat.div_eq_of_lt_le (by have := hb.1; omega) hb.2
+  have hda : c.1.val/side n k = a := Nat.div_eq_of_lt_le (by have := ha.1; omega) ha.2
+  have hdb : c.1.val/side n k = b := Nat.div_eq_of_lt_le (by have := hb.1; omega) hb.2
   exact hda.symm.trans hdb
 
 end

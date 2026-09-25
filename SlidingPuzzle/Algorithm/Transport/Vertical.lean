@@ -10,7 +10,7 @@ open Classical
 
 /-- A legal corridor route retains the filled-blank group invariant. -/
 theorem exists_group_corridor_route {n k : ℕ} [NeZero n]
-    (hk : 2 ≤ k) (i : GroupIndex k) (line : Fin n → Cell n)
+    (hk : Dims n k) (i : GroupIndex k) (line : Fin n → Cell n)
     (hinj : Function.Injective line)
     (hadj : ∀ x y : Fin n, x.val+1 = y.val → gridDistance (line x) (line y) = 1)
     (cap : ℕ)

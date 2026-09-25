@@ -82,7 +82,7 @@ theorem exists_board_extending_assignment (s : Finset (Cell n))
 
 /-- Group-size inequalities suffice to fill any prescribed finite set of cells;
 there is no additional tile-availability hypothesis. -/
-theorem exists_board_with_group_assignment {k : ℕ} (hk : 2 ≤ k)
+theorem exists_board_with_group_assignment {k : ℕ} (hk : Partition.Dims n k)
     (s : Finset (Cell n)) (hb : blank (target n) ∉ s)
     (required : {c // c ∈ s} → Partition.GroupIndex k)
     (hcapacity : ∀ i, Fintype.card {c : {c // c ∈ s} // required c=i} ≤

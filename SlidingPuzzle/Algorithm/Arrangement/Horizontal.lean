@@ -54,24 +54,24 @@ theorem card_horizontal_active :
     _ = k^3-k^2 := by congr 1 <;> ring
 
 /-- A horizontal slice lies in the square indexed by its row block and column block. -/
-theorem horizontalSlice_subset_square (hk : 2 ≤ k) (i : SliceIndex k)
-    {x : Cell (k^4)} (hx : x ∈ horizontalSliceCells i.1 i.2) :
+theorem horizontalSlice_subset_square {n : ℕ} (hk : Dims n k) (i : SliceIndex k)
+    {x : Cell n} (hx : x ∈ horizontalSliceCells i.1 i.2) :
     square (sliceDestination i) x := by
   obtain ⟨hH,hlo,hhi⟩ := mem_horizontalSliceCells _ _ _ |>.mp hx
-  have hk3 : k ≤ k^3 := by nlinarith [Nat.mul_le_mul_left k (Nat.pow_le_pow_left hk 2)]
+  have hk3 : k ≤ side n k := by have := hk.k_add_two_le; omega
   have hcol := (groupCol i.1).isLt
   simp only [square,sliceDestination,groupRow,groupCol,Equiv.symm_apply_apply]
-  change x.1.val = (groupRow i.1).val*k^3+(groupCol i.1).val at hH
-  change (groupRow i.1).val*k^3 ≤ x.1.val ∧
-    x.1.val < ((groupRow i.1).val+1)*k^3 ∧
-    i.2.val*k^3 ≤ x.2.val ∧ x.2.val < (i.2.val+1)*k^3
+  change x.1.val = (groupRow i.1).val*side n k+(groupCol i.1).val at hH
+  change (groupRow i.1).val*side n k ≤ x.1.val ∧
+    x.1.val < ((groupRow i.1).val+1)*side n k ∧
+    i.2.val*side n k ≤ x.2.val ∧ x.2.val < (i.2.val+1)*side n k
   refine ⟨by omega,?_,hlo,hhi⟩
   simp only [Nat.add_mul,Nat.one_mul]
   omega
 
 /-- The horizontal slices form pairwise disjoint regions. -/
-theorem horizontalSlice_disjoint (hk : 2 ≤ k) (i j : SliceIndex k) (hij : i ≠ j) :
-    Disjoint (horizontalSliceCells (n := k^4) i.1 i.2) (horizontalSliceCells j.1 j.2) := by
+theorem horizontalSlice_disjoint {n : ℕ} (hk : Dims n k) (i j : SliceIndex k) (hij : i ≠ j) :
+    Disjoint (horizontalSliceCells (n := n) i.1 i.2) (horizontalSliceCells j.1 j.2) := by
   apply Finset.disjoint_left.mpr
   intro x hxi hxj
   have hH := horizontal_unique hk (mem_horizontalSliceCells _ _ _ |>.mp hxi).1
@@ -85,32 +85,33 @@ theorem horizontalSlice_disjoint (hk : 2 ≤ k) (i j : SliceIndex k) (hij : i �
 
 /-- Sort all horizontal slices into their containing squares, restoring every
 vertical corridor and reservoir. -/
-theorem exists_horizontal_arrangement_path [NeZero (k^4)] (hk : 2 ≤ k) (B : Board (k^4))
+theorem exists_horizontal_arrangement_path {n : ℕ} [NeZero n] (hk : Dims n k) (B : Board n)
     (hH : ∀ (i : GroupIndex k) x, horizontal i x → B x ∈ targetGroup i) :
-    ∃ C : Board (k^4), ∃ p : Path B C,
-      p.length ≤ (24*k^3+2032)*(k^3-k^2)*k^4 ∧ blank C = blank B ∧
+    ∃ C : Board n, ∃ p : Path B C,
+      p.length ≤ (24*side n k+2032)*(k^3-k^2)*n ∧ blank C = blank B ∧
       (∀ (i : SliceIndex k) x, x ∈ horizontalSliceCells i.1 i.2 →
         C x ∈ targetGroup (sliceDestination i)) ∧
       (∀ (i j : GroupIndex k) x, vertical i j x → C x = B x) ∧
       (∀ (i : GroupIndex k) x, reservoir i x → C x = B x) := by
   classical
-  have hn : 4 ≤ k^4 := by nlinarith [Nat.pow_le_pow_left hk 4]
-  let S : SliceIndex k → Finset (Cell (k^4)) := fun i => horizontalSliceCells i.1 i.2
-  have hsize : ∀ i, 2 ≤ (S i).card ∧ (S i).card ≤ k^3 := by
+  have hn : 4 ≤ n := hk.two_le_n
+  let S : SliceIndex k → Finset (Cell n) := fun i => horizontalSliceCells i.1 i.2
+  have hsize : ∀ i, 2 ≤ (S i).card ∧ (S i).card ≤ side n k := by
     intro i
     dsimp [S]
-    rw [card_horizontalSlice hk rfl]
-    exact ⟨by nlinarith [Nat.pow_le_pow_left hk 3],le_rfl⟩
+    rw [card_horizontalSlice hk]
+    exact ⟨by have := hk.k_add_two_le; omega,le_rfl⟩
   have hcard : ∀ i, (S i).card = (S (slicePartner i)).card := by
     intro i
     dsimp [S]
-    rw [card_horizontalSlice hk rfl,card_horizontalSlice hk rfl]
+    rw [card_horizontalSlice hk,card_horizontalSlice hk]
   have hzero : ∀ i x, x ∈ S i → B x ≠ 0 := by
     intro i x hx hz
     have hh := hH i.1 x (mem_horizontalSliceCells _ _ _ |>.mp hx).1
     exact zero_not_mem_targetGroup i.1 (hz ▸ hh)
   obtain ⟨C,p,hp,hbC,hC,hfix⟩ := exists_bulk_involution_region_path_active B hn S slicePartner
-    slicePartner_involutive (horizontalSlice_disjoint hk) (k^3) (by nlinarith [Nat.mul_le_mul_right (k^3) hk]) hsize hcard hzero
+    slicePartner_involutive (horizontalSlice_disjoint hk) (side n k) (by
+      have hh := Nat.mul_le_mul_right (side n k) hk.two_le; have := hk.mul_side; omega) hsize hcard hzero
     (fun i t => t ∈ targetGroup (sliceDestination i)) Finset.univ (by simp)
     (by intro i _ x hx; simpa using hH i.1 x (mem_horizontalSliceCells _ _ _ |>.mp hx).1)
   refine ⟨C,p,?_,hbC,?_,?_,?_⟩

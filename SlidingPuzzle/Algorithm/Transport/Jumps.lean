@@ -11,7 +11,7 @@ open Classical
 column. The endpoint is the requested cell, all other group memberships are
 preserved, and the cost is linear in the vertical gap. -/
 theorem exists_group_vertical_jump {n k : ℕ} [NeZero n]
-    (hk : 2 ≤ k) (hn : 2 ≤ n) (B : Board n) (i : GroupIndex k)
+    (hk : Dims n k) (hn : 2 ≤ n) (B : Board n) (i : GroupIndex k)
     (b u : Cell n) (hb : B b ∈ targetGroup i) (hu : B u ∈ targetGroup i)
     (hbc : b.2 = (blank B).2)
     (hadj : gridDistance (blank B) u = 1) :

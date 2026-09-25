@@ -7,7 +7,7 @@ noncomputable section
 open Classical
 
 /-- Exchanging two cells of the same reservoir leaves every count unchanged. -/
-theorem boardMatrix_swap_same_reservoir {n k : ℕ} (hk : 2 ≤ k) (B : Board n)
+theorem boardMatrix_swap_same_reservoir {n k : ℕ} (hk : Dims n k) (B : Board n)
     {a c : Cell n} {i : GroupIndex k} (ha : reservoir i a) (hc : reservoir i c)
     (hac : a ≠ c) : boardMatrix hk (swapCells B a c) = boardMatrix hk B := by
   funext r s
@@ -24,15 +24,15 @@ theorem boardMatrix_swap_same_reservoir {n k : ℕ} (hk : 2 ≤ k) (B : Board n)
 
 /-- Slide the blank up its column to the first row of its reservoir. Counts
 and clear corridors are preserved; only reservoir cells move. -/
-theorem exists_reservoir_top_path {n k : ℕ} [NeZero n] (hk : 2 ≤ k)
+theorem exists_reservoir_top_path {n k : ℕ} [NeZero n] (hk : Dims n k)
     (B : Board n) (hB : Clear (k := k) B) (i : GroupIndex k)
     (hi : reservoir i (blank B)) :
     ∃ C : Board n, ∃ p : Path B C,
       Clear (k := k) C ∧ reservoir i (blank C) ∧
-      (blank C).1.val = (groupRow i).val*k^3+k ∧ (blank C).2 = (blank B).2 ∧
+      (blank C).1.val = (groupRow i).val*side n k+k ∧ (blank C).2 = (blank B).2 ∧
       boardMatrix hk C = boardMatrix hk B ∧
-      p.length + ((groupRow i).val*k^3+k) = (blank B).1.val := by
-  generalize hm : (blank B).1.val - ((groupRow i).val*k^3+k) = m
+      p.length + ((groupRow i).val*side n k+k) = (blank B).1.val := by
+  generalize hm : (blank B).1.val - ((groupRow i).val*side n k+k) = m
   induction m generalizing B with
   | zero =>
     have hlo := hi.1

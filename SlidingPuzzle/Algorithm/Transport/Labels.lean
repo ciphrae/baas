@@ -26,7 +26,7 @@ theorem GroupEquivalent.trans {i : GroupIndex k} {A B C : Board n}
   fun c j => (h c j).trans (h' c j)
 
 omit [NeZero n] in
-theorem targetGroup_membership_iff (hk : 2 ≤ k) {t : Tile n} {i : GroupIndex k}
+theorem targetGroup_membership_iff (hk : Dims n k) {t : Tile n} {i : GroupIndex k}
     (ht : t ∈ targetGroup i) (j : GroupIndex k) : t ∈ targetGroup j ↔ j = i := by
   constructor
   · intro hj
@@ -36,7 +36,7 @@ theorem targetGroup_membership_iff (hk : 2 ≤ k) {t : Tile n} {i : GroupIndex k
 
 /-- Any jump or ordinary move which exchanges the blank with a tile of group
 i preserves the filled-blank group invariant. -/
-theorem groupEquivalent_swap (hk : 2 ≤ k) (B : Board n) (i : GroupIndex k)
+theorem groupEquivalent_swap (hk : Dims n k) (B : Board n) (i : GroupIndex k)
     (b : Cell n) (ht : B b ∈ targetGroup i) :
     GroupEquivalent i B (swapCells B (blank B) b) := by
   have hne : b ≠ blank B := by
@@ -62,7 +62,7 @@ theorem groupEquivalent_swap (hk : 2 ≤ k) (B : Board n) (i : GroupIndex k)
 
 /-- A region filled with one group (apart from its blank) may be rearranged
 arbitrarily without changing the invariant, provided outside cells are fixed. -/
-theorem groupEquivalent_of_region (hk : 2 ≤ k) (i : GroupIndex k)
+theorem groupEquivalent_of_region (hk : Dims n k) (i : GroupIndex k)
     (A B : Board n) (S : Set (Cell n)) (ha : blank A ∈ S) (hb : blank B ∈ S)
     (hA : ∀ c ∈ S, c ≠ blank A → A c ∈ targetGroup i)
     (hB : ∀ c ∈ S, c ≠ blank B → B c ∈ targetGroup i)
@@ -102,7 +102,7 @@ theorem GroupEquivalent.membership_iff {i : GroupIndex k} {A B : Board n}
     simpa [hc, hc'] using h c j
 
 /-- Group equivalence preserves Clear when the final blank lies in a reservoir. -/
-theorem GroupEquivalent.clear (hk : 2 ≤ k) {i : GroupIndex k} {A B : Board n}
+theorem GroupEquivalent.clear (hk : Dims n k) {i : GroupIndex k} {A B : Board n}
     (h : GroupEquivalent i A B) (hA : Clear (k := k) A)
     {s : GroupIndex k} (hb : reservoir s (blank B)) :
     Clear (k := k) B := by
@@ -118,7 +118,7 @@ theorem GroupEquivalent.clear (hk : 2 ≤ k) {i : GroupIndex k} {A B : Board n}
 
 /-- The endpoint of any group-i route to the selected source tile has exactly
 the count effect of a direct blank/tile swap, even if corridor labels moved. -/
-theorem GroupEquivalent.boardMatrix_eq_swap (hk : 2 ≤ k) (i : GroupIndex k)
+theorem GroupEquivalent.boardMatrix_eq_swap (hk : Dims n k) (i : GroupIndex k)
     (A B : Board n) (b : Cell n) (ht : A b ∈ targetGroup i)
     (h : GroupEquivalent i A B) (hb : blank B = b) :
     boardMatrix hk B = boardMatrix hk (swapCells A (blank A) b) := by

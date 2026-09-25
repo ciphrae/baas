@@ -1,7 +1,7 @@
 import SlidingPuzzle.Parberry.Solver
 
 /-! Solving the outer `d` layers (rows and columns) of a board, at cost
-`(15*n²+3002*n+1)*d`. Used to reduce arbitrary sides to fourth powers. -/
+`(15*n²+3002*n+1)*d`. Used to reduce arbitrary sides to admissible ones (fewer than `k` layers). -/
 namespace SlidingPuzzle.Parberry
 variable {n : ℕ} [NeZero n]
 
