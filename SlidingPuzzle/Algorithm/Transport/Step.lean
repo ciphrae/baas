@@ -21,17 +21,17 @@ def VerticalTransportBound {n k : ℕ} [NeZero n] (_hk : Dims n k) (E : ℕ) : P
       vertical j i (blank D) ∧ (blank D).1 = b.1 ∧
       GroupEquivalent i A D ∧ p.inefficientMoves ≤ E
 
-/-- The vertical routing budget `E` adds to `5*s+75*k²+13*k+189`, plus `3*s`
+/-- The vertical routing budget `E` adds to `4.5*s+75*k²+13*k+190`, plus `3*s`
 for sources in the rightmost column of squares. The blank first slides to the
 top of its own reservoir, which preserves all counts; the entry jump then
 crosses only the horizontal corridor rows. The blank descends the vertical
 corridor on the nearer side of the source tile: its own square's, or that of the
 square to the right. The exit carries the tile to that side of its reservoir, so
-it costs at most `3*s` except in the rightmost column. -/
+it costs at most `2.5*s` except in the rightmost column. -/
 theorem transportStepBound_of_vertical_bound {n k E : ℕ} [NeZero n]
     (hk : Dims n k)
     (hvertical : VerticalTransportBound (n := n) hk E) :
-    TransportStepBound (n := n) hk (fun r => 5*side n k+E+75*k^2+13*k+189+
+    TransportStepBound (n := n) hk (fun r => 4*side n k+(side n k+1)/2+E+75*k^2+13*k+190+
       if (groupCol (transportIndex k hk r)).val+1 = k then 3*side n k else 0) := by
   intro A₀ hA₀ i j hi₀ hchoice₀
   obtain ⟨A, p₀, hA, hi, htop, _, hmat₀, hlen₀⟩ :=
@@ -80,8 +80,8 @@ theorem transportStepBound_of_vertical_bound {n k E : ℕ} [NeZero n]
   -- Choose the nearer side.
   have hmain : ∃ D : Board n, ∃ p : Path A D, Clear (k := k) D ∧ reservoir J (blank D) ∧
       boardMatrix hk D = boardMatrix hk (swapCells A (blank A) b) ∧
-      2*p.inefficientMoves ≤ 2*side n k+26*(k+1)+2*E+2*(75*k^2+176)+
-        6*side n k+(if (groupCol J).val+1 = k then 6*side n k else 0) := by
+      2*p.inefficientMoves ≤ 2*side n k+26*(k+1)+2*E+2*(75*k^2+177)+
+        5*side n k+(if (groupCol J).val+1 = k then 5*side n k else 0) := by
     by_cases hright : (groupCol J).val+1 < k ∧
         (groupCol J).val*side n k+side n k-b.2.val < b.2.val-(groupCol J).val*side n k
     · let J' : GroupIndex k := finProdFinEquiv (groupRow J, ⟨(groupCol J).val+1, hright.1⟩)
@@ -97,22 +97,22 @@ theorem transportStepBound_of_vertical_bound {n k E : ℕ} [NeZero n]
         refine ⟨by rw [hrowJ]; exact hb1, by rw [hrowJ, Nat.add_mul, Nat.one_mul]; exact hb2,
           le_rfl, by simp only [bc, Nat.add_mul, Nat.one_mul]; omega⟩
       obtain ⟨D, p, hD, hbD, hmD, hp⟩ := hroute J' bc hbc rfl
-        (6*(((groupCol J).val+1)*side n k-b.2.val)+75*k^2+176) (by
+        (5*(((groupCol J).val+1)*side n k-b.2.val)+75*k^2+177) (by
           intro C q hAC hCV hrow
           exact exists_transport_exit_right hk A C hA I J J' hrowJ hcolJ hAC b hb ht hCV hrow)
       refine ⟨D, p, hD, hbD, hmD, ?_⟩
-      have h6 : 2*(6*(((groupCol J).val+1)*side n k-b.2.val)) ≤ 6*side n k := by
+      have h6 : 2*(5*(((groupCol J).val+1)*side n k-b.2.val)) ≤ 5*side n k := by
         rw [Nat.add_mul, Nat.one_mul]; omega
       split_ifs <;> omega
     · obtain ⟨D, p, hD, hbD, hmD, hp⟩ := hroute J b hb rfl
-        (6*(b.2.val-(groupCol J).val*side n k)+75*k^2+176) (by
+        (5*(b.2.val-(groupCol J).val*side n k)+75*k^2+177) (by
           intro C q hAC hCV hrow
           exact exists_transport_exit_left hk A C hA I J hAC b hb ht hCV hrow)
       refine ⟨D, p, hD, hbD, hmD, ?_⟩
       have hgc := (groupCol J).isLt
       split_ifs with hlast
       · omega
-      · have h6 : 2*(6*(b.2.val-(groupCol J).val*side n k)) ≤ 6*side n k := by
+      · have h6 : 2*(5*(b.2.val-(groupCol J).val*side n k)) ≤ 5*side n k := by
           have : (groupCol J).val+1 < k := by omega
           have := not_and.mp hright this
           omega
@@ -127,7 +127,7 @@ theorem transportStepBound_of_vertical_bound {n k E : ℕ} [NeZero n]
     have hres' := hi.1
     rw [Nat.add_mul, Nat.one_mul] at hres
     have hrow0 : (groupRow I).val*side n k+k ≤ (blank A).1.val := hi.1
-    change p₀.inefficientMoves+p.inefficientMoves ≤ 5*side n k+E+75*k^2+13*k+189+
+    change p₀.inefficientMoves+p.inefficientMoves ≤ 4*side n k+(side n k+1)/2+E+75*k^2+13*k+190+
       (if (groupCol J).val+1 = k then 3*side n k else 0)
     split_ifs at hp ⊢ <;> omega
 

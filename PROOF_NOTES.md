@@ -97,9 +97,15 @@ each transfer is realized by a legal path (`Transport/Realization.lean`).
   orientation-free core (`exists_transport_exit_core`) instantiated twice.
   Squares in the rightmost column have only the left side.
 
-A transfer costs at most `6*s + O(k²)` inefficient moves: one `s` each for the
-entry slide, horizontal travel and vertical travel, and three for the exit, plus
-`3*s` if the source lies in the rightmost column. Off-diagonal counts never
+- *Exit charged by potential:* the walk to the source tile and the carries back
+  form one word of length `6d` (`Moves/ExitCarry.lean`), but its tiles move
+  little in net: the potential rises by at most `4d+2`, so at most `5d+1` of its
+  moves are inefficient. The proof is an induction on `d` that follows the
+  first walked tile, whose displacement partly cancels in the next carry.
+
+A transfer costs at most `5.5*s + O(k²)` inefficient moves: one `s` each for
+the entry slide, horizontal travel and vertical travel, and `2.5*s` for the
+exit, plus `3*s` if the source lies in the rightmost column. Off-diagonal counts never
 increase, so a reservoir is the source of at most as many transfers as it
 initially holds off-diagonal tiles (`weighted_rowOff_move`). The rightmost
 column's surcharge is therefore at most `k*s²*3s`, lower order
@@ -129,7 +135,7 @@ most twice the distance between their targets
 twice the access length (`Path.exists_conjugated_efficient`).
 
 *Two levels* (`Algorithm/TwoLevel.lean`). The one-level explicit bound is a
-local solver with inefficiency `19.25*s^(11/4) + 62665*s^(5/2)` for `s ≥ 10000`
+local solver with inefficiency `18.38*s^(11/4) + 62663*s^(5/2)` for `s ≥ 12⁴`
 (`recursiveSolver`). The suffix after Transport is then charged by inefficiency
 (`exists_admissible_solution_of_solver_ineff`): Arrangement by its length plus
 its potential increase, which is at most `2s` per non-reservoir cell because
@@ -140,29 +146,29 @@ level uses the inner bound only through Finish.
 
 ## Arbitrary sides
 
-For a board of side `n ≥ 10000`, let `x = n^(1/4)`, take `k = ⌊3x/5⌋` (one level) and
+For a board of side `n ≥ 12⁴`, let `x = n^(1/4)`, take `k = ⌊7x/12⌋` (one level) and
 `s = ⌊n/k⌋`, so that `s ≥ k³` (`exists_scaled_dimension`). The outer
 `d = n - k*s < k` rows and columns are solved by the Parberry prefix and the
 remaining `k*s × k*s` board by the admissible-board algorithm. The residual
 board is reachable and its Manhattan distance equals the original board's
 after the prefix (`Algorithm/Residual*.lean`). Then
-`k²s³ ≤ n³/k ≤ (5/3)x¹¹ + 4x¹⁰` (since `k > 3x/5 - 1`),
-`k⁵s² ≤ k³n² ≤ (27/125)x¹¹`, `k*s³ ≤ 4x¹⁰`, and the prefix costs
+`k²s³ ≤ n³/k ≤ (12/7)x¹¹ + 4x¹⁰` (since `k > 7x/12 - 1`),
+`k⁵s² ≤ k³n² ≤ (343/1728)x¹¹`, `k*s³ ≤ 4x¹⁰`, and the prefix costs
 `O(n²·k) = O(x¹⁰)`.
 
 **Choice of `k`.** With `k ≈ c*x`, twice the leading inefficiency is
-`(A'/c + 47*c³)*x¹¹`, where `A' = 17` with the Parberry Finish (one level) and
-`A' = 12` with the recursive Finish (two levels). The minimizer is
+`(A'/c + 47*c³)*x¹¹`, where `A' = 16` with the Parberry Finish (one level) and
+`A' = 11` with the recursive Finish (two levels). The minimizer is
 `c = (A'/141)^(1/4)`, and at the optimum the constant is
 `(4/3)*A^(3/4)*(3P)^(1/4)` for halved coefficients `A = A'/2` and `P = 23.5`.
 
 | Level | `c` | Constant | Where |
 | --- | --- | ---: | --- |
-| One (Parberry Finish) | `3/5` | `85/6 + 1269/250 ≈ 19.25` | `GeneralSize.exists_solution_explicit` |
-| Two (recursive Finish) | `27/50` | `100/9 + 925101/250000 ≈ 14.812` | `TwoLevel.exists_solution_two_level` |
+| One (Parberry Finish) | `7/12` | `96/7 + 16121/3456 ≈ 18.38` | `GeneralSize.exists_solution_explicit` |
+| Two (recursive Finish) | `9/17` | `187/18 + 34263/9826 ≈ 13.876` | `TwoLevel.exists_solution_two_level` |
 
-With two levels a unit saved in Transport is worth about `1.85` and a unit saved
-in Preparation or Arrangement about `0.16`.
+With two levels a unit saved in Transport is worth about `1.89` and a unit saved
+in Preparation or Arrangement about `0.15`.
 
 The paper instead rounds `n` down to a fourth power, leaving up to
 `4*n^(3/4)` outer layers whose Parberry prefix costs `60*n^(11/4)`. Rounding
@@ -176,9 +182,9 @@ Leading coefficients of the inefficient moves:
 | --- | ---: | --- |
 | Arrangement (length 24, halved) | `12*k⁵s²` | `Admissible.arrangement_bound` |
 | Preparation: staging 7.5, vertical spreading 4 | `11.5*k⁵s²` | `Admissible.preparation_phase` |
-| Transport | `6*k²s³` | `Admissible.transport_phase` |
+| Transport | `5.5*k²s³` | `Admissible.transport_phase` |
 | Finish (recursive solver, charged by inefficiency) | lower order | `TwoLevel.recursiveSolver` |
-| **Total**, with `k = ⌊27x/50⌋` | **`14.812*n^(11/4)`** | `TwoLevel.exists_solution_two_level` |
+| **Total**, with `k = ⌊9x/17⌋` | **`13.876*n^(11/4)`** | `TwoLevel.exists_solution_two_level` |
 
 Lower-order terms are collected in one `k*s³` envelope, plus the inner level's
 error, and absorbed (as `O(n^(41/16))`) only in `uniformApproximation`.
@@ -187,14 +193,14 @@ error, and absorbed (as `O(n^(41/16))`) only in `uniformApproximation`.
 
 Given the weights above, Transport is the phase worth attacking.
 
-- **Arrangement (12, weight 0.16).** Families are staged at the top row of the board, so each
+- **Arrangement (12, weight 0.15).** Families are staged at the top row of the board, so each
   exchanged tile travels up to `n` twice. Staging nearer to the squares involved,
   or accounting for the tiles' progress toward their targets, would reduce it.
-- **Staging (7.5, weight 0.16).** The staging prefix places exact tiles, although only group
+- **Staging (7.5, weight 0.15).** The staging prefix places exact tiles, although only group
   membership is needed.
-- **Transport (6).** The entry slide, horizontal travel, vertical travel and
-  exit each cost up to `s` per transfer (weight 1.85).
-- **Vertical spreading (4, weight 0.16).** Charging the translations at half their length
+- **Transport (5.5, weight 1.89).** The entry slide, horizontal travel and
+  vertical travel each cost up to `s` per transfer, the exit `2.5*s`.
+- **Vertical spreading (4, weight 0.15).** Charging the translations at half their length
   plus displacement needs a complete description of their effect on the band.
 - **Parberry placements.** Tracking Manhattan changes through the `Zhong` words
   would let carried tiles' own moves count as efficient in staging.
