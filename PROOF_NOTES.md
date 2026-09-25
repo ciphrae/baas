@@ -274,6 +274,13 @@ error, and absorbed (as `O(n^(41/16))`) only in `uniformApproximation`.
 
 ## Directions for improvement
 
+A broader brainstorm (recursive halving, Preparation redesigns, global structure,
+lower bounds and literature), with its simulation scripts, is in
+[`research/brainstorm-2026-09/`](research/brainstorm-2026-09/README.md). Its main
+candidates are an exit that restores the reservoir (`A` 3.5 → 2.75), Arrangement as a
+drain run (lower order), and Preparation by long-range conveyor families
+(11.5 → about 4/3), together giving a constant of about 4.
+
 Coefficients are halved (inefficiency units). At the balanced `k` the constant
 is `(4/3)*A^(3/4)*(3P)^(1/4)` with `A = 3.5` (Transport) and `P = 12.5`
 (Preparation 11.5, Arrangement 1), so one unit saved in `A` is worth about
