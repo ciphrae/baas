@@ -8,7 +8,7 @@ algorithm is such a solver, with inefficiency `O(s^(11/4))` (`recursiveSolver`).
 Charging the whole suffix by inefficiency
 (`exists_admissible_solution_of_solver_ineff`), Finish contributes only
 `O(k²s^(11/4))`, and twice the inefficiency is
-`7*k²s³ + 26*k⁵s² + O(k*s³) + O(k²s^(11/4))`: Transport alone remains in the
+`7*k²s³ + 25*k⁵s² + O(k*s³) + O(k²s^(11/4))`: Transport alone remains in the
 `k²s³` term.
 
 With `y = n^(1/16)`, `x = y⁴ = n^(1/4)`, `k = ⌊6x/11⌋` and `s = ⌊n/k⌋`:
@@ -16,11 +16,11 @@ With `y = n^(1/16)`, `x = y⁴ = n^(1/4)`, `k = ⌊6x/11⌋` and `s = ⌊n/k⌋`
 * `k²s³ ≤ (11/6)x¹¹ + 4x¹⁰`, `k⁵s² ≤ (216/1331)x¹¹`, `k*s³ ≤ 4x¹⁰`;
 * `s ≥ x³`, so `s^(1/4) ≥ y³` and `k²s^(11/4) ≤ k²s³/y³ ≤ 2y⁴¹`.
 
-The factor `6/11` is close to the minimizer `(7/78)^(1/4) ≈ 0.547` of
-`7/c + 26c³`. For every `n ≥ 36⁴`,
+The factor `6/11` is close to the minimizer `(7/75)^(1/4) ≈ 0.553` of
+`7/c + 25c³`. For every `n ≥ 36⁴`,
 
 ```text
-inefficiency ≤ 8.53*n^(11/4) + 237882*n^(41/16)      (exists_solution_two_level)
+inefficiency ≤ 8.45*n^(11/4) + 237854*n^(41/16)      (exists_solution_two_level)
 ```
 
 The remainder exponent `41/16` comes from the inner level's `s^(11/4)`. -/
@@ -65,8 +65,8 @@ theorem recursiveSolver : SolverBound recursiveCost recursiveIneff := by
 /-- Prefix and residual combined, with the recursive Finish solver. -/
 theorem optimalLength_le_of_residual_two_level {n k : ℕ} [NeZero n]
     (B : ReachableBoard n) (hk : 2 ≤ k) (hlo : k^4 ≤ n) :
-    optimalLength B ≤ manhattan B.val + 7*(k^2*(n/k)^3)+26*(k^5*(n/k)^2)+
-      40614*(k*(n/k)^3)+2*(k^2*recursiveIneff (n/k)) +
+    optimalLength B ≤ manhattan B.val + 7*(k^2*(n/k)^3)+25*(k^5*(n/k)^2)+
+      40600*(k*(n/k)^3)+2*(k^2*recursiveIneff (n/k)) +
       2*((15*n^2+3002*n+1)*(n-k*(n/k))) := by
   have hdims := residual_dims hk hlo
   have hm4 := hdims.two_le_n
@@ -84,7 +84,7 @@ theorem optimalLength_le_of_residual_two_level {n k : ℕ} [NeZero n]
     residual_reachable (by omega : 2 ≤ k*(n/k)) (n-k*(n/k)) hd C hC A hA hreachC
   obtain ⟨q,hq⟩ := exists_admissible_solution_of_solver_ineff recursiveSolver hdims A hreachA
   rw [hside] at hq
-  have hq' : q.length ≤ manhattan A+(7*(k^2*(n/k)^3)+26*(k^5*(n/k)^2)+40614*(k*(n/k)^3)+
+  have hq' : q.length ≤ manhattan A+(7*(k^2*(n/k)^3)+25*(k^5*(n/k)^2)+40600*(k*(n/k)^3)+
       2*(k^2*recursiveIneff (n/k))) := by
     omega
   have h := optimalLength_le_prefix_residual_solution B (n-k*(n/k)) hd C p hC A hA q hq'
@@ -304,12 +304,12 @@ private theorem two_level_terms {n k : ℕ} (hn : 36^4 ≤ n) (hlo : 14641*k^4 �
 theorem optimalLength_le_two_level {n : ℕ} [NeZero n]
     (hn : 36^4 ≤ n) (B : ReachableBoard n) :
     (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ)+
-      17.06*Real.rpow (n : ℝ) (11/4 : ℝ)+475764*Real.rpow (n : ℝ) (41/16 : ℝ) := by
+      16.90*Real.rpow (n : ℝ) (11/4 : ℝ)+475708*Real.rpow (n : ℝ) (41/16 : ℝ) := by
   obtain ⟨k,hk,hlo,hhi⟩ := exists_scaled_dimension 1296 14641 (by norm_num) (by omega)
     (n := n)
   have hnat := optimalLength_le_of_residual_two_level B hk (by linarith)
   have hreal : (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ)+
-      7*((k^2*(n/k)^3 : ℕ) : ℝ)+26*((k^5*(n/k)^2 : ℕ) : ℝ)+40614*((k*(n/k)^3 : ℕ) : ℝ)+
+      7*((k^2*(n/k)^3 : ℕ) : ℝ)+25*((k^5*(n/k)^2 : ℕ) : ℝ)+40600*((k*(n/k)^3 : ℕ) : ℝ)+
       2*((k^2*recursiveIneff (n/k) : ℕ) : ℝ)+
       2*(((15*n^2+3002*n+1)*(n-k*(n/k)) : ℕ) : ℝ) := by exact_mod_cast hnat
   obtain ⟨ha, hb, hc, hd, he⟩ := two_level_terms hn hlo hhi
@@ -328,14 +328,14 @@ theorem optimalLength_le_two_level {n : ℕ} [NeZero n]
   nlinarith
 
 /-- The two-level bound as a legal solution: inefficiency at most
-`8.53*n^(11/4) + 237882*n^(41/16)` for every `n ≥ 36⁴`. -/
+`8.45*n^(11/4) + 237854*n^(41/16)` for every `n ≥ 36⁴`. -/
 theorem exists_solution_two_level {n : ℕ} [NeZero n]
     (hn : 36^4 ≤ n) (B : ReachableBoard n) :
     ∃ p : Path B.val (target n),
-      (p.inefficientMoves : ℝ) ≤ 8.53*Real.rpow (n : ℝ) (11/4 : ℝ)+
-        237882*Real.rpow (n : ℝ) (41/16 : ℝ) ∧
-      (p.length : ℝ) ≤ (manhattan B.val : ℝ)+17.06*Real.rpow (n : ℝ) (11/4 : ℝ)+
-        475764*Real.rpow (n : ℝ) (41/16 : ℝ) := by
+      (p.inefficientMoves : ℝ) ≤ 8.45*Real.rpow (n : ℝ) (11/4 : ℝ)+
+        237854*Real.rpow (n : ℝ) (41/16 : ℝ) ∧
+      (p.length : ℝ) ≤ (manhattan B.val : ℝ)+16.90*Real.rpow (n : ℝ) (11/4 : ℝ)+
+        475708*Real.rpow (n : ℝ) (41/16 : ℝ) := by
   obtain ⟨p,hp⟩ := shortest_witness B
   have hlength := optimalLength_le_two_level hn B
   rw [← hp] at hlength
@@ -359,20 +359,20 @@ theorem sixteenth_gap_absorb (R n : ℕ) (hn : R^16 ≤ n^3) :
   calc (R : ℝ)*y^41 ≤ y^3*y^41 := mul_le_mul_of_nonneg_right hR (by positivity)
     _ = y^44 := by ring
 
-/-- For large `n`, `OPT ≤ M + 18.06*n^(11/4)`. The threshold is not optimized. -/
+/-- For large `n`, `OPT ≤ M + 17.90*n^(11/4)`. The threshold is not optimized. -/
 theorem optimalLength_le_eventually_two_level {n : ℕ} [NeZero n]
-    (hn : 475764^6 ≤ n) (B : ReachableBoard n) :
-    (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ)+18.06*Real.rpow (n : ℝ) (11/4 : ℝ) := by
+    (hn : 475708^6 ≤ n) (B : ReachableBoard n) :
+    (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ)+17.90*Real.rpow (n : ℝ) (11/4 : ℝ) := by
   have h := optimalLength_le_two_level (le_trans (by norm_num) hn) B
-  have hr := sixteenth_gap_absorb 475764 n (by
-    calc 475764^16 ≤ (475764^6)^3 := by norm_num
+  have hr := sixteenth_gap_absorb 475708 n (by
+    calc 475708^16 ≤ (475708^6)^3 := by norm_num
       _ ≤ n^3 := Nat.pow_le_pow_left hn 3)
   norm_num only [Nat.cast_ofNat] at hr
   linarith
 
 /-- The boardwise bound required by Proposition 9. -/
 theorem uniformApproximation : UniformApproximation := by
-  refine ⟨18.06,by norm_num,475764^6,?_⟩
+  refine ⟨17.90,by norm_num,475708^6,?_⟩
   intro n hn hn2
   letI : NeZero n := ⟨by omega⟩
   intro B

@@ -217,7 +217,11 @@ local solver with inefficiency `12.86*s^(11/4) + 78255*s^(5/2)` for `s ≥ 12⁴
 (`exists_admissible_solution_of_solver_ineff`): Arrangement by its length plus
 its potential increase, which is at most `2s` per non-reservoir cell because
 every tile of a sorted board lies in its own square (`arrangement_manhattan`),
-and Finish by `k²` local inefficiencies. Since `s ≥ x³` with `x = n^(1/4)`, the
+and Finish by `k²` local inefficiencies. Arrangement's potential also falls:
+each vertical corridor tile of `V(i,j)` starts at least `s*(Δrow+Δcol) - 2s`
+from its target and ends within `2s` of it, so the potential drops by about
+`(2/3)*k⁵s²`, a quarter of Arrangement's length `(8/3)*k⁵s²`
+(`arrangement_manhattan`). Since `s ≥ x³` with `x = n^(1/4)`, the
 inner error is `O(x^(41/4)) = O(n^(41/16))`. No induction is needed: the outer
 level uses the inner bound only through Finish.
 
@@ -237,15 +241,17 @@ after the prefix (`Algorithm/Residual*.lean`). Then
 `(A'/c + 26*c³)*x¹¹`, where `A' = 12` with the Parberry Finish (one level) and
 `A' = 7` with the recursive Finish (two levels). The minimizer is
 `c = (A'/78)^(1/4)`, and at the optimum the constant is
-`(4/3)*A^(3/4)*(3P)^(1/4)` for halved coefficients `A = A'/2` and `P = 13`.
+`(4/3)*A^(3/4)*(3P)^(1/4)` for halved coefficients `A = A'/2` and `P = 13` (one
+level) or `P = 12.5` (two levels, where Arrangement is charged less its
+potential decrease; the corridor term is then `25*c³`).
 
 | Level | `c` | Constant | Where |
 | --- | --- | ---: | --- |
 | One (Parberry Finish) | `2/3` | `9 + 104/27 ≈ 12.86` | `GeneralSize.exists_solution_explicit` |
-| Two (recursive Finish) | `6/11` | `77/12 + 2808/1331 ≈ 8.53` | `TwoLevel.exists_solution_two_level` |
+| Two (recursive Finish) | `6/11` | `77/12 + 2700/1331 ≈ 8.45` | `TwoLevel.exists_solution_two_level` |
 
-With two levels a unit saved in Transport is worth about `1.83` and a unit saved
-in Preparation or Arrangement about `0.16`.
+With two levels a unit saved in Transport is worth about `1.81` and a unit saved
+in Preparation or Arrangement about `0.17`.
 
 The paper instead rounds `n` down to a fourth power, leaving up to
 `4*n^(3/4)` outer layers whose Parberry prefix costs `60*n^(11/4)`. Rounding
@@ -257,11 +263,11 @@ Leading coefficients of the inefficient moves:
 
 | Source | Coefficient | Where |
 | --- | ---: | --- |
-| Arrangement (length 3, halved) | `1.5*k⁵s²` | `Admissible.arrangement_bound` |
+| Arrangement (length `8/3` less potential decrease `2/3`, halved) | `k⁵s²` | `Admissible.arrangement_manhattan` |
 | Preparation: staging 7.5, vertical spreading 4 | `11.5*k⁵s²` | `Admissible.preparation_phase` |
 | Transport | `3.5*k²s³` | `Admissible.transport_phase` |
 | Finish (recursive solver, charged by inefficiency) | lower order | `TwoLevel.recursiveSolver` |
-| **Total**, with `k = ⌊6x/11⌋` | **`8.53*n^(11/4)`** | `TwoLevel.exists_solution_two_level` |
+| **Total**, with `k = ⌊6x/11⌋` | **`8.45*n^(11/4)`** | `TwoLevel.exists_solution_two_level` |
 
 Lower-order terms are collected in one `k*s³` envelope, plus the inner level's
 error, and absorbed (as `O(n^(41/16))`) only in `uniformApproximation`.
@@ -269,11 +275,11 @@ error, and absorbed (as `O(n^(41/16))`) only in `uniformApproximation`.
 ## Directions for improvement
 
 Coefficients are halved (inefficiency units). At the balanced `k` the constant
-is `(4/3)*A^(3/4)*(3P)^(1/4)` with `A = 3.5` (Transport) and `P = 13`
-(Preparation 11.5, Arrangement 1.5), so one unit saved in `A` is worth about
-`1.83` and one unit in `P` about `0.16`.
+is `(4/3)*A^(3/4)*(3P)^(1/4)` with `A = 3.5` (Transport) and `P = 12.5`
+(Preparation 11.5, Arrangement 1), so one unit saved in `A` is worth about
+`1.81` and one unit in `P` about `0.17`.
 
-- **Arrangement sideways leg (1.5 → about 0.67; constant about −0.14).** Families
+- **Arrangement sideways leg (1 → about 0.33; constant about −0.11).** Families
   move sideways at `6` moves per tile and cell (protected column shifts) but along
   their own axis at `2` (conveyor). Turning a column family into a row costs
   only `O(s)` per tile, which is lower order. So the sideways leg could run as a
@@ -296,7 +302,7 @@ is `(4/3)*A^(3/4)*(3P)^(1/4)` with `A = 3.5` (Transport) and `P = 13`
   of the right group, like the Arrangement change, is another option; so is
   tracking Manhattan changes through the `Zhong` placement words, so that carried
   tiles' own moves count as efficient.
-- **Transport (3.5, weight 1.83).** Per transfer: entry slide and vertical
+- **Transport (3.5, weight 1.81).** Per transfer: entry slide and vertical
   travel together up to `s` (upper and lower corridor rows), exit plus
   horizontal travel `2.5*s` on average (with look-ahead, which is optimal for
   this cost model). Ideas:
@@ -311,5 +317,5 @@ is `(4/3)*A^(3/4)*(3P)^(1/4)` with `A = 3.5` (Transport) and `P = 13`
   not change the leading constant.
 - **Remainder and thresholds.** The explicit bounds use loose envelopes (`k*s³`
   with coefficients near `3*10⁴`), and `uniformApproximation` absorbs the
-  `n^(41/16)` term only at `n ≥ 475764^6`. Tightening these doesn't affect the
+  `n^(41/16)` term only at `n ≥ 475708^6`. Tightening these doesn't affect the
   asymptotic constant.

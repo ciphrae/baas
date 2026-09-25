@@ -206,8 +206,8 @@ theorem exists_vertical_arrangement_path_near (hk : Dims n k) (B : Board n)
 omit [NeZero n] in
 /-- The vertical exchanges cost `(8/3)*k⁵s² + O(k*s³)` in total. -/
 theorem sum_vcost_le (hk : Dims n k) :
-    ∑ ij ∈ Finset.univ.filter (fun ij : GroupIndex k × GroupIndex k => ij.swap ≠ ij),
-      vcost n k ij ≤ 3*(k^5*side n k^2)+22*(k*side n k^3) := by
+    3*∑ ij ∈ Finset.univ.filter (fun ij : GroupIndex k × GroupIndex k => ij.swap ≠ ij),
+      vcost n k ij ≤ 8*(k^5*side n k^2)+66*(k*side n k^3) := by
   classical
   obtain ⟨hk2, hk2', hk3, hks, hkn⟩ := hk.facts
   set s := side n k with hsdef
@@ -239,7 +239,9 @@ theorem sum_vcost_le (hk : Dims n k) :
   set DR := ∑ i : GroupIndex k, ∑ j : GroupIndex k, Nat.dist (groupRow i).val (groupRow j).val
   have hcard : Fintype.card (GroupIndex k × GroupIndex k) = k^4 := by
     simp [Fintype.card_prod]; ring
-  calc ∑ ij ∈ Finset.univ.filter (fun ij : GroupIndex k × GroupIndex k => ij.swap ≠ ij),
+  have hchain : ∑ ij ∈ Finset.univ.filter (fun ij : GroupIndex k × GroupIndex k => ij.swap ≠ ij),
+        vcost n k ij ≤ k^4*(4*n+3*m+1)+(s*DC+k^4*k^2)*(6*m+5)+s*DR*(2*m+3) := calc
+    ∑ ij ∈ Finset.univ.filter (fun ij : GroupIndex k × GroupIndex k => ij.swap ≠ ij),
         vcost n k ij
       ≤ ∑ ij : GroupIndex k × GroupIndex k, vcost n k ij :=
         Finset.sum_le_sum_of_subset (Finset.filter_subset _ _)
@@ -257,7 +259,8 @@ theorem sum_vcost_le (hk : Dims n k) :
           ← Finset.sum_mul, Finset.sum_const, Finset.card_univ, hcard, smul_eq_mul]
         simp only [Fintype.sum_prod_type, DC, DR, ← Finset.mul_sum, ← Finset.sum_mul]
         ring
-    _ ≤ 3*(k^5*s^2)+22*(k*s^3) := by
+  have hfinal : 3*(k^4*(4*n+3*m+1)+(s*DC+k^4*k^2)*(6*m+5)+s*DR*(2*m+3)) ≤
+      8*(k^5*s^2)+66*(k*s^3) := by
         have hn : n = k*s := hk.mul_side.symm
         -- Monomials below `k*s³`, using `s ≥ k³`.
         have hs1 : 1 ≤ s := by nlinarith
@@ -298,5 +301,6 @@ theorem sum_vcost_le (hk : Dims n k) :
         have hexpA : (s*k^5+3*k^6)*(6*s+5) = 6*(k^5*s^2)+5*(k^5*s)+18*(k^6*s)+15*k^6 := by ring
         have hexpB : s*k^5*(2*s+3) = 2*(k^5*s^2)+3*(k^5*s) := by ring
         omega
+  omega
 
 end SlidingPuzzle.Partition

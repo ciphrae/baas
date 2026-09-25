@@ -17,12 +17,12 @@ theorem exists_arrangement_path (hk : Dims n k) (B : Board n)
     (hclear : Clear (k := k) B) (hsorted : ReservoirSorted (k := k) B)
     (hblank : ∃ g : GroupIndex k, reservoir g (blank B)) :
     ∃ C : Board n, ∃ p : Path B C,
-      p.length ≤ 3*(k^5*side n k^2)+22*(k*side n k^3) + (24*side n k+2032)*(4*k^3)*n ∧
+      3*p.length ≤ 8*(k^5*side n k^2)+66*(k*side n k^3) + 3*((24*side n k+2032)*(4*k^3)*n) ∧
       blank C = blank B ∧
       SquaresSorted (k := k) C ∧
       ∀ (i : GroupIndex k) x, reservoir i x → C x = B x := by
   obtain ⟨D,p,hp,hbD,hDV,hDH,hDR⟩ := exists_vertical_arrangement_path_near hk B hclear hblank
-  have hp' := hp.trans (sum_vcost_le hk)
+  have hp' := sum_vcost_le hk
   have hH : ∀ (i : GroupIndex k) x, horizontal i x → D x ∈ targetGroup i := by
     intro i x hx
     rw [hDH i x hx]
@@ -32,7 +32,7 @@ theorem exists_arrangement_path (hk : Dims n k) (B : Board n)
     (hCR i x hx).trans (hDR i x hx)
   refine ⟨C,p.append q,?_,hbC.trans hbD,?_,hR⟩
   · rw [Path.length_append]
-    exact Nat.add_le_add hp' hq
+    omega
   · intro i x hxi hnonzero
     rcases covers hk x with ⟨j,hxH⟩ | ⟨j,l,hxV⟩ | ⟨j,hxR⟩
     · obtain ⟨a, hxa⟩ := exists_slot_of_horizontal hk hxH

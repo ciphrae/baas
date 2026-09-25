@@ -181,8 +181,8 @@ private theorem transport_arith {k s : ℕ} (hk : 2 ≤ k) (hs : k^3 ≤ s) :
   linarith
 
 private theorem arrangement_arith {k s : ℕ} (hk : 2 ≤ k) (hs : k^3 ≤ s) :
-    3*(k^5*s^2)+22*(k*s^3)+(24*s+2032)*(4*k^3)*(k*s) ≤
-      3*(k^5*s^2)+8300*(k*s^3) := by
+    8*(k^5*s^2)+66*(k*s^3)+3*((24*s+2032)*(4*k^3)*(k*s)) ≤
+      8*(k^5*s^2)+24800*(k*s^3) := by
   obtain ⟨m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13⟩ := monomials hk hs
   have hexp : (24*s+2032)*(4*k^3)*(k*s) = 96*(k^4*s^2)+8128*(k^4*s) := by ring
   omega
@@ -230,7 +230,7 @@ theorem transport_phase {n k : ℕ} (hk : Dims n k) [NeZero n] :
   dsimp [LeadingBudget.eval]
   omega
 
-/-- Arrangement: two exchange schedules of total length `3*k⁵s² + O(k*s³)`. -/
+/-- Arrangement: two exchange schedules of total length `(8/3)*k⁵s² + O(k*s³)`. -/
 theorem arrangement_bound {n k : ℕ} (hk : Dims n k) [NeZero n]
     (B : Board n) (hB : Transported hk B) :
     ∃ C : Board n, ∃ p : Path B C, Arranged hk C ∧
@@ -289,13 +289,29 @@ private theorem square_gridDistance_le {n k : ℕ} {i : GroupIndex k} {a b : Cel
   simp only [gridDistance, Nat.dist]
   omega
 
-/-- Arrangement raises the potential by little: reservoirs are unchanged, and
-every tile of a sorted board is within `2s` of its target. -/
+/-- A tile in square `i` whose target lies in square `j` is at least the
+distance between the squares, less `2s`, from its target. -/
+private theorem square_dist_lower {n k : ℕ} {i j : GroupIndex k} {a b : Cell n}
+    (ha : square i a) (hb : square j b) :
+    Nat.dist (groupRow i).val (groupRow j).val*side n k+
+      Nat.dist (groupCol i).val (groupCol j).val*side n k ≤ gridDistance a b+2*side n k := by
+  obtain ⟨ha1, ha2, ha3, ha4⟩ := ha
+  obtain ⟨hb1, hb2, hb3, hb4⟩ := hb
+  rw [← Nat.dist_mul_right, ← Nat.dist_mul_right]
+  simp only [Nat.add_mul, Nat.one_mul] at ha2 ha4 hb2 hb4
+  simp only [gridDistance, Nat.dist]
+  omega
+
+/-- Arrangement lowers the potential by about `(2/3)*k⁵s²`: every vertical
+corridor tile travels from square `i` to its own square `j`, whose coordinates
+differ by `k/3` on average (`Arrangement/Cost.lean`), and every tile of a
+sorted board is within `2s` of its target. Reservoirs are unchanged. -/
 theorem arrangement_manhattan {n k : ℕ} (hk : Dims n k) (B C : Board n)
-    (hres : ∀ (i : GroupIndex k) x, reservoir i x → C x = B x)
+    (hclear : Clear (k := k) B) (hres : ∀ (i : GroupIndex k) x, reservoir i x → C x = B x)
     (hsorted : SquaresSorted (k := k) C) :
-    manhattan C ≤ manhattan B+(4*k^2*n*side n k+2*k^4*side n k^2) := by
-  have hcell : ∀ x, cellCost C x ≤ 2*side n k := by
+    3*manhattan C+2*(k^5*side n k^2) ≤ 3*manhattan B+30*(k*side n k^3) := by
+  set s := side n k with hs
+  have hcell : ∀ x, cellCost C x ≤ 2*s := by
     intro x
     obtain ⟨j, hj⟩ := square_covers hk x
     unfold cellCost
@@ -313,39 +329,94 @@ theorem arrangement_manhattan {n k : ℕ} (hk : Dims n k) (B C : Board n)
     intro c hc
     simp only [cellCost, hres i c ((mem_reservoirCells i c).mp hc)]
   have hH : ∑ i : GroupIndex k, ∑ c ∈ horizontalCells i, cellCost C c ≤
-      k^2*(2*n)*(2*side n k) := by
-    calc _ ≤ ∑ _i : GroupIndex k, (2*n)*(2*side n k) := by
+      k^2*(2*n)*(2*s) := by
+    calc _ ≤ ∑ _i : GroupIndex k, (2*n)*(2*s) := by
           apply Finset.sum_le_sum
           intro i _
-          calc _ ≤ ∑ _c ∈ horizontalCells (n := n) i, 2*side n k :=
+          calc _ ≤ ∑ _c ∈ horizontalCells (n := n) i, 2*s :=
                 Finset.sum_le_sum (fun c _ => hcell c)
-            _ = (2*n)*(2*side n k) := by simp [card_horizontal hk i]
-      _ = k^2*(2*n)*(2*side n k) := by simp [Finset.card_univ, pow_two]; ring
-  have hV : ∑ i : GroupIndex k, ∑ j : GroupIndex k, ∑ c ∈ verticalCells i j, cellCost C c ≤
-      k^4*side n k*(2*side n k) := by
-    calc _ ≤ ∑ _i : GroupIndex k, ∑ _j : GroupIndex k, side n k*(2*side n k) := by
-          apply Finset.sum_le_sum
-          intro i _
-          apply Finset.sum_le_sum
-          intro j _
-          calc _ ≤ ∑ _c ∈ verticalCells (n := n) i j, 2*side n k :=
-                Finset.sum_le_sum (fun c _ => hcell c)
-            _ = (side n k-2*k)*(2*side n k) := by simp [card_vertical hk i j]
-            _ ≤ side n k*(2*side n k) := Nat.mul_le_mul_right _ (Nat.sub_le _ _)
-      _ = k^4*side n k*(2*side n k) := by simp [Finset.card_univ]; ring
-  have e1 : k^2*(2*n)*(2*side n k) = 4*k^2*n*side n k := by ring
-  have e2 : k^4*side n k*(2*side n k) = 2*k^4*side n k^2 := by ring
+            _ = (2*n)*(2*s) := by simp [card_horizontal hk i]
+      _ = k^2*(2*n)*(2*s) := by simp [Finset.card_univ, pow_two]; ring
+  -- Each vertical corridor tile.
+  obtain ⟨X, hX⟩ : ∃ X : GroupIndex k → GroupIndex k → ℕ, X = fun i j =>
+      Nat.dist (groupRow i).val (groupRow j).val*s+Nat.dist (groupCol i).val (groupCol j).val*s :=
+    ⟨_, rfl⟩
+  have hpt : ∀ i j : GroupIndex k, ∀ c ∈ verticalCells (n := n) i j,
+      cellCost C c+X i j ≤ cellCost B c+4*s := by
+    intro i j c hc
+    have hv := (mem_verticalCells i j c).mp hc
+    have hBc := hclear.2 i j c hv
+    obtain ⟨h0, hsq⟩ := (mem_targetGroup j (B c)).mp hBc
+    have hlow := square_dist_lower (vertical_subset_square hk hv) hsq
+    rw [← hs] at hlow
+    have hcB : cellCost B c = gridDistance c (position (target n) (B c)) := by
+      unfold cellCost; rw [if_neg h0]
+    have := hcell c
+    simp only [hX]
+    omega
+  have hV : ∑ i : GroupIndex k, ∑ j : GroupIndex k, ∑ c ∈ verticalCells i j, cellCost C c +
+      ∑ i : GroupIndex k, ∑ j : GroupIndex k, (s-2*k)*X i j ≤
+      ∑ i : GroupIndex k, ∑ j : GroupIndex k, ∑ c ∈ verticalCells i j, cellCost B c +
+      k^4*((s-2*k)*(4*s)) := by
+    have h1 : ∀ i j : GroupIndex k, ∑ c ∈ verticalCells (n := n) i j, cellCost C c+
+        (s-2*k)*X i j ≤ ∑ c ∈ verticalCells (n := n) i j, cellCost B c+(s-2*k)*(4*s) := by
+      intro i j
+      calc _ = ∑ c ∈ verticalCells (n := n) i j, (cellCost C c+X i j) := by
+            rw [Finset.sum_add_distrib, Finset.sum_const, card_vertical hk i j, smul_eq_mul]
+        _ ≤ ∑ c ∈ verticalCells (n := n) i j, (cellCost B c+4*s) := Finset.sum_le_sum (hpt i j)
+        _ = _ := by
+            rw [Finset.sum_add_distrib, Finset.sum_const, card_vertical hk i j, smul_eq_mul]
+    have h2 := Finset.sum_le_sum (fun i (_ : i ∈ (Finset.univ : Finset (GroupIndex k))) =>
+      Finset.sum_le_sum (fun j (_ : j ∈ (Finset.univ : Finset (GroupIndex k))) => h1 i j))
+    simp only [Finset.sum_add_distrib] at h2
+    have e : ∑ _i : GroupIndex k, ∑ _j : GroupIndex k, (s-2*k)*(4*s) = k^4*((s-2*k)*(4*s)) := by
+      simp only [Finset.sum_const, Finset.card_univ, Fintype.card_fin, smul_eq_mul]; ring
+    rw [e] at h2
+    exact h2
+  -- The total travel.
+  have hsum : 3*∑ i : GroupIndex k, ∑ j : GroupIndex k, (s-2*k)*X i j =
+      2*((s-2*k)*s*(k^2*(k^3-k))) := by
+    have e : ∀ i j : GroupIndex k, (s-2*k)*X i j =
+        ((s-2*k)*s)*Nat.dist (groupRow i).val (groupRow j).val+
+          ((s-2*k)*s)*Nat.dist (groupCol i).val (groupCol j).val := by
+      intro i j; simp only [hX]; ring
+    simp only [e, Finset.sum_add_distrib, ← Finset.mul_sum]
+    have hR' := sum_groupRow_dist k
+    have hC' := sum_groupCol_dist k
+    calc 3*((s-2*k)*s*∑ i : GroupIndex k, ∑ j : GroupIndex k,
+            Nat.dist (groupRow i).val (groupRow j).val+
+          (s-2*k)*s*∑ i : GroupIndex k, ∑ j : GroupIndex k,
+            Nat.dist (groupCol i).val (groupCol j).val) =
+        (s-2*k)*s*(3*∑ i : GroupIndex k, ∑ j : GroupIndex k,
+            Nat.dist (groupRow i).val (groupRow j).val)+
+          (s-2*k)*s*(3*∑ i : GroupIndex k, ∑ j : GroupIndex k,
+            Nat.dist (groupCol i).val (groupCol j).val) := by ring
+      _ = 2*((s-2*k)*s*(k^2*(k^3-k))) := by rw [hR', hC']; ring
+  -- Lower-order terms.
+  obtain ⟨m2,m3,-,m5,-,-,-,-,-,-,-,-⟩ := monomials hk.two_le hk.cube_le
+  rw [← hs] at m2 m3 m5
+  have h2k : 2*k ≤ s := by have := hk.sq_add_le; nlinarith [hk.two_le]
+  have hk3 : k ≤ k^3 := by have := hk.two_le; nlinarith
+  have hpoly : 2*(k^5*s^2) ≤ 2*((s-2*k)*s*(k^2*(k^3-k)))+2*(k^3*s^2)+4*(k^6*s) := by
+    zify [h2k, hk3]
+    nlinarith [sq_nonneg ((k : ℤ)^2), show (0 : ℤ) ≤ k^4*s by positivity]
+  have hVlow : k^4*((s-2*k)*(4*s)) ≤ 4*(k^4*s^2) := by
+    calc k^4*((s-2*k)*(4*s)) ≤ k^4*(s*(4*s)) :=
+          Nat.mul_le_mul_left _ (Nat.mul_le_mul_right _ (Nat.sub_le _ _))
+      _ = 4*(k^4*s^2) := by ring
+  have hHlow : k^2*(2*n)*(2*s) = 4*(k^3*s^2) := by
+    rw [← hk.mul_side, ← hs]; ring
   omega
 
-/-- The whole suffix charged by inefficiency: Arrangement by its length plus
-its small potential increase (`arrangement_manhattan`), Finish by the local
+/-- The whole suffix charged by inefficiency: Arrangement by its length less
+its potential decrease (`arrangement_manhattan`), Finish by the local
 solver's inefficiency. Twice the inefficiency is at most
-`7*k²s³ + 26*k⁵s² + 40614*k*s³ + 2*k²*ineff s`. -/
+`7*k²s³ + 25*k⁵s² + 40600*k*s³ + 2*k²*ineff s`. -/
 theorem exists_admissible_solution_of_solver_ineff {cost ineff : ℕ → ℕ}
     (hsolver : SolverBound cost ineff)
     {n k : ℕ} (hk : Dims n k) [NeZero n] (B : Board n) (hB : Reachable B) :
     ∃ p : Path B (target n),
-      p.length ≤ manhattan B+7*(k^2*side n k^3)+26*(k^5*side n k^2)+40614*(k*side n k^3)+
+      p.length ≤ manhattan B+7*(k^2*side n k^3)+25*(k^5*side n k^2)+40600*(k*side n k^3)+
         2*(k^2*ineff (side n k)) := by
   obtain ⟨C,p,hC,hp⟩ := preparation_transport_phase hk B hB
   obtain ⟨D,q,hq,hblank,hsorted,hres⟩ := exists_arrangement_path hk C hC.clear hC.sorted
@@ -353,21 +424,15 @@ theorem exists_admissible_solution_of_solver_ineff {cost ineff : ℕ → ℕ}
   have hD : Arranged hk D := Arranged.of_path hC.reachable q hsorted (by
     rw [hblank]; exact reservoir_subset_square hC.blank_last)
   obtain ⟨r,-,hri⟩ := exists_finish_path hsolver hk D hD
-  have hM := arrangement_manhattan hk C D hres hsorted
+  have hM := arrangement_manhattan hk C D hC.clear hres hsorted
   have hqbal := q.length_add_manhattan
   have ha := arrangement_arith hk.two_le hk.cube_le
   rw [hk.mul_side] at ha
   obtain ⟨m2,m3,-,-,-,-,m8,-,-,-,-,-⟩ := monomials hk.two_le hk.cube_le
-  have e1 : 4*k^2*n*side n k = 4*(k^3*side n k^2) := by
-    have h := hk.mul_side
-    generalize side n k = s at h ⊢
-    subst h; ring
   have e2 : 9354*k^2*n = 9354*(k^3*side n k) := by
     have h := hk.mul_side
     generalize side n k = s at h ⊢
     subst h; ring
-  have e3 : 2*k^4*side n k^2 = 2*(k^4*side n k^2) := by ring
-  rw [e1, e3] at hM
   rw [e2] at hri
   refine ⟨p.append (q.append r),?_⟩
   rw [Path.solution_length]
