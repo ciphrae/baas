@@ -70,21 +70,24 @@ Findings (scripts here, `uv run --with numpy python <script> kinds KxS,... m,...
   further) also change the assignment.
 
 Results (eulerrun.py, `uv run --with numpy --with scipy python eulerrun.py kinds KxS m`).
-Assignment per column = lexicographic max-weight matching (feasible pairs, then own-hub
-pairs, then stock). Greedy and non-lexicographic weightings each broke one family
-(greedy: blockperm k=12 carried one class every round; stock-first: random).
-  m=16: hard stalls 0, carries 0 everywhere except transpose k=10 (2), k = 8..12.
-  random: min stock stays >= 12-13 of 16 (stock barely moves); cycles/round 5.0/5.9/6.8
-  (k=8/10/12, about 0.6k, within the k per round budget); transpose/rot90/blockperm 1-2.
-  G_r always connected. (cycles+carry)*k/n2 <= 0.63 and not growing.
-  So Euler rounds + MaxWeight assignment look like a working O(n^(8/3)) schedule with m = O(1).
+Assignment per column = lexicographic max-weight matching (feasible pairs, then stock).
+CORRECTION: earlier runs (commits 8e2bef6, fcad46d) treated service of D=(a,c) by its own
+hub as free. It is not: D then receives R(a,c)'s head, whatever class it is, so the own class
+needs (virtual) stock like any other. With that free, own-class deficits reached -s^2
+(blockperm) and surplus stock ~s^2 piled up elsewhere: cleanup ~n^3. Those "0 carries" were
+an artifact. With the own class treated like the others (virtual seeds m):
+  m=16, k=8..12, all four families: carries 0, hard 0; every stock in [2, 37].
+  Worst dip below the seed level on random: ~8/13/14 at k=8/10/12 (m=2,4 fail with hard
+  stalls: column-level stock of a class runs out, i.e. in-flight fluctuation, Lemma 3).
+  cycles/round: 1.0-2.0 on all families (random ~1.46); G_r always connected.
+  So seeds m = O(1)-ish (slowly growing, far below the affordable m ~ s) seem to suffice.
 
 ## Open lemma, sharpened
 Column c, hubs b, classes a. Supply O^r_b (row outputs, exogenous; column sums fluctuate with
 in-flight counts), per round a b-matching classes -> hubs with capacities n^r_b = |O^r_b|.
 Want: a policy (MaxWeight = serve from the fullest hub) keeping stock_b[a] >= 1 with seeds
 m = O(s) (or polylog), while also allowing enough cross-band swaps that cycles per round
-stay O(k) (no proof yet that merging leaves <= O(k) cycles; data: about 0.6k on random).
+stay O(k) (no proof yet that merging leaves <= O(k) cycles; data: ~1.5 per round).
 This looks like a fully loaded input-queued switch with deterministic admissible
 arrivals; MaxWeight/rounding discrepancy results (Tassiulas-Ephremides; Tijdeman's chairman
 assignment) are the tools to try. Also needed: in-flight fluctuation of class a in column c

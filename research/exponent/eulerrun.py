@@ -99,6 +99,12 @@ def run(k, s, kind, m=4, seed=0, warm=None, merge=True):
                 rows.hop(S, pi[S])
     # stock[b, c, a]: class (a, c) tiles in hub (b, c)
     stock = np.full((k, k, k), m, dtype=np.int64)
+    # stock[a, c, a] is virtual: class-(a,c) tiles delivered home by R(a,c) minus the rounds in
+    # which (a,c) was served by its own hub (it then receives R(a,c)'s head, whatever it is).
+    # Negative = square (a,c) is short of its class and holds stock instead.
+    diag = np.zeros((k, k, k), dtype=bool)
+    for a in range(k): diag[a, :, a] = True
+    # (virtual seeds m on the diagonal: the hub may hold m extra stock tiles instead of its own)
     st = dict(cycles=0, comps=0, carry=0, hard=0, rounds=0, minstock=m)
     for pi in rounds(T, nprng):
         st["rounds"] += 1
@@ -124,14 +130,14 @@ def run(k, s, kind, m=4, seed=0, warm=None, merge=True):
                 a = D // k
                 for j, S in enumerate(slots):
                     bb = S // k
-                    # lexicographic: feasible pairs, then own-hub pairs, then stock
-                    if bb == a: Wt[i, j] = 1e9 + 1e6
-                    elif stock[bb, c, a] >= 1: Wt[i, j] = 1e9 + min(stock[bb, c, a], 1e5)
+                    # lexicographic: feasible pairs, then stock.  The own hub is no
+                    # exception: D then receives R(a,c)'s head, so it spends virtual stock.
+                    if stock[bb, c, a] >= 1: Wt[i, j] = 1e9 + min(stock[bb, c, a], 1e5)
                     else: Wt[i, j] = max(stock[bb, c, a], -1e5)
             ri, cj = linear_sum_assignment(-Wt)
             for i, j in zip(ri, cj):
                 D = arr_c[i]; S = slots[j]; a = D // k; bb = S // k
-                if bb != a:
+                if True:
                     if stock[bb, c, a] >= 1:
                         stock[bb, c, a] -= 1
                     else:
@@ -152,7 +158,10 @@ def run(k, s, kind, m=4, seed=0, warm=None, merge=True):
             else:
                 # same-column tile goes by hop2 directly: it is its own stock
                 stock[S // k, D % k, D // k] += 1
-        st["minstock"] = min(st["minstock"], int(stock.min()))
+        st["minstock"] = min(st["minstock"], int(stock[~diag].min()))
+        st["maxstock"] = max(st.get("maxstock", 0), int(stock[~diag].max()))
+        st["selfmin"] = min(st.get("selfmin", 0), int(stock[diag].min()))
+        st["selfmax"] = max(st.get("selfmax", 0), int(stock[diag].max()))
         # cycles of the transition system D -> trans[D] (next arrival is trans[D])
         seen = {}
         cyc = 0
@@ -204,5 +213,5 @@ if __name__ == "__main__":
                 R = st["rounds"]
                 print(f"{kind:9s} k={k:2d} s={s:3d} m={m:3d} cycles/round={st['cycles']/R:.3f} "
                       f"comps/round={st['comps']/R:.3f} carry={st['carry']} hard={st['hard']} "
-                      f"(cycles+carry)*k/n2={(st['cycles']+st['carry']+st['hard'])*k/n**2:.4f} minstock={st['minstock']}",
+                      f"(cycles+carry)*k/n2={(st['cycles']+st['carry']+st['hard'])*k/n**2:.4f} minstock={st['minstock']} maxstock={st['maxstock']} self=[{st['selfmin']},{st['selfmax']}]",
                       flush=True)
