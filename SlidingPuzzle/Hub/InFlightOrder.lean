@@ -123,4 +123,117 @@ theorem card_badA {lam : ℕ} (hk : 0 < k) (hlam : 6 * k * lam ≤ s - k) (H : R
           rw [mul_assoc, ← Real.exp_add]; simp [neg_div]
   exact_mod_cast hfin
 
+theorem card_badB (n : ℕ) (H : RowH k) (d : ℕ) (x : Sq k) (τ0 : Fin Δ) :
+    (badB s rs n H d x τ0).card * 2 ^ lamN n ≤ Δ.factorial := by
+  set w := win s rs H d with hw
+  set A := Atot rs H d x with hA
+  by_cases hA0 : A = 0
+  · have hz : ∀ j, acnt rs H d x j = 0 := by
+      intro j
+      have := (Finset.sum_eq_zero_iff.mp (show ∑ j, acnt rs H d x j = 0 from hA0)) j (mem_univ _)
+      exact this
+    have : badB s rs n H d x τ0 = ∅ := by
+      rw [badB, filter_eq_empty_iff]
+      intro σ _ h
+      simp [hz] at h
+    rw [this]; simp
+  have hΔ : 0 < Δ := Nat.lt_of_le_of_lt (Nat.zero_le _) τ0.isLt
+  have hΔR : (0 : ℝ) < Δ := by exact_mod_cast hΔ
+  have hNb : Nb s rs n H d x = 2 * A * (w + 1) / Δ + lamN n := by
+    rw [Nb, if_neg hA0]
+  set a : Fin Δ → ℕ := fun j => acnt rs H d x j with ha
+  have ha1 : ∀ j, a j ≤ 1 := fun j => count_roundIns_le_one (rs j) (H, d, x)
+  have hcard : Fintype.card (Fin Δ) = Δ := Fintype.card_fin Δ
+  have hch := card_upper_tail (winB Δ τ0.val w) a ha1 (lamN n) (by rw [hcard]; exact hΔ)
+  rw [hcard] at hch
+  have hsumA : ∑ i, (a i : ℝ) = A := by simp only [ha, hA, Atot]; push_cast; rfl
+  rw [hsumA] at hch
+  have hT : ((winB Δ τ0.val w).card : ℝ) ≤ w + 1 := by exact_mod_cast card_winB_le τ0.val w
+  have hsub : badB s rs n H d x τ0 ⊆ univ.filter fun σ : Equiv.Perm (Fin Δ) =>
+      2 * ((winB Δ τ0.val w).card * (A : ℝ) / Δ) + lamN n ≤
+        ((∑ τ ∈ winB Δ τ0.val w, a (σ τ) : ℕ) : ℝ) := by
+    intro σ hσ
+    simp only [badB, mem_filter, mem_univ, true_and] at hσ ⊢
+    rw [hNb] at hσ
+    have h1 : ((2 * A * (w + 1) / Δ : ℕ) : ℝ) + lamN n + 1 ≤
+        ((∑ τ ∈ winB Δ τ0.val w, a (σ τ) : ℕ) : ℝ) := by exact_mod_cast hσ
+    have h2 := nat_div_add_one_gt (2 * A * (w + 1)) Δ hΔ
+    have h3 : 2 * ((winB Δ τ0.val w).card * (A : ℝ) / Δ) ≤ ((2 * A * (w + 1) : ℕ) : ℝ) / Δ := by
+      rw [mul_div_assoc', div_le_div_iff_of_pos_right hΔR]
+      push_cast
+      have : (0 : ℝ) ≤ A := Nat.cast_nonneg _
+      nlinarith
+    linarith
+  have hfin : ((badB s rs n H d x τ0).card : ℝ) * 2 ^ lamN n ≤ Δ.factorial :=
+    (mul_le_mul_of_nonneg_right (Nat.cast_le.mpr (card_le_card hsub)) (by positivity)).trans hch
+  exact_mod_cast hfin
+
+/-- The window properties (A) and (B), for times as natural numbers. -/
+structure GoodOrder (n : ℕ) (σ : Equiv.Perm (Fin Δ)) : Prop where
+  A : ∀ H d, d < k → ∀ τ0, τ0 + win s rs H d < Δ → insPos k s H d + 1 ≤
+    ∑ τ ∈ Ioc τ0 (τ0 + win s rs H d),
+      (rnd rs σ τ).countP (fun p => decide (p.1 = H ∧ d ≤ p.2.1))
+  B : ∀ H d, d < k → ∀ x τ0, τ0 < Δ →
+    ∑ τ ∈ Icc τ0 (τ0 + win s rs H d), (rnd rs σ τ).countP (fun p => decide (p = (H, d, x))) ≤
+      Nb s rs n H d x
+
+theorem goodOrder_of_not_bad (n : ℕ) (σ : Equiv.Perm (Fin Δ))
+    (hA : ∀ H (d : Fin k) τ0, σ ∉ badA s rs H d τ0)
+    (hB : ∀ H (d : Fin k) x τ0, σ ∉ badB s rs n H d x τ0) : GoodOrder s rs n σ := by
+  constructor
+  · intro H d hd τ0 hfit
+    rw [sum_rnd rs σ _ (fun l => l.countP (fun p => decide (p.1 = H ∧ d ≤ p.2.1))) rfl]
+    have := hA H ⟨d, hd⟩ ⟨τ0, by omega⟩
+    simp only [badA, mem_filter, mem_univ, true_and, not_and, not_lt] at this
+    exact this hfit
+  · intro H d hd x τ0 hτ0
+    rw [sum_rnd rs σ _ (fun l => l.countP (fun p => decide (p = (H, d, x)))) rfl]
+    have := hB H ⟨d, hd⟩ x ⟨τ0, hτ0⟩
+    simp only [badB, mem_filter, mem_univ, true_and, not_lt] at this
+    exact this
+
+/-- Union bound: some order avoids every bad event. -/
+theorem exists_goodOrder (n : ℕ) (hk : 0 < k) (hlam : 6 * k * lamN n ≤ s - k)
+    (hcount : Fintype.card (RowH k × Fin k × Fin Δ) +
+      Fintype.card (RowH k × Fin k × Sq k × Fin Δ) < 2 ^ lamN n) :
+    ∃ σ, GoodOrder s rs n σ := by
+  set Bad : Finset (Equiv.Perm (Fin Δ)) :=
+    (univ : Finset (RowH k × Fin k × Fin Δ)).biUnion (fun e => badA s rs e.1 e.2.1 e.2.2) ∪
+      (univ : Finset (RowH k × Fin k × Sq k × Fin Δ)).biUnion
+        (fun e => badB s rs n e.1 e.2.1 e.2.2.1 e.2.2.2) with hBad
+  have hc : Bad.card * 2 ^ lamN n ≤
+      (Fintype.card (RowH k × Fin k × Fin Δ) +
+        Fintype.card (RowH k × Fin k × Sq k × Fin Δ)) * Δ.factorial := by
+    calc Bad.card * 2 ^ lamN n
+        ≤ ((∑ e : RowH k × Fin k × Fin Δ, (badA s rs e.1 e.2.1 e.2.2).card) +
+          ∑ e : RowH k × Fin k × Sq k × Fin Δ,
+            (badB s rs n e.1 e.2.1 e.2.2.1 e.2.2.2).card) * 2 ^ lamN n := by
+          apply Nat.mul_le_mul_right
+          exact (card_union_le _ _).trans (add_le_add card_biUnion_le card_biUnion_le)
+      _ = (∑ e : RowH k × Fin k × Fin Δ, (badA s rs e.1 e.2.1 e.2.2).card * 2 ^ lamN n) +
+          ∑ e : RowH k × Fin k × Sq k × Fin Δ,
+            (badB s rs n e.1 e.2.1 e.2.2.1 e.2.2.2).card * 2 ^ lamN n := by
+          rw [add_mul, sum_mul, sum_mul]
+      _ ≤ (∑ _e : RowH k × Fin k × Fin Δ, Δ.factorial) +
+          ∑ _e : RowH k × Fin k × Sq k × Fin Δ, Δ.factorial := by
+          apply add_le_add
+          · exact sum_le_sum fun e _ => card_badA s rs hk hlam _ _ _
+          · exact sum_le_sum fun e _ => card_badB s rs n _ _ _ _
+      _ = _ := by simp [add_mul]
+  have hlt : Bad.card < (univ : Finset (Equiv.Perm (Fin Δ))).card := by
+    rw [card_univ, Fintype.card_perm, Fintype.card_fin]
+    have hf : 0 < Δ.factorial := Nat.factorial_pos Δ
+    by_contra hge
+    rw [not_lt] at hge
+    have := Nat.mul_le_mul hge (le_refl (2 ^ lamN n))
+    have h2 := Nat.mul_lt_mul_of_pos_right hcount hf
+    rw [mul_comm (2 ^ lamN n)] at h2
+    omega
+  obtain ⟨σ, -, hσ⟩ := exists_mem_notMem_of_card_lt_card hlt
+  refine ⟨σ, goodOrder_of_not_bad s rs n σ ?_ ?_⟩
+  · intro H d τ0 h
+    exact hσ (mem_union_left _ (mem_biUnion.mpr ⟨(H, d, τ0), mem_univ _, h⟩))
+  · intro H d x τ0 h
+    exact hσ (mem_union_right _ (mem_biUnion.mpr ⟨(H, d, x, τ0), mem_univ _, h⟩))
+
 end SlidingPuzzle.Hub
