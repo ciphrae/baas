@@ -72,6 +72,25 @@ theorem Dims.cube_le_n {n k : ℕ} (h : Dims n k) : k^3 ≤ n := by
   have : side n k ≤ k * side n k := Nat.le_mul_of_pos_left _ (by have := h.two_le; omega)
   omega
 
+/-- Weaker dimensions, enough for Finish: squares of side at least `8`. -/
+structure FDims (n k : ℕ) : Prop where
+  two_le : 2 ≤ k
+  eight_le : 8 ≤ side n k
+  mul_side : k * side n k = n
+
+theorem Dims.toFDims {n k : ℕ} (h : Dims n k) : FDims n k := by
+  refine ⟨h.two_le, ?_, h.mul_side⟩
+  have := h.cube_le; have := Nat.pow_le_pow_left h.two_le 3; omega
+
+/-- `FDims` can be supplied wherever only `2 ≤ k` is needed. -/
+instance {n k : ℕ} : CoeOut (FDims n k) (2 ≤ k) := ⟨fun h => h.two_le⟩
+
+theorem FDims.side_pos {n k : ℕ} (h : FDims n k) : 0 < side n k := by
+  have := h.eight_le; omega
+
+theorem FDims.two_le_n {n k : ℕ} (h : FDims n k) : 4 ≤ n := by
+  have := h.eight_le; have := h.two_le; rw [← h.mul_side]; nlinarith
+
 def groupRow {k : ℕ} (i : GroupIndex k) : Fin k := (finProdFinEquiv.symm i).1
 def groupCol {k : ℕ} (i : GroupIndex k) : Fin k := (finProdFinEquiv.symm i).2
 
@@ -393,6 +412,30 @@ theorem horizontal_unique {n k : ℕ} (hd : Dims n k) {i j : GroupIndex k} {c : 
   · apply finProdFinEquiv.symm.injective
     exact Prod.ext (Fin.ext (hnext _ _ hri hrj (h1.symm.trans h1')))
       (Fin.ext (show (groupCol i).val = (groupCol j).val by omega))
+
+theorem FDims.square_unique {n k : ℕ} (_hd : FDims n k)
+    {i j : GroupIndex k} {c : Cell n} (hi : square i c) (hj : square j c) : i = j := by
+  have hr : groupRow i = groupRow j := Fin.ext ((Nat.div_eq_of_lt_le hi.1 hi.2.1).symm.trans
+    (Nat.div_eq_of_lt_le hj.1 hj.2.1))
+  have hc : groupCol i = groupCol j := Fin.ext ((Nat.div_eq_of_lt_le hi.2.2.1 hi.2.2.2).symm.trans
+    (Nat.div_eq_of_lt_le hj.2.2.1 hj.2.2.2))
+  apply finProdFinEquiv.symm.injective
+  exact Prod.ext hr hc
+
+theorem FDims.square_covers {n k : ℕ} (hd : FDims n k) (c : Cell n) :
+    ∃ i : GroupIndex k, square i c := by
+  have hp : 0 < side n k := hd.side_pos
+  have hlt : ∀ x : Fin n, x.val / side n k < k := fun x =>
+    (Nat.div_lt_iff_lt_mul hp).mpr (by have := x.isLt; rw [hd.mul_side]; exact this)
+  let a : Fin k := ⟨c.1.val / side n k, hlt c.1⟩
+  let b : Fin k := ⟨c.2.val / side n k, hlt c.2⟩
+  refine ⟨finProdFinEquiv (a,b), ?_⟩
+  have hxd := Nat.div_add_mod' c.1.val (side n k)
+  have hyd := Nat.div_add_mod' c.2.val (side n k)
+  have hx := Nat.mod_lt c.1.val hp
+  have hy := Nat.mod_lt c.2.val hp
+  simp only [square, groupRow, groupCol, Equiv.symm_apply_apply, a,b, Nat.add_mul, Nat.one_mul]
+  exact ⟨Nat.div_mul_le_self _ _, by nlinarith, Nat.div_mul_le_self _ _, by nlinarith⟩
 
 end Partition
 end SlidingPuzzle
