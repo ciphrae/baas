@@ -236,9 +236,8 @@ class x and every window W of w_d + 1 consecutive rounds:
       distance d.
 *Proof.* Take sigma uniformly at random. For a fixed window, the matchings in it form a
 uniformly random subset of size |W|, so each count is a sum over a random subset (sampling
-without replacement). Hoeffding (1963, Thm 4): moment generating functions of such sums are
-at most those of the i.i.d. (with replacement) sums, so the usual multiplicative Chernoff
-bounds hold.
+without replacement), and the multiplicative Chernoff bounds hold for it (section 9,
+"Subset Chernoff"; also Hoeffding 1963, Thm 4).
 Windows at the end of the run are shorter; a window meeting the start is contained in a full
 one; both only help.
 (a) Terms f(pi) = sum_{d'>=d} g_d'(pi) in [0,k] (divide by k to apply the [0,1] bound), mean
@@ -302,6 +301,20 @@ With k^3 = n/ln n: O(n^(8/3) (ln n)^(1/3)).
 
 ## 9. Notes for the formalization
 
+- **Subset Chernoff (the probabilistic input), elementary proof.** Let a_1..a_N in [0,1],
+  W a uniformly random w-subset of [N], X = sum_{j in W} a_j, mu = E X = (w/N) sum a_j.
+  For real lambda put y_j = e^{lambda a_j} > 0. Then E e^{lambda X} = e_w(y)/C(N,w)
+  (elementary symmetric mean), and Maclaurin's inequality gives
+      e_w(y)/C(N,w) <= (e_1(y)/N)^w = (mean_j e^{lambda a_j})^w,
+  which is the moment generating function of the i.i.d. sum. Since e^{lambda a} <=
+  1 + a(e^lambda - 1) for a in [0,1], mean_j e^{lambda a_j} <= 1 + (mu/w)(e^lambda - 1) and
+  E e^{lambda X} <= exp(mu (e^lambda - 1)). Markov then gives the usual bounds:
+      P(X <= (1-delta) mu) <= exp(-delta^2 mu / 2),
+      P(X >= (1+delta) mu) <= exp(-delta^2 mu / (2+delta)).
+  A uniformly random order of the Delta matchings restricted to a fixed window of positions
+  is a uniformly random subset of that size, so this is all Lemma 3 uses (plus a union
+  bound, i.e. counting permutations). For Lean: Maclaurin's inequality (or just the needed
+  case, via Newton's inequalities) and the counting are the only new pieces.
 - Probability: Lemma 3 needs only the existence of one good order. The cleanest route is a
   counting statement: for a fixed window, the number of permutations of the Delta matchings
   that make a count bad is at most n^{-10} of all of them. This is a Chernoff bound for
