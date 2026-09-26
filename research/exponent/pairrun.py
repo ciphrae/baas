@@ -47,6 +47,8 @@ def run(k, s, kind, seed=0, prefill="uniform", offset="rand"):
             infl[b, c, x] += 1
     pre = infl.copy()
     peak = infl.copy()
+    stock = np.zeros((k, k, k), dtype=np.int64)   # no seeds: bypass when empty
+    byp = np.zeros((k, k), dtype=np.int64)
     cycles = 0
     for pi in mats:
         seen = np.zeros(K, dtype=bool)
@@ -61,6 +63,11 @@ def run(k, s, kind, seed=0, prefill="uniform", offset="rand"):
                 D = int(pi[S])
                 bS, J = divmod(S, k)
                 a, c = divmod(D, k)
+                if J != c and bS != a:
+                    if stock[bS, c, a] >= 1:
+                        stock[bS, c, a] -= 1
+                    else:
+                        byp[bS, c] += 1
                 if J != c:
                     side = 0 if J < c else 1
                     arr = rows[(bS, c, side)]
@@ -71,6 +78,8 @@ def run(k, s, kind, seed=0, prefill="uniform", offset="rand"):
                     arr[0:p] = arr[1:p + 1]
                     arr[p] = a
                     infl[bS, c, F] -= 1
+                    if F != bS:
+                        stock[bS, c, F] += 1
                     infl[bS, c, a] += 1
                     if infl[bS, c, a] > peak[bS, c, a]:
                         peak[bS, c, a] = infl[bS, c, a]
@@ -80,9 +89,12 @@ def run(k, s, kind, seed=0, prefill="uniform", offset="rand"):
     for b in range(k):
         need[b, :, b] = 0
     per_hub = need.sum(axis=2)               # [b, c]
+    # bypasses at hub b count demands at empty stock; bound: sum_x max_t new_b[x](t) <= per_hub
+    newpeak_ok = bool((byp <= np.maximum(peak, 0).sum(axis=2)).all())
     return dict(n=n, rounds=len(mats), cycles=cycles, hub_max=int(per_hub.max()),
                 hub_mean=float(per_hub.mean()), total=int(need.sum()),
-                pair_max=int(need.max()))
+                pair_max=int(need.max()), byp_max=int(byp.max()), byp_total=int(byp.sum()),
+                ok=newpeak_ok)
 
 
 if __name__ == "__main__":
@@ -94,5 +106,6 @@ if __name__ == "__main__":
             n = r["n"]
             print(f"{kind:9s} k={k:2d} s={s:3d} n={n:4d} seeds/hub max={r['hub_max']/n:.3f}n "
                   f"mean={r['hub_mean']/n:.3f}n  max per (hub,class)={r['pair_max']}  "
-                  f"total seeds/(k^2 n)={r['total']/(k*k*n):.3f}  cycles/round={r['cycles']/r['rounds']:.2f}",
+                  f"total seeds/(k^2 n)={r['total']/(k*k*n):.3f}  cycles/round={r['cycles']/r['rounds']:.2f}  "
+                  f"bypass/hub max={r['byp_max']/n:.3f}n total/(k^2 n)={r['byp_total']/(k*k*n):.3f}",
                   flush=True)

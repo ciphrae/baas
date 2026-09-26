@@ -138,3 +138,9 @@ O(k^2 s) per round whatever their number. Only the in-flight bound remains; with
 order of rounds it holds with O(n log n) seeds per hub (push lemma + sampling without
 replacement). pairrun.py: seeds per hub <= 0.85 n, total <= 0.23 k^2 n, k = 4..12.
 Full argument and the list of remaining checks: PROOF.md.
+Seed circularity removed (same day): no seeds at all. When hub b has no class-x stock, a
+*bypass* swaps one of the hub's reserve home tiles into D (O(n)) and does the planned hop1
+anyway, so the row dynamics are exactly the plan's. stock = out_prefill - new + bypasses,
+hence bypasses_b[x] <= max_t new_b[x](t), and sum_x of that is <= 8n(1 + ln k Delta) per hub
+for EVERY T: the reserve is fixed in advance. pairrun.py (zero seeds): bypasses per hub
+<= 0.78 n, total <= 0.22 k^2 n, k = 6..10, all families. PROOF.md updated.
