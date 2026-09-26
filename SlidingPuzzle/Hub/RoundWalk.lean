@@ -119,18 +119,18 @@ lemma walk_weight {k : ℕ} (r : Round k) (sv : Finset (Sq k)) (x : Sq k) :
   | case2 sv x h => rfl
 
 /-- Indicator of `serve S D` having happened, given the served set. -/
-def ind {k : ℕ} (r : Round k) (sv : Finset (Sq k)) (S D : Sq k) : ℕ :=
+def walkInd {k : ℕ} (r : Round k) (sv : Finset (Sq k)) (S D : Sq k) : ℕ :=
   if D ∈ sv ∧ S = r.perm.symm D then 1 else 0
 
 lemma walk_count {k : ℕ} (r : Round k) (sv : Finset (Sq k)) (x : Sq k) (S D : Sq k) :
-    (walk r sv x).1.count (.serve S D) + ind r sv S D = ind r (walk r sv x).2.1 S D := by
+    (walk r sv x).1.count (.serve S D) + walkInd r sv S D = walkInd r (walk r sv x).2.1 S D := by
   fun_induction walk r sv x with
   | case1 sv x h res ih =>
     dsimp only [res] at ih ⊢
     rw [← ih, List.count_cons]
-    have key : ind r (insert x sv) S D =
-        ind r sv S D + (if HEvent.serve (r.perm.symm x) x == HEvent.serve S D then 1 else 0) := by
-      unfold ind
+    have key : walkInd r (insert x sv) S D =
+        walkInd r sv S D + (if HEvent.serve (r.perm.symm x) x == HEvent.serve S D then 1 else 0) := by
+      unfold walkInd
       by_cases hD : D = x
       · subst hD
         by_cases hS : S = r.perm.symm D
@@ -291,8 +291,8 @@ lemma phase_chain (L : List (Sq k)) (sv : Finset (Sq k)) (b : Sq k) :
     · exact ih sv b
 
 lemma phase_count (L : List (Sq k)) (sv : Finset (Sq k)) (b : Sq k) (S D : Sq k) :
-    (phase r p L sv b).1.count (.serve S D) + ind r sv S D =
-      ind r (phase r p L sv b).2.1 S D := by
+    (phase r p L sv b).1.count (.serve S D) + walkInd r sv S D =
+      walkInd r (phase r p L sv b).2.1 S D := by
   induction L generalizing sv b with
   | nil => simp [phase]
   | cons Z Zs ih =>
@@ -434,11 +434,11 @@ theorem exists_round_events {k : ℕ} (r : Round k) (cur : Sq k) :
     rw [a.2]
     exact ⟨a.1, b.1⟩
   · intro S D
-    have c1 : ph1.1.count (.serve S D) + ind r ∅ S D = ind r ph1.2.1 S D :=
+    have c1 : ph1.1.count (.serve S D) + walkInd r ∅ S D = walkInd r ph1.2.1 S D :=
       phase_count r p1 Finset.univ.toList ∅ cur S D
-    have c2 : ph2.1.count (.serve S D) + ind r ph1.2.1 S D = ind r ph2.2.1 S D :=
+    have c2 : ph2.1.count (.serve S D) + walkInd r ph1.2.1 S D = walkInd r ph2.2.1 S D :=
       phase_count r (fun _ => true) (snakeList k) ph1.2.1 ph1.2.2 S D
-    have hind0 : ind r ∅ S D = 0 := by simp [ind]
+    have hind0 : walkInd r ∅ S D = 0 := by simp [walkInd]
     have hsv : D ∈ ph2.2.1 ↔ r.inR D := by
       constructor
       · intro hD
@@ -450,10 +450,10 @@ theorem exists_round_events {k : ℕ} (r : Round k) (cur : Sq k) :
       · intro hD
         exact phase_cover r _ (snakeList k) _ _ D (mem_snakeList D) rfl hD
     rw [List.count_append]
-    have hsum : ph1.1.count (.serve S D) + ph2.1.count (.serve S D) = ind r ph2.2.1 S D := by
+    have hsum : ph1.1.count (.serve S D) + ph2.1.count (.serve S D) = walkInd r ph2.2.1 S D := by
       omega
     rw [hsum]
-    unfold ind
+    unfold walkInd
     by_cases h : r.perm S = D ∧ r.real S
     · rw [if_pos h, if_pos]
       obtain ⟨rfl, h2⟩ := h

@@ -8,6 +8,14 @@ import SlidingPuzzle
 #print axioms SlidingPuzzle.average_optimal_length
 #print axioms SlidingPuzzle.gods_number
 
+-- The better exponent: O(n^(8/3) (log n)^(1/3)) by hub transport (SlidingPuzzle/Hub)
+#print axioms SlidingPuzzle.Hub.uniform_approximation
+#print axioms SlidingPuzzle.Hub.average_optimal_length
+#print axioms SlidingPuzzle.Hub.gods_number
+#print axioms SlidingPuzzle.Hub.average_optimal_length_rpow
+#print axioms SlidingPuzzle.Hub.gods_number_rpow
+#print axioms SlidingPuzzle.Hub.exists_hub_solution
+
 -- The boardwise bounds
 #print axioms SlidingPuzzle.Algorithm.uniformApproximation
 #print axioms SlidingPuzzle.Algorithm.exists_solution_two_level

@@ -1,8 +1,15 @@
 # Lean plan: O(n^(8/3) (log n)^(1/3)) via hub transport
 
+**Status (2026-09-26): complete.** Every module is proved;
+`SlidingPuzzle.Hub.average_optimal_length`, `gods_number` (error
+`O(n^(8/3) (log n)^(1/3))`) and the `rpow` corollaries (any exponent `> 8/3`)
+depend only on `propext`, `Classical.choice`, `Quot.sound`
+(`Checks/Axioms.lean`). Finish was generalized from `Dims` to `FDims`
+(`8 ≤ side`); the 11/4 development is unchanged.
+
 This is the blueprint for formalizing `PROOF.md`. The skeleton is in
-`SlidingPuzzle/Hub/*.lean`: every definition is final, every interface theorem
-is stated and currently `sorry`. Modules only communicate through these
+`SlidingPuzzle/Hub/*.lean`: every definition is final, and the interface
+theorems below are the module boundaries. Modules only communicate through these
 statements. Read `PROOF.md` first for the mathematics; this file records where
 the formalization deliberately differs (simplifications) and how each module
 should be proved.

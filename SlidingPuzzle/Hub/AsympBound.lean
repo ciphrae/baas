@@ -38,7 +38,7 @@ def hubD : ℕ := 6036
 section
 variable {n k s : ℕ}
 
-theorem sqCorridor_le (k s : ℕ) : sqCorridor k s ≤ 2 * (k * s) := by
+theorem sqCorridor_le_asymp (k s : ℕ) : sqCorridor k s ≤ 2 * (k * s) := by
   unfold sqCorridor
   have h1 : (k - 1) * s ≤ k * s := Nat.mul_le_mul_right _ (Nat.sub_le _ _)
   have h2 : (k - 1) * (s - k) ≤ k * s := Nat.mul_le_mul (Nat.sub_le _ _) (Nat.sub_le _ _)
@@ -47,7 +47,7 @@ theorem sqCorridor_le (k s : ℕ) : sqCorridor k s ≤ 2 * (k * s) := by
 theorem hubBound_le (hd : HDims n k s) :
     hubBound n k s ≤ hubK * (n ^ 2 * s + k ^ 2 * n ^ 2 * (Nat.log 2 n + 1)) := by
   obtain ⟨hk2, -, hroom, hmul⟩ := hd
-  have hC := sqCorridor_le k s
+  have hC := sqCorridor_le_asymp k s
   rw [hmul] at hC
   unfold hubBound transportBound misplacedBound hubK
   generalize sqCorridor k s = C at *
