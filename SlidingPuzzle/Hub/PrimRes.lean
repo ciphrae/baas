@@ -79,4 +79,17 @@ theorem val_ne_zero_of_ne_blank {B : Board n} {x : Cell n} (h : x ≠ blank B) :
   apply h
   exact (blank_eq_of_apply (Fin.ext e)).symm
 
+omit [NeZero n] in
+/-- Region counts only depend on the region's cells. -/
+theorem regionCount_congr (hd : HDims n k s) {B C : Board n} {Q : Sq k}
+    (h : ∀ x, region k s Q x → C x = B x) (y : Sq k) :
+    regionCount hd C Q y = regionCount hd B Q y := by
+  unfold regionCount
+  congr 1
+  apply Finset.filter_congr
+  intro x _
+  constructor
+  · rintro ⟨h1, h2⟩; exact ⟨h1, by rw [← h x h1]; exact h2⟩
+  · rintro ⟨h1, h2⟩; exact ⟨h1, by rw [h x h1]; exact h2⟩
+
 end SlidingPuzzle.Hub

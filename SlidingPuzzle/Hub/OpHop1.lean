@@ -180,4 +180,141 @@ theorem hop1_phase1 (hd : HDims n k s) (B : Board n) {S h : Sq k}
         rw [moveCost_lineCell (n := n) hd H (s - 1 + q) (by omega) (by omega) _ hjunk]
     omega
 
+/-- hop1 realized on the board. -/
+theorem simulate_hop1 (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel hd B σ)
+    {S h y : Sq k} (hpre : σ.Pre (.hop1 S h y)) :
+    ∃ C : Board n, ∃ p : Path B C, Rel hd C (σ.step s (.hop1 S h y)) ∧
+      p.inefficientMoves ≤ σ.cost s (.hop1 S h y) := by
+  obtain ⟨hbl, hS1, hS2, hcnt⟩ := hpre
+  obtain ⟨hRrow, hRcol, hRcnt, hRbl⟩ := hR
+  rw [hbl] at hRbl
+  set H := hop1Half S h with hH
+  set p := hop1Pos s S h with hp
+  obtain ⟨hpl, hvcol⟩ := hop1_geom hd hS2
+  rw [← hH, ← hp] at hpl hvcol
+  obtain ⟨B3, p3, hb3, hA, hBrow, hBreg, K1, hkhead, hi3⟩ := hop1_phase1 hd B hRbl hS2
+  rw [← hp] at hi3
+  have hH1 : H.1 = h.1 := rfl
+  have hH2 : H.2.1 = h.2 := rfl
+  have hSh : S ≠ h := fun e => hS2 (by rw [e])
+  have hks := hd.k_lt_s
+  have hroom := hd.room
+  have hc := h.2.isLt
+  have hJ := S.2.isLt
+  have hbS1 := hd.band_le S.1.isLt
+  have hbS2 := hd.band_le S.2.isLt
+  have hS1' : S.1.val * s = h.1.val * s := by rw [hS1]
+  -- the insertion cell and the jump target
+  set v := rowCell (n := n) k s H p with hv
+  have vf : v.1.val = h.1.val * s + h.2.val := rowCell_fst hd H p
+  have vs : v.2.val = rowCol s H p := rowCell_snd hd H p hpl
+  obtain ⟨jp, hjp1, hjp2⟩ : ∃ jp, jp ≤ 1 ∧ (k + h.2.val + jp) % 2 = 1 :=
+    ⟨if (k + h.2.val) % 2 = 1 then 0 else 1, by split_ifs <;> omega,
+      by split_ifs <;> omega⟩
+  obtain ⟨wc, hwc1, hwc2, hwc3, hwc4⟩ : ∃ wc, S.2.val * s + k ≤ wc ∧ wc < S.2.val * s + s ∧
+      Nat.dist (rowCol s H p) wc ≤ 1 ∧ (rowCol s H p + wc + jp) % 2 = 0 := by
+    refine ⟨if H.2.2 then S.2.val * s + s - 1 - jp else S.2.val * s + k + jp, ?_⟩
+    rw [hvcol]; simp only [Nat.dist]; split_ifs <;> omega
+  let w : Cell n := mkCell n (S.1.val * s + k) wc
+  have wf : w.1.val = S.1.val * s + k := mkCell_fst (by omega)
+  have ws : w.2.val = wc := mkCell_snd (by omega)
+  have hw : reservoir k s S w := (reservoir_iff hd).mpr (by omega)
+  have hkv : keyOf hd v = none := keyOf_rowCell hd H p hpl
+  have hvbox : InBox (S.1.val * s) (S.2.val * s) s v := by
+    unfold InBox; rw [vf, vs, hvcol]; split_ifs <;> omega
+  have hreg3 : ∀ x, region k s S x → B3 x = B x := fun x hx =>
+    hBreg x (by rw [(keyOf_eq_some hd).mpr hx]; simp)
+      (by rw [(keyOf_eq_some hd).mpr hx]; exact fun e => hSh (Option.some.inj e))
+  have hT3 : 1 ≤ regionCount hd B3 S y := by
+    rw [regionCount_congr hd hreg3, hRcnt]; exact hcnt
+  obtain ⟨p4, hp4⟩ := exists_vjump_step hd.two_le_n B3 w
+    (by rw [hb3, vs, ws]; exact hwc3) (by rw [hb3]; omega)
+  obtain ⟨C, p5, T, hT0, hTc, hTk, hCv, hCbl, hCx, K2, hi5⟩ :=
+    insert_by_cycle hd B3 (Q := S) (y := y) hb3 hkv hw (by rw [wf]; omega) hvbox hT3
+      (25 * (k + 1)) ⟨p4, hp4.trans (by rw [hb3]; simp only [Nat.dist]; omega)⟩
+  -- facts about C
+  have hCc : ∀ x, keyOf hd x = none → x ≠ v → C x = B3 x := fun x hx hxv =>
+    hCx x hxv (by rw [hx]; simp)
+  set head := B (rowCell k s H 0) with hhead
+  have hhead0 : head.val ≠ 0 := (hRrow H 0 (by omega)).1
+  have hkB3T : keyOf hd (position B3 T) = some S := hTk
+  have hTh : head ≠ T := by
+    intro e
+    rw [← e, hkhead] at hkB3T
+    exact hSh (Option.some.inj hkB3T).symm
+  refine ⟨C, p3.append p5, ⟨?_, ?_, ?_, ?_⟩, ?_⟩
+  · -- row halves
+    intro H' q' hq'
+    simp only [IState.step]
+    by_cases e : H' = H ∧ q' ≤ p
+    · obtain ⟨rfl, hq'p⟩ := e
+      rw [Function.update_self]
+      unfold shiftIn
+      rcases Nat.lt_or_ge q' p with hlt | hge
+      · rw [if_pos hlt, hCc _ (keyOf_rowCell hd H q' hq')
+          (fun e => by have := (rowCell_inj hd hq' hpl e).2; omega), hBrow q' hlt]
+        exact hRrow H (q' + 1) (by omega)
+      · have hq : q' = p := by omega
+        subst hq
+        rw [if_neg (lt_irrefl _), if_pos rfl, hCv, hTc]
+        exact ⟨hT0, rfl⟩
+    · have hne : ∀ q, q ≤ p → rowCell (n := n) k s H' q' ≠ rowCell k s H q := by
+        intro q hq e'
+        obtain ⟨h1, h2⟩ := rowCell_inj hd hq' (by omega) e'
+        exact e ⟨h1, by omega⟩
+      rw [hCc _ (keyOf_rowCell hd H' q' hq') (hne p le_rfl),
+        hA _ (keyOf_rowCell hd H' q' hq') hne]
+      by_cases eH : H' = H
+      · subst eH
+        rw [Function.update_self]
+        unfold shiftIn
+        have : ¬ q' ≤ p := fun hh => e ⟨rfl, hh⟩
+        rw [if_neg (by omega), if_neg (by omega)]
+        exact hRrow H q' hq'
+      · rw [Function.update_of_ne eH]
+        exact hRrow H' q' hq'
+  · -- column halves
+    intro V q hq
+    simp only [IState.step]
+    have hk := keyOf_colCell (n := n) hd V q hq
+    rw [hCc _ hk (fun e => rowCell_ne_colCell hd H V p q hq e.symm),
+      hA _ hk (fun q' _ e => rowCell_ne_colCell hd H V q' q hq e.symm)]
+    exact hRcol V q hq
+  · -- region counts
+    intro Q y'
+    simp only [IState.step]
+    have K : KeepKey hd B C {head, T} := by
+      have := K1.trans K2
+      rwa [← Finset.insert_eq] at this
+    have k1C : keyOf hd (position C head) = some h := by
+      rw [K2 head hhead0 (by simpa using hTh), hkhead]
+    have k2B : keyOf hd (position B T) = some S := by
+      rw [← K1 T hT0 (by simpa using hTh.symm)]; exact hkB3T
+    have k1B : keyOf hd (position B head) = none := by
+      rw [show position B head = rowCell k s H 0 by simp [hhead, position]]
+      exact keyOf_rowCell hd H 0 (by omega)
+    have k2C : keyOf hd (position C T) = none := by
+      rw [position_eq_of_apply hCv]; exact hkv
+    rw [regionCount_move2 hd K hTh hhead0 hT0 hSh k1B k1C k2B k2C Q y', hTc,
+      (hRrow H 0 (by omega)).2]
+    have hc : regionCount hd B = σ.cnt := funext fun Q => funext fun y => hRcnt Q y
+    rw [hc]
+  · -- the blank
+    simp only [IState.step]
+    rw [hCbl]; exact hw
+  · -- cost
+    simp only [IState.cost, IState.junkRow]
+    rw [Path.inefficientMoves_append]
+    have hj : ((Finset.range (p + 1)).filter fun q =>
+        (classOf hd (B (rowCell k s H q))).2 ≠ h.2) =
+        ((Finset.range (p + 1)).filter fun q => (σ.row H q).2 ≠ H.2.1) := by
+      apply Finset.filter_congr
+      intro q hq
+      rw [Finset.mem_range] at hq
+      rw [(hRrow H q (by omega)).2]
+      exact Iff.rfl
+    rw [hj] at hi3
+    change _ ≤ 4000 * s + ((Finset.range (p + 1)).filter fun q => (σ.row H q).2 ≠ H.2.1).card
+    omega
+
 end SlidingPuzzle.Hub
