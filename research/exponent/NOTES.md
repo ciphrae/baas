@@ -52,7 +52,7 @@ Findings (scripts here, `uv run --with numpy python <script> kinds KxS,... m,...
   the least-visited active square by < `lead` visits; else a sync relocation (O(n) carry).
   Stock stalls vanish once m >= 2*lead. With `look` (pick the hub whose band offers the
   least-visited source), all relocs*k/n2 at m=64, lead=32:
-      random k=8: 0.067, k=10: 0.042;  blockperm k=10: 0.42 (~ number of sigma-cycles per round,
+      random k=8: 0.067, k=10: 0.042, k=12: 0.016 (m=96, lead=48);  blockperm k=10: 0.42 (~ number of sigma-cycles per round,
       ~ln k^2: fine);  transpose/rot90 k=10: ~0.01-0.03.
   Budget is relocs = O(n^2/k), i.e. <= O(k) per round of s^2 rounds; seeds up to m ~ s are
   affordable (k^3 m n <= k^2 n^2).
