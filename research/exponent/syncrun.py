@@ -1,0 +1,347 @@
+"""rotorrun2.py (steady-state rows) plus visit synchronization: every active
+square is visited (sends a tile) at nearly the same rate; a source may lead the
+least-visited active square by < `lead` visits.  If the blank at a hub has no
+allowed source, it does a sync relocation (O(n) carry, counted in sreloc).
+
+Base model (rotorrun.py):
+
+Randomized two-hop Algorithm 4 (count model, exact rows as delay lines).
+
+Blank at D=(a,c).  Candidates: squares S != D holding a tile T of class D.
+  - S = (a, J):   hop1 into D along R(a,c): T enters the row, the row's head
+                  (a column-c tile of arbitrary band) drops into D.
+  - S = (b, c):   hop2 from S down/up C(c,a): D receives a class-D tile.
+  - otherwise:    hop2 from hub h=(b,c) (needs a class-D tile in h: stock),
+                  then hop1 into h along R(b,c): T enters the row, head -> h.
+Blank moves to S.  S is chosen at random, weighted by its number of class-D
+tiles, among valid candidates.  No valid candidate -> relocation (a direct
+carry, cost ~n).
+
+Rows start with the composition of their future traffic (random order), taken
+from that traffic; seeds: m tiles of each class that uses hub h, taken from
+that class's band-b sources (their hop1 done early).
+"""
+import sys, random
+import numpy as np
+DEBUG = False
+WEIGHT_TOTAL = False  # rotor weights = total demand (sources + row), not sources only
+from hubrun import make_perm
+
+
+def setup(k, s, kind, seed):
+    rng = random.Random(seed)
+    n = k * s
+    perm = make_perm(n, s, kind, rng)
+    K = k * k
+    cnt = np.zeros((K, K), dtype=np.int64)
+    X = None
+    for (r, c), (tr, tc) in perm.items():
+        g = (tr // s) * k + tc // s
+        q = (r // s) * k + c // s
+        if (tr, tc) == (n - 1, n - 1):
+            X = q; continue
+        cnt[q, g] += 1
+    return rng, n, cnt, X
+
+
+def run(k, s, kind, m=4, seed=0, stop_frac=None, verbose=False, lead=2, POLICY="vis", HUBPOL="stock"):
+    rng, n, cnt, X = setup(k, s, kind, seed)
+    K = k * k
+    band = np.arange(K) // k
+    col = np.arange(K) % k
+    nprng = np.random.default_rng(seed)
+
+    def take_from_band(b, c, a, num):
+        """remove up to num tiles of class (a,c) from band-b squares outside column c"""
+        g = a * k + c
+        got = 0
+        order = [b * k + J for J in range(k) if J != c]
+        rng.shuffle(order)
+        for q in order:
+            t = min(num - got, cnt[q, g])
+            if t > 0:
+                cnt[q, g] -= t; got += t
+            if got == num: break
+        return got
+
+    short = [0]
+
+    def steady_row(traffic, L, rng, dist_of=None):
+        """class layout of a length-L row after a long run of rotor insertions
+        (deficit round robin by traffic share, insertion at the source distance)"""
+        cls = [x for x in range(k) if traffic[x] > 0]
+        # distances of the sources of each class, weighted by their tiles
+        arr = [cls[i % len(cls)] for i in range(L)]
+        done = np.zeros(k)
+        for _ in range(6 * L * k):
+            x = min(cls, key=lambda y: (done[y] + 1) / traffic[y])
+            done[x] += 1
+            d = dist_of[x][rng.randrange(len(dist_of[x]))]
+            p = min(d * s + rng.randrange(s), L - 1)
+            arr[0:p] = arr[1:p + 1]; arr[p] = x
+        return list(arr)
+
+    # rows: per hub (b,c), sides L (left of block c) and R
+    rows = {}
+    for b in range(k):
+        for c in range(k):
+            sides = []
+            for side in (0, 1):
+                L = c * s if side == 0 else (k - 1 - c) * s
+                Js = range(0, c) if side == 0 else range(c + 1, k)
+                traffic = np.zeros(k, dtype=np.int64)
+                dist_of = {a: [] for a in range(k)}
+                for J in Js:
+                    q = b * k + J
+                    d = (c - 1 - J) if J < c else (J - c - 1)
+                    for a in range(k):
+                        traffic[a] += cnt[q, a * k + c]
+                        if cnt[q, a * k + c] > 0: dist_of[a].append(d)
+                tot = traffic.sum()
+                bands = []
+                if tot > 0 and L > 0:
+                    bands = steady_row(traffic, L, rng, dist_of)
+                    need = np.bincount(bands, minlength=k)
+                    for a in range(k):
+                        got = take_from_band(b, c, a, int(need[a]))
+                        if got < need[a]:
+                            short[0] += int(need[a]) - got
+                            # replace missing ones by any column-c tile of class a elsewhere
+                            g = a * k + c
+                            for q in np.flatnonzero(cnt[:, g] > 0):
+                                if q == g: continue
+                                t = min(int(need[a]) - got, cnt[q, g]); cnt[q, g] -= t; got += t
+                                if got == need[a]: break
+                while len(bands) < L:
+                    bands.append(rng.randrange(k))
+                sides.append(np.array(bands, dtype=np.int32))
+            rows[(b, c)] = sides
+    stock = np.zeros((K, K), dtype=np.int64)  # hub stock tiles (part of cnt)
+    # seeds
+    for b in range(k):
+        for c in range(k):
+            h = b * k + c
+            for a in range(k):
+                if a == b: continue
+                got = take_from_band(b, c, a, m)
+                cnt[h, a * k + c] += got; stock[h, a * k + c] += got
+
+    def hop1(h, S):
+        """hop1 into hub h from source S: returns class delivered into h"""
+        b, c = divmod(h, k)
+        J = S % k
+        side = 0 if J < c else 1
+        arr = rows[(b, c)][side]
+        dist = (c - 1 - J) if J < c else (J - c - 1)
+        p = dist * s + rng.randrange(s)
+        F = int(arr[0])
+        arr[0:p] = arr[1:p + 1]
+        return F, arr, p
+
+    misplaced = lambda: int(cnt.sum() - np.trace(cnt))
+    stop_at = k * k * n if stop_frac is None else int(stop_frac * n * n)
+    reloc_log = []
+    stats = {"sreloc": 0, "V": 0, "H": 0, "Hbreak": 0, "reloc": 0, "Vdirect": 0}
+    steps = 0
+
+    def src_of(b, c, x, side):
+        """band-b squares on the given side of column c with a class-(x,c) tile"""
+        Js = range(0, c) if side == 0 else range(c + 1, k)
+        g = x * k + c
+        return [b * k + J for J in Js if cnt[b * k + J, g] > 0]
+
+    # rotor state: insertions so far per (hub, side, class); traffic totals fixed at start
+    traffic = {}
+    for b in range(k):
+        for c in range(k):
+            for side in (0, 1):
+                Js = range(0, c) if side == 0 else range(c + 1, k)
+                t = np.zeros(k)
+                for J in Js:
+                    for x in range(k):
+                        t[x] += cnt[b * k + J, x * k + c]
+                if WEIGHT_TOTAL and len(rows[(b, c)][side]):
+                    t = t + np.bincount(rows[(b, c)][side], minlength=k)[:k] * (t > 0)
+                traffic[(b, c, side)] = t
+    done_ins = {key: np.zeros(k) for key in traffic}
+
+    visits = np.zeros(K, dtype=np.int64)
+
+    # sendable[S, g]: a tile of class g at S can leave by hop1 (other column, row in use)
+    sendable = np.zeros((K, K), dtype=bool)
+    for S in range(K):
+        for g in range(K):
+            cS, cg = S % k, g % k
+            if cg != cS and traffic[(S // k, cg, 0 if cS < cg else 1)][g // k] > 0:
+                sendable[S, g] = True
+
+    def source_out():
+        return ((cnt - stock) * sendable).sum(axis=1)
+
+    def vmin():
+        out = source_out()
+        act = out > 0
+        return visits[act].min() if act.any() else 0
+
+    def hop1_copy(h):
+        """hop1 into hub h.  Candidates (side, class x, source S); a source may
+        run at most `lead` visits ahead of the least-visited active square.  Among
+        allowed ones: POLICY 'vis' = least visited first, then class deficit;
+        'frac' = class deficit first.  None allowed -> sync relocation."""
+        best, anycand = pick(h)
+        b, c = divmod(h, k)
+        if best is None:
+            if not anycand:
+                return None
+            return sync_reloc(h)
+        return commit(h, best)
+
+    def pick(h):
+        b, c = divmod(h, k)
+        cap = vmin() + lead
+        best = None
+        anycand = False
+        for side in (0, 1):
+            arr = rows[(b, c)][side]
+            if len(arr) == 0: continue
+            t = traffic[(b, c, side)]
+            if t.sum() == 0: continue
+            Js = range(0, c) if side == 0 else range(c + 1, k)
+            for x in range(k):
+                if t[x] == 0: continue
+                frac = (done_ins[(b, c, side)][x] + 1) / t[x]
+                for J in Js:
+                    S = b * k + J
+                    if cnt[S, x * k + c] == 0: continue
+                    anycand = True
+                    if visits[S] >= cap: continue
+                    key = (visits[S], frac) if POLICY == "vis" else (frac, visits[S])
+                    if best is None or key < best[0]:
+                        best = (key, side, x, S)
+        return best, anycand
+
+    def commit(h, best):
+        b, c = divmod(h, k)
+        _, side, x, S = best
+        done_ins[(b, c, side)][x] += 1
+        J = S % k
+        arr = rows[(b, c)][side]
+        dist = (c - 1 - J) if J < c else (J - c - 1)
+        p = min(dist * s + rng.randrange(s), len(arr) - 1)
+        F = int(arr[0])
+        arr[0:p] = arr[1:p + 1]
+        arr[p] = x
+        cnt[S, x * k + c] -= 1
+        cnt[h, F * k + c] += 1
+        if F * k + c != h: stock[h, F * k + c] += 1
+        visits[S] += 1
+        stats["H"] += 1
+        return S
+
+    def sync_reloc(h):
+        if DEBUG and stats['sreloc'] in (0, 100, 1000):
+            out = source_out(); act = out > 0
+            print(visits.reshape(k, k)); print('sreloc', stats['sreloc'], 'vmin', vmin(), 'visits(act)', sorted(zip(visits[act].tolist(), np.flatnonzero(act).tolist()))[:8], 'out', out[act][:40].tolist())
+        """direct O(n) carry into h from the least-visited active square
+        (a column-c tile if it has one: it becomes stock at h)"""
+        c = h % k
+        out = source_out(); out[h] = 0
+        act = np.flatnonzero(out > 0)
+        src = cnt - stock
+        if len(act) == 0: return None
+        v = visits[act]
+        Zs = act[v == v.min()]
+        colc = [z for z in Zs if any(src[z, x * k + c] > 0 for x in range(k) if x * k + c != z)]
+        if not colc:
+            # least visited among active squares that hold a column-c tile
+            hasc = [z for z in act if any(src[z, x * k + c] > 0 for x in range(k) if x * k + c != z)]
+            if hasc:
+                vm = min(visits[z] for z in hasc)
+                colc = [z for z in hasc if visits[z] == vm]
+        Z = int(rng.choice(colc)) if colc else int(rng.choice(list(Zs)))
+        if colc:
+            gs = [x * k + c for x in range(k) if x * k + c != Z and src[Z, x * k + c] > 0]
+        else:
+            gs = [g for g in np.flatnonzero(src[Z] > 0) if g != Z]
+        g = int(rng.choice(gs))
+        cnt[Z, g] -= 1; cnt[h, g] += 1
+        if g % k == c and g != h: stock[h, g] += 1
+        visits[Z] += 1
+        stats["sreloc"] += 1
+        return Z
+
+    while True:
+        steps += 1
+        if steps > 10 * n * n:
+            return None
+        D = X
+        a, c = divmod(D, k)
+        # 1. hop2 from a hub in column c with class-D stock, then hop1 into that hub
+        hubs = [b * k + c for b in range(k) if b != a and cnt[b * k + c, D] > 0]
+        rng.shuffle(hubs)
+        if HUBPOL == "look":
+            # prefer the hub whose band offers the least-visited allowed source
+            def hkey(h):
+                best, _ = pick(h)
+                return (best[0][0] if best else 1 << 60, -cnt[h, D])
+            hubs.sort(key=hkey)
+        else:
+            hubs.sort(key=lambda h: -cnt[h, D])
+        done = False
+        for h in hubs:
+            cnt[h, D] -= 1; cnt[D, D] += 1
+            if stock[h, D] > 0: stock[h, D] -= 1
+            S = hop1_copy(h)
+            if S is not None:
+                stats["V"] += 1; X = S; done = True; break
+            # hub has no hop1 sources left: the blank stays at h (plain hop2)
+            stats["Vdirect"] += 1; visits[h] += 1; X = h; done = True; break
+        if done: continue
+        # 2. hop1 into D itself
+        S = hop1_copy(D)
+        if S is not None:
+            X = S; continue
+        # 3. stuck
+        if misplaced() <= stop_at:
+            break
+        reloc_log.append((misplaced(), D, int(cnt[:, D].sum() - cnt[D, D])))
+        colD = cnt[:, D].copy(); colD[D] = 0
+        cand = np.flatnonzero(colD > 0)
+        if len(cand):
+            S = int(cand[rng.randrange(len(cand))])
+            if cnt[S, D] == stock[S, D]: stock[S, D] -= 1
+            cnt[S, D] -= 1; cnt[D, D] += 1; X = S; stats["reloc"] += 1; visits[S] += 1
+            continue
+        rowsum = cnt.sum(axis=1) - np.diag(cnt); rowsum[D] = 0
+        Zs = np.flatnonzero(rowsum > 0)
+        if len(Zs) == 0: break
+        Z = int(Zs[rng.randrange(len(Zs))])
+        gs = [g for g in np.flatnonzero(cnt[Z] > 0) if g != Z]
+        g = int(gs[rng.randrange(len(gs))])
+        if cnt[Z, g] == stock[Z, g]: stock[Z, g] -= 1
+        cnt[Z, g] -= 1; cnt[D, g] += 1; X = Z; stats["reloc"] += 1; visits[Z] += 1
+    stats["short"] = short[0]
+    stats["log"] = reloc_log
+    return stats, n, misplaced()
+
+
+if __name__ == "__main__":
+    kinds = sys.argv[1].split(",")
+    ks = [tuple(map(int, x.split("x"))) for x in sys.argv[2].split(",")]
+    ms = [int(x) for x in sys.argv[3].split(",")] if len(sys.argv) > 3 else [4]
+    Ls = [int(x) for x in sys.argv[4].split(",")] if len(sys.argv) > 4 else [2]
+    pol = sys.argv[5] if len(sys.argv) > 5 else "vis"
+    hubpol = sys.argv[6] if len(sys.argv) > 6 else "stock"
+    for kind in kinds:
+        for k, s in ks:
+            for m in ms:
+                for L in Ls:
+                    r = run(k, s, kind, m, lead=L, POLICY=pol, HUBPOL=hubpol)
+                    if r is None:
+                        print(kind, k, s, m, L, "no termination", flush=True); continue
+                    st, n, left = r
+                    tr = st["H"] + st["V"] + st["Vdirect"]
+                    rl = st["reloc"] + st["sreloc"]
+                    print(f"{kind:9s} k={k:2d} s={s:3d} m={m:3d} L={L:2d} hops/n2={tr/n**2:.3f} "
+                          f"reloc={st['reloc']:6d} sreloc={st['sreloc']:6d} (all)*k/n2={rl*k/n**2:.4f} "
+                          f"left/(k^2 n)={left/(k*k*n):.2f}", flush=True)
