@@ -29,6 +29,35 @@ inefficient moves, i.e. of length at most `Manhattan + 14.15*n^(11/4) + 475686*n
 The one-level algorithm alone gives `11.73*n^(11/4) + 78252*n^(5/2)` for
 `n ≥ 12⁴` (`Algorithm.exists_solution_explicit`).
 
+## Beyond Zhong: exponent 8/3 (this branch)
+
+This branch (`exponent-research`) also proves a strictly better error term,
+by a different transport scheme ("hub transport", `SlidingPuzzle/Hub/`):
+
+```text
+average optimal solution length = (2/3)*n³ + O(n^(8/3) (log n)^(1/3))
+God's number                    =       n³ + O(n^(8/3) (log n)^(1/3))
+```
+
+(`SlidingPuzzle.Hub.average_optimal_length`, `SlidingPuzzle.Hub.gods_number`,
+and `…_rpow`: `O(n^α)` for every `α > 8/3`). Corridors are homogeneous in one
+coordinate only: row corridors carry tiles by target block column, column
+corridors by exact class, and a tile turns in the reservoir of a *hub* square.
+The plan is a König decomposition into rounds executed in a random-like order
+(a subset Chernoff bound via Maclaurin's inequality), which keeps the tiles in
+flight small. The pen-and-paper proof is `research/exponent/PROOF.md`; the
+Lean blueprint and its deviations from it are in `research/exponent/LEAN_PLAN.md`.
+
+| Path | Contents |
+| --- | --- |
+| `Hub/Basic`, `Interface`, `Layout` | Layout arithmetic, the abstract state `IState` and resolved operations, `Rel` to boards |
+| `Hub/Prim*`, `Geom*`, `Op*`, `Simulate` | Board operations (hop1, hop2, jump) with their inefficiency budgets |
+| `Hub/Plan*`, `WalkSnake`, `RoundWalk` | König decomposition with padding; the walk of one round |
+| `Hub/Chernoff*`, `InFlight*` | Maclaurin, subset Chernoff, the good order of rounds, the in-flight bound |
+| `Hub/Run*` | The abstract run: roles, stock identity, validity, cost, misplaced tiles |
+| `Hub/Cleanup`, `FinishGen`, `Transport` | Cleanup by double swaps, Finish, the whole algorithm on side `k*s` |
+| `Hub/Asymp*`, `Main` | Choice of `k ≈ (n/log n)^(1/3)` and the final theorems |
+
 ## Building
 
 Lean `v4.33.1` with mathlib `v4.33.1` (pinned in `lake-manifest.json`).
