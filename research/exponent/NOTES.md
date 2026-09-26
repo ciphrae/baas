@@ -129,3 +129,12 @@ Lemma 1 (stock) reduces to an online rounding problem, per column c:
 Lemma 3 (in flight) is the remaining genuinely new question: column-level stock of class x
 equals seeds + in_flight_x(0) - in_flight_x(t) exactly. Levers: order of rounds (free),
 choice of each matching, steady-state prefill. Data: dips ~14 at k = 12 on random.
+
+## 2026-09-26 (later): own-sender pairing makes Lemmas 1 and 2 trivial -> PROOF.md
+Serve D from the hub in the band of D's own sender this round; the sender then inserts its
+tile (class D) into that hub's row. Then stock_b[x] = seeds + prefill - inflight_b[x] exactly
+(no rounding problem), the walk is the cycles of pi_r, and relocations in snake order cost
+O(k^2 s) per round whatever their number. Only the in-flight bound remains; with a random
+order of rounds it holds with O(n log n) seeds per hub (push lemma + sampling without
+replacement). pairrun.py: seeds per hub <= 0.85 n, total <= 0.23 k^2 n, k = 4..12.
+Full argument and the list of remaining checks: PROOF.md.
