@@ -1,4 +1,7 @@
 import SlidingPuzzle.Hub.Layout
+import SlidingPuzzle.Hub.OpHop1
+import SlidingPuzzle.Hub.OpHop2
+import SlidingPuzzle.Hub.OpJump
 
 /-! # Realizing resolved operations on boards
 
@@ -12,7 +15,10 @@ variable {n k s : ℕ}
 theorem simulate_step (hd : HDims n k s) [NeZero n] {B : Board n} {σ : IState k}
     (hR : Rel hd B σ) {e : REvent k} (he : σ.Pre e) :
     ∃ C : Board n, ∃ p : Path B C, Rel hd C (σ.step s e) ∧ p.inefficientMoves ≤ σ.cost s e := by
-  sorry
+  cases e with
+  | hop1 S h y => exact simulate_hop1 hd hR he
+  | hop2 h D y => exact simulate_hop2 hd hR he
+  | jump E Z y => exact simulate_jump hd hR he
 
 /-- A valid list of operations. -/
 theorem simulate_run (hd : HDims n k s) [NeZero n] {B : Board n} {σ : IState k}
@@ -29,5 +35,6 @@ theorem simulate_run (hd : HDims n k s) [NeZero n] {B : Board n} {σ : IState k}
     rw [Path.inefficientMoves_append]
     simp only [IState.totalCost]
     omega
+
 
 end SlidingPuzzle.Hub
