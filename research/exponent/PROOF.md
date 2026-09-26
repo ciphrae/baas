@@ -313,8 +313,10 @@ With k^3 = n/ln n: O(n^(8/3) (ln n)^(1/3)).
       P(X >= (1+delta) mu) <= exp(-delta^2 mu / (2+delta)).
   A uniformly random order of the Delta matchings restricted to a fixed window of positions
   is a uniformly random subset of that size, so this is all Lemma 3 uses (plus a union
-  bound, i.e. counting permutations). For Lean: Maclaurin's inequality (or just the needed
-  case, via Newton's inequalities) and the counting are the only new pieces.
+  bound, i.e. counting permutations). For Lean: Maclaurin's inequality and the counting are
+  the only new pieces. Maclaurin is not in the pinned Mathlib (checked 2026-09-26); the
+  usual route is Newton's inequalities (real-rootedness of prod (X + y_j) and Rolle), or a
+  direct induction. The cruder e_w <= (sum y)^w / w! loses a factor e^{w^2/N}: not enough.
 - Probability: Lemma 3 needs only the existence of one good order. The cleanest route is a
   counting statement: for a fixed window, the number of permutations of the Delta matchings
   that make a count bad is at most n^{-10} of all of them. This is a Chernoff bound for
