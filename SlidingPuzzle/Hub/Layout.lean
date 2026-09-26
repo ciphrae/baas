@@ -95,15 +95,15 @@ noncomputable def absState (hd : HDims n k s) [NeZero n] (B : Board n) : IState 
 
 /-! ## Decoding cells: regions, row positions, column positions -/
 
-section Decode
+namespace LayoutFacts
 
 open LayoutAux Finset
 
 /-! ## Cells of the layout -/
 
-theorem HDims.s_pos (hd : HDims n k s) : 0 < s := by have := hd.room; omega
+theorem hs_pos (hd : HDims n k s) : 0 < s := by have := hd.room; omega
 
-theorem HDims.k_lt_s (hd : HDims n k s) : k < s := by have := hd.room; omega
+theorem hk_lt_s (hd : HDims n k s) : k < s := by have := hd.room; omega
 
 theorem mkCell_val [NeZero n] {r c : ℕ} (hr : r < n) (hc : c < n) :
     (mkCell n r c).1.val = r ∧ (mkCell n r c).2.val = c := by
@@ -118,7 +118,7 @@ theorem rowCell_val (hd : HDims n k s) [NeZero n] (H : RowH k) {q : ℕ}
   obtain ⟨b, c, r⟩ := H
   have hc := c.isLt
   have hb := b.isLt
-  have hks := hd.k_lt_s
+  have hks := hk_lt_s hd
   apply mkCell_val
   · rw [← hd.mul]; exact block_lt hb (by omega)
   · rw [← hd.mul]
@@ -141,7 +141,7 @@ theorem colCell_val (hd : HDims n k s) [NeZero n] (V : ColH k) {q : ℕ}
   obtain ⟨c, a, r⟩ := V
   have hc := c.isLt
   have ha := a.isLt
-  have hks := hd.k_lt_s
+  have hks := hk_lt_s hd
   have hcol : c.val * s + a.val < n := by rw [← hd.mul]; exact block_lt hc (by omega)
   set m := s - k with hm_def
   have hmk : k + m = s := by omega
@@ -183,8 +183,8 @@ theorem rowCell_facts (hd : HDims n k s) [NeZero n] (H : RowH k) {q : ℕ}
     (rowCell (n := n) k s H q).1.val % s = H.2.1.val ∧
     (rowCell (n := n) k s H q).2.val / s ≠ H.2.1.val := by
   have v := rowCell_val hd H hq
-  have hks := hd.k_lt_s
-  have hs := hd.s_pos
+  have hks := hk_lt_s hd
+  have hs := hs_pos hd
   have hc := H.2.1.isLt
   have hdm := divmod (b := H.1.val) (show H.2.1.val < s by omega)
   rw [v.1]
@@ -209,7 +209,7 @@ theorem colCell_facts (hd : HDims n k s) [NeZero n] (V : ColH k) {q : ℕ}
     k ≤ (colCell (n := n) k s V q).1.val % s ∧
     (colCell (n := n) k s V q).1.val / s ≠ V.2.1.val := by
   obtain ⟨v2, band, off, v1, hband, hk, hoff, hq'⟩ := colCell_val hd V hq
-  have hks := hd.k_lt_s
+  have hks := hk_lt_s hd
   have ha := V.2.1.isLt
   have hdm := divmod (b := V.1.val) (show V.2.1.val < s by omega)
   have hdm' := divmod (b := band) hoff
@@ -227,7 +227,7 @@ theorem rowCell_inj (hd : HDims n k s) [NeZero n] {H H' : RowH k} {q q' : ℕ}
   have e2 := congrArg (fun x : Cell n => x.2.val) h
   rw [v.1, v'.1] at e1
   rw [v.2, v'.2] at e2
-  have hks := hd.k_lt_s
+  have hks := hk_lt_s hd
   obtain ⟨b, c, r⟩ := H
   obtain ⟨b', c', r'⟩ := H'
   have hc := c.isLt
@@ -250,7 +250,7 @@ theorem colCell_inj (hd : HDims n k s) [NeZero n] {V V' : ColH k} {q q' : ℕ}
   have e2 := congrArg (fun x : Cell n => x.2.val) h
   rw [v1, v1'] at e1
   rw [v2, v2'] at e2
-  have hks := hd.k_lt_s
+  have hks := hk_lt_s hd
   obtain ⟨c, a, r⟩ := V
   obtain ⟨c', a', r'⟩ := V'
   have ha := a.isLt
@@ -282,8 +282,8 @@ theorem rowCell_eq (hd : HDims n k s) [NeZero n] (H : RowH k) {q : ℕ}
 /-- Every cell that is not a region cell is a row or column position. -/
 theorem row_or_col_of_not_region (hd : HDims n k s) [NeZero n] (x : Cell n)
     (hreg : ¬ region k s (sqOf hd x) x) : IsRowPos k s x ∨ IsColPos k s x := by
-  have hs := hd.s_pos
-  have hks := hd.k_lt_s
+  have hs := hs_pos hd
+  have hks := hk_lt_s hd
   have hn : n = k * s := hd.mul.symm
   have hx1 := Nat.div_add_mod' x.1.val s
   have hx2 := Nat.div_add_mod' x.2.val s
@@ -470,7 +470,7 @@ theorem card_square (hd : HDims n k s) (Q : Sq k) (R : ℕ → ℕ → Prop)
     #(univ.filter fun x : Cell n => x.1.val / s = Q.1.val ∧ x.2.val / s = Q.2.val ∧
       R (x.1.val % s) (x.2.val % s)) =
       #((range s ×ˢ range s).filter fun p => R p.1 p.2) := by
-  have hs := hd.s_pos
+  have hs := hs_pos hd
   apply card_bij (fun x _ => (x.1.val % s, x.2.val % s))
   · intro x hx
     simp only [mem_filter, mem_univ, true_and, mem_product, mem_range] at hx ⊢
@@ -512,7 +512,7 @@ theorem regionSize_eq (hks : k ≤ s) (hk : 1 ≤ k) :
 
 theorem card_region (hd : HDims n k s) (Q : Sq k) :
     #(univ.filter fun x : Cell n => region k s Q x) = regionSize k s := by
-  have hks := hd.k_lt_s
+  have hks := hk_lt_s hd
   have hk := hd.two_le
   have hQ1 := Q.1.isLt
   have hQ2 := Q.2.isLt
@@ -561,7 +561,7 @@ theorem eq_blank_of_val_eq_zero [NeZero n] {B : Board n} {x : Cell n} (h : (B x)
 theorem isLast_iff (hd : HDims n k s) [NeZero n] (y : Sq k) :
     IsLast y ↔ sqOf hd (blank (target n)) = y := by
   rw [blank_target_eq]
-  have hs := hd.s_pos
+  have hs := hs_pos hd
   have hk := hd.two_le
   have he : n - 1 = (k - 1) * s + (s - 1) := by
     rw [← hd.mul]
@@ -657,9 +657,9 @@ theorem sum_corridor : (∑ H : RowH k, rowLen k s H) + (∑ V : ColH k, colLen 
     k ^ 2 * sqCorridor k s := by
   rw [sum_rowLen, sum_colLen, sqCorridor]; ring
 
-end Decode
+end LayoutFacts
 
-open Finset LayoutAux
+open Finset LayoutAux LayoutFacts
 
 /-! ## Facts about the layout -/
 
@@ -669,7 +669,7 @@ theorem rel_absState (hd : HDims n k s) [NeZero n] (B : Board n)
   ⟨fun H _ hq => ⟨rowCell_nonblank hd hb H hq, rfl⟩,
     fun V _ hq => ⟨colCell_nonblank hd hb V hq, rfl⟩, fun _ _ => rfl, hb⟩
 
-theorem reservoir_region {Q : Sq k} {x : Cell n} (h : reservoir k s Q x) : region k s Q x :=
+theorem LayoutFacts.reservoir_region {Q : Sq k} {x : Cell n} (h : reservoir k s Q x) : region k s Q x :=
   ⟨h.1, h.2.1, Or.inr ⟨h.2.2.1, Or.inl h.2.2.2⟩⟩
 
 /-- Every region has `regionSize` cells, one of them possibly the blank. -/
@@ -783,8 +783,8 @@ theorem misplaced_le_of_rel (hd : HDims n k s) [NeZero n] {B : Board n} {σ : IS
 theorem exists_normalize (hd : HDims n k s) [NeZero n] (B : Board n) :
     ∃ C : Board n, ∃ p : Path B C,
       reservoir k s (sqOf hd (blank C)) (blank C) ∧ p.inefficientMoves ≤ 2 * n := by
-  have hs := hd.s_pos
-  have hks := hd.k_lt_s
+  have hs := hs_pos hd
+  have hks := hk_lt_s hd
   set x := blank B
   have hb1 := hd.div_lt x.1
   have hb2 := hd.div_lt x.2

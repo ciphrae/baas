@@ -11,15 +11,17 @@ namespace SlidingPuzzle.Hub
 
 variable {n k s : ℕ}
 
+namespace FinishGen
+
 open _root_.SlidingPuzzle.Partition in
-theorem HDims.side_eq (hd : HDims n k s) : side n k = s := by
+theorem side_eq (hd : HDims n k s) : side n k = s := by
   unfold side
   rw [← hd.mul]
   exact Nat.mul_div_cancel_left s (by have := hd.two_le; omega)
 
 open _root_.SlidingPuzzle.Partition in
-theorem HDims.toFDims (hd : HDims n k s) : FDims n k :=
-  ⟨hd.two_le, by rw [hd.side_eq]; have := hd.room; have := hd.two_le; omega, by rw [hd.side_eq]; exact hd.mul⟩
+theorem toFDims (hd : HDims n k s) : FDims n k :=
+  ⟨hd.two_le, by rw [side_eq hd]; have := hd.room; have := hd.two_le; omega, by rw [side_eq hd]; exact hd.mul⟩
 
 private theorem div_eq_iff' {x r s : ℕ} (hs : 0 < s) : x / s = r ↔ r * s ≤ x ∧ x < (r + 1) * s := by
   constructor
@@ -36,10 +38,14 @@ theorem square_iff_sqOf (hd : HDims n k s) (i : GroupIndex k) (x : Cell n) :
     square i x ↔ sqOf hd x = (groupRow i, groupCol i) := by
   have hs : 0 < s := by have := hd.room; omega
   unfold square
-  rw [hd.side_eq]
+  rw [side_eq hd]
   simp only [sqOf, Prod.ext_iff, Fin.ext_iff]
   rw [div_eq_iff' hs, div_eq_iff' hs]
   tauto
+
+end FinishGen
+
+open FinishGen
 
 /-- Finish for a board whose tiles all lie in their own squares. -/
 theorem exists_finish (hd : HDims n k s) [NeZero n] {cost ineff : ℕ → ℕ}
@@ -47,7 +53,7 @@ theorem exists_finish (hd : HDims n k s) [NeZero n] {cost ineff : ℕ → ℕ}
     (hsorted : ∀ x, (B x).val ≠ 0 → classOf hd (B x) = sqOf hd x)
     (hblank : IsLast (sqOf hd (blank B))) :
     ∃ p : Path B (target n), p.inefficientMoves ≤ k ^ 2 * ineff s + 9354 * k ^ 2 * n := by
-  have hf := hd.toFDims
+  have hf := toFDims hd
   have hS : Partition.SquaresSorted (k := k) B := by
     intro i c hc hnz
     refine (Partition.mem_targetGroup i _).mpr ⟨hnz, ?_⟩
@@ -61,6 +67,6 @@ theorem exists_finish (hd : HDims n k s) [NeZero n] {cost ineff : ℕ → ℕ}
       Equiv.symm_apply_apply]
     exact Prod.ext (Fin.ext hblank.1) (Fin.ext hblank.2)
   obtain ⟨p, -, hp⟩ := Partition.exists_finish_path_of hsolver hf B hB hS hL
-  exact ⟨p, by rwa [hd.side_eq] at hp⟩
+  exact ⟨p, by rwa [side_eq hd] at hp⟩
 
 end SlidingPuzzle.Hub
