@@ -111,7 +111,7 @@
       "configFile": "lakefile.toml"
     }
   ],
-  "name": "slidingPuzzle",
+  "name": "baas",
   "lakeDir": ".lake",
   "fixedToolchain": false
 }

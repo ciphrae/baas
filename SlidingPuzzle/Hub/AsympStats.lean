@@ -3,8 +3,8 @@ import SlidingPuzzle.Manhattan
 
 /-! # Orbit statistics from a boardwise approximation, for any error scale
 
-A generalization of `Proposition9.lean` and `Asymptotics.lean`: the error scale
-`f` is arbitrary as long as `n² ≤ f n` eventually. -/
+The statistical reduction of Zhong (2023), Section 5, for an arbitrary error scale:
+`f` need only satisfy `n² ≤ f n` eventually. -/
 
 open Filter Asymptotics
 

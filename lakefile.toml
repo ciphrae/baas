@@ -1,4 +1,4 @@
-name = "slidingPuzzle"
+name = "baas"
 version = "0.1.0"
 defaultTargets = ["SlidingPuzzle"]
 

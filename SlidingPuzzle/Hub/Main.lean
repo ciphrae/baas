@@ -8,7 +8,7 @@ import SlidingPuzzle.Bridge.Statistics
 With `k³ ≈ n / log n` (`k` even) and `s = ⌊n/k⌋`, the hub algorithm on the
 `k*s × k*s` residual board costs `O(n³/k + k²n² log n)` inefficient moves, i.e.
 `O(n^(8/3) (log n)^(1/3))`; the outer `n - k*s < k` layers are solved by the
-Parberry prefix as in `Algorithm/GeneralSize.lean`. Hence the mean optimal
+Parberry prefix (`Parberry/Prefix.lean`). Hence the mean optimal
 solution length is `(2/3)n³ + O(n^(8/3) (log n)^(1/3))` and God's number is
 `n³ + O(n^(8/3) (log n)^(1/3))`, improving Zhong's `O(n^(11/4))`. -/
 open Filter Asymptotics

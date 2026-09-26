@@ -1,6 +1,6 @@
 # The Lean proof of O(n^(8/3) (log n)^(1/3))
 
-**Status: complete** (branch `exponent-research`). The final theorems in
+**Status: complete.** The final theorems in
 `SlidingPuzzle/Hub/Main.lean`:
 
 | Theorem | Statement |
@@ -46,9 +46,9 @@ are generous and unoptimized.
    corridors included.
 7. **`k` even**, so a column walk crosses a row group of `k` rows by a jump of
    odd length `k + 1`.
-8. **Finish generalized.** `Algorithm/Finish*` needed only `8 ≤ side n k`, not
-   `k³ ≤ side n k`; it now takes `Partition.FDims` (`Dims.toFDims` keeps the
-   11/4 development unchanged), since here `s ≈ k² log n`.
+8. **Finish with small squares.** Zhong's partition has squares of side `k³`;
+   here `s ≈ k² log n`. `Algorithm/Finish*` needs only `8 ≤ side n k`
+   (`Partition.FDims`).
 
 ## Architecture
 
@@ -174,7 +174,7 @@ squares `≤ 643·k²n(log₂ n + 1)` (budget `misplacedBound`, `1000`).
 `hubBound n k s ≤ 10⁸(n²s + k²n²(log₂ n + 1))` on side `n = k*s`. For `n ≥ 4096`
 take `k = 2m` with `256·m³(log₂ n + 1) ≤ n < 256(m+1)³(log₂ n + 1)` and
 `s = ⌊n/k⌋`, solve the outer `n - k*s < k` layers by the Parberry prefix
-(`Algorithm/GeneralSize.lean`), and bound each term's cube by
-`6036³ n⁸ (log₂ n + 1)`, with `log₂ n + 1 ≤ 3 ln n`. The statistics wrapper
-of `Proposition9.lean` is generalized to any error scale `f ≥ n²`
+(`Parberry/Prefix.lean`), and bound each term's cube by
+`6036³ n⁸ (log₂ n + 1)`, with `log₂ n + 1 ≤ 3 ln n`. The statistical
+reduction of the paper (Section 5) is proved for any error scale `f ≥ n²`
 (`AsympStats.lean`).

@@ -1,9 +1,8 @@
 # Zhong library
 
-A word-level model of the sliding puzzle from an earlier formalization attempt
-(`../Zhong`): rectangular boards `Zhong.Board n m`, operation words over
-`Dir`, and their permutation action. Only the parts used by `SlidingPuzzle`
-are kept, and several files were modified during cleanup.
+A word-level model of the sliding puzzle, following the conventions of Zhong
+(2023): rectangular boards `Zhong.Board n m`, operation words over `Dir`, and
+their permutation action.
 
 It supplies
 - the solvability criterion (`Reachable`, `Alternating`, `Glue`),

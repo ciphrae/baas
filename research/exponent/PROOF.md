@@ -3,10 +3,11 @@
 Pen-and-paper proof, now fully formalized in `SlidingPuzzle/Hub/` (theorems
 `SlidingPuzzle.Hub.average_optimal_length`, `gods_number`); `LEAN_PLAN.md` records how the
 Lean proof is organized and where it departs from this text (three-cycle insertions, straight
-jumps for relocations and bypasses, no tokens, cleanup by double swaps, `k` even). Compared with the formalized
-n^(11/4) development (`SlidingPuzzle/`), the new parts are the layout (section 1), the
+jumps for relocations and bypasses, no tokens, cleanup by double swaps, `k` even). Compared with
+Zhong's n^(11/4) algorithm (Zhong 2023), the new parts are the layout (section 1), the
 transport plan and its execution (sections 3-5), the in-flight bound (section 6) and a
-Cleanup phase (section 7). Everything else is reused.
+Cleanup phase (section 7). The division into squares, the local Finish and the statistical
+reduction follow the paper.
 
 **Theorem.** Every reachable n x n board has a solution with
 O(n^(8/3) (log n)^(1/3)) inefficient moves.
@@ -15,13 +16,13 @@ Parameters: k ~ (n/ln n)^(1/3), s = n/k, so s = Theta(n^(2/3) (ln n)^(1/3)). We 
   (P1) s >= 80 k ln n          (Lemma 3)
   (P2) 4k + 4 <= s             (room for corridors; insertion positions >= s/2)
 and set R := 4n(1 + ln(k s^2)) + 64 k^2 ln n + 10k (reserve for bypasses, Lemma 4).
-All hold for large n. Sides not of the form k*s are reduced to this case as in
-`Algorithm/GeneralSize.lean`, with the new admissibility conditions.
+All hold for large n. Sides not of the form k*s are reduced to this case by solving the
+outer n - k*s < k layers with a Parberry-style prefix (`Hub/AsympBound.lean`).
 
 Cost units: "O(x)" below always counts inefficient moves (`Path.inefficientMoves`); via
 `length + M(end) = M(start) + 2*ineff` this is what the final theorem needs.
 
-## 0. Primitives (all already formalized)
+## 0. Primitives
 
 - **Blank/tile swap** (`exists_vertical_jump`, `exists_horizontal_jump`, and the L-shaped
   combination): the blank moves from cell u to cell v, the tile at v moves to u, every other
@@ -32,12 +33,12 @@ Cost units: "O(x)" below always counts inefficient moves (`Path.inefficientMoves
 - **Corridor slide** (`Moves/Corridor.lean`): the blank walks along a line of cells, each
   step moving the next tile one cell back. A step is efficient iff it moves that tile toward
   its target.
-- **Restoring exit** (`Moves/RestoreCarry.lean`, `Transport/Exit.lean`): a chosen reservoir
-  tile T at distance d from the reservoir side is carried out next to a corridor cell and
-  the reservoir is restored exactly; 4d + O(k^2) inefficient moves. (Entry column chosen so
-  that d is odd, as there.)
-- **Local Finish** (`Finish.lean`, `TwoLevel.lean`): when every square holds exactly its own
-  tiles, solve each square locally; k^2 * O(s^3) = O(n^3/k) (or the two-level bound).
+- **Restoring exit**: a chosen reservoir tile T at distance d from the reservoir side is
+  carried out next to a corridor cell by a three-row carry, and the reservoir is restored
+  exactly; 4d + O(k^2) inefficient moves (entry column chosen so that d is odd). The Lean
+  proof avoids it: insertions use three-cycles in local boxes (`LEAN_PLAN.md`, item 2).
+- **Local Finish** (`Algorithm/Finish.lean`): when every square holds exactly its own
+  tiles, solve each square locally; k^2 * O(s^3) = O(n^3/k).
 
 ## 1. Layout
 
@@ -166,8 +167,8 @@ stock if it is another class of the hub's column, floating otherwise (junk). A t
 receives from a column is home (floating if junk). A hop2 in case (iii) uses a stock tile.
 
 **Parity.** Every swap uses buffers inside a reservoir, so corridor contents and their
-order are exactly as described; reservoirs are only tracked by counts per class (Zhong's
-`GroupEquivalent` idea with "target column block" for rows).
+order are exactly as described; reservoirs are only tracked by counts per class (as in
+Zhong's Algorithm 4, with "target column block" for rows).
 
 **Cost per round.** Every scheduled tile makes at most one hop1 and one hop2 in total:
 O(n^2 (s + k^2)) = O(n^3/k + k^2 n^2) over the run. Bypasses: O(n) each (section 6 bounds
@@ -327,8 +328,8 @@ With k^3 = n/ln n: O(n^(8/3) (ln n)^(1/3)).
   for independent variables but (as far as I know) not the without-replacement comparison;
   alternatives: prove the subset Chernoff bound directly by the exchangeable-moment argument,
   or via Azuma on the permutation's Doob martingale (bounded differences k).
-- The plan is a statement about counts only, like `Transport/Counts.lean`; realization of one
-  round in moves is like `Transport/Realization.lean`, with the three hop kinds and the bypass.
+- The plan is a statement about counts only; realization of one round in moves is separate,
+  with the three hop kinds and the bypass (`Hub/Simulate.lean`).
 - Lemma 1 is an invariant of the count run; Lemmas 2-4 concern only the row halves' position
   dynamics, which are a function of the insertion sequence (a clean combinatorial model).
 - Constants are not optimized anywhere; (P1)-(P2) decide the threshold on n.

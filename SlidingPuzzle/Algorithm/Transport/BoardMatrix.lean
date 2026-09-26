@@ -1,8 +1,7 @@
 import SlidingPuzzle.Algorithm.Transport.CountSwap
 import SlidingPuzzle.Algorithm.Transport.Counts
 
-/-! The transport matrix margins instantiated by actual clear boards.
-Realizing the count run by board paths is done in `Realization.lean`. -/
+/-! The transport matrix margins instantiated by actual clear boards. -/
 namespace SlidingPuzzle.Partition
 noncomputable section
 open Classical
