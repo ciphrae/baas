@@ -245,5 +245,25 @@ theorem square_target_blank {n k : ℕ} [NeZero n] (hd : Dims n k)
     exact ⟨by omega, by omega, by omega, by omega⟩
   exact ⟨fun h => square_unique hd h hlast, fun h => h ▸ hlast⟩
 
+
+theorem FDims.square_target_blank {n k : ℕ} [NeZero n] (hd : FDims n k)
+    (j : GroupIndex k) : square j (blank (target n)) ↔ j=lastGroup k hd := by
+  have hb : blank (target n) =
+      (⟨n-1, Nat.sub_lt (NeZero.pos n) (by omega)⟩,
+       ⟨n-1, Nat.sub_lt (NeZero.pos n) (by omega)⟩) := by
+    apply (target n).injective
+    rw [target_bottomRight]
+    exact (target n).apply_symm_apply 0
+  have hlast : square (lastGroup k hd) (blank (target n)) := by
+    rw [hb]
+    simp only [square,lastGroup,groupRow,groupCol,Equiv.symm_apply_apply]
+    have hp : 0<side n k := hd.side_pos
+    have hkm : k-1+1=k := by have := hd.two_le; omega
+    have he' : (k-1+1)*side n k=n := by rw [hkm]; exact hd.mul_side
+    have he : (k-1)*side n k+side n k=n := by
+      have h := he'; rw [Nat.add_mul, Nat.one_mul] at h; exact h
+    exact ⟨by omega, by omega, by omega, by omega⟩
+  exact ⟨fun h => hd.square_unique h hlast, fun h => h ▸ hlast⟩
+
 end
 end SlidingPuzzle.Partition

@@ -274,7 +274,7 @@ namespace Partition
 section
 variable {n k : ℕ} [NeZero n]
 theorem exists_finish_one_square {cost ineff : ℕ → ℕ} (hsolver : SolverBound cost ineff)
-    (hk : Dims n k) (B : Board n)
+    (hk : FDims n k) (B : Board n)
     (hB : SquaresSorted (k := k) B) (hb : blank B = blank (target n))
     (i : GroupIndex k) (hi : i ≠ lastGroup k hk)
     (u v : Cell n) (huv : u ≠ v)
@@ -288,7 +288,7 @@ theorem exists_finish_one_square {cost ineff : ℕ → ℕ} (hsolver : SolverBou
         ∀ x, square j x → C x = B x) := by
   classical
   let : NeZero (side n k) := ⟨hk.side_pos.ne'⟩
-  have hm : 8 ≤ side n k := by have := hk.cube_le; have := Nat.pow_le_pow_left hk.two_le 3; omega
+  have hm : 8 ≤ side n k := hk.eight_le
   have hn : 4 ≤ n := hk.two_le_n
   have hBu : B u ≠ 0 := by
     intro h
@@ -298,10 +298,10 @@ theorem exists_finish_one_square {cost ineff : ℕ → ℕ} (hsolver : SolverBou
     exact hv0 ((B.injective (h.trans (B.apply_symm_apply 0).symm)).trans hb)
   have huout : u ∉ Set.range (squareEmbedding i) := by
     intro h
-    exact hi (square_unique hk ((mem_range_squareEmbedding hk i u).mp h) hu)
+    exact hi (hk.square_unique ((mem_range_squareEmbedding hk i u).mp h) hu)
   have hvout : v ∉ Set.range (squareEmbedding i) := by
     intro h
-    exact hi (square_unique hk ((mem_range_squareEmbedding hk i v).mp h) hv)
+    exact hi (hk.square_unique ((mem_range_squareEmbedding hk i v).mp h) hv)
   obtain ⟨C,p,hp,hpi,hbC,hC,hbuf,hfix⟩ := exists_block_finish hsolver B (target n) hm hn
     ((groupRow i).val*side n k) ((groupCol i).val*side n k)
     (by simpa [Nat.add_mul] using square_block_end (n := n) (groupRow i))
@@ -329,11 +329,11 @@ theorem exists_finish_one_square {cost ineff : ℕ → ℕ} (hsolver : SolverBou
       exact (mem_targetGroup j _).mpr ⟨hnonzero,by simpa [position] using hx⟩
     by_cases hxu : x=u
     · subst x
-      have he : j=lastGroup k hk := square_unique hk hx hu
+      have he : j=lastGroup k hk := hk.square_unique hx hu
       rwa [he]
     by_cases hxv : x=v
     · subst x
-      have he : j=lastGroup k hk := square_unique hk hx hv
+      have he : j=lastGroup k hk := hk.square_unique hx hv
       rwa [he]
     have hnot : x ∉ Set.range (squareEmbedding i) :=
       fun h => hxi ((mem_range_squareEmbedding hk i x).mp h)
@@ -342,16 +342,16 @@ theorem exists_finish_one_square {cost ineff : ℕ → ℕ} (hsolver : SolverBou
   · intro j hji hjlast x hx
     apply hfix
     · intro h
-      exact hji (square_unique hk hx ((mem_range_squareEmbedding hk i x).mp h))
+      exact hji (hk.square_unique hx ((mem_range_squareEmbedding hk i x).mp h))
     · intro he
       subst x
-      exact hjlast (square_unique hk hx hu)
+      exact hjlast (hk.square_unique hx hu)
     · intro he
       subst x
-      exact hjlast (square_unique hk hx hv)
+      exact hjlast (hk.square_unique hx hv)
 
 theorem exists_finish_square_schedule {cost ineff : ℕ → ℕ} (hsolver : SolverBound cost ineff)
-    (hk : Dims n k) (B : Board n)
+    (hk : FDims n k) (B : Board n)
     (hB : SquaresSorted (k := k) B) (hb : blank B = blank (target n))
     (u v : Cell n) (huv : u ≠ v)
     (hu : square (lastGroup k hk) u) (hv : square (lastGroup k hk) v)
@@ -402,13 +402,16 @@ theorem exists_finish_square_schedule {cost ineff : ℕ → ℕ} (hsolver : Solv
   · intro i hi x hx
     exact hsolved i (by simp [hi]) x hx
 
-theorem exists_finish_path {cost ineff : ℕ → ℕ} (hsolver : SolverBound cost ineff)
-    (hk : Dims n k) (B : Board n) (hB : Arranged hk B) :
+/-- Finish under the weak dimensions `FDims`: every tile lies in its own square
+and the blank lies in the last square. -/
+theorem exists_finish_path_of {cost ineff : ℕ → ℕ} (hsolver : SolverBound cost ineff)
+    (hk : FDims n k) (B : Board n) (hBr : Reachable B) (hBs : SquaresSorted (k := k) B)
+    (hBb : square (lastGroup k hk) (blank B)) :
     ∃ p : Path B (target n), p.length ≤ k^2*cost (side n k)+9354*k^2*n ∧
       p.inefficientMoves ≤ k^2*ineff (side n k)+9354*k^2*n := by
   let : NeZero (side n k) := ⟨hk.side_pos.ne'⟩
-  have hm : 8 ≤ side n k := by have := hk.cube_le; have := Nat.pow_le_pow_left hk.two_le 3; omega
-  obtain ⟨A,p,hp,hbA,hA⟩ := exists_finish_blank_access hk B hB.sorted hB.blank_last
+  have hm : 8 ≤ side n k := hk.eight_le
+  obtain ⟨A,p,hp,hbA,hA⟩ := exists_finish_blank_access hk B hBs hBb
   obtain ⟨u,v,huv,hu,hv,hu0,hv0⟩ := exists_finish_buffers hk
   obtain ⟨D,q,hq,hqi,hbD,hD,hsolved⟩ := exists_finish_square_schedule hsolver hk A hA hbA
     u v huv hu hv hu0 hv0
@@ -422,7 +425,7 @@ theorem exists_finish_path {cost ineff : ℕ → ℕ} (hsolver : SolverBound cos
       _ = n := by rw [h]; exact hk.mul_side
   have hprefix : ∀ x y : Fin n, x.val<d ∨ y.val<d → D (x,y)=target n (x,y) := by
     intro x y hxy
-    obtain ⟨i,hi⟩ := square_covers hk (x,y)
+    obtain ⟨i,hi⟩ := hk.square_covers (x,y)
     apply hsolved i _ (x,y) hi
     intro he
     rw [he] at hi
@@ -430,7 +433,7 @@ theorem exists_finish_path {cost ineff : ℕ → ℕ} (hsolver : SolverBound cos
     dsimp [d] at hxy
     omega
   have hreach : Reachable D := by
-    obtain ⟨r⟩ := hB.reachable
+    obtain ⟨r⟩ := hBr
     exact ⟨(r.append p).append q⟩
   obtain ⟨R,hR⟩ := exists_residual_board d hd D hprefix
   have hrR : Reachable R := residual_reachable (by omega) d hd D hprefix R hR hreach
@@ -466,6 +469,13 @@ theorem exists_finish_path {cost ineff : ℕ → ℕ} (hsolver : SolverBound cos
       _ = (k*k-1+1)*cost (side n k)+9352*(k*k-1)*n := by ring
       _ = k^2*cost (side n k)+9352*(k*k-1)*n := by rw [hcount]; ring
   nlinarith
+
+
+theorem exists_finish_path {cost ineff : ℕ → ℕ} (hsolver : SolverBound cost ineff)
+    (hk : Dims n k) (B : Board n) (hB : Arranged hk B) :
+    ∃ p : Path B (target n), p.length ≤ k^2*cost (side n k)+9354*k^2*n ∧
+      p.inefficientMoves ≤ k^2*ineff (side n k)+9354*k^2*n :=
+  exists_finish_path_of hsolver hk.toFDims B hB.reachable hB.sorted hB.blank_last
 
 end
 end Partition
