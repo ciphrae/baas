@@ -69,18 +69,22 @@ Findings (scripts here, `uv run --with numpy python <script> kinds KxS,... m,...
   classes -> hubs with stock >= 1, capacities n_{b,c}. Cross-band swaps (to merge trails
   further) also change the assignment.
 
-Results (eulerrun.py, `uv run --with numpy --with scipy python eulerrun.py kinds KxS m`):
-  hard stalls 0 everywhere; carries 0 at m=16 except transpose k=10 (2); min stock stays >= 0.
-  cycles/round after same-band merging: random 4.0 / 4.5 / 5.1 (k=8/10/12), blockperm ~1-2,
-  transpose/rot90 1.0; G_r always connected. (cycles+carry)*k/n2 <= 0.5 and not growing.
-  So Euler rounds + MaxWeight assignment look like a working O(n^(8/3)) schedule with m = O(1)!
+Results (eulerrun.py, `uv run --with numpy --with scipy python eulerrun.py kinds KxS m`).
+Assignment per column = lexicographic max-weight matching (feasible pairs, then own-hub
+pairs, then stock). Greedy and non-lexicographic weightings each broke one family
+(greedy: blockperm k=12 carried one class every round; stock-first: random).
+  m=16: hard stalls 0, carries 0 everywhere except transpose k=10 (2), k = 8..12.
+  random: min stock stays >= 12-13 of 16 (stock barely moves); cycles/round 5.0/5.9/6.8
+  (k=8/10/12, about 0.6k, within the k per round budget); transpose/rot90/blockperm 1-2.
+  G_r always connected. (cycles+carry)*k/n2 <= 0.63 and not growing.
+  So Euler rounds + MaxWeight assignment look like a working O(n^(8/3)) schedule with m = O(1).
 
 ## Open lemma, sharpened
 Column c, hubs b, classes a. Supply O^r_b (row outputs, exogenous; column sums fluctuate with
 in-flight counts), per round a b-matching classes -> hubs with capacities n^r_b = |O^r_b|.
 Want: a policy (MaxWeight = serve from the fullest hub) keeping stock_b[a] >= 1 with seeds
 m = O(s) (or polylog), while also allowing enough cross-band swaps that cycles per round
-stay O(k) (no proof yet that same-band merging leaves <= O(k) cycles; data says ~ln k).
+stay O(k) (no proof yet that merging leaves <= O(k) cycles; data: about 0.6k on random).
 This looks like a fully loaded input-queued switch with deterministic admissible
 arrivals; MaxWeight/rounding discrepancy results (Tassiulas-Ephremides; Tijdeman's chairman
 assignment) are the tools to try. Also needed: in-flight fluctuation of class a in column c

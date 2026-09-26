@@ -17,8 +17,9 @@ trails meeting at one (vertex, band) group merge for free.
     cycles per round = relocations per round (O(n) each)
 
 Stock.  Row R(b, c) outputs are exogenous (they depend on pi only).  Per round
-and column: assign each arrival class to a band with a free departure and
-stock >= 1 (D = hub itself needs no stock).  No such band: a vertical O(n)
+and column: max-weight assignment of arrival classes to departures, feasible
+if the hub (band of the departure) has stock >= 1, weight = stock (D = hub
+itself needs no stock).  No such band: a vertical O(n)
 carry from the column's richest hub (counted in 'carry'); no stock anywhere in
 the column: 'hard'.
 
@@ -29,6 +30,7 @@ import sys, random
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 from hubrun import make_perm
+CARRY_LOG = []
 
 
 def traffic_matrix(k, s, kind, seed):
@@ -114,28 +116,33 @@ def run(k, s, kind, m=4, seed=0, warm=None, merge=True):
             for S in dep_c:
                 byband.setdefault(S // k, []).append(S)
             cap = {b: len(v) for b, v in byband.items()}
-            # scarce classes first
-            def options(D):
+            # max-weight assignment of arrival classes to departure slots (MaxWeight):
+            # own hub free, else stock >= 1 weighted by stock; infeasible pairs cost a carry
+            slots = [S for S in dep_c]
+            Wt = np.empty((len(arr_c), len(slots)))
+            for i, D in enumerate(arr_c):
                 a = D // k
-                return [b for b in cap if cap[b] > 0 and (b == a or stock[b, c, a] >= 1)]
-            order = sorted(arr_c, key=lambda D: len(options(D)))
-            for D in order:
-                a = D // k
-                opts = options(D)
-                if opts:
-                    b = max(opts, key=lambda b: (b == a, stock[b, c, a]))
-                    if b != a: stock[b, c, a] -= 1
-                else:
-                    b = max((b for b in cap if cap[b] > 0), key=lambda b: stock[b, c, a])
-                    if b != a:
+                for j, S in enumerate(slots):
+                    bb = S // k
+                    # lexicographic: feasible pairs, then own-hub pairs, then stock
+                    if bb == a: Wt[i, j] = 1e9 + 1e6
+                    elif stock[bb, c, a] >= 1: Wt[i, j] = 1e9 + min(stock[bb, c, a], 1e5)
+                    else: Wt[i, j] = max(stock[bb, c, a], -1e5)
+            ri, cj = linear_sum_assignment(-Wt)
+            for i, j in zip(ri, cj):
+                D = arr_c[i]; S = slots[j]; a = D // k; bb = S // k
+                if bb != a:
+                    if stock[bb, c, a] >= 1:
+                        stock[bb, c, a] -= 1
+                    else:
                         rich = int(np.argmax(stock[:, c, a]))
                         if stock[rich, c, a] <= 0: st["hard"] += 1
-                        else: st["carry"] += 1
+                        else:
+                            st["carry"] += 1
+                            CARRY_LOG.append((st["rounds"], c, a, bb))
                         stock[rich, c, a] -= 1
-                cap[b] -= 1
-                S = byband[b][cap[b]]
                 trans[D] = S
-                group[D] = (c, b)
+                group[D] = (c, bb)
         # hop1s: each mover S inserts into row R(band S, col pi(S)) unless same column
         for S in movers:
             D = pi[S]
