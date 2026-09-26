@@ -258,6 +258,162 @@ lemma inv_of_P {k : ℕ} (r : Round k) (sv : Finset (Sq k)) (h1 : P1 r sv) (h2 :
   rw [hinv] at this
   exact this
 
+/-! ## Phases -/
+
+/-- Process the squares of `L` in order: each square `Z` with `p Z` that is real and
+unserved gets a relocation (if needed) and a walk from `Z`. -/
+def phase {k : ℕ} (r : Round k) (p : Sq k → Bool) :
+    List (Sq k) → Finset (Sq k) → Sq k → List (HEvent k) × Finset (Sq k) × Sq k
+  | [], sv, b => ([], sv, b)
+  | Z :: Zs, sv, b =>
+    if p Z ∧ r.inR Z ∧ Z ∉ sv then
+      ((relocTo b Z ++ (walk r sv Z).1) ++
+          (phase r p Zs (walk r sv Z).2.1 (walk r sv Z).2.2).1,
+        (phase r p Zs (walk r sv Z).2.1 (walk r sv Z).2.2).2)
+    else phase r p Zs sv b
+
+section phase
+variable {k : ℕ} (r : Round k) (p : Sq k → Bool)
+
+lemma phase_chain (L : List (Sq k)) (sv : Finset (Sq k)) (b : Sq k) :
+    HChain b (phase r p L sv b).1 ∧ hEnd b (phase r p L sv b).1 = (phase r p L sv b).2.2 := by
+  induction L generalizing sv b with
+  | nil => exact ⟨trivial, rfl⟩
+  | cons Z Zs ih =>
+    simp only [phase]
+    split_ifs with h
+    · have h1 := relocTo_chain b Z
+      have h2 := walk_chain r sv Z
+      have h3 := ih (walk r sv Z).2.1 (walk r sv Z).2.2
+      rw [hChain_append, hChain_append]
+      simp only [hEnd_append, h1.2, h2.2]
+      exact ⟨⟨⟨h1.1, h2.1⟩, h3.1⟩, h3.2⟩
+    · exact ih sv b
+
+lemma phase_count (L : List (Sq k)) (sv : Finset (Sq k)) (b : Sq k) (S D : Sq k) :
+    (phase r p L sv b).1.count (.serve S D) + ind r sv S D =
+      ind r (phase r p L sv b).2.1 S D := by
+  induction L generalizing sv b with
+  | nil => simp [phase]
+  | cons Z Zs ih =>
+    simp only [phase]
+    split_ifs with h
+    · rw [List.count_append, List.count_append, relocTo_count, ← ih, ← walk_count r sv Z S D]
+      omega
+    · exact ih sv b
+
+lemma phase_sub (L : List (Sq k)) (sv : Finset (Sq k)) (b : Sq k) :
+    sv ⊆ (phase r p L sv b).2.1 ∧ ∀ D ∈ (phase r p L sv b).2.1, D ∈ sv ∨ r.inR D := by
+  induction L generalizing sv b with
+  | nil => exact ⟨subset_rfl, fun D hD => Or.inl hD⟩
+  | cons Z Zs ih =>
+    simp only [phase]
+    split_ifs with h
+    · have h1 := walk_sub r sv Z
+      have h2 := ih (walk r sv Z).2.1 (walk r sv Z).2.2
+      refine ⟨h1.1.trans h2.1, fun D hD => ?_⟩
+      rcases h2.2 D hD with h3 | h3
+      · exact h1.2 D h3
+      · exact Or.inr h3
+    · exact ih sv b
+
+lemma phase_cover (L : List (Sq k)) (sv : Finset (Sq k)) (b : Sq k) :
+    ∀ Z ∈ L, p Z → r.inR Z → Z ∈ (phase r p L sv b).2.1 := by
+  induction L generalizing sv b with
+  | nil => simp
+  | cons Z Zs ih =>
+    intro Z' hZ' hp hR
+    simp only [phase]
+    split_ifs with h
+    · rcases List.mem_cons.1 hZ' with h1 | h1
+      · subst h1
+        exact (phase_sub r p Zs _ _).1 (walk_mem r sv Z' hR h.2.2)
+      · exact ih _ _ Z' h1 hp hR
+    · rcases List.mem_cons.1 hZ' with h1 | h1
+      · subst h1
+        by_contra h2
+        apply h ⟨hp, hR, fun h3 => h2 ((phase_sub r p Zs sv b).1 h3)⟩
+      · exact ih _ _ Z' h1 hp hR
+
+lemma phase_P2 (L : List (Sq k)) (sv : Finset (Sq k)) (b : Sq k) (h : P2 r sv) :
+    P2 r (phase r p L sv b).2.1 := by
+  induction L generalizing sv b with
+  | nil => exact h
+  | cons Z Zs ih =>
+    simp only [phase]
+    split_ifs with h1
+    · exact ih _ _ (walk_P2 r sv Z h)
+    · exact ih sv b h
+
+lemma phase_cost1 (L : List (Sq k)) (sv : Finset (Sq k)) (b : Sq k) :
+    ((phase r p L sv b).1.map relocWeight).sum ≤
+      (L.map fun Z => if p Z then 2 * k else 0).sum := by
+  induction L generalizing sv b with
+  | nil => simp [phase]
+  | cons Z Zs ih =>
+    simp only [phase, List.map_cons, List.sum_cons]
+    split_ifs with h h'
+    · simp only [List.map_append, List.sum_append, walk_weight]
+      have := relocTo_weight b Z
+      have := ih (walk r sv Z).2.1 (walk r sv Z).2.2
+      omega
+    · exact absurd h.1 h'
+    · have := ih sv b; omega
+    · have := ih sv b; omega
+
+end phase
+
+lemma phase_costA {k : ℕ} (r : Round k) (L : List (Sq k)) (sv : Finset (Sq k)) (B : Sq k)
+    (hL : L.Pairwise (fun P Q => snake P < snake Q)) (hB : ∀ Z ∈ L, snake B ≤ snake Z)
+    (h1 : P1 r sv) (h2 : P2 r sv) :
+    ((phase r (fun _ => true) L sv B).1.map relocWeight).sum + snake B ≤ L.length + k * k := by
+  induction L generalizing sv B with
+  | nil => simp [phase]; exact (snake_lt B).le
+  | cons Z Zs ih =>
+    rw [List.pairwise_cons] at hL
+    have hBZ := hB Z List.mem_cons_self
+    have hZk := snake_lt Z
+    simp only [phase]
+    split_ifs with h
+    · have hend : (walk r sv Z).2.2 = Z := by
+        apply walk_cycle r sv Z Z (Or.inl h.2)
+        · intro y hy hys; exact Or.inl (inv_of_P r sv h1 h2 y hy hys)
+        · intro h3; exact absurd rfl h3
+      have hsub := walk_sub r sv Z
+      have := ih (walk r sv Z).2.1 Z hL.2 (fun Z' hZ' => (hL.1 Z' hZ').le)
+        (fun Z' hd hR => hsub.1 (h1 Z' hd hR)) (walk_P2 r sv Z h2)
+      rw [hend]
+      simp only [List.map_append, List.sum_append, walk_weight, List.length_cons]
+      have := relocTo_weight_snake B Z hBZ
+      omega
+    · have := ih sv B hL.2 (fun Z' hZ' => hB Z' (List.mem_cons_of_mem _ hZ')) h1 h2
+      simp only [List.length_cons]
+      omega
+
+lemma phase_costB {k : ℕ} (r : Round k) (L : List (Sq k)) (sv : Finset (Sq k)) (b : Sq k)
+    (hL : L.Pairwise (fun P Q => snake P < snake Q)) (h1 : P1 r sv) (h2 : P2 r sv) :
+    ((phase r (fun _ => true) L sv b).1.map relocWeight).sum ≤ 2 * k + L.length + k * k := by
+  induction L generalizing sv b with
+  | nil => simp [phase]
+  | cons Z Zs ih =>
+    rw [List.pairwise_cons] at hL
+    simp only [phase]
+    split_ifs with h
+    · have hend : (walk r sv Z).2.2 = Z := by
+        apply walk_cycle r sv Z Z (Or.inl h.2)
+        · intro y hy hys; exact Or.inl (inv_of_P r sv h1 h2 y hy hys)
+        · intro h3; exact absurd rfl h3
+      have hsub := walk_sub r sv Z
+      have := phase_costA r Zs (walk r sv Z).2.1 Z hL.2 (fun Z' hZ' => (hL.1 Z' hZ').le)
+        (fun Z' hd hR => hsub.1 (h1 Z' hd hR)) (walk_P2 r sv Z h2)
+      rw [hend]
+      simp only [List.map_append, List.sum_append, walk_weight, List.length_cons]
+      have := relocTo_weight b Z
+      omega
+    · have := ih sv b hL.2 h1 h2
+      simp only [List.length_cons]
+      omega
+
 /-- The events of one round, started with the blank in `cur`. -/
 theorem exists_round_events {k : ℕ} (r : Round k) (cur : Sq k) :
     ∃ es : List (HEvent k),
@@ -265,6 +421,60 @@ theorem exists_round_events {k : ℕ} (r : Round k) (cur : Sq k) :
       (∀ S D, es.count (.serve S D) = if r.perm S = D ∧ r.real S then 1 else 0) ∧
       (es.map relocWeight).sum ≤
         4 * k ^ 2 + 4 * k * (1 + (Finset.univ.filter fun S => r.isDummy S).card) := by
-  sorry
+  let p1 : Sq k → Bool := fun Z => decide (r.isDummy Z)
+  let ph1 := phase r p1 Finset.univ.toList ∅ cur
+  let ph2 := phase r (fun _ => true) (snakeList k) ph1.2.1 ph1.2.2
+  have hP1 : P1 r ph1.2.1 := fun Z hd hR =>
+    phase_cover r p1 _ ∅ cur Z (Finset.mem_toList.2 (Finset.mem_univ Z)) (by simp [p1, hd]) hR
+  have hP2 : P2 r ph1.2.1 := phase_P2 r p1 _ ∅ cur (by intro y hy; simp at hy)
+  refine ⟨ph1.1 ++ ph2.1, ?_, ?_, ?_⟩
+  · rw [hChain_append]
+    have a := phase_chain r p1 Finset.univ.toList ∅ cur
+    have b := phase_chain r (fun _ => true) (snakeList k) ph1.2.1 ph1.2.2
+    rw [a.2]
+    exact ⟨a.1, b.1⟩
+  · intro S D
+    have c1 : ph1.1.count (.serve S D) + ind r ∅ S D = ind r ph1.2.1 S D :=
+      phase_count r p1 Finset.univ.toList ∅ cur S D
+    have c2 : ph2.1.count (.serve S D) + ind r ph1.2.1 S D = ind r ph2.2.1 S D :=
+      phase_count r (fun _ => true) (snakeList k) ph1.2.1 ph1.2.2 S D
+    have hind0 : ind r ∅ S D = 0 := by simp [ind]
+    have hsv : D ∈ ph2.2.1 ↔ r.inR D := by
+      constructor
+      · intro hD
+        rcases (phase_sub r _ (snakeList k) ph1.2.1 ph1.2.2).2 D hD with h | h
+        · rcases (phase_sub r p1 Finset.univ.toList ∅ cur).2 D h with h' | h'
+          · simp at h'
+          · exact h'
+        · exact h
+      · intro hD
+        exact phase_cover r _ (snakeList k) _ _ D (mem_snakeList D) rfl hD
+    rw [List.count_append]
+    have hsum : ph1.1.count (.serve S D) + ph2.1.count (.serve S D) = ind r ph2.2.1 S D := by
+      omega
+    rw [hsum]
+    unfold ind
+    by_cases h : r.perm S = D ∧ r.real S
+    · rw [if_pos h, if_pos]
+      obtain ⟨rfl, h2⟩ := h
+      refine ⟨hsv.2 ?_, by simp⟩
+      unfold Round.inR; simpa using h2
+    · rw [if_neg h, if_neg]
+      rintro ⟨h1, rfl⟩
+      apply h
+      refine ⟨by simp, ?_⟩
+      exact hsv.1 h1
+  · rw [List.map_append, List.sum_append]
+    have k1 := phase_cost1 r p1 Finset.univ.toList ∅ cur
+    rw [Finset.sum_map_toList] at k1
+    have e : ∑ Z, (if p1 Z = true then 2 * k else 0) =
+        (Finset.univ.filter fun S => r.isDummy S).card * (2 * k) := by
+      rw [← Finset.sum_filter]
+      simp [p1]
+    rw [e] at k1
+    have k2 := phase_costB r (snakeList k) ph1.2.1 ph1.2.2 snakeList_pairwise hP1 hP2
+    rw [length_snakeList] at k2
+    change _ + (List.map relocWeight ph2.1).sum ≤ _
+    nlinarith [k1, k2]
 
 end SlidingPuzzle.Hub
