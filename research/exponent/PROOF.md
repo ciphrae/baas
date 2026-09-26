@@ -1,6 +1,9 @@
 # An O(n^(8/3) (log n)^(1/3)) bound on inefficient moves
 
-Pen-and-paper proof, written to be translated into Lean. Compared with the formalized
+Pen-and-paper proof, now fully formalized in `SlidingPuzzle/Hub/` (theorems
+`SlidingPuzzle.Hub.average_optimal_length`, `gods_number`); `LEAN_PLAN.md` records how the
+Lean proof is organized and where it departs from this text (three-cycle insertions, straight
+jumps for relocations and bypasses, no tokens, cleanup by double swaps, `k` even). Compared with the formalized
 n^(11/4) development (`SlidingPuzzle/`), the new parts are the layout (section 1), the
 transport plan and its execution (sections 3-5), the in-flight bound (section 6) and a
 Cleanup phase (section 7). Everything else is reused.
@@ -315,8 +318,8 @@ With k^3 = n/ln n: O(n^(8/3) (ln n)^(1/3)).
   is a uniformly random subset of that size, so this is all Lemma 3 uses (plus a union
   bound, i.e. counting permutations). For Lean: Maclaurin's inequality and the counting are
   the only new pieces. Maclaurin is not in the pinned Mathlib (checked 2026-09-26); the
-  usual route is Newton's inequalities (real-rootedness of prod (X + y_j) and Rolle), or a
-  direct induction. The cruder e_w <= (sum y)^w / w! loses a factor e^{w^2/N}: not enough.
+  formalization proves it by induction on the number of elements with Bernoulli's inequality
+  (`Hub/ChernoffMaclaurin.lean`). The cruder e_w <= (sum y)^w / w! loses a factor e^{w^2/N}: not enough.
 - Probability: Lemma 3 needs only the existence of one good order. The cleanest route is a
   counting statement: for a fixed window, the number of permutations of the Delta matchings
   that make a count bad is at most n^{-10} of all of them. This is a Chernoff bound for

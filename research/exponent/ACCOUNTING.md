@@ -1,5 +1,10 @@
 # Cost accounting for two-hop transport in Euler rounds
 
+Status: historical draft, superseded by `PROOF.md` (own-sender pairing, bypasses and a
+random round order instead of the three conditional lemmas below) and its formalization
+(`LEAN_PLAN.md`). The lemmas it leaves open were resolved there, at the price of a
+`(log n)^(1/3)` factor.
+
 Pen-and-paper. Goal: every term O(n^(8/3)) at k = n^(1/3), s = n/k = k^2, conditional on the
 lemmas listed at the end. All costs are inefficient moves (length minus Manhattan decrease,
 up to the factor 2 of `length + M(end) = M(start) + 2*ineff`).

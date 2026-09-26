@@ -1,7 +1,8 @@
 # Proof notes
 
 How the formalization relates to Zhong (2023), where it departs from the printed
-argument, and where the constant could be improved. Printed page `p` of the
+argument, where the constant could be improved, and how the improved exponent
+`8/3` (hub transport, last section) departs from Zhong's scheme. Printed page `p` of the
 source is PDF page `p - 128`. The development history of these notes is in git.
 
 ## Conventions
@@ -203,8 +204,11 @@ which is paired with a transposition of two buffer tiles in the final square to
 give an even permutation (`Finish.lean`). The blank is borrowed from the global
 target corner. The final square is solvable because the whole board is
 reachable (`Algorithm/ResidualReachability.lean`). The local solver is
-abstract (`SolverCostBound`): its cost must hold for every board of side `s`.
+abstract (`SolverBound`): its cost must hold for every board of side `s`.
 The Parberry-style solver gives `5*s³ + O(s²)` moves (`Parberry/Solver.lean`).
+Finish only needs `8 ≤ s`, not `k³ ≤ s`: it is stated for `Partition.FDims`
+(`2 ≤ k`, `8 ≤ side n k`, `k * side n k = n`; `Dims.toFDims`), which the hub
+algorithm, with `s ≈ k² log n`, also uses (`exists_finish_path_of`).
 
 The Finish chain carries an inefficiency bound alongside the length bound
 (`SolverBound`). The block embedding with borrowed labels is
@@ -276,7 +280,51 @@ Leading coefficients of the inefficient moves:
 Lower-order terms are collected in one `k*s³` envelope, plus the inner level's
 error, and absorbed (as `O(n^(41/16))`) only in `uniformApproximation`.
 
+## Beyond 11/4: hub transport
+
+The exponent `11/4` is the balance of Transport (`n³/k`) against the `k³n`
+corridor tiles, each costing `O(n)` (Preparation, Arrangement). Corridors pure
+in the full class need `k³n` cells, since each of `k²` classes must reach `k²`
+squares. `SlidingPuzzle/Hub/` proves
+`OPT(B) ≤ M(B) + O(n^(8/3) (log n)^(1/3))` with `O(k²n)` corridor cells: rows
+sorted by target block column only, columns by exact class, and tiles turning
+through the reservoir of a hub square. The pen-and-paper proof is
+`research/exponent/PROOF.md` and the organization of the Lean proof
+`research/exponent/LEAN_PLAN.md`; the main differences from Zhong's scheme:
+
+- **No Preparation, no Arrangement.** Corridors start with whatever tiles the
+  board has there. A junk tile only moves toward the head of its corridor half
+  and costs at most `n` before it drops into a reservoir; the `O(k²n log n)`
+  tiles left outside their squares at the end are exchanged home by double
+  swaps (`Hub/Cleanup.lean`, `O(n)` each).
+- **Rounds instead of Algorithm 4.** The reservoir demand multigraph, padded
+  with dummy edges and loops, splits into perfect matchings (Hall/König,
+  `Hub/Plan.lean`); a round follows its cycles backwards, and cycles start in
+  snake order so relocations cost `O(k²s)` per round (`Hub/RoundWalk.lean`).
+- **Counts, not transpositions**, as in the formalized Algorithm 4, but with
+  roles (scheduled, stock, free, home) as ghost state (`Hub/Run*.lean`).
+  Insertions are placed by three-cycles in local boxes, which removes the exit
+  carries and their parity cases (`Hub/Op*.lean`).
+- **A probabilistic ingredient.** Row halves are delay lines; the rounds are
+  run in an order in which few tiles of each class are in flight. It exists
+  by a subset Chernoff bound proved from Maclaurin's inequality
+  (`Hub/Chernoff*.lean`, `Hub/InFlight*.lean`), counting permutations rather
+  than using probability theory.
+- **General sides and statistics** as in the `11/4` development: the Parberry
+  prefix on the outer `n - k*s < k` layers (`Hub/AsympBound.lean`) and the
+  statistics wrapper for any error scale `f ≥ n²` (`Hub/AsympStats.lean`).
+
+No constants were optimized there; the boardwise constant is about `5·10¹²`,
+so the new bound beats `7.08*n^(11/4)` only for astronomically large `n`.
+
 ## Directions for improvement
+
+These concern the constant of the `11/4` development. For the hub algorithm
+nothing has been optimized; its leading terms are `n³/k` (hops, Finish) and
+`k²n² log n` (bypasses, cleanup), and the logarithm comes only from the
+in-flight bound (simulations in `research/exponent/` show no visible
+logarithm).
+
 
 A broader brainstorm (recursive halving, Preparation redesigns, global structure,
 lower bounds and literature), with its simulation scripts, is in

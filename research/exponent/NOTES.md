@@ -1,6 +1,9 @@
-# Beating n^(11/4): two-hop transport through hub squares (work in progress)
+# Beating n^(11/4): two-hop transport through hub squares (research log)
 
-Status: theory sketch plus count-model simulations. Nothing is proved and nothing is formalized.
+Status: historical. This is the research log that led to the scheme; several ideas below
+(seeds, rotor routing, MaxWeight rounding, tokens) were abandoned. The final proof is
+`PROOF.md`, formalized in `SlidingPuzzle/Hub/` (see `LEAN_PLAN.md`): the mean optimal
+length and God's number are proved within `O(n^(8/3) (log n)^(1/3))`.
 
 ## Idea
 Replace Zhong's k^3 n exact-class corridors with k^2 n corridors that only need to be

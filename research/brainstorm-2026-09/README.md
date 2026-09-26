@@ -38,6 +38,8 @@ not for the asymptotic bound; making it target-aware turns it into Zhong's corri
   Blocker: at the corner of the L-shaped route the tile must match the second leg's group;
   two attempts failed in simulation (transpose gets stuck; matched-exchange rows miss 60–99%).
   Research question; pen-and-paper attempt before any Lean.
+  **Resolved on branch `exponent-research`:** hub transport with a random-like round order
+  gives `O(n^(8/3) (log n)^(1/3))`, fully formalized (`research/exponent/`, `SlidingPuzzle/Hub/`).
 - Shared corridors per target band (n^(8/3) or n^(5/2) heuristics) fail at the junction with H_i.
 
 ## Side results
@@ -62,6 +64,6 @@ Details: structure/REPORT.md, structure/restore.py.
 1. Exit-and-restore (A 3.5 → 2.75, constant ≈ 7.05).
 2. Drain Arrangement (Arrangement lower order).
 3. Conveyor-family Preparation (Preparation 11.5 → ≈ 4/3; with 1 and 2, constant ≈ 4.0).
-Separately, a pen-and-paper look at the corner-supply problem (n^(8/3)).
+Separately, a pen-and-paper look at the corner-supply problem (n^(8/3)): done, see above.
 
 Per-angle reports: halving/, prep/, structure/, bounds/ (REPORT.md in each).

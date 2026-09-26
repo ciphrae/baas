@@ -1,226 +1,180 @@
-# Lean plan: O(n^(8/3) (log n)^(1/3)) via hub transport
+# The Lean proof of O(n^(8/3) (log n)^(1/3))
 
-**Status (2026-09-26): complete.** Every module is proved;
-`SlidingPuzzle.Hub.average_optimal_length`, `gods_number` (error
-`O(n^(8/3) (log n)^(1/3))`) and the `rpow` corollaries (any exponent `> 8/3`)
-depend only on `propext`, `Classical.choice`, `Quot.sound`
-(`Checks/Axioms.lean`). Finish was generalized from `Dims` to `FDims`
-(`8 ≤ side`); the 11/4 development is unchanged.
+**Status: complete** (branch `exponent-research`). The final theorems in
+`SlidingPuzzle/Hub/Main.lean`:
 
-This is the blueprint for formalizing `PROOF.md`. The skeleton is in
-`SlidingPuzzle/Hub/*.lean`: every definition is final, and the interface
-theorems below are the module boundaries. Modules only communicate through these
-statements. Read `PROOF.md` first for the mathematics; this file records where
-the formalization deliberately differs (simplifications) and how each module
-should be proved.
+| Theorem | Statement |
+| --- | --- |
+| `Hub.uniform_approximation` | `OPT(B) ≤ M(B) + C·n^(8/3)(log n)^(1/3)` for every reachable board, `n ≥ 4096` |
+| `Hub.average_optimal_length` | mean optimal length `= (2/3)n³ + O(n^(8/3)(log n)^(1/3))` |
+| `Hub.gods_number` | God's number `= n³ + O(n^(8/3)(log n)^(1/3))` |
+| `Hub.average_optimal_length_rpow`, `Hub.gods_number_rpow` | the same errors are `O(n^α)` for every `α > 8/3` |
 
-## Differences from PROOF.md (simplifications for Lean)
+They depend only on `propext`, `Classical.choice` and `Quot.sound`
+(`Checks/Axioms.lean`). The mathematics is `PROOF.md`; this file records how
+the Lean proof is organized and where it departs from `PROOF.md`. Constants
+are generous and unoptimized.
 
-1. **Operations are built from four primitives only**: walks of the blank inside
-   a reservoir rectangle (`exists_blank_access_path_preserving`), straight blank
-   walks along a line (`exists_line_walk`), vertical/horizontal jumps
-   (`exists_vertical_jump`, `exists_horizontal_jump`: blank/tile swap across a
-   straight segment, length `≤ 25*(dist+1)`, requires opposite colours) and
-   **three-cycles inside an embedded square sub-board** (`exists_three_cycle`
-   lifted by `Path.exists_embedded`: cost `3022*m` for an `m × m` box). No
-   restoring carries. Reservoir contents are tracked only as counts, so moving
-   tiles around inside one region is free (it only costs its length).
-2. **The inserted tile is placed by a three-cycle**: after walking the row to the
-   insertion cell `v`, the blank jumps down into the source's reservoir (the tile
-   `W` there moves up to `v`), then a three-cycle in the source square's `s × s`
-   box sends `T → v`, `W → u`, `U → t` for some other region cell `u`. This
-   removes every parity case distinction of the insertion.
-3. **Relocations and bypasses are straight jumps** (`REvent.jump`): same band or
-   same block column. A general relocation `E → Z` is two jumps through the
-   corner square `(Z.1, E.2)`; the corner square gives one free tile and gets one
-   back. A jump fetches an arbitrary region cell of `Z` with a three-cycle in a
-   box covering both squares (side `≤ (1 + sqDist) * s`).
-4. **Roles**: `sched`, `stock`, `free`, `home` (no tokens). Relocations and
-   bypasses move *free* tiles, so the total number of free tiles only grows by
-   junk heads; `free[Z]` stays positive because
-   `(jumps into Z) - (jumps out of Z) ≤ (#rounds where Z's out-edge is dummy) + 2`
-   (conservation of the blank's entries/exits, see Run below) and bypasses at
-   `Z` are at most `Σ_x (N_Z[x] + 1)`.
-5. **Cleanup by double swaps**: with the blank in the last square, a misplaced
-   tile of class `Q` is exchanged with a wrong tile inside `Q`, together with an
-   exchange of two tiles inside one square (parity), by `exists_double_swap`
-   (`6044*n`). Every double swap lowers `misplaced` by at least one.
-6. **No Preparation**: corridors start with whatever the (normalized) board
-   holds. The blank is first walked into a reservoir (`exists_normalize`), and
-   the abstract run starts from `absState` of that board.
-7. `k` is even: a column walk crosses a row group of `k` rows by a vertical jump
-   of length `k + 1` (odd, so the colours differ).
+## Departures from PROOF.md
 
-## Layout (Hub/Basic.lean, Hub/Layout.lean)
+1. **Four primitives.** Every operation is built from walks of the blank
+   inside a reservoir rectangle, straight blank walks along a line (a walk may
+   also cross a row group by a jump), vertical/horizontal jumps (blank/tile
+   swaps across a straight segment, `≤ 25*(dist+1)` moves, opposite colours),
+   and three-cycles inside an embedded square sub-board (`3022*m` moves for an
+   `m × m` box, `Hub/PrimCycle.lean`). There are no restoring carries: region
+   contents are tracked only as counts per class, so shuffling tiles inside one
+   region costs only its length.
+2. **Insertion by a three-cycle.** After walking the corridor to the insertion
+   cell `v`, the blank jumps into the source reservoir (the tile `W` there moves
+   up to `v`); a three-cycle in the source square's `s × s` box then sends
+   `T → v`, `W → u`, `U → t`. This removes every parity case of the insertion.
+3. **Relocations and bypasses are straight jumps** (`REvent.jump`, same band or
+   same block column). A general relocation `E → Z` goes through the corner
+   square `(Z.1, E.2)`, which gives one free tile and gets one back. A jump
+   fetches any region cell of `Z` by a three-cycle in a box covering both
+   squares.
+4. **Roles** `sched`, `stock`, `free`, `home`, no tokens. Relocations and
+   bypasses move free tiles, so the total of free tiles grows only by junk
+   heads, and one invariant keeps every square's free count positive.
+5. **Cleanup by double swaps** (`exists_double_swap`, `6044·n` moves): with the
+   blank in the last square, a misplaced tile of class `Q` is exchanged with a
+   wrong tile of square `Q`, together with an exchange inside one square for
+   parity; `misplaced` drops by at least one each time.
+6. **No Preparation.** The blank is first walked into a reservoir
+   (`exists_normalize`); the run starts from the board's abstraction, junk
+   corridors included.
+7. **`k` even**, so a column walk crosses a row group of `k` rows by a jump of
+   odd length `k + 1`.
+8. **Finish generalized.** `Algorithm/Finish*` needed only `8 ≤ side n k`, not
+   `k³ ≤ side n k`; it now takes `Partition.FDims` (`Dims.toFDims` keeps the
+   11/4 development unchanged), since here `s ≈ k² log n`.
 
-Square `Q = (b, c)`: rows `[b*s, (b+1)*s)`, columns `[c*s, (c+1)*s)`. Offsets
+## Architecture
+
+The abstract run and the board meet in `Hub/Interface.lean`: an `IState` records
+the class at every corridor position, the class counts of every region and
+the blank's square; `REvent` has the three operations `hop1`, `hop2`, `jump`
+with preconditions `Pre`, effect `step` and inefficiency budget `cost`.
+`Hub/Layout.lean` defines `Rel` (a board realizes an `IState`).
+
+| Files | Content | Main result |
+| --- | --- | --- |
+| `Basic`, `Interface`, `Layout`, `LayoutAux` | layout arithmetic, `IState`, `Rel`, cell partition and counts | `rel_absState`, `absState_classTotal`, `misplaced_le_of_rel` |
+| `Prim*`, `Geom*`, `Op*`, `Simulate` | the operations on boards | `simulate_step`, `simulate_run` |
+| `PlanAux`, `Plan` | transportation matrix, Hall, König decomposition with padding | `exists_rounds` |
+| `WalkSnake`, `RoundWalk` | snake order, the two-phase walk of a round | `exists_round_events` |
+| `ChernoffMaclaurin`, `ChernoffPerm` | Maclaurin's inequality, subset Chernoff for permutations | tail counts |
+| `InFlight*` | push lemma, windows, union bound, harmonic sums | `exists_good_order` |
+| `Run*` | ghost roles, stock identity, validity, cost | `exists_valid_run` |
+| `Cleanup`, `FinishGen`, `Transport` | cleanup, Finish on the hub layout, the whole algorithm on side `k*s` | `exists_hub_solution` |
+| `AsympError`, `AsympStats`, `AsympBound`, `Main` | choice of `k`, general sides, statistics | the final theorems |
+
+## Layout
+
+Square `Q = (b, c)`: rows `[b*s, (b+1)*s)`, columns `[c*s, (c+1)*s)`; offsets
 `i = row % s`, `j = col % s`.
-* `i < k`: row corridor `R(b, i)`. If `c = i` it is the landing strip (region of
-  `(b, c)`), else position of the left half (`c < i`) or right half (`c > i`) of
-  `R(b, i)`: right half position `q` ↔ column `(i+1)*s + q`, left half ↔ column
-  `i*s - 1 - q`.
-* `i ≥ k`, `j < k`: if `j = b` own column piece (region), else column corridor
-  `C(c, j)`: lower half (bands `> j`) position `q` ↔ band `j + 1 + q/(s-k)`, row
-  offset `k + q%(s-k)`; upper half (bands `< j`) ↔ band `j - 1 - q/(s-k)`, row
-  offset `s - 1 - q%(s-k)`.
-* `i ≥ k`, `j ≥ k`: reservoir (region).
+* `i < k`: row corridor `R(b, i)`. In block `c = i` it is the landing strip
+  (region of `(b, c)`); elsewhere it is the left half (`c < i`, position `q` ↔
+  column `i*s - 1 - q`) or right half (`c > i`, column `(i+1)*s + q`).
+* `i ≥ k`, `j < k`: if `j = b` the own column piece (region), else column
+  corridor `C(c, j)`: lower half position `q` ↔ band `j + 1 + q/(s-k)`, row
+  offset `k + q%(s-k)`; upper half ↔ band `j - 1 - q/(s-k)`, row offset
+  `s - 1 - q%(s-k)`.
+* `i, j ≥ k`: reservoir (region).
 `regionSize = s² - sqCorridor`, `sqCorridor = (k-1)*s + (k-1)*(s-k) ≤ 2ks`.
+Insertion positions: hop1 at `(d+1)s - 1` (right) or `(d+1)s - 1 - k` (left),
+the source block's column farthest from the hub; hop2 at `(|h.1 - D.1| - 1)(s-k)`,
+the first cell of the column half inside the hub's band.
 
-Insertion positions: `hop1Pos s S h = insPos (hop1Half S h) (hop1Dist S h)`,
-`insPos` right `(d+1)s - 1` (source block's column offset `s-1`), left
-`(d+1)s - 1 - k` (column offset `k`). `hop2Pos s h D = (|h.1 - D.1| - 1)(s-k)`:
-the first cell of the column half inside band `h.1`.
+## Board operations (`Simulate`)
 
-## Module: board operations (`Hub/Simulate.lean`: `simulate_step`)
+* **hop1 S h y**: walk in `h`'s reservoir; jump to the landing strip; walk the
+  row through the strip into the half up to position `p` (the head drops into
+  the strip); jump down into `S` and place the class-`y` tile by a three-cycle.
+  Inefficiency `≤ 3025 s + 50(k+1) + junkRow`: a clean row tile moves toward
+  its target block column, so only strip steps and junk steps can be
+  inefficient (`PrimWalk.lean` bounds a walk step by step).
+* **hop2 h D y**: walk in `D`'s reservoir; jump to the own column piece and
+  across a row group into position `0`; walk the column half, crossing row
+  groups by jumps of length `k + 1`; jump into `h`'s reservoir and place the
+  tile by a three-cycle. `≤ 3024 s + 25(k+2)(k+4) + junkCol`.
+* **jump E Z y**: align in `E`'s reservoir, one jump into `Z`, a three-cycle in
+  a box covering both squares. `≤ 2s + 25(d·s + 2) + 3022(d+1)s`, `d = sqDist`.
+Region counts are rewritten as sums over tiles (`PrimCount.lean`), so moves
+inside one region leave them unchanged and one- and two-tile moves give exactly
+`incCnt`/`decCnt`.
 
-Given `Rel hd B σ` and `σ.Pre e`, realize `e` with at most `σ.cost s e`
-inefficient moves (use `inefficientMoves ≤ length` for everything except the
-long corridor walks). Write primitives in new files `Hub/Prim*.lean`.
+## Plan and round walk
 
-**hop1 S h y** (`S = (b, J)`, `h = (b, c)`, `J ≠ c`, `H = hop1Half S h`, `p = hop1Pos`):
-1. walk the blank inside `h`'s reservoir to `(row offset k, column offset k)`
-   (`≤ 2s` moves, only reservoir cells change);
-2. vertical jump to the landing strip cell `(offset c, offset j')`,
-   `j' = k` if `k - c` is odd, else `k + 1` (crosses rows `c+1..k-1`, restored);
-3. straight walk along row `b*s + c` from column `c*s + j'` through the strip
-   and on into the half up to position `p` (`exists_line_walk`): positions
-   `0..p-1` receive positions `1..p`, the head goes into the strip. Inefficiency:
-   strip steps (`≤ s`) plus steps moving a tile of another block column
-   (`≤ σ.junkRow H p`); a clean tile moves toward block `c`, i.e. toward its
-   target column. (A line-walk lemma counting "steps that move a tile away from
-   its target" is the natural tool.)
-4. vertical jump from `v` (the cell of position `p`, column offset `s-1` or `k`
-   of block `J`) down to `w` = row offset `k`, column offset same or one step
-   inward (parity), crossing the other row corridors (restored). `W` → `v`.
-5. if `T`'s cell `t ≠ w`, a three-cycle in square `S`'s box on `(v, t, u)`:
-   `T → v`, `U → t`, `W → u`, with `u` any other nonblank region cell of `S`.
-Result: `Rel C (σ.step s e)`, blank at `w` in `S`'s reservoir, cost
-`≤ 2s + 50(k+2) + s + junk + 3022 s ≤ 4000 s + junk` (use `4k+4 ≤ s`).
+`exists_rounds`: a dummy matrix with row sums `(recv - sends)⁺` and column sums
+`(sends - recv)⁺` (transportation, induction on the total) plus loops makes all
+row and column sums `Δ0 = max_S max(sends, recv)`; Hall
+(`Finset.all_card_le_biUnion_card_iff_exists_injective`) gives a permutation
+in the support; subtract and recurse. Edges are labelled real while `T` still
+has a positive entry.
 
-**hop2 h D y** (`h = (b, c)`, `D = (a, c)`, `b ≠ a`, `V = hop2Half h D`):
-1. walk inside `D`'s reservoir to row offset `k` (upper half, `b < a`) or `s-1`
-   (lower half), column offset `k` or `k+1` (parity);
-2. horizontal jump to the own column piece cell (column offset `a`), crossing
-   the column corridors `C(c, a+1..k-1)` at that row;
-3. vertical jump across the row group of band `a` (upper: up to band `a-1`, row
-   offset `s-1`) or of band `a+1` (lower: down to row offset `k`): length
-   `k + 1`, odd. The head (position 0) enters `D`'s own column piece.
-4. walk along the column half to position `p`: adjacent steps inside a band,
-   vertical jumps (`k+1`) between bands; clean tiles (class `(a,c)`) move toward
-   band `a` on adjacent steps (efficient); each crossing costs `≤ 25(k+2)`.
-5. horizontal jump from `v` (column offset `a`) into `h`'s reservoir (column
-   offset `k` or `k+1`, same row), then three-cycle in `h`'s box placing `X` at `v`.
-Cost `≤ 4000 s + 30 k² + junk`.
+`exists_round_events`: phase 1 starts a walk at every square with a dummy edge
+and a real in-edge; phase 2 starts, in snake order, at every unserved square
+with a real in-edge and walks until the cycle closes. Invariants: after phase 1
+no unserved square with a real in-edge lies on a cycle with a dummy edge, so
+phase-2 walks end where they start; relocations cost `≤ 2k` per dummy edge in
+phase 1 and telescope along the snake order in phase 2
+(`sqDist P Q ≤ |snake P - snake Q|`): `≤ 4k² + 4k(1 + #dummy)` per round.
 
-**jump E Z y** (same band or same block column, `E ≠ Z`): walk inside `E`'s
-reservoir to a cell aligned with a reservoir cell `z` of `Z` (same row, resp.
-column, parity by choice of `z`'s column/row among two neighbours), jump to `z`
-(the tile at `z` goes to `E`), then (if the class-`y` tile is not at `z`) a
-three-cycle in a square box containing both squares that swaps the class-`y`
-tile into `E` and puts the `z` tile back into `Z`. Cost `≤ 4000 s (1 + sqDist)`.
+## In-flight bound
 
-The effect on `Rel`: only the corridor positions named move; the other
-corridor cells are restored by jumps and three-cycles; every region's
-multiset of classes changes exactly as `step` says (moves inside one region do
-not matter: prove "agrees outside a set `U ⊆ region Q` ⇒ same counts").
+Per half and block distance `d` a round inserts at most once (the source is a
+single square). With `B_d` the insertions from distance `≥ d` over the plan and
+window `w_d = min Δ (⌊2(p_d+1)Δ/B_d⌋ + 1)`, a good order has (a) at least
+`p_d + 1` insertions from distance `≥ d` in every `w_d` consecutive rounds and
+(b) at most `⌊2A_{x,d}(w_d+1)/Δ⌋ + λ` rounds inserting class `x` from distance
+`d` in every `w_d + 1` consecutive rounds, `λ = 7(log₂ n + 1)`.
+* Maclaurin's inequality `e_w(y)/C(N,w) ≤ (Σy/N)^w` (not in Mathlib) is proved
+  by induction on the number of elements with Bernoulli's inequality.
+* Lower tail with weights `1 - g/(4K)` (only `exp x ≥ 1 + x` is needed):
+  `≤ Δ!·exp(-μ/(12K))`; upper tail with weights `1 + a = 2^a`.
+* All fibres of `σ ↦ σ '' T` have the same size, so subset counts are
+  permutation counts; a union bound gives the order.
+* Push lemma: a tile inserted at `p_d` leaves after `p_d + 1` insertions at
+  positions `≥ p_d`; with (a) it leaves within `w_d` rounds; with (b) the tiles
+  of class `x` from distance `d` present are few.
+* Harmonic sums `Σ_d G_d/B_d ≤ H(B_0)` give about `34·n(log₂ n + 1)` per hub,
+  under `Rhub n = 200·n(log₂ n + 1)`.
 
-## Module: layout facts, Cleanup, Finish (`Hub/Layout.lean` stubs, `Hub/Cleanup.lean`, `Hub/FinishGen.lean`)
+## The run
 
-* `rel_absState`: corridor cells are not reservoir cells, so they are nonblank.
-* `absState_regionTotal`: card of `region Q` is `regionSize`.
-* `absState_classTotal`: every cell is exactly one of region / row position /
-  column position (a bijection); class `y` has `s²` cells in its target square,
-  minus the blank's cell for the last class.
-* `misplaced_le_of_rel`: misplaced tiles sit in corridor cells
-  (`k² * sqCorridor` of them) or in regions of other squares (`offCount`).
-* `exists_normalize`: blank-access walk to a reservoir cell of its square.
-* `exists_cleanup`: see simplification 5.
-* `exists_finish`: generalize `Algorithm/Finish.lean` (+ `Finish/*`,
-  `Partition.square_covers`, `lastGroup`, `Arranged`) from `Dims` to a weaker
-  structure (`2 ≤ k`, `8 ≤ side n k`, `k * side n k = n`), keeping the existing
-  11/4 development compiling (e.g. provide `Dims → FDims`). Then translate
-  `Hub.sqOf`/`classOf` squares to `Partition.square`/`targetGroup`
-  (`GroupIndex k = Fin (k*k)` via `finProdFinEquiv`).
+`T S D = cnt S D`; `exists_rounds`; the first
+`Q' = min Δ0 (Rhub n + 8ks + 10)` rounds are set aside (their real edges' tiles
+and `min(home0, Q')` home tiles start as free); the other rounds are ordered by
+`exists_good_order` and walked by `exists_round_events`; each high-level event
+is resolved into operations:
+* `serve S D`, same block column: `hop2 S D D`; same band: `hop1 S D D`;
+  otherwise, hub `h = (S.1, D.2)`: `hop2 h D D` if `h` has class-`D` stock, else
+  the bypass `jump D h y`, then `hop1 S h D`;
+* `reloc E Z`: one jump, or two through the corner `(Z.1, E.2)`.
+Facts proved:
+* `recv - sends = sqCorridor - corrCount + [blank] - [last]` (from the class and
+  region totals), so dummy out-edges are `≤ 2ks + 1` per square,
+  `free0 ≥ Q' - 2·sqCorridor - 2` and `Δ0 ≤ s² + 1`;
+* stock identity `stock + new = out + byp` between high-level events (for
+  `x ≠ h` in `h`'s column), so bypasses happen only at stock `0` and
+  `byp ≤ N + 1` with `N` from the in-flight bound (the run's insertion list is
+  `Consistent` by construction);
+* one invariant `free0 + sent + [blank started here] ≤ Σfree + Σbyp + served + [blank here]`,
+  with `served ≤ sent + (#dummy rounds so far) + 1`, keeps free counts positive;
+* the cost potential `Σ_{junk positions} (q+1)`: each hop's junk term is
+  exactly its drop, and inserted tiles are clean.
+Actual totals: cost `≤ 72000·n²s + 1.8·10⁶·k²n²(log₂ n + 1)` (budget
+`transportBound = 10⁷(n²s + k²n²(log₂ n + 1))`); region tiles outside their
+squares `≤ 643·k²n(log₂ n + 1)` (budget `misplacedBound`, `1000`).
 
-## Module: plan and round walk (`Hub/Plan.lean`, `Hub/RoundWalk.lean`)
+## Asymptotics
 
-`exists_rounds`: dummy matrix with row sums `(recv - sends)⁺`, column sums
-`(sends - recv)⁺` (transportation: induction on the total), loops
-`Δ0 - max(sends, recv)` with `Δ0 = max_S max(sends S, recv S)`; the sum
-`A = T + dummy + loops` has all row and column sums `Δ0`; Hall
-(`Finset.all_card_le_biUnion_card_iff_exists_injective`) gives a permutation in
-the support; subtract and recurse. Label, for each `(S, D)`, the first `T S D`
-rounds using `S → D` as real and the rest as dummy.
-
-`exists_round_events`: phase 1: for each square `Z` (snake order) whose edge is
-dummy and whose in-edge is real, relocate to `Z` and walk `Z, perm⁻¹ Z, …`
-while the in-edge is real and the square is unserved. Phase 2: for each square
-in snake order that is unserved with a real in-edge, relocate there and walk
-until the cycle closes (all edges on it are real). Prove: each real edge is
-served exactly once; phase-2 walks end where they start; relocation weights
-`≤ 2k` in phase 1 (one per dummy edge), and in phase 2 they telescope along the
-snake order (`sqDist P Q ≤ |snake P - snake Q|`).
-
-## Module: in-flight bound (`Hub/InFlight.lean`: `exists_good_order`)
-
-Per half `H` and distance `d` (the source at distance `d` is one square, so a
-round inserts at most once per `(H, d)`): `G_d(i) ∈ {0,1}`, `a_{x,d}(i) ∈ {0,1}`,
-`B_d = Σ_{d' ≥ d} G_{d'}` (totals over the `Δ` plan rounds), window
-`w_d = min Δ ⌈2(p_d+1)Δ/B_d⌉`, `λ = 7 (log₂ n + 1)`.
-1. Maclaurin (`e_w(y)/C(N,w) ≤ (Σ y/N)^w` for `y ≥ 0`, by smoothing: replace
-   `y_i > m > y_j` by `m, y_i + y_j - m`) ⇒ for a uniform `w`-subset `W`,
-   `E Π_{j∈W} y_j ≤ (mean y)^w`.
-2. Tails: `#{W : Σ_W g < μ/2} ≤ C(N,w) exp(-(1/2 - 1/e) μ / K)` for
-   `g ∈ [0, K]` (take `y = exp(-g/K)`), and `#{W : Σ_W a ≥ 2μ + λ} ≤ C(N,w) 2^(-λ)`
-   for `a ∈ {0,1}` (take `y = 2^a`); `μ = w Σ/N`.
-3. `σ ↦ σ '' T` is `w!(Δ-w)!`-to-one onto `w`-subsets: permutation counts.
-4. Union bound over `≤ 2k² · k · (k+1) · Δ` window events ⇒ a good `σ` exists
-   (`s ≥ 64 k (log₂ n + 1)`, `p_d + 1 ≥ s - k`).
-5. Push lemma and windows (deterministic): a tile inserted in round `τ0` at
-   `p_d` is gone after `p_d + 1` insertions at positions `≥ p_d`; with the
-   window property it is gone by the end of round `τ0 + w_d`; so present
-   `(x, d)` tiles ≤ rounds in `[τ - w_d, τ]` inserting `(x,d)` ≤ `2A(w_d+1)/Δ + λ`.
-6. Sum: `Σ_d G_d / B_d ≤ H(B_0) ≤ 1 + ln(kΔ)` (harmonic numbers), total per hub
-   `≤ 4n(1 + ln(kΔ)) + 8k + 2k²λ ≤ Rhub n`.
-
-## Module: the run (`Hub/Run.lean`: `exists_valid_run`)
-
-Ghost state on top of `IState`: roles `sched stock free home : Sq k → Sq k → ℕ`
-with `cnt = sched + stock + free + home`, ghost rows `Ghost k`, counters
-`out`, `byp`, and bookkeeping for the blank's jumps in/out per square.
-
-Construction: `T S D = σ0.cnt S D` (`S ≠ D`), `exists_rounds`, set aside the
-first `Q' = min Δ0 (Rhub n + 8 k s + 10)` rounds (their real edges' tiles and
-`min(home0, Q')` home tiles start as `free`), plan rounds `rs i = rs0 (Q' + i)`,
-`σ` from `exists_good_order`, high-level events = concatenation over `τ` of
-`exists_round_events (rs (σ τ)) cur`, resolved as in the file header.
-
-Invariants/facts to prove:
-* `recv - sends = sqCorridor - corrCount + [blank] - [last]` from F1, F2, so
-  dummy out-edges `≤ 2ks + 1` per square and `≤ k²(2ks+1)` in total; loops
-  `≤ home0 + 2ks + 2`, so `free0 ≥ Q' - 4ks - 3`; `Δ0 ≤ s² + 1`.
-* stock identity (PROOF.md Lemma 1): `stock h x = out h x - new h x + byp h x`
-  for `x.2 = h.2`, `x ≠ h`; a bypass happens only at `stock = 0`, so
-  `byp h x ≤ N h x + 1` with `N` from `exists_good_order` (the insertion list of
-  the run is `Consistent` by construction).
-* free lower bound: `free Z ≥ free0 Z - (jumps into Z - jumps out of Z) - bypasses at Z`;
-  jumps in − out `≤` (#rounds so far where Z's edge is dummy) + 2, from: entries −
-  exits of the blank into `Z` is `0` or `±1`, serves move the blank `D → S`,
-  and per round `Z` sends at most once and is served at most once.
-* validity: `sched ≥ 1` for the edge being served, `stock ≥ 1` in case (iii),
-  `free ≥ 1` for bypasses/relocations.
-* cost: hops `≤ 2 n²` of them; `Σ junk ≤ Φ₀ = Σ (junk positions q + 1) ≤ 2k²n²`
-  (inserted tiles are clean, so `Φ` only decreases); bypasses
-  `≤ k²(Rhub + k)`, each `≤ 4000 s (1 + k)`; relocation weights per round from
-  `exists_round_events`, each weight unit `≤ 8000 s`.
-* end: all plan edges served, so `sched = 0`; `offCount ≤ Σ stock + Σ free`
-  `≤ (k² n + Σ byp) + (Σ free0 + junk heads)`.
-
-## Module: asymptotics (`Hub/Main.lean`)
-
-Choose `k` even with `k ≈ (n / (128 (log₂ n + 1)))^(1/3)` (so that
-`64 k (log₂ n + 1) ≤ s = ⌊n/k⌋` and `4k+4 ≤ s`), apply
-`exists_hub_solution` to the residual `k*s` board after the Parberry prefix
-(`Algorithm/GeneralSize.lean`), and bound `hubBound + prefix` by
-`C n^(8/3) (log n)^(1/3)`. Generalize `UniformApproximation` /
-`Proposition9.lean` to an error function `f ≥ n²` eventually.
+`hubBound n k s ≤ 10⁸(n²s + k²n²(log₂ n + 1))` on side `n = k*s`. For `n ≥ 4096`
+take `k = 2m` with `256·m³(log₂ n + 1) ≤ n < 256(m+1)³(log₂ n + 1)` and
+`s = ⌊n/k⌋`, solve the outer `n - k*s < k` layers by the Parberry prefix
+(`Algorithm/GeneralSize.lean`), and bound each term's cube by
+`6036³ n⁸ (log₂ n + 1)`, with `log₂ n + 1 ≤ 3 ln n`. The statistics wrapper
+of `Proposition9.lean` is generalized to any error scale `f ≥ n²`
+(`AsympStats.lean`).
