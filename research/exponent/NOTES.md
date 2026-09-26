@@ -92,3 +92,40 @@ This looks like a fully loaded input-queued switch with deterministic admissible
 arrivals; MaxWeight/rounding discrepancy results (Tassiulas-Ephremides; Tijdeman's chairman
 assignment) are the tools to try. Also needed: in-flight fluctuation of class a in column c
 is O(seeds) (rows in steady state; latency <= row length in hops).
+
+## Proof plan for the three lemmas (2026-09-26, pen and paper; see ACCOUNTING.md)
+
+Lemma 2 (trails) can be made unconditional. A round may split into up to k^2 closed trails,
+but start them in snake order over the k x k squares: the relocations of one round then
+cost O(k^2 s) = O(k n) in total, i.e. O(k n s^2) = O(n^3/k) over all rounds. Each relocation
+is a blank/tile swap moving one misplaced tile t_{i+1} of the next start square Z_{i+1} into
+the previous start Z_i. Along the chain every start square gives one misplaced tile and gets
+one, so T keeps its row and column sums (only entries move) and the online decomposition
+(one perfect matching of the current regular T per round) continues. The moved tiles need
+no extra hops beyond their own transport. Needs care: Z_{i+1} must have a misplaced tile
+other than its round tile (else use the round tile and re-plan that square's round).
+
+Lemma 1 (stock) reduces to an online rounding problem, per column c:
+  given fractional b-matchings y_t on hubs x classes (row sums n_b(t), column sums 1) with
+  sum_{r<=t} (O_r - y_r) bounded (O_r = row outputs; possible iff Lemma 3), choose integral
+  b-matchings P_t online with |sum_{r<=t} (y_r - P_r)[b,a]| <= f(k) for all t.
+  Seeds m = f(k) + O(1) suffice, and m up to s = k^2 is affordable, so f(k) = O(k^2) is enough.
+- Offline (all y_t known): Barany-Grinberg style floating rounding keeps at most d = k^2
+  rounds fractional, so f <= k^2. But y_t is not fully known in advance: relocations move
+  tiles and the decomposition is online.
+- Online: MaxWeight (P_t = argmax_P <D, P>, D = cumulative deficit) gives
+  Delta(|D|^2) <= 2<D, y_t - P_t> + 2k <= 2k: only O(sqrt(k t)). Bounded f needs negative drift,
+  which holds when y_t stays inside its face: if y_t[b,a] >= delta on the support, then
+  max_P <D,P> >= <D,y_t> + delta*|D| (D has zero row and column sums), so |D| = O(k/delta).
+  Choose y_t as smoothed long-run rates (any y with bounded cumulative gap to O works), not
+  the raw sparse O_t. Open: delta for adversarial boards; supports that change over time.
+- Literature: Ajtai, Aspnes, Naor, Rabani, Schulman, Waarts, "Fairness in scheduling",
+  J. Algorithms 29 (1998): online carpool/edge orientation, deterministic greedy unfairness
+  <= n/2 (tight); "vector rounding" (sum-preserving only) reduces to it. Our rounding must
+  preserve row AND column sums (b-matchings), which is not covered as such. Tijdeman's
+  chairman assignment (one class at a time, discrepancy < 1) handles each class alone but
+  not the hub capacities n_b(t).
+
+Lemma 3 (in flight) is the remaining genuinely new question: column-level stock of class x
+equals seeds + in_flight_x(0) - in_flight_x(t) exactly. Levers: order of rounds (free),
+choice of each matching, steady-state prefill. Data: dips ~14 at k = 12 on random.
