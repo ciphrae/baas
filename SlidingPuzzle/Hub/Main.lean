@@ -24,9 +24,9 @@ namespace SlidingPuzzle.Hub
 /-- Round up `2·1.143243·((hubXNum/hubXDen) hubScaledKX/1000 +
 (hubYNum/hubYDen) hubScaledKY/1000 + 2/1000)`, keeping the three error
 coefficients separate. -/
-def hubConstant : ℕ := 1440
+def hubConstant : ℕ := 1272
 
-theorem hubConstant_eq : hubConstant = 1440 := by
+theorem hubConstant_eq : hubConstant = 1272 := by
   rfl
 
 /-- Integer inequalities certify the ceiling without evaluating a large division. -/
@@ -38,7 +38,7 @@ theorem hubConstant_rounding :
           2 * hubXDen * hubYDen) := by
   norm_num [hubConstant, hubScaledKX, hubScaledKY, hubXNum, hubXDen, hubYNum, hubYDen]
 
-/-- The optimized bound holds with `C = 1440` for every `n ≥ 4096`. -/
+/-- The optimized bound holds with `C = 1272` for every `n ≥ 4096`. -/
 theorem uniform_approximation_explicit {n : ℕ} [NeZero n]
     (hn : hubN ≤ n) (B : ReachableBoard n) :
     (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) + hubConstant * hubError n := by

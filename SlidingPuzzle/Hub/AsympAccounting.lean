@@ -11,7 +11,7 @@ namespace SlidingPuzzle.Hub
 
 /-- Numerators of the large-grid coefficients, with denominator `1000`. -/
 def hubScaledKX : ℕ := 270169
-def hubScaledKY : ℕ := 490796
+def hubScaledKY : ℕ := 309231
 
 set_option maxHeartbeats 800000 in
 /-- Combined transport, cleanup, and Finish accounting using the actual capacity. -/
@@ -25,9 +25,9 @@ theorem hubBound_le_scaled {k s : ℕ} (hk : 132 ≤ k)
     have h1 := Nat.mul_le_mul_right s (Nat.sub_le k 1)
     have h2 := Nat.mul_le_mul (Nat.sub_le k 1) (Nat.sub_le s k)
     omega
-  have hCcost := Nat.mul_le_mul_left (104 * (k * s) * k ^ 2) hC
+  have hCcost := Nat.mul_le_mul_left (52 * (k * s) * k ^ 2) hC
   have hRcost := Nat.mul_le_mul_left
-    (77 * s * (1 + k) * k ^ 2 + 208 * (k * s) * k ^ 2) (Rhub_upper (k * s))
+    (77 * s * (1 + k) * k ^ 2 + 104 * (k * s) * k ^ 2) (Rhub_upper (k * s))
   unfold hubBound transportBound misplacedBound hubScaledKX hubScaledKY
   generalize Rhub (k * s) = R at *
   generalize sqCorridor k s = C at *
@@ -46,17 +46,17 @@ theorem hubBound_le_scaled {k s : ℕ} (hk : 132 ≤ k)
   have hq := Nat.mul_le_mul_left (k ^ 4 * s ^ 2) hL
   have hq0 : 348884 ≤ 2644 * k := by omega
   have hq1 := Nat.mul_le_mul_right (k ^ 3 * s ^ 2) hq0
-  have hq' : 2287998 * (k ^ 4 * s ^ 2) + 348884 * (k ^ 3 * s ^ 2) ≤
-      81809 * (k ^ 4 * s ^ 2 * L) := by
+  have hq' : 1374441 * (k ^ 4 * s ^ 2) + 348884 * (k ^ 3 * s ^ 2) ≤
+      49182 * (k ^ 4 * s ^ 2 * L) := by
     nlinarith only [hq, hq1, Nat.zero_le (k ^ 4 * s ^ 2)]
   -- Capacity controls the bypass and cleanup k^4 remainders together.
-  have hc0 : 1000 * (181 * k + 77) ≤ 395920 * k := by omega
+  have hc0 : 1000 * (129 * k + 77) ≤ 395920 * k := by omega
   have hc1 := Nat.mul_le_mul_left (505 * k) (Nat.pow_le_pow_left hL 2)
-  have hc2 : 1000 * (181 * k + 77) ≤ 505 * k * L ^ 2 := by
+  have hc2 : 1000 * (129 * k + 77) ≤ 505 * k * L ^ 2 := by
     nlinarith only [hc0, hc1]
   have hc3 := Nat.mul_le_mul_right (k ^ 4 * s) hc2
   have hc4 := Nat.mul_le_mul_left (k ^ 4 * s * L) hcap
-  have hc : 1000 * (181 * k ^ 5 * s + 77 * k ^ 4 * s) ≤
+  have hc : 1000 * (129 * k ^ 5 * s + 77 * k ^ 4 * s) ≤
       1 * (k ^ 4 * s ^ 2 * L) := by nlinarith only [hc3, hc4]
   -- Linear corridor terms cost less than one thousandth of Y.
   have hnL : 23630000 ≤ k * s * L := by nlinarith
@@ -66,7 +66,7 @@ theorem hubBound_le_scaled {k s : ℕ} (hk : 132 ≤ k)
   have hf2 : k ^ 2 ≤ (k * s) ^ 2 := by nlinarith
   have hf3 : k * s ≤ (k * s) ^ 2 := by nlinarith
   have hf4 := Nat.mul_le_mul_left ((k * s) ^ 2) hs
-  have hf : 1000 * (2017 * (k * s) ^ 2 + 1582 * k ^ 2 * s +
+  have hf : 1000 * (1913 * (k * s) ^ 2 + 1582 * k ^ 2 * s +
       4796 * k ^ 2 + 106 * (k * s)) ≤ 2 * ((k * s) ^ 2 * s) := by
     nlinarith only [hf1, hf2, hf3, hf4, Nat.zero_le ((k * s) ^ 2)]
   nlinarith only [hCcost, hRcost, hx, hy, hq', hc, hr, hf]

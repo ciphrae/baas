@@ -14,7 +14,7 @@ variable {n k s : ℕ}
 /-- The bound of the whole algorithm on a board of side `n = k*s`. -/
 def hubBound (n k s : ℕ) : ℕ :=
   2 * n + transportBound n k s +
-    104 * n * (k ^ 2 * sqCorridor k s + misplacedBound n k + 2 * n + 1) +
+    52 * n * (k ^ 2 * sqCorridor k s + misplacedBound n k + 2 * n + 2) +
     (k ^ 2 * (5 * s ^ 3 + 1509 * s ^ 2 + 1505 * s + 4796) + 9354 * k ^ 2 * n)
 
 theorem exists_hub_solution (hd : HDims n k s) [NeZero n]
@@ -34,7 +34,7 @@ theorem exists_hub_solution (hd : HDims n k s) [NeZero n]
   refine ⟨((p1.append p2).append p3).append p4, ?_⟩
   simp only [Path.inefficientMoves_append]
   have h3 : p3.inefficientMoves ≤
-      104 * n * (k ^ 2 * sqCorridor k s + misplacedBound n k + 2 * n + 1) := by
+      52 * n * (k ^ 2 * sqCorridor k s + misplacedBound n k + 2 * n + 2) := by
     refine hp3.trans (Nat.mul_le_mul_left _ ?_)
     omega
   unfold hubBound

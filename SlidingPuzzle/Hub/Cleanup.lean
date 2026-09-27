@@ -4,10 +4,12 @@ import SlidingPuzzle.Moves.ThreeCycleSharp
 
 /-! # Cleanup
 
-Bring the blank into the last square, then fix misplaced tiles two at a time
-with double swaps (`exists_double_swap`, `O(n)` each): a misplaced tile of
-class `Q` is exchanged with a wrong tile inside square `Q`, together with a
-harmless exchange inside one square, which keeps the permutation even. -/
+Bring the blank into the last square, then fix misplaced tiles at least two at
+a time: a misplaced tile goes to its square `Q` in exchange for a wrong tile of
+`Q`, which goes to its own square by a three-cycle through a third wrong tile
+(`exists_three_cycle_sharp`, `52 n`), or, if it belongs where the first tile
+was, by a double swap (`exists_double_swap_sharp`, `104 n`) whose second
+exchange stays inside one square and keeps the permutation even. -/
 namespace SlidingPuzzle.Hub
 
 variable {n k s : ℕ}
@@ -132,11 +134,40 @@ theorem six_le_n (hd : HDims n k s) : 6 ≤ n := by
   have := hd.two_le
   nlinarith
 
-/-- One double swap lowers the misplaced count, keeping the blank. -/
+/-- Cells outside a set of cells whose tiles are unchanged keep their status;
+if the misplaced cells of `C` lie among those of `D` minus two of them, the
+count drops by two. -/
+theorem misplaced_drop_two (hd : HDims n k s) {C D : Board n} (a b : Cell n) (hab : a ≠ b)
+    (ha : Mis hd D a) (hb : Mis hd D b)
+    (hsub : ∀ x, Mis hd C x → Mis hd D x ∧ x ≠ a ∧ x ≠ b) :
+    misplaced hd C + 2 ≤ misplaced hd D := by
+  rw [misplaced_eq, misplaced_eq]
+  have hs : (univ.filter fun x => Mis hd C x) ⊆
+      ((univ.filter fun x => Mis hd D x).erase a).erase b := by
+    intro x hx
+    simp only [mem_filter, mem_univ, true_and] at hx
+    obtain ⟨h1, h2, h3⟩ := hsub x hx
+    simp only [mem_erase, mem_filter, mem_univ, true_and]
+    exact ⟨h3, h2, h1⟩
+  have hbm : b ∈ (univ.filter fun x => Mis hd D x).erase a := by
+    simp only [mem_erase, mem_filter, mem_univ, true_and]
+    exact ⟨Ne.symm hab, hb⟩
+  have ham : a ∈ univ.filter fun x => Mis hd D x := by
+    simp only [mem_filter, mem_univ, true_and]; exact ha
+  have h1 := card_le_card hs
+  rw [card_erase_of_mem hbm, card_erase_of_mem ham] at h1
+  have h2 : 2 ≤ #(univ.filter fun x => Mis hd D x) := by
+    have := card_pos.mpr ⟨b, hbm⟩
+    rw [card_erase_of_mem ham] at this
+    omega
+  omega
+
+/-- One three-cycle or double swap removes at least two misplaced tiles, keeping
+the blank. -/
 theorem exists_cleanup_step (hd : HDims n k s) [NeZero n] (D : Board n)
     (hb : IsLast (sqOf hd (blank D))) (hm : misplaced hd D ≠ 0) :
     ∃ C : Board n, ∃ p : Path D C, blank C = blank D ∧ p.length ≤ 104 * n ∧
-      misplaced hd C < misplaced hd D := by
+      misplaced hd C + 2 ≤ misplaced hd D := by
   obtain ⟨x1, hx1⟩ : ∃ x1, Mis hd D x1 := by
     by_contra hno
     push Not at hno
@@ -144,66 +175,95 @@ theorem exists_cleanup_step (hd : HDims n k s) [NeZero n] (D : Board n)
     rw [misplaced_eq, card_eq_zero, filter_eq_empty_iff]
     exact fun x _ => hno x
   obtain ⟨x2, hx2Q, hx2z, hx2c⟩ := exists_wrong_in_square hd D hb x1 hx1.1 hx1.2
-  obtain ⟨u, u', huu, hu, hu', hux2, hub, hu'x2, hu'b⟩ :=
-    exists_two_in_square hd (sqOf hd x2) x2 (blank D)
+  have hx2 : Mis hd D x2 := ⟨hx2z, by rw [hx2Q]; exact hx2c⟩
   have hx12 : x1 ≠ x2 := fun h => hx1.2 (hx2Q.symm.trans (by rw [h]))
-  have hx1u : x1 ≠ u := fun h => hx1.2 (hx2Q.symm.trans (hu.symm.trans (by rw [h])))
-  have hx1u' : x1 ≠ u' := fun h => hx1.2 (hx2Q.symm.trans (hu'.symm.trans (by rw [h])))
-  obtain ⟨C, p, hp, hbC, hCa, hCb, hCc, hCd, hfix⟩ := exists_double_swap_sharp D (six_le_n hd)
-    x1 u x2 u' hx1u hx12 hx1u' hux2 huu hu'x2.symm
-    (fun h => hx1.1 (by rw [h]; rfl)) (fun h => val_ne_zero_of_ne_blank hub (by rw [h]; rfl))
-    (fun h => hx2z (by rw [h]; rfl)) (fun h => val_ne_zero_of_ne_blank hu'b (by rw [h]; rfl))
-  refine ⟨C, p, hbC, hp, ?_⟩
-  rw [misplaced_eq, misplaced_eq]
-  -- every misplaced cell of `C` comes from a misplaced cell of `D`, other than `x2`
-  have hsub : (univ.filter fun x => Mis hd C x) ⊆
-      ((univ.filter fun x => Mis hd D x).image (Equiv.swap u u')).erase x2 := by
-    intro x hx
-    simp only [mem_filter, mem_univ, true_and] at hx
-    rw [mem_erase, mem_image]
+  by_cases hback : classOf hd (D x2) = sqOf hd x1
+  · -- `x1` and `x2` belong in each other's squares: a double swap fixes both
+    obtain ⟨u, u', huu, hu, hu', hux2, hub, hu'x2, hu'b⟩ :=
+      exists_two_in_square hd (sqOf hd x2) x2 (blank D)
+    have hx1u : x1 ≠ u := fun h => hx1.2 (hx2Q.symm.trans (hu.symm.trans (by rw [h])))
+    have hx1u' : x1 ≠ u' := fun h => hx1.2 (hx2Q.symm.trans (hu'.symm.trans (by rw [h])))
+    obtain ⟨C, p, hp, hbC, hCa, hCb, hCc, hCd, hfix⟩ := exists_double_swap_sharp D (six_le_n hd)
+      x1 u x2 u' hx1u hx12 hx1u' hux2 huu hu'x2.symm
+      (fun h => hx1.1 (by rw [h]; rfl)) (fun h => val_ne_zero_of_ne_blank hub (by rw [h]; rfl))
+      (fun h => hx2z (by rw [h]; rfl)) (fun h => val_ne_zero_of_ne_blank hu'b (by rw [h]; rfl))
+    refine ⟨C, p, hbC, hp, ?_⟩
+    -- the misplaced cells of `C`, moved by the swap `u ↔ u'`, lie among those of `D`
+    have hsub : (univ.filter fun x => Mis hd C x) ⊆
+        ((((univ.filter fun x => Mis hd D x).image (Equiv.swap u u')).erase x2).erase x1) := by
+      intro x hx
+      simp only [mem_filter, mem_univ, true_and] at hx
+      simp only [mem_erase, mem_image]
+      have hxx2 : x ≠ x2 := by
+        rintro rfl
+        apply hx.2
+        rw [hCc, hx2Q]
+      have hxx1 : x ≠ x1 := by
+        rintro rfl
+        apply hx.2
+        rw [hCa, hback]
+      refine ⟨hxx1, hxx2, Equiv.swap u u' x, ?_, Equiv.swap_apply_self _ _ _⟩
+      simp only [mem_filter, mem_univ, true_and]
+      by_cases hxb : x = u
+      · subst hxb
+        rw [Equiv.swap_apply_left]
+        unfold Mis at hx ⊢
+        rw [hCb] at hx
+        rwa [hu', ← hu]
+      by_cases hxd : x = u'
+      · subst hxd
+        rw [Equiv.swap_apply_right]
+        unfold Mis at hx ⊢
+        rw [hCd] at hx
+        rwa [hu, ← hu']
+      rw [Equiv.swap_apply_of_ne_of_ne hxb hxd]
+      unfold Mis at hx ⊢
+      rwa [hfix x hxx1 hxb hxx2 hxd] at hx
+    have hmem2 : x2 ∈ (univ.filter fun x => Mis hd D x).image (Equiv.swap u u') := by
+      rw [mem_image]
+      exact ⟨x2, by simpa using hx2, Equiv.swap_apply_of_ne_of_ne (Ne.symm hux2) (Ne.symm hu'x2)⟩
+    have hmem1 : x1 ∈ ((univ.filter fun x => Mis hd D x).image (Equiv.swap u u')).erase x2 := by
+      rw [mem_erase, mem_image]
+      exact ⟨hx12, x1, by simpa using hx1, Equiv.swap_apply_of_ne_of_ne hx1u hx1u'⟩
+    have h1 := card_le_card hsub
+    rw [card_erase_of_mem hmem1, card_erase_of_mem hmem2] at h1
+    have h2 := card_image_le (s := univ.filter fun x => Mis hd D x) (f := Equiv.swap u u')
+    have h3 : 1 ≤ #(((univ.filter fun x => Mis hd D x).image (Equiv.swap u u')).erase x2) :=
+      card_pos.mpr ⟨x1, hmem1⟩
+    rw [card_erase_of_mem hmem2] at h3
+    rw [misplaced_eq, misplaced_eq]
+    omega
+  · -- a third misplaced tile in the home square of `x2`: one three-cycle fixes two
+    obtain ⟨x3, hx3Q, hx3z, hx3c⟩ := exists_wrong_in_square hd D hb x2 hx2z hx2.2
+    have hx3 : Mis hd D x3 := ⟨hx3z, by rw [hx3Q]; exact hx3c⟩
+    have hx23 : x2 ≠ x3 := fun h => hx2.2 (hx3Q.symm.trans (by rw [h]))
+    have hx13 : x1 ≠ x3 := fun h => hback (hx3Q.symm.trans (by rw [h]))
+    obtain ⟨C, p, hp, hbC, hCa, hCb, hCc, hfix⟩ := exists_three_cycle_sharp D (six_le_n hd)
+      x2 x1 x3 hx12.symm hx23 hx13
+      (fun h => hx2z (by rw [h]; rfl)) (fun h => hx1.1 (by rw [h]; rfl))
+      (fun h => hx3z (by rw [h]; rfl))
+    refine ⟨C, p, hbC, by omega, ?_⟩
+    refine misplaced_drop_two hd x2 x3 hx23 hx2 hx3 fun x hx => ?_
     have hxx2 : x ≠ x2 := by
       rintro rfl
       apply hx.2
-      rw [hCc, hx2Q]
-    refine ⟨hxx2, Equiv.swap u u' x, ?_, Equiv.swap_apply_self _ _ _⟩
-    simp only [mem_filter, mem_univ, true_and]
-    by_cases hxa : x = x1
-    · subst hxa
-      rw [Equiv.swap_apply_of_ne_of_ne hx1u hx1u']
-      exact hx1
-    by_cases hxb : x = u
-    · subst hxb
-      rw [Equiv.swap_apply_left]
-      unfold Mis at hx ⊢
-      rw [hCb] at hx
-      rwa [hu', ← hu]
-    by_cases hxd : x = u'
-    · subst hxd
-      rw [Equiv.swap_apply_right]
-      unfold Mis at hx ⊢
-      rw [hCd] at hx
-      rwa [hu, ← hu']
-    rw [Equiv.swap_apply_of_ne_of_ne hxb hxd]
-    unfold Mis at hx ⊢
-    rwa [hfix x hxa hxb hxx2 hxd] at hx
-  have hmem : x2 ∈ (univ.filter fun x => Mis hd D x).image (Equiv.swap u u') := by
-    rw [mem_image]
-    refine ⟨x2, ?_, Equiv.swap_apply_of_ne_of_ne (Ne.symm hux2) (Ne.symm hu'x2)⟩
-    simp only [mem_filter, mem_univ, true_and]
-    exact ⟨hx2z, by rw [hx2Q]; exact hx2c⟩
-  have h1 := card_le_card hsub
-  rw [card_erase_of_mem hmem] at h1
-  have h2 := card_image_le (s := univ.filter fun x => Mis hd D x) (f := Equiv.swap u u')
-  have h3 : 1 ≤ #((univ.filter fun x => Mis hd D x).image (Equiv.swap u u')) :=
-    card_pos.mpr ⟨x2, hmem⟩
-  omega
+      rw [hCa, hx2Q]
+    have hxx3 : x ≠ x3 := by
+      rintro rfl
+      apply hx.2
+      rw [hCc, hx3Q]
+    refine ⟨?_, hxx2, hxx3⟩
+    by_cases hxx1 : x = x1
+    · subst hxx1; exact hx1
+    · unfold Mis at hx ⊢
+      rwa [hfix x hxx2 hxx1 hxx3] at hx
 
-/-- Double swaps until nothing is misplaced. -/
+/-- Cleanup steps until nothing is misplaced. -/
 theorem exists_cleanup_loop (hd : HDims n k s) [NeZero n] :
     ∀ m (D : Board n), misplaced hd D = m → IsLast (sqOf hd (blank D)) →
       ∃ C : Board n, ∃ p : Path D C,
         (∀ x, (C x).val ≠ 0 → classOf hd (C x) = sqOf hd x) ∧ IsLast (sqOf hd (blank C)) ∧
-        p.length ≤ 104 * n * m := by
+        p.length ≤ 52 * n * (m + 1) := by
   intro m
   induction m using Nat.strong_induction_on with
   | _ m ih =>
@@ -212,12 +272,12 @@ theorem exists_cleanup_loop (hd : HDims n k s) [NeZero n] :
     · subst h0
       exact ⟨D, Path.nil D, sorted_of_misplaced_zero hd hm, hb, by simp⟩
     obtain ⟨E, p, hbE, hp, hlt⟩ := exists_cleanup_step hd D hb (hm ▸ h0)
-    obtain ⟨C, q, hC, hbC, hq⟩ := ih (misplaced hd E) (hm ▸ hlt) E rfl (hbE ▸ hb)
+    obtain ⟨C, q, hC, hbC, hq⟩ := ih (misplaced hd E) (by omega) E rfl (hbE ▸ hb)
     refine ⟨C, p.append q, hC, hbC, ?_⟩
     rw [Path.length_append]
-    have : 104 * n * misplaced hd E + 104 * n ≤ 104 * n * m := by
-      rw [← Nat.mul_succ]
-      exact Nat.mul_le_mul_left _ (by omega)
+    have : 52 * n * (misplaced hd E + 1) + 104 * n ≤ 52 * n * (m + 1) := by
+      have := Nat.mul_le_mul_left (52 * n) (show misplaced hd E + 1 + 2 ≤ m + 1 by omega)
+      nlinarith
     omega
 
 end CleanupAux
@@ -228,7 +288,7 @@ open CleanupAux LayoutFacts
 theorem exists_cleanup (hd : HDims n k s) [NeZero n] (B : Board n) :
     ∃ C : Board n, ∃ p : Path B C,
       (∀ x, (C x).val ≠ 0 → classOf hd (C x) = sqOf hd x) ∧ IsLast (sqOf hd (blank C)) ∧
-      p.inefficientMoves ≤ 104 * n * (misplaced hd B + 2 * n + 1) := by
+      p.inefficientMoves ≤ 52 * n * (misplaced hd B + 2 * n + 2) := by
   obtain ⟨D, p, hD, hp, -⟩ := exists_blank_access_path_preserving B (blank (target n))
   have hpn : p.length ≤ 2 * n := by
     refine hp.trans ?_
@@ -246,11 +306,10 @@ theorem exists_cleanup (hd : HDims n k s) [NeZero n] (B : Board n) :
   refine (Path.inefficientMoves_le_length _).trans ?_
   rw [Path.length_append]
   set m := misplaced hd B
-  have h1 : 104 * n * misplaced hd D ≤ 104 * n * (m + 2 * n) := by
-    calc 104 * n * misplaced hd D ≤ 104 * n * misplaced hd D :=
-          Nat.mul_le_mul_right _ (Nat.mul_le_mul_right _ (by norm_num))
-      _ ≤ 104 * n * (m + 2 * n) := Nat.mul_le_mul_left _ (by omega)
-  have h2 : 104 * n * (m + 2 * n + 1) = 104 * n * (m + 2 * n) + 104 * n := by ring
+  have h1 : 52 * n * (misplaced hd D + 1) ≤ 52 * n * (m + 2 * n + 1) :=
+    Nat.mul_le_mul_left _ (by omega)
+  have h2 : 52 * n * (m + 2 * n + 2) = 52 * n * (m + 2 * n + 1) + 52 * n := by ring
+  have h3 : 2 * n ≤ 52 * n := by omega
   omega
 
 end SlidingPuzzle.Hub
