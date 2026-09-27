@@ -244,7 +244,7 @@ theorem exists_half_width {n L : ℕ} (hL : 1 ≤ L) (hn : hubA * L ≤ n) :
 /-- Prefix plus hub on the residual board. -/
 theorem optimalLength_le_hub_residual {n k : ℕ} [NeZero n] (B : ReachableBoard n)
     (hd : HDims (k * (n / k)) k (n / k))
-    (hP1 : 317 * k * (Nat.log 2 (k * (n / k)) + 1) ≤ n / k) (hsk : n / k ≤ k ^ 3) :
+    (hP1 : 169 * k * (Nat.log 2 (k * (n / k)) + 1) ≤ n / k) (hsk : n / k ≤ k ^ 3) :
     optimalLength B ≤ manhattan B.val + 2 * ((15 * n ^ 2 + 3002 * n + 1) * (n - k * (n / k))) +
       2 * hubBound (k * (n / k)) k (n / k) := by
   have hmn : k * (n / k) ≤ n := Nat.mul_div_le n k
@@ -502,9 +502,9 @@ theorem optimalLength_le_hub_scaled {n : ℕ} [NeZero n] (hn : hubLargeN ≤ n) 
   have hmn : k * s ≤ n := Nat.mul_div_le n k
   have hd : HDims (k * s) k s := ⟨by omega, ⟨m, by omega⟩, hroom, rfl⟩
   have hlog : Nat.log 2 (k * s) ≤ Nat.log 2 n := Nat.log_mono_right hmn
-  have hP1 : 317 * k * (Nat.log 2 (k * s) + 1) ≤ s := by
+  have hP1 : 169 * k * (Nat.log 2 (k * s) + 1) ≤ s := by
     apply (Nat.le_div_iff_mul_le hkpos).mpr
-    calc 317 * k * (Nat.log 2 (k * s) + 1) * k ≤ 317 * k * L * k := by gcongr; omega
+    calc 169 * k * (Nat.log 2 (k * s) + 1) * k ≤ 169 * k * L * k := by gcongr; omega
       _ = 1268 * (m ^ 2 * L) := by rw [hkdef]; ring
       _ ≤ n := hmcap
   have hres := optimalLength_le_hub_residual B hd hP1 hsk

@@ -11,13 +11,13 @@ namespace SlidingPuzzle.Hub
 
 /-- Numerators of the large-grid coefficients, with denominator `1000`. -/
 def hubScaledKX : ℕ := 182251
-def hubScaledKY : ℕ := 255642
+def hubScaledKY : ℕ := 161298
 
 set_option maxHeartbeats 1600000 in
 /-- Combined transport, cleanup, and Finish accounting using the actual capacity. -/
 theorem hubBound_le_scaled {k s : ℕ} (hk : 106 ≤ k)
     (hL : 26 ≤ Nat.log 2 (k * s) + 1)
-    (hcap : 317 * k * (Nat.log 2 (k * s) + 1) ≤ s) :
+    (hcap : 169 * k * (Nat.log 2 (k * s) + 1) ≤ s) :
     1000 * hubBound (k * s) k s ≤ hubScaledKX * ((k * s) ^ 2 * s) +
       hubScaledKY * (k ^ 2 * (k * s) ^ 2 * (Nat.log 2 (k * s) + 1)) := by
   have hC : sqCorridor k s ≤ 2 * (k * s) := by
@@ -25,9 +25,9 @@ theorem hubBound_le_scaled {k s : ℕ} (hk : 106 ≤ k)
     have h1 := Nat.mul_le_mul_right s (Nat.sub_le k 1)
     have h2 := Nat.mul_le_mul (Nat.sub_le k 1) (Nat.sub_le s k)
     omega
-  have hCcost := Nat.mul_le_mul_left (52 * (k * s) * k ^ 2) hC
+  have hCcost := Nat.mul_le_mul_left (26 * (k * s) * k ^ 2) hC
   have hRcost := Nat.mul_le_mul_left
-    ((s + 3) * (39 * k + 15) * k ^ 2 + 104 * (k * s) * k ^ 2) (Rhub_upper (k * s))
+    ((s + 3) * (39 * k + 15) * k ^ 2 + 52 * (k * s) * k ^ 2) (Rhub_upper (k * s))
   unfold hubBound transportBound misplacedBound hubScaledKX hubScaledKY
   generalize Rhub (k * s) = R at *
   generalize sqCorridor k s = C at *
@@ -46,13 +46,13 @@ theorem hubBound_le_scaled {k s : ℕ} (hk : 106 ≤ k)
   have hq := Nat.mul_le_mul_left (k ^ 4 * s ^ 2) hL
   have hq0 : 210615 ≤ 1987 * k := by omega
   have hq1 := Nat.mul_le_mul_right (k ^ 3 * s ^ 2) hq0
-  have hq' : 1162526 * (k ^ 4 * s ^ 2) + 210615 * (k ^ 3 * s ^ 2) ≤
-      44789 * (k ^ 4 * s ^ 2 * L) := by
+  have hq' : 701062 * (k ^ 4 * s ^ 2) + 210615 * (k ^ 3 * s ^ 2) ≤
+      27041 * (k ^ 4 * s ^ 2 * L) := by
     nlinarith only [hq, hq1, Nat.zero_le (k ^ 4 * s ^ 2)]
   -- Capacity controls the bypass and cleanup k^4 remainders together.
   have hc0 : 1000 * (210 * k + 700) ≤ 2 * 214292 * k := by omega
   have hc1 := Nat.mul_le_mul_left (317 * k) (Nat.pow_le_pow_left hL 2)
-  have hc2 : 1000 * (210 * k + 700) ≤ 2 * (317 * k * L ^ 2) := by
+  have hc2 : 1000 * (210 * k + 700) ≤ 2 * (169 * k * L ^ 2) := by
     nlinarith only [hc0, hc1]
   have hc3 := Nat.mul_le_mul_right (k ^ 4 * s) hc2
   have hc4 := Nat.mul_le_mul_left (k ^ 4 * s * L) hcap
