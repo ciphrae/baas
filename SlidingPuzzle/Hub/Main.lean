@@ -21,31 +21,31 @@ namespace SlidingPuzzle.Hub
 `Hub/AsympError.lean`; the natural-number bound of the algorithm is
 `optimalLength_le_hub` (`Hub/AsympBound.lean`). -/
 
-/-- The coefficient of the hub algorithm for `n ≥ 9·2^24`: round up
-`2·1.143243·((hubXNum/hubXDen) hubScaledKX/1000 + (hubYNum/hubYDen) hubScaledKY/1000 + 2.5/1000)`,
+/-- The coefficient of the hub algorithm for `n ≥ 3·2^25`: round up
+`1.143729·(2(hubXNum/hubXDen) hubScaledKX + 2(hubYNum/hubYDen) hubScaledKY + 2000/350)/1000`,
 keeping the three error coefficients separate. -/
-def hubLargeConstant : ℕ := 1044
+def hubLargeConstant : ℕ := 894
 
 /-- Integer inequalities certify the ceiling without evaluating a large division. -/
 theorem hubLargeConstant_rounding :
-    1143243 * (2 * (hubXNum * hubYDen * hubScaledKX + hubYNum * hubXDen * hubScaledKY) +
-        5 * hubXDen * hubYDen) ≤ 1000000000 * hubXDen * hubYDen * hubLargeConstant ∧
-      1000000000 * hubXDen * hubYDen * (hubLargeConstant - 1) <
-        1143243 * (2 * (hubXNum * hubYDen * hubScaledKX + hubYNum * hubXDen * hubScaledKY) +
-          5 * hubXDen * hubYDen) := by
+    1143729 * (700 * (hubXNum * hubYDen * hubScaledKX + hubYNum * hubXDen * hubScaledKY) +
+        2000 * hubXDen * hubYDen) ≤ 350000000000 * hubXDen * hubYDen * hubLargeConstant ∧
+      350000000000 * hubXDen * hubYDen * (hubLargeConstant - 1) <
+        1143729 * (700 * (hubXNum * hubYDen * hubScaledKX + hubYNum * hubXDen * hubScaledKY) +
+          2000 * hubXDen * hubYDen) := by
   norm_num [hubLargeConstant, hubScaledKX, hubScaledKY, hubXNum, hubXDen, hubYNum, hubYDen]
 
-/-- The uniform coefficient: the hub algorithm above `9·2^24` needs `1044`, and the
-cubic solver covers `4096 ≤ n ≤ 9·2^24` within it (`cubic_solver_le_hubError`). -/
-def hubConstant : ℕ := 1044
+/-- The uniform coefficient: the hub algorithm above `3·2^25` needs `894`, and the
+cubic solver covers `4096 ≤ n ≤ 3·2^25` within it (`cubic_solver_le_hubError`). -/
+def hubConstant : ℕ := 894
 
-theorem hubConstant_eq : hubConstant = 1044 := by
+theorem hubConstant_eq : hubConstant = 894 := by
   rfl
 
 theorem hubLargeConstant_le : hubLargeConstant ≤ hubConstant := by
   norm_num [hubLargeConstant, hubConstant]
 
-/-- The optimized bound holds with `C = 1044` for every `n ≥ 4096`. -/
+/-- The optimized bound holds with `C = 894` for every `n ≥ 4096`. -/
 theorem uniform_approximation_explicit {n : ℕ} [NeZero n]
     (hn : hubN ≤ n) (B : ReachableBoard n) :
     (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) + hubConstant * hubError n := by
@@ -57,13 +57,13 @@ theorem uniform_approximation_explicit {n : ℕ} [NeZero n]
     have hreal : (optimalLength B : ℝ) ≤ ((5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796 : ℕ) : ℝ) := by
       exact_mod_cast hnat
     have herr := cubic_solver_le_hubError (by unfold hubN at hn; omega)
-      (show n ≤ 9 * 2 ^ 24 by unfold hubLargeN at hlarge; omega)
+      (show n ≤ 3 * 2 ^ 25 by unfold hubLargeN at hlarge; omega)
     have hM : (0 : ℝ) ≤ manhattan B.val := Nat.cast_nonneg _
     have hE := hubError_nonneg n
     norm_num [hubConstant, hubScaledKX, hubScaledKY] at *
     nlinarith
   obtain ⟨X, Y, Z, hX, hY, hZ, hopt⟩ := optimalLength_le_hub_scaled hlarge B
-  have hnlarge : 9 * 2 ^ 24 ≤ n := hlarge
+  have hnlarge : 3 * 2 ^ 25 ≤ n := hlarge
   have hXR := le_hubError_of_cube_grid hnlarge hX
   have hYR := le_hubError_of_cube_grid hnlarge hY
   have hZR := le_hubError_of_cube_grid hnlarge hZ

@@ -69,7 +69,7 @@ theorem hReloc_free (G : GS k) (E Z Q : Sq k) :
 theorem hReloc_cost {G : GS k} (hL : LInv s σ0 F0 G) {E Z : Sq k} (hb : G.σ.blank = E)
     (hfree : ∀ Q, 1 ≤ ∑ y, G.free Q y) :
     IState.totalCost s σ0 (hReloc s G E Z).evs + pot s (hReloc s G E Z).σ ≤
-      IState.totalCost s σ0 G.evs + pot s G.σ + 65 * s * (if E.1 = Z.1 ∨ E.2 = Z.2 then 1 + sqDist E Z else 2 + sqDist E Z) := by
+      IState.totalCost s σ0 G.evs + pot s G.σ + (s + 3) * (if E.1 = Z.1 ∨ E.2 = Z.2 then 54 + 39 * sqDist E Z else 108 + 39 * sqDist E Z) := by
   by_cases c : E.1 = Z.1 ∨ E.2 = Z.2
   · rw [if_pos c, hReloc_of_al c]
     have := gJump_cost hL (E := E) (Z := Z) (y := pickFree G Z)
@@ -82,8 +82,8 @@ theorem hReloc_cost {G : GS k} (hL : LInv s σ0 F0 G) {E Z : Sq k} (hb : G.σ.bl
       (y := pickFree (gJump s G E (Z.1, E.2) (pickFree G (Z.1, E.2))) Z)
     have hd : sqDist E (Z.1, E.2) + sqDist (Z.1, E.2) Z = sqDist E Z := by
       unfold sqDist; simp only [Nat.dist_self]; ring
-    have : 65 * s * (1 + sqDist E (Z.1, E.2)) + 65 * s * (1 + sqDist (Z.1, E.2) Z) ≤
-        65 * s * (2 + sqDist E Z) := by
+    have : (s + 3) * (54 + 39 * sqDist E (Z.1, E.2)) + (s + 3) * (54 + 39 * sqDist (Z.1, E.2) Z) ≤
+        (s + 3) * (108 + 39 * sqDist E Z) := by
       rw [← hd]; nlinarith
     omega
 
@@ -102,8 +102,8 @@ structure HInv (s : ℕ) (σ0 : IState k) (free0 : Sq k → ℕ) (N : Sq k → S
   free_lo : ∀ Z, free0 Z + G.sent Z + (if σ0.blank = Z then 1 else 0) ≤
     (∑ y, G.free Z y) + (∑ x, G.byp Z x) + G.served Z + (if G.σ.blank = Z then 1 else 0)
   cost : IState.totalCost s σ0 G.evs + pot s G.σ ≤ pot s σ0 +
-    2 * hopC k s * (∑ Z, G.served Z) + 65 * s * (1 + k) * (∑ h, ∑ x, G.byp h x) +
-    65 * s * G.wt
+    2 * hopC k s * (∑ Z, G.served Z) + (s + 3) * (39 * k + 15) * (∑ h, ∑ x, G.byp h x) +
+    (s + 3) * G.wt
   sched_sum : (∑ Z, G.served Z) + (∑ S, ∑ D, G.sched S D) = S0
 
 section step
@@ -138,8 +138,8 @@ theorem hstep_serve {G : GS k} (hL : LInv s σ0 F0 G) (hH : HInv s σ0 free0 N S
     have h2 := hServe_cost hL τ ok
     show IState.totalCost s σ0 (hServe s τ G S D).evs + pot s (hServe s τ G S D).σ ≤
       pot s σ0 + 2 * hopC k s * (∑ Z, bump G.served D Z) +
-      65 * s * (1 + k) * (∑ h, ∑ x, (hServe s τ G S D).byp h x) +
-      65 * s * (hServe s τ G S D).wt
+      (s + 3) * (39 * k + 15) * (∑ h, ∑ x, (hServe s τ G S D).byp h x) +
+      (s + 3) * (hServe s τ G S D).wt
     rw [sum_bump, r3]
     unfold hopC at *
     nlinarith
@@ -187,8 +187,8 @@ theorem hstep_reloc {G : GS k} (hL : LInv s σ0 F0 G) (hH : HInv s σ0 free0 N S
     have h2 := hReloc_cost hL (Z := Z) hb hfree
     show IState.totalCost s σ0 (hReloc s G E Z).evs + pot s (hReloc s G E Z).σ ≤
       pot s σ0 + 2 * hopC k s * (∑ Q, (hReloc s G E Z).served Q) +
-      65 * s * (1 + k) * (∑ h, ∑ x, (hReloc s G E Z).byp h x) +
-      65 * s * (G.wt + (if E.1 = Z.1 ∨ E.2 = Z.2 then 1 + sqDist E Z else 2 + sqDist E Z))
+      (s + 3) * (39 * k + 15) * (∑ h, ∑ x, (hReloc s G E Z).byp h x) +
+      (s + 3) * (G.wt + (if E.1 = Z.1 ∨ E.2 = Z.2 then 54 + 39 * sqDist E Z else 108 + 39 * sqDist E Z))
     rw [r6, r4]
     nlinarith
   · show (∑ Q, (hReloc s G E Z).served Q) + (∑ S', ∑ D', (hReloc s G E Z).sched S' D') = S0

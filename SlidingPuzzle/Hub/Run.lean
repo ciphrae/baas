@@ -30,8 +30,8 @@ open Finset
 /-- Transport budget retaining the actual grid dimensions and logarithm. -/
 def transportBound (n k s : ℕ) : ℕ :=
   4 * k ^ 2 * n ^ 2 + 2 * (55 * s + 13 * k ^ 2 + 65 * k + 78) * n ^ 2 +
-    65 * s * (1 + k) * (k ^ 2 * (Rhub n + k ^ 2)) +
-    65 * s * (s ^ 2 * ((3 * k ^ 2 + 6 * k) / 2) + 2 * k * (k ^ 2 * (2 * n + 1)))
+    (s + 3) * (39 * k + 15) * (k ^ 2 * (Rhub n + k ^ 2)) +
+    (s + 3) * (s ^ 2 * (66 * k ^ 2 + 132 * k + 30) + (78 * k + 30) * (k ^ 2 * (2 * n + 1)))
 
 /-- Region tiles left outside their squares, before absorbing lower-order terms. -/
 def misplacedBound (n k : ℕ) : ℕ :=
@@ -40,24 +40,25 @@ def misplacedBound (n k : ℕ) : ℕ :=
 
 /-- The fractional in-flight budget recovers the older polynomial bound. -/
 theorem transportBound_le_seven_budget {n k s : ℕ} (hn : 1 ≤ n)
-    (hL : 10 ≤ Nat.log 2 n + 1) (hks : k ≤ s) (hs : 2 ≤ s) :
+    (hL : 10 ≤ Nat.log 2 n + 1) (hks : k ≤ s) (hs : 2 ≤ s) (hk : 1 ≤ k) :
     transportBound n k s ≤
       4 * k ^ 2 * n ^ 2 + 2 * (288 * s + 30 * k ^ 2) * n ^ 2 +
         288 * s * (1 + k) * (k ^ 2 * (7 * n * (Nat.log 2 n + 1) + k ^ 2)) +
         576 * s * (s ^ 2 * (4 * k ^ 2 + 4 * k) + 4 * k * (k ^ 2 * (2 * n + 1))) := by
   unfold transportBound
-  have hW : 65 * s * (s ^ 2 * ((3 * k ^ 2 + 6 * k) / 2) + 2 * k * (k ^ 2 * (2 * n + 1))) ≤
+  have hW : (s + 3) * (s ^ 2 * (66 * k ^ 2 + 132 * k + 30) + (78 * k + 30) * (k ^ 2 * (2 * n + 1))) ≤
       576 * s * (s ^ 2 * (4 * k ^ 2 + 4 * k) + 4 * k * (k ^ 2 * (2 * n + 1))) := by
-    have : s ^ 2 * ((3 * k ^ 2 + 6 * k) / 2) + 2 * k * (k ^ 2 * (2 * n + 1)) ≤
-        s ^ 2 * (4 * k ^ 2 + 4 * k) + 4 * k * (k ^ 2 * (2 * n + 1)) := by
-      gcongr <;> omega
-    exact (Nat.mul_le_mul_right _ (Nat.mul_le_mul_right _ (by norm_num))).trans
-      (Nat.mul_le_mul_left _ this)
+    have hA : (s + 3) * (66 * k ^ 2 + 132 * k + 30) ≤ 576 * s * (4 * k ^ 2 + 4 * k) := by
+      nlinarith
+    have hB : (s + 3) * (78 * k + 30) ≤ 576 * s * (4 * k) := by nlinarith
+    have h1 := Nat.mul_le_mul_left (s ^ 2) hA
+    have h2 := Nat.mul_le_mul_right (k ^ 2 * (2 * n + 1)) hB
+    nlinarith only [h1, h2]
   have hR := Nat.mul_le_mul_left (288 * s * (1 + k)) (Nat.mul_le_mul_left (k ^ 2)
     (Nat.add_le_add_right (Rhub_le_seven hn hL) (k ^ 2)))
-  have hR' : 65 * s * (1 + k) * (k ^ 2 * (Rhub n + k ^ 2)) ≤
+  have hR' : (s + 3) * (39 * k + 15) * (k ^ 2 * (Rhub n + k ^ 2)) ≤
       288 * s * (1 + k) * (k ^ 2 * (Rhub n + k ^ 2)) :=
-    Nat.mul_le_mul_right _ (Nat.mul_le_mul_right _ (Nat.mul_le_mul_right _ (by norm_num)))
+    Nat.mul_le_mul_right _ (by nlinarith)
   have hH : 2 * (55 * s + 13 * k ^ 2 + 65 * k + 78) * n ^ 2 ≤
       2 * (288 * s + 30 * k ^ 2) * n ^ 2 := by
     apply Nat.mul_le_mul_right; nlinarith
@@ -79,7 +80,7 @@ theorem transportBound_le {k s : ℕ} (hk : 2 ≤ k) (hks : k ≤ s)
     transportBound (k * s) k s ≤
       4032 * ((k * s) ^ 2 * s) + 3592 * (k ^ 2 * (k * s) ^ 2 * (Nat.log 2 (k * s) + 1)) := by
   refine (transportBound_le_seven_budget (by nlinarith : 1 ≤ k * s)
-    (by omega : 10 ≤ Nat.log 2 (k * s) + 1) hks (by omega)).trans ?_
+    (by omega : 10 ≤ Nat.log 2 (k * s) + 1) hks (by omega) (by omega)).trans ?_
   simpa only [mul_assoc, pow_two] using
     cost_arith k s (Nat.log 2 (k * s) + 1) (4 * k ^ 2 * (k * s) * (k * s))
       ((k * s) ^ 2) (k ^ 2 * (7 * (k * s) * (Nat.log 2 (k * s) + 1) + k ^ 2))
@@ -97,7 +98,7 @@ theorem transportBound_le_large {k s : ℕ} (hk : 1000 ≤ k) (hks : k ≤ s)
     transportBound (k * s) k s ≤
       2883 * ((k * s) ^ 2 * s) + 2148 * (k ^ 2 * (k * s) ^ 2 * (Nat.log 2 (k * s) + 1)) := by
   refine (transportBound_le_seven_budget (by nlinarith : 1 ≤ k * s)
-    (by omega : 10 ≤ Nat.log 2 (k * s) + 1) hks (by omega)).trans ?_
+    (by omega : 10 ≤ Nat.log 2 (k * s) + 1) hks (by omega) (by omega)).trans ?_
   simpa only [mul_assoc, pow_two] using
     cost_arith_large k s (Nat.log 2 (k * s) + 1) (4 * k ^ 2 * (k * s) * (k * s))
       ((k * s) ^ 2) (k ^ 2 * (7 * (k * s) * (Nat.log 2 (k * s) + 1) + k ^ 2))
@@ -303,8 +304,8 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
   refine ⟨Gf.evs, hOf.lin.valid, ?_, ?_⟩
   · -- cost
     have hcost : IState.totalCost s σ0 Gf.evs + pot s Gf.σ ≤ pot s σ0 +
-        2 * hopC k s * (∑ Z, Gf.served Z) + 65 * s * (1 + k) * (∑ h, ∑ x, Gf.byp h x) +
-        65 * s * Gf.wt := hOf.hin.cost
+        2 * hopC k s * (∑ Z, Gf.served Z) + (s + 3) * (39 * k + 15) * (∑ h, ∑ x, Gf.byp h x) +
+        (s + 3) * Gf.wt := hOf.hin.cost
     have hss : (∑ Z, Gf.served Z) + (∑ S, ∑ D, Gf.sched S D) = ∑ S, ∑ D, sched0 S D :=
       hOf.hin.sched_sum
     have hS0 : ∑ S, ∑ D, sched0 S D ≤ (k * s) ^ 2 := by
@@ -325,7 +326,8 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
       refine (sum_le_sum fun h _ => this h).trans ?_
       simp only [sum_const, card_univ, Fintype.card_prod, Fintype.card_fin, smul_eq_mul]
       unfold Rhub; ring_nf; exact le_refl _
-    have hwt : Gf.wt ≤ s ^ 2 * ((3 * k ^ 2 + 6 * k) / 2) + 2 * k * (k ^ 2 * (2 * k * s + 1)) := by
+    have hwt : Gf.wt ≤ s ^ 2 * (66 * k ^ 2 + 132 * k + 30) +
+        (78 * k + 30) * (k ^ 2 * (2 * k * s + 1)) := by
       refine hOf.wt.trans ?_
       have hdc : ∀ r : Round k, (univ.filter fun S => r.isDummy S).card = ∑ S, dummyAt r S := by
         intro r; rw [card_filter]; rfl
@@ -334,19 +336,20 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
       have h1 : ∑ S : Sq k, ∑ τ ∈ range (Δ0 - Q'), dummyAt (rd τ) S ≤
           ∑ _S : Sq k, (sqCorridor k s + 1) := sum_le_sum fun S _ => hdum_plan S
       simp only [sum_const, card_univ, Fintype.card_prod, Fintype.card_fin, smul_eq_mul] at h1
-      have h2 : (Δ0 - Q') * ((3 * k ^ 2 + 6 * k) / 2) ≤ s ^ 2 * ((3 * k ^ 2 + 6 * k) / 2) :=
+      have h2 : (Δ0 - Q') * (66 * k ^ 2 + 132 * k + 30) ≤ s ^ 2 * (66 * k ^ 2 + 132 * k + 30) :=
         Nat.mul_le_mul_right _ (by omega)
-      have h3 : 2 * k * (k * k * (sqCorridor k s + 1)) ≤ 2 * k * (k ^ 2 * (2 * k * s + 1)) := by
+      have h3 : (78 * k + 30) * (k * k * (sqCorridor k s + 1)) ≤
+          (78 * k + 30) * (k ^ 2 * (2 * k * s + 1)) := by
         refine Nat.mul_le_mul_left _ ?_
         rw [sq]; exact Nat.mul_le_mul_left _ (by omega)
-      have h4 : 2 * k * ∑ S : Sq k, ∑ τ ∈ range (Δ0 - Q'), dummyAt (rd τ) S ≤
-          2 * k * (k * k * (sqCorridor k s + 1)) := Nat.mul_le_mul_left _ h1
+      have h4 : (78 * k + 30) * ∑ S : Sq k, ∑ τ ∈ range (Δ0 - Q'), dummyAt (rd τ) S ≤
+          (78 * k + 30) * (k * k * (sqCorridor k s + 1)) := Nat.mul_le_mul_left _ h1
       nlinarith
     have hpot : pot s σ0 ≤ 4 * k ^ 2 * (k * s) * (k * s) :=
       (pot_le s σ0).trans (Nat.mul_le_mul_right _ (junkCnt_le s σ0))
     have ht1 := Nat.mul_le_mul_left (2 * (55 * s + 13 * k ^ 2 + 65 * k + 78)) hserved
-    have ht2 := Nat.mul_le_mul_left (65 * s * (1 + k)) hbyp
-    have ht3 := Nat.mul_le_mul_left (65 * s) hwt
+    have ht2 := Nat.mul_le_mul_left ((s + 3) * (39 * k + 15)) hbyp
+    have ht3 := Nat.mul_le_mul_left (s + 3) hwt
     unfold transportBound hopC at *
     nlinarith only [hcost, hpot, ht1, ht2, ht3, Nat.zero_le (pot s Gf.σ)]
 

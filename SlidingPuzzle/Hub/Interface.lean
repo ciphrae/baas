@@ -86,7 +86,7 @@ def junkCol (σ : IState k) (V : ColH k) (p : ℕ) : ℕ :=
 def cost (s : ℕ) (σ : IState k) : REvent k → ℕ
   | .hop1 S h _ => 55 * s + 26 * (k + 1) + σ.junkRow (hop1Half S h) (hop1Pos s S h)
   | .hop2 h D _ => 54 * s + 13 * k ^ 2 + 65 * k + 78 + σ.junkCol (hop2Half h D) (hop2Pos s h D)
-  | .jump E Z _ => 65 * s * (1 + sqDist E Z)
+  | .jump E Z _ => (s + 3) * (54 + 39 * sqDist E Z)
 
 /-- The state after a list of operations. -/
 def run (s : ℕ) : IState k → List (REvent k) → IState k

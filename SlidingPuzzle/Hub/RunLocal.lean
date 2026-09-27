@@ -330,7 +330,7 @@ theorem gJump_linv {G : GS k} (hL : LInv s σ0 F0 G) {E Z y : Sq k}
 
 theorem gJump_cost {G : GS k} (hL : LInv s σ0 F0 G) {E Z y : Sq k} :
     IState.totalCost s σ0 (gJump s G E Z y).evs + pot s (gJump s G E Z y).σ =
-      IState.totalCost s σ0 G.evs + pot s G.σ + 65 * s * (1 + sqDist E Z) := by
+      IState.totalCost s σ0 G.evs + pot s G.σ + (s + 3) * (54 + 39 * sqDist E Z) := by
   show IState.totalCost s σ0 (G.evs ++ [.jump E Z y]) + pot s G.σ = _
   rw [cost_append hL]
   simp only [IState.cost]

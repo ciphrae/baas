@@ -21,7 +21,7 @@ def dummyAt (r : Round k) (Z : Sq k) : ℕ := if r.isDummy Z then 1 else 0
 
 /-- Budget of relocation weight of a round. -/
 def roundW (r : Round k) : ℕ :=
-  (3 * k ^ 2 + 6 * k) / 2 + 2 * k * (Finset.univ.filter fun S => r.isDummy S).card
+  66 * k ^ 2 + 132 * k + 30 + (78 * k + 30) * (Finset.univ.filter fun S => r.isDummy S).card
 
 /-- The events of a round. -/
 noncomputable def roundEvs (r : Round k) (cur : Sq k) : List (HEvent k) :=
@@ -35,13 +35,8 @@ theorem roundEvs_count (r : Round k) (cur S D : Sq k) :
   (Classical.choose_spec (exists_round_events r cur)).2.1 S D
 
 theorem roundEvs_weight (r : Round k) (cur : Sq k) :
-    ((roundEvs r cur).map relocWeight).sum ≤ roundW r := by
-  have := (Classical.choose_spec (exists_round_events r cur)).2.2
-  unfold roundW
-  change 2 * ((roundEvs r cur).map relocWeight).sum ≤ _ at this
-  have e : 4 * k * (Finset.univ.filter fun S => r.isDummy S).card =
-      2 * (2 * k * (Finset.univ.filter fun S => r.isDummy S).card) := by ring
-  omega
+    ((roundEvs r cur).map relocWeight).sum ≤ roundW r :=
+  (Classical.choose_spec (exists_round_events r cur)).2.2
 
 /-- Process a list of events of round `τ`. -/
 noncomputable def runEvs (s τ : ℕ) (G : GS k) (es : List (HEvent k)) : GS k :=

@@ -109,4 +109,96 @@ theorem jump_ends (hd : HDims n k s) {E Z : Sq k} (hal : E.1 = Z.1 ∨ E.2 = Z.2
     unfold Nat.dist at hdm ⊢
     omega
 
+/-- Endpoints of a three-jump transfer from `E` to `Z`: `e0` in `E`'s reservoir,
+two cells `z ≠ z'` of `Z`'s reservoir off the row `k + 2`, and the jumps
+`e0 → z`, `z → e0` and `e0 → z'`. -/
+theorem jump_ends2 (hd : HDims n k s) {E Z : Sq k} (hal : E.1 = Z.1 ∨ E.2 = Z.2) :
+    ∃ e0 z z' : Cell n, reservoir k s E e0 ∧ reservoir k s Z z ∧ reservoir k s Z z' ∧
+      z ≠ z' ∧ z.1.val ≠ Z.1.val * s + (k + 2) ∧ z'.1.val ≠ Z.1.val * s + (k + 2) ∧
+      (∀ B' : Board n, blank B' = e0 →
+        ∃ p : Path B' (swapCells B' (blank B') z), p.inefficientMoves ≤ 13 * (sqDist E Z * s + 2)) ∧
+      (∀ B' : Board n, blank B' = z →
+        ∃ p : Path B' (swapCells B' (blank B') e0), p.inefficientMoves ≤ 13 * (sqDist E Z * s + 2)) ∧
+      (∀ B' : Board n, blank B' = e0 →
+        ∃ p : Path B' (swapCells B' (blank B') z'), p.inefficientMoves ≤ 13 * (sqDist E Z * s + 6)) := by
+  have hks := hd.k_lt_s
+  have hroom := hd.room
+  have hE1 := hd.band_le E.1.isLt
+  have hE2 := hd.band_le E.2.isLt
+  have hZ1 := hd.band_le Z.1.isLt
+  have hZ2 := hd.band_le Z.2.isLt
+  let e0 : Cell n := mkCell n (E.1.val * s + k) (E.2.val * s + k)
+  have e0f : e0.1.val = E.1.val * s + k := mkCell_fst (by omega)
+  have e0s : e0.2.val = E.2.val * s + k := mkCell_snd (by omega)
+  have he0 : reservoir k s E e0 := (reservoir_iff hd).mpr (by omega)
+  rcases hal with h | h
+  · have hs1 : E.1.val * s = Z.1.val * s := by rw [h]
+    have hd0 : sqDist E Z = Nat.dist E.2.val Z.2.val := by
+      unfold sqDist; rw [h, Nat.dist_self, zero_add]
+    have hdm := Nat.dist_mul_right E.2.val s Z.2.val
+    obtain ⟨jp, hjp1, hjp2⟩ : ∃ jp, jp ≤ 1 ∧ (E.2.val * s + Z.2.val * s + jp) % 2 = 1 :=
+      ⟨if (E.2.val * s + Z.2.val * s) % 2 = 1 then 0 else 1, by split_ifs <;> omega,
+        by split_ifs <;> omega⟩
+    let z : Cell n := mkCell n (Z.1.val * s + k) (Z.2.val * s + k + jp)
+    have zf : z.1.val = Z.1.val * s + k := mkCell_fst (by omega)
+    have zs : z.2.val = Z.2.val * s + k + jp := mkCell_snd (by omega)
+    let z' : Cell n := mkCell n (Z.1.val * s + k) (Z.2.val * s + k + jp + 2)
+    have z'f : z'.1.val = Z.1.val * s + k := mkCell_fst (by omega)
+    have z's : z'.2.val = Z.2.val * s + k + jp + 2 := mkCell_snd (by omega)
+    refine ⟨e0, z, z', he0, (reservoir_iff hd).mpr (by omega), (reservoir_iff hd).mpr (by omega),
+      fun e => by have := congrArg (fun c : Cell n => c.2.val) e; change z.2.val = z'.2.val at this; omega,
+      by omega, by omega, fun B' hB' => ?_, fun B' hB' => ?_, fun B' hB' => ?_⟩
+    · obtain ⟨p, hp⟩ := exists_hjump_step hd.two_le_n B' z
+        (by rw [hB', e0f, zf]; simp [Nat.dist]; omega) (by rw [hB', e0f, e0s, zf, zs]; omega)
+      refine ⟨p, hp.trans ?_⟩
+      rw [hB', e0s, zs, hd0]
+      unfold Nat.dist at hdm ⊢
+      omega
+    · obtain ⟨p, hp⟩ := exists_hjump_step hd.two_le_n B' e0
+        (by rw [hB', e0f, zf]; simp [Nat.dist]; omega) (by rw [hB', e0f, e0s, zf, zs]; omega)
+      refine ⟨p, hp.trans ?_⟩
+      rw [hB', e0s, zs, hd0]
+      unfold Nat.dist at hdm ⊢
+      omega
+    · obtain ⟨p, hp⟩ := exists_hjump_step hd.two_le_n B' z'
+        (by rw [hB', e0f, z'f]; simp [Nat.dist]; omega) (by rw [hB', e0f, e0s, z'f, z's]; omega)
+      refine ⟨p, hp.trans ?_⟩
+      rw [hB', e0s, z's, hd0]
+      unfold Nat.dist at hdm ⊢
+      omega
+  · have hs2 : E.2.val * s = Z.2.val * s := by rw [h]
+    have hd0 : sqDist E Z = Nat.dist E.1.val Z.1.val := by
+      unfold sqDist; rw [h, Nat.dist_self, add_zero]
+    have hdm := Nat.dist_mul_right E.1.val s Z.1.val
+    obtain ⟨jp, hjp1, hjp2⟩ : ∃ jp, jp ≤ 1 ∧ (E.1.val * s + Z.1.val * s + jp) % 2 = 1 :=
+      ⟨if (E.1.val * s + Z.1.val * s) % 2 = 1 then 0 else 1, by split_ifs <;> omega,
+        by split_ifs <;> omega⟩
+    let z : Cell n := mkCell n (Z.1.val * s + k + jp) (Z.2.val * s + k)
+    have zf : z.1.val = Z.1.val * s + k + jp := mkCell_fst (by omega)
+    have zs : z.2.val = Z.2.val * s + k := mkCell_snd (by omega)
+    let z' : Cell n := mkCell n (Z.1.val * s + k + jp + 4) (Z.2.val * s + k)
+    have z'f : z'.1.val = Z.1.val * s + k + jp + 4 := mkCell_fst (by omega)
+    have z's : z'.2.val = Z.2.val * s + k := mkCell_snd (by omega)
+    refine ⟨e0, z, z', he0, (reservoir_iff hd).mpr (by omega), (reservoir_iff hd).mpr (by omega),
+      fun e => by have := congrArg (fun c : Cell n => c.1.val) e; change z.1.val = z'.1.val at this; omega,
+      by omega, by omega, fun B' hB' => ?_, fun B' hB' => ?_, fun B' hB' => ?_⟩
+    · obtain ⟨p, hp⟩ := exists_vjump_step hd.two_le_n B' z
+        (by rw [hB', e0s, zs]; simp [Nat.dist]; omega) (by rw [hB', e0f, e0s, zf, zs]; omega)
+      refine ⟨p, hp.trans ?_⟩
+      rw [hB', e0f, zf, hd0]
+      unfold Nat.dist at hdm ⊢
+      omega
+    · obtain ⟨p, hp⟩ := exists_vjump_step hd.two_le_n B' e0
+        (by rw [hB', e0s, zs]; simp [Nat.dist]; omega) (by rw [hB', e0f, e0s, zf, zs]; omega)
+      refine ⟨p, hp.trans ?_⟩
+      rw [hB', e0f, zf, hd0]
+      unfold Nat.dist at hdm ⊢
+      omega
+    · obtain ⟨p, hp⟩ := exists_vjump_step hd.two_le_n B' z'
+        (by rw [hB', e0s, z's]; simp [Nat.dist]; omega) (by rw [hB', e0f, e0s, z'f, z's]; omega)
+      refine ⟨p, hp.trans ?_⟩
+      rw [hB', e0f, z'f, hd0]
+      unfold Nat.dist at hdm ⊢
+      omega
+
 end SlidingPuzzle.Hub
