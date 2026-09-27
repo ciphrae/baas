@@ -30,10 +30,6 @@ theorem card_winB_le (τ0 w : ℕ) : (winB Δ τ0 w).card ≤ w + 1 := by
   rw [winB, card_fin_filter_mem]
   exact (card_filter_le _ _).trans (by rw [Nat.card_Icc]; omega)
 
-theorem insPos_add_one_ge (H : RowH k) (d : ℕ) : s - k ≤ insPos k s H d + 1 := by
-  have : s ≤ (d + 1) * s := Nat.le_mul_of_pos_left s (by omega)
-  unfold insPos; split <;> omega
-
 /-- Orders violating (A) at `(H, d, τ0)`. -/
 noncomputable def badA (H : RowH k) (d : ℕ) (τ0 : Fin Δ) : Finset (Equiv.Perm (Fin Δ)) :=
   univ.filter fun σ => τ0.val + win s rs H d < Δ ∧

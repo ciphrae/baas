@@ -44,13 +44,6 @@ theorem Rhub_upper (n : ℕ) : 10000 * Rhub n ≤ 21756 * n + 10000 := by
   unfold Rhub
   omega
 
-/-- Compatibility estimate for the generic run budgets. -/
-theorem Rhub_le_seven {n : ℕ} (hn : 1 ≤ n) (hL : 10 ≤ Nat.log 2 n + 1) :
-    Rhub n ≤ 7 * n * (Nat.log 2 n + 1) := by
-  have h := Rhub_upper n
-  have hlog := Nat.mul_le_mul_left n hL
-  nlinarith only [h, hlog, hn]
-
 /-- The capacity condition already forces large squares and a logarithm of
 at least ten; retain these facts in the later cost estimates. -/
 theorem capacity_lower_bounds {n k s : ℕ} (hd : HDims n k s)

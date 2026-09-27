@@ -6,9 +6,8 @@ We run the ghost rows with *indices* instead of tags: the insertion number `m`
 writes `some m`. A tile present at position `q` of a half, inserted by insertion
 `i`, satisfies `q + pushes i m ≤ insPos (e i).d`, where `pushes i m` counts the
 later insertions into the same half from a distance `≥ (e i).d` (these insert at
-positions `≥` the tile's, so each moves it one step toward the head). Since
-indices are distinct, present tiles inject into insertions with few pushes
-(`card_present_le`). `ghostRun_take` relates the indexed run to `ghostRun`. -/
+positions `≥` the tile's, so each moves it one step toward the head). Indices
+are distinct (`IInv.inj`). `ghostRun_take` relates the indexed run to `ghostRun`. -/
 namespace SlidingPuzzle.Hub
 
 open Finset
@@ -114,28 +113,6 @@ theorem iinv_succ (e : ℕ → InsRec k) (m : ℕ) (hI : IInv s e m) : IInv s e 
 theorem iinv (e : ℕ → InsRec k) : ∀ m, IInv s e m
   | 0 => iinv_zero s e
   | m + 1 => iinv_succ s e m (iinv e m)
-
-/-- Present tiles inject into their insertions, which had few pushes since. -/
-theorem card_present_le {β : Type*} [DecidableEq β] (e : ℕ → InsRec k) (m : ℕ) (H : RowH k)
-    (len : ℕ) (f : ℕ → β) (b : β) :
-    ((range len).filter fun q => (irun s e m H q).map f = some b).card ≤
-      ((range m).filter fun i =>
-        (e i).H = H ∧ f i = b ∧ pushes e i m ≤ insPos k s H (e i).d).card := by
-  have hI := iinv s e m
-  refine card_le_card_of_injOn (fun q => (irun s e m H q).getD 0) ?_ ?_
-  · intro q hq
-    simp only [coe_filter, Set.mem_ofPred_eq] at hq
-    obtain ⟨i, hi, hfi⟩ := Option.map_eq_some_iff.mp hq.2
-    obtain ⟨him, hH, hb⟩ := hI.val _ _ _ hi
-    simp only [coe_filter, Set.mem_ofPred_eq, mem_range, hi, Option.getD_some]
-    exact ⟨him, hH, hfi, by omega⟩
-  · intro q hq q' hq' heq
-    simp only [coe_filter, Set.mem_ofPred_eq] at hq hq'
-    obtain ⟨i, hi, -⟩ := Option.map_eq_some_iff.mp hq.2
-    obtain ⟨i', hi', -⟩ := Option.map_eq_some_iff.mp hq'.2
-    simp only [hi, hi', Option.getD_some] at heq
-    subst heq
-    exact hI.inj _ _ _ _ hi hi'
 
 /-- `ghostRun` on a prefix is the indexed run with the tags read off. -/
 theorem ghostRun_take (L : List (InsRec k)) (r0 : InsRec k) :
