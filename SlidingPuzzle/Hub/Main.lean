@@ -21,20 +21,24 @@ namespace SlidingPuzzle.Hub
 `Hub/AsympError.lean`; the natural-number bound of the algorithm is
 `optimalLength_le_hub` (`Hub/AsympBound.lean`). -/
 
-/-- Round up `2·1.139524·((599/299) hubScaledKX/1000 + hubScaledKY/4000 + 1/1000)`, keeping
-the three error coefficients separate. -/
-def hubConstant : ℕ := 17682
+/-- Round up `2·1.139524·((hubXNum/hubXDen) hubScaledKX/1000 +
+(hubYNum/hubYDen) hubScaledKY/1000 + 1/1000)`, keeping the three error
+coefficients separate. -/
+def hubConstant : ℕ := 16656
 
-theorem hubConstant_eq : hubConstant = 17682 := by
+theorem hubConstant_eq : hubConstant = 16656 := by
   rfl
 
 /-- Integer inequalities certify the ceiling without evaluating a large division. -/
 theorem hubConstant_rounding :
-    1139524 * (2396 * hubScaledKX + 299 * hubScaledKY + 1196) ≤ 598000000000 * hubConstant ∧
-      598000000000 * (hubConstant - 1) < 1139524 * (2396 * hubScaledKX + 299 * hubScaledKY + 1196) := by
-  norm_num [hubConstant, hubScaledKX, hubScaledKY]
+    2 * 1139524 * (hubXNum * hubYDen * hubScaledKX + hubYNum * hubXDen * hubScaledKY +
+        hubXDen * hubYDen) ≤ 1000000000 * hubXDen * hubYDen * hubConstant ∧
+      1000000000 * hubXDen * hubYDen * (hubConstant - 1) <
+        2 * 1139524 * (hubXNum * hubYDen * hubScaledKX + hubYNum * hubXDen * hubScaledKY +
+          hubXDen * hubYDen) := by
+  norm_num [hubConstant, hubScaledKX, hubScaledKY, hubXNum, hubXDen, hubYNum, hubYDen]
 
-/-- The optimized bound holds with `C = 17682` for every `n ≥ 4096`. -/
+/-- The optimized bound holds with `C = 16656` for every `n ≥ 4096`. -/
 theorem uniform_approximation_explicit {n : ℕ} [NeZero n]
     (hn : hubN ≤ n) (B : ReachableBoard n) :
     (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) + hubConstant * hubError n := by
@@ -62,7 +66,8 @@ theorem uniform_approximation_explicit {n : ℕ} [NeZero n]
     (show (0 : ℝ) ≤ hubScaledKX by positivity)
   have hy := mul_le_mul_of_nonneg_left hYR
     (show (0 : ℝ) ≤ hubScaledKY by positivity)
-  norm_num [hubConstant, hubScaledKX, hubScaledKY, hubD] at *
+  have hE := hubError_nonneg n
+  norm_num [hubConstant, hubScaledKX, hubScaledKY, hubXNum, hubXDen, hubYNum, hubYDen] at *
   linarith
 
 /-- The boardwise bound `OPT(B) ≤ M(B) + C n^(8/3) (log n)^(1/3)`. -/

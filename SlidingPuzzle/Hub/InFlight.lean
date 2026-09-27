@@ -25,18 +25,18 @@ namespace SlidingPuzzle.Hub
 open Finset
 
 /-- Integer upper rounding of the fractional in-flight estimate. -/
-def Rhub (n : ℕ) : ℕ := (182 * n * (Nat.log 2 n + 1) + 145 * n) / 45 + 1
+def Rhub (n : ℕ) : ℕ := (35043 * n * (Nat.log 2 n + 1) + 32205 * n) / 10000 + 1
 
 theorem Rhub_lower (n : ℕ) :
-    182 * n * (Nat.log 2 n + 1) + 145 * n ≤ 45 * Rhub n := by
-  have := Nat.mod_add_div (182 * n * (Nat.log 2 n + 1) + 145 * n) 45
-  have := Nat.mod_lt (182 * n * (Nat.log 2 n + 1) + 145 * n) (by norm_num : 0 < 45)
+    35043 * n * (Nat.log 2 n + 1) + 32205 * n ≤ 10000 * Rhub n := by
+  have := Nat.mod_add_div (35043 * n * (Nat.log 2 n + 1) + 32205 * n) 10000
+  have := Nat.mod_lt (182 * n * (Nat.log 2 n + 1) + 145 * n) (by norm_num : 0 < 10000)
   unfold Rhub
   omega
 
 theorem Rhub_upper (n : ℕ) :
-    45 * Rhub n ≤ 182 * n * (Nat.log 2 n + 1) + 145 * n + 45 := by
-  have := Nat.mod_add_div (182 * n * (Nat.log 2 n + 1) + 145 * n) 45
+    10000 * Rhub n ≤ 35043 * n * (Nat.log 2 n + 1) + 32205 * n + 10000 := by
+  have := Nat.mod_add_div (35043 * n * (Nat.log 2 n + 1) + 32205 * n) 10000
   unfold Rhub
   omega
 
@@ -130,9 +130,55 @@ theorem log_kΔ_le {n k s Δ : ℕ} (hd : HDims n k s) (hΔ : Δ ≤ s ^ 2 + 1) 
       _ = 2 * Real.log n := by rw [Real.log_pow]; push_cast; ring
       _ ≤ _ := by linarith
 
+/-- With `s ≤ k³`, `log (k Δ) ≤ (7/4) log n + 1/s²`. -/
+theorem log_kΔ_le_sharp {n k s Δ : ℕ} (hd : HDims n k s) (hΔ : Δ ≤ s ^ 2 + 1)
+    (hsk : s ≤ k ^ 3) :
+    Real.log ((k : ℝ) * Δ) ≤ (7 / 4 : ℝ) * Real.log n + 1 / (s : ℝ) ^ 2 := by
+  have hk : 2 ≤ k := hd.two_le
+  have hs : 1 ≤ s := by have := hd.room; omega
+  have hn : n = k * s := hd.mul.symm
+  have hkR : (0 : ℝ) < k := by exact_mod_cast (show 0 < k by omega)
+  have hsR : (0 : ℝ) < s := by exact_mod_cast (show 0 < s by omega)
+  have hnR : (1 : ℝ) ≤ n := by
+    have : 1 ≤ n := by rw [hn]; nlinarith
+    exact_mod_cast this
+  have hlogn : 0 ≤ Real.log n := Real.log_nonneg hnR
+  have hpow : (k * s ^ 2) ^ 4 ≤ n ^ 7 := by
+    rw [hn]
+    have h := Nat.mul_le_mul_left (k ^ 4 * s ^ 7) hsk
+    calc (k * s ^ 2) ^ 4 = k ^ 4 * s ^ 7 * s := by ring
+      _ ≤ k ^ 4 * s ^ 7 * k ^ 3 := h
+      _ = (k * s) ^ 7 := by ring
+  have hks2 : Real.log ((k : ℝ) * s ^ 2) ≤ (7 / 4 : ℝ) * Real.log n := by
+    have hR : ((k : ℝ) * s ^ 2) ^ 4 ≤ (n : ℝ) ^ 7 := by exact_mod_cast hpow
+    have h1 := Real.log_le_log (by positivity) hR
+    rw [Real.log_pow, Real.log_pow] at h1
+    push_cast at h1
+    linarith
+  rcases Nat.eq_zero_or_pos Δ with h0 | hpos
+  · subst h0
+    simp only [Nat.cast_zero, mul_zero, Real.log_zero]
+    positivity
+  have hΔR : ((k : ℝ) * Δ) ≤ (k : ℝ) * s ^ 2 * (1 + 1 / (s : ℝ) ^ 2) := by
+    have : (Δ : ℝ) ≤ (s : ℝ) ^ 2 + 1 := by exact_mod_cast hΔ
+    have e : (k : ℝ) * s ^ 2 * (1 + 1 / (s : ℝ) ^ 2) = k * ((s : ℝ) ^ 2 + 1) := by
+      field_simp
+    rw [e]
+    exact mul_le_mul_of_nonneg_left this hkR.le
+  have hpos' : (0 : ℝ) < (k : ℝ) * Δ := by
+    have : (0 : ℝ) < Δ := by exact_mod_cast hpos
+    positivity
+  calc Real.log ((k : ℝ) * Δ) ≤ Real.log ((k : ℝ) * s ^ 2 * (1 + 1 / (s : ℝ) ^ 2)) :=
+        Real.log_le_log hpos' hΔR
+    _ = Real.log ((k : ℝ) * s ^ 2) + Real.log (1 + 1 / (s : ℝ) ^ 2) :=
+        Real.log_mul (by positivity) (by positivity)
+    _ ≤ (7 / 4 : ℝ) * Real.log n + 1 / (s : ℝ) ^ 2 := by
+        have := Real.log_le_sub_one_of_pos (show (0 : ℝ) < 1 + 1 / (s : ℝ) ^ 2 by positivity)
+        linarith
+
 /-- Some order of the rounds keeps every hub's in-flight maxima small. -/
 theorem exists_good_order {n k s : ℕ} (hd : HDims n k s)
-    (hP1 : 25 * k * (Nat.log 2 n + 1) ≤ s) {Δ : ℕ} (hΔ : Δ ≤ s ^ 2 + 1)
+    (hP1 : 25 * k * (Nat.log 2 n + 1) ≤ s) (hsk : s ≤ k ^ 3) {Δ : ℕ} (hΔ : Δ ≤ s ^ 2 + 1)
     (rs : Fin Δ → Round k) :
     ∃ σ : Equiv.Perm (Fin Δ), ∀ L : List (InsRec k), Consistent rs σ L →
       ∃ N : Sq k → Sq k → ℕ, (∀ h, ∑ x, N h x ≤ Rhub n) ∧
@@ -166,7 +212,21 @@ theorem exists_good_order {n k s : ℕ} (hd : HDims n k s)
         rw [hn, ← add_mul]
         exact Nat.mul_le_mul_right _ (by omega)
       exact_mod_cast this
-    have hlog := log_kΔ_le hd hΔ
+    have hlog := log_kΔ_le_sharp hd hΔ hsk
+    have hlogn : Real.log n ≤ (6931471808 / 10000000000 : ℝ) * ℓ := by
+      have hnpos : 0 < n := by rw [hn]; positivity
+      have h := Nat.lt_pow_succ_log_self (by norm_num : 1 < 2) n
+      have h' : (n : ℝ) ≤ 2 ^ ℓ := by rw [hℓ]; exact_mod_cast h.le
+      calc Real.log n ≤ Real.log (2 ^ ℓ) := Real.log_le_log (by exact_mod_cast hnpos) h'
+        _ = ℓ * Real.log 2 := by rw [Real.log_pow]
+        _ ≤ _ := by
+          have := Real.log_two_lt_d9
+          have : (0 : ℝ) ≤ ℓ := Nat.cast_nonneg _
+          nlinarith
+    have hs500R : (500 : ℝ) ≤ s := by exact_mod_cast (capacity_lower_bounds hd hP1).2.1
+    have hsinv : 1 / (s : ℝ) ^ 2 ≤ 1 / 250000 := by
+      rw [div_le_div_iff₀ (by positivity) (by norm_num)]
+      nlinarith
     have hkk : (k : ℝ) * k ≤ n := by
       have : k * k ≤ n := by
         rw [hn]; apply Nat.mul_le_mul_left
@@ -192,21 +252,21 @@ theorem exists_good_order {n k s : ℕ} (hd : HDims n k s)
     have hlamR : (lamN n : ℝ) = 4 * ℓ := by simp only [lamN, hℓ]; push_cast; ring
     have hnR : (0 : ℝ) ≤ n := Nat.cast_nonneg _
     have hℓdef : ((Nat.log 2 n : ℕ) : ℝ) + 1 = ℓ := by rw [hℓ]; push_cast; ring
-    rw [hℓdef] at hlog
     have hfin : ∑ x, ∑ side : Bool, ∑ d ∈ range k, (Nb s rs n (h.1, h.2, side) d x : ℝ) ≤
         (Rhub n : ℝ) := by
       refine hsum.trans ?_
       rw [Fintype.sum_bool, hlamR]
-      have hR : 182 * (n : ℝ) * ℓ + 145 * n ≤ 45 * (Rhub n : ℝ) := by
+      have hR : 35043 * (n : ℝ) * ℓ + 32205 * n ≤ 10000 * (Rhub n : ℝ) := by
         have h := Rhub_lower n
         rw [← hℓdef]
         exact_mod_cast h
       have hl0 : (0 : ℝ) ≤ rowLen k s (h.1, h.2, true) := Nat.cast_nonneg _
       have hl1 : (0 : ℝ) ≤ rowLen k s (h.1, h.2, false) := Nat.cast_nonneg _
-      have hlg : 1 + Real.log (k * Δ) ≤ 1 + (7 / 5 : ℝ) * ℓ := by linarith
+      have hlg : 1 + Real.log (k * Δ) ≤
+          250001 / 250000 + (7 / 4 * (6931471808 / 10000000000) : ℝ) * ℓ := by linarith
       have hA : (26 / 9 * (rowLen k s (h.1, h.2, true) : ℝ)) * (1 + Real.log (k * Δ)) +
           26 / 9 * (rowLen k s (h.1, h.2, false) : ℝ) * (1 + Real.log (k * Δ)) ≤
-            26 / 9 * n * (1 + (7 / 5 : ℝ) * ℓ) := by
+            26 / 9 * n * (250001 / 250000 + (7 / 4 * (6931471808 / 10000000000) : ℝ) * ℓ) := by
         have hlpos : 0 ≤ 1 + Real.log (k * Δ) := by
           rcases Nat.eq_zero_or_pos (k * Δ) with h0 | hpos
           · have : (k : ℝ) * Δ = 0 := by exact_mod_cast h0
