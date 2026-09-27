@@ -1,14 +1,18 @@
 # Potential breakthroughs beyond the current bound
 
-These are research proposals, not certified improvements. The current Lean
-theorem has coefficient **776** and error scale
-`n^(8/3) (ln n)^(1/3)`. The most promising proposal below changes the
-in-flight analysis while retaining the present algorithm.
+These are research proposals. The first one is now **proved in Lean**: the
+theorem has error scale `n^(8/3)` without the logarithm, with coefficient
+`1133` (`Hub.uniform_approximation_explicit`); see `Hub/InFlightSegment.lean`,
+`Hub/InFlightSum.lean` and `LEAN_PLAN.md`. The text of §1 is kept as written
+before the proof. The remaining proposals are open.
 
-## 1. Follow a tile through successive distance bands: remove the logarithm?
+## 1. Follow a tile through successive distance bands: remove the logarithm (done)
 
-**Priority: first. Confidence: promising proof route, with a specific missing
-deterministic lemma.**
+**Status: proved.** The deterministic lemma is `seg_bound` and
+`last_le_of_segments`; the telescoping sum is `sum_mul_sum_inv_le`. The
+formal version counts `s` pushes per band, uses windows `w_j ≈ (4/3)sΔ/B_j`
+and the capacity condition `48kL ≤ s`, and handles moderate `n`, where
+capacity limits `k`, in the explicit constant.
 
 ### Where the present estimate loses information
 
@@ -140,7 +144,7 @@ core, then prove the thin appendage cases while restoring crossed corridors.
 
 This could lower the hop and relocation coefficients substantially. It
 would not automatically lower the global cleanup three-cycle cost. Also,
-the cubic fallback is already close to 776 at the current switch point;
+the cubic fallback is already close to the uniform constant at the switch point;
 a smaller uniform constant needs a lower hub threshold or better fallback.
 
 ## 3. Batch reservoir preparation instead of selecting each tile from scratch

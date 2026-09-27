@@ -9,12 +9,20 @@ transport plan and its execution (sections 3-5), the in-flight bound (section 6)
 Cleanup phase (section 7). The division into squares, the local Finish and the statistical
 reduction follow the paper.
 
-The formalization now certifies the explicit boardwise bound
-`OPT(B) ≤ M(B) + 776·n^(8/3)(ln n)^(1/3)` for `n ≥ 4096`.
-The argument below retains its original asymptotic parameters; the current
-numerical budgets and their derivation are in
-[LEAN_PLAN.md](LEAN_PLAN.md#asymptotics) and
-[PROOF_NOTES.md](../../PROOF_NOTES.md).
+The formalization now certifies the stronger boardwise bound
+`OPT(B) ≤ M(B) + 1133·n^(8/3)` for `n ≥ 4096`, without the logarithm. The only
+change to the argument below is in Lemma 4: instead of giving a tile its whole
+lifetime at the rate of its insertion distance `d`, follow it through the bands
+`d, d-1, ..., 0` of its half. It leaves band `j` after `s` insertions from
+distances `≥ j`, which take about `sΔ/B_j` rounds, where `B_j` counts the
+insertions from distances `≥ j`. Weighted by the insertion rates `G_d`, these
+residence times telescope, `Σ_d G_d Σ_{j≤d} 1/B_j = #{j : B_j > 0} ≤ k`, so a
+hub holds `O(n)` tiles in flight instead of `O(n log n)`. Then R = O(n), the
+bypass and cleanup costs are `O(k²n²)`, and `k ≍ n^(1/3)` gives `O(n^(8/3))`
+once the capacity condition (P1) holds, which it does for large `n`.
+The argument below retains its original parameters; the current numerical
+budgets and their derivation are in [LEAN_PLAN.md](LEAN_PLAN.md#asymptotics)
+and [PROOF_NOTES.md](../../PROOF_NOTES.md).
 
 **Theorem.** Every reachable n x n board has a solution with
 O(n^(8/3) (log n)^(1/3)) inefficient moves.

@@ -1,23 +1,19 @@
 # Further constant reductions
 
-The certified boardwise coefficient is **776** for `n ≥ 4096`
-(`Hub.uniform_approximation_explicit`). The large-board proof has the bound
+The certified boardwise bound is **`OPT(B) ≤ M(B) + 1133·n^(8/3)`** for
+`n ≥ 4096` (`Hub.uniform_approximation_explicit`); the logarithm of earlier
+versions is gone. In the older scale `n^(8/3)(ln n)^(1/3)` the coefficient is
+`450` (`Hub.uniform_approximation_log_explicit`).
 
-```text
-1.144253 · (2 · 1.22660 · 182.186 + 2 · 0.688613 · 167.7 + 2/250)
-  ≈ 775.70 < 776,
-```
+The uniform coefficient is set near `n = 11·2^20`, where the hub algorithm
+takes over from the cubic solver (about `1129.8` there). Just above the
+threshold the capacity condition `48kL ≤ s` limits `k`; asymptotically the
+grid gives about `1118`.
 
-and the cubic solver covers `4096 ≤ n ≤ 2^26 + 2^13` within the same
-coefficient (it reaches about `775.03` at the top of that range).
-The exponent and the lower threshold `4096` are unchanged.
+## Implemented so far
 
-For more speculative structural changes, see
-[BREAKTHROUGH_IDEAS.md](research/exponent/BREAKTHROUGH_IDEAS.md). The leading
-proposal tracks tiles through successive distance bands; its rate sum
-telescopes and may remove the logarithmic factor from the current algorithm.
-
-## Implemented in the latest pass (19,319 → 776)
+The table records the coefficient of `n^(8/3)(ln n)^(1/3)` through the
+optimization passes, then the switch to the error scale `n^(8/3)`.
 
 | Step | Constant |
 | --- | --- |
@@ -32,29 +28,31 @@ telescopes and may remove the logarithmic factor from the current algorithm.
 | Lower tail `θ = 7/8` (capacity `317kL`), hub regime from `9·2^24` | 1,044 |
 | Jumps via a three-cycle in the target square's own box and three strip jumps; hub regime from `3·2^25` | 894 |
 | Cleanup: a three-cycle fixes two misplaced tiles, a double swap four (`26n` per tile); lower tail `θ = 5/6` (capacity `169kL`); grid factor `24 → 14`, hub regime from `2^26 + 2^13` | 776 |
+| Segmented residence: the in-flight budget is `O(n)`, and the bound becomes `O(n^(8/3))`; lower tail `θ = 3/4` (capacity `48kL`), slack `λ = 3L`; hub regime from `11·2^20` | 450, and `1133·n^(8/3)` |
 
-Each step re-tuned the grid factor `hubA`, the hub threshold and the
-certificate constants; [PROOF_NOTES.md](PROOF_NOTES.md) lists the final
-estimates.
+Each step re-tuned the grid, the hub threshold and the certificate constants;
+[PROOF_NOTES.md](PROOF_NOTES.md) lists the final estimates.
 
 ## Where the bound now comes from
 
-With `A = 182.19` (coefficient of `X = n²s`) and `B = 167.7` (of `Y = k²n²L`),
-the constant is `2r(1.22660A + 0.688613B)` with `r ≈ 1.1443`:
+The hub algorithm costs at most `2(A·n²s + B·k²n²)` inefficient moves, with
+`A = 182.34` and `B = 776.3` (`hubBound_le_lin`). With `t = k/n^(1/3)` this is
+`2(A/t + Bt²)·n^(8/3)`, minimal near `t = (A/2B)^(1/3) ≈ 0.49`; the grid uses
+`t = 1/2` when capacity allows.
 
 - `A`: hops `2·55 = 110`, relocations `66` (a round weighs at most `66k²`
-  jump units of `s`), local Finish `5`, remainders `1.2` (mostly `132/k`).
-- `B`: bypass jumps `39·1.5467 = 60.3`, cleanup `52·1.5467 = 80.4`,
-  terms without the logarithm `≈ 26.6` (at `L = 27`), remainders `≈ 0.4`.
+  jump units of `s`), local Finish `5`, remainders `1.3` (mostly `132/k`).
+- `B`: cleanup of the misplaced tiles, `26n` each: the reserve and home padding
+  (`8k²n`), stock and bookkeeping terms (`5k²n`), in flight and bypassed
+  (`2k²·Rhub ≈ 4.35k²n`) and corridors (`2k²n`), together `≈ 503`;
+  dummy relocations `156`; bypass jumps `39·2.1756 ≈ 84.8`; the potential of
+  the initial corridor tiles `30`; remainders `≈ 2.5`.
 
-The weighted parts are now `1.2266A ≈ 223.5` and `0.6886B ≈ 115.5`: the local
-side dominates, which is why the grid factor dropped to `14`. The three-cycle
-constant `52` enters hops (`52s` of `55s`), jumps (`52s` of
-`(54 + 39d)s`) and cleanup (`26n` per tile). The threshold `2^26 + 2^13` balances the
-two regimes: the hub coefficient falls only slowly above it (about `773` at
-`2^27`), while the cubic solver's coefficient grows as `(n/ln n)^(1/3)` and
-equals the hub's near `2^26`. Lowering the hub coefficient therefore also
-needs a better solver on the initial range (§5).
+The coefficient scales like `A^(2/3)B^(1/3)`. Cleanup is now the largest part
+of `B`, and the reserve padding `8n` per square is its largest term: every
+free tile set aside and not used is cleaned up at `26n`. The three-cycle
+constant `52` still enters hops (`52s` of `55s`), jumps (`52s` of
+`(54 + 39d)s`) and cleanup (`26n` per tile).
 
 ## 1. Cheaper insertions and jumps
 
@@ -75,20 +73,24 @@ placement bound proportional to the tile's distance, together with a choice of
 the staging corner nearest to the tiles and the blank, would lower the
 three-cycle constant wherever the three tiles are close, as in insertions.
 
-## 3. Upper-tail base
+## 3. Chernoff parameters
 
-Base `17/16` instead of `9/8` in the upper Chernoff tail (threshold
-`(33/32)μ + 12λ`, from `(17/16)^33 ≥ e²`) lowers the logarithmic part of `Rhub`
-by about 3% but doubles the `k²λ` remainder; the net gain is under 1%.
+A model of the uniform coefficient over the lower-tail threshold `θ` and the
+upper-tail base puts the optimum near `θ = 3/4` (implemented). A larger upper
+base (`3/2` with threshold `1.2332μ + 1.71λ`) would save about 1%.
 
 ## 4. Reserve padding
 
 `Q' = Rhub + 8n + 10` could be about `Rhub + 7n + 6`, since the corridor bound
-is used twice in the padding argument. This saves about 2 in `B`.
+is used twice in the padding argument. Each unit of `n` in the padding costs
+`26` in `B` (about `1.1%` of `B`), so this is now worth about `0.4%` of the
+constant; a reserve sized by the actual corridor contents rather than by
+`sqCorridor` could save more.
 
 ## 5. Threshold and initial range
 
-The hub coefficient decreases slowly above the threshold, while the cubic
-solver's coefficient grows as `(n/ln n)^(1/3)`. A better solver for boards of
-side `10^7` to `10^8`, or a hub variant with smaller capacity requirements,
-would let the hub regime start lower.
+The uniform coefficient is set where the cubic solver (`5n^(1/3)`) meets the
+capacity-limited hub algorithm, near `n = 11·2^20`. A better solver for
+boards of side `10^6` to `10^7`, or a hub variant with a smaller capacity
+requirement, would move the switch lower. The asymptotic coefficient
+(`≈ 1118`) is only slightly below the uniform one.
