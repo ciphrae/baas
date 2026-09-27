@@ -1,7 +1,7 @@
-# Potential breakthroughs after the 894 bound
+# Potential breakthroughs beyond the current bound
 
 These are research proposals, not certified improvements. The current Lean
-theorem still has coefficient **894** and error scale
+theorem has coefficient **776** and error scale
 `n^(8/3) (ln n)^(1/3)`. The most promising proposal below changes the
 in-flight analysis while retaining the present algorithm.
 
@@ -140,7 +140,7 @@ core, then prove the thin appendage cases while restoring crossed corridors.
 
 This could lower the hop and relocation coefficients substantially. It
 would not automatically lower the global cleanup three-cycle cost. Also,
-the cubic fallback is already close to 894 at the current switch point;
+the cubic fallback is already close to 776 at the current switch point;
 a smaller uniform constant needs a lower hub threshold or better fallback.
 
 ## 3. Batch reservoir preparation instead of selecting each tile from scratch

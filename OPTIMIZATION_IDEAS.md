@@ -1,14 +1,15 @@
 # Further constant reductions
 
-The certified boardwise coefficient is **894** for `n ≥ 4096`
+The certified boardwise coefficient is **776** for `n ≥ 4096`
 (`Hub.uniform_approximation_explicit`). The large-board proof has the bound
 
 ```text
-1.143729 · (2 · 1.46947 · 182.251 + 2 · 0.48075 · 255.642 + 2/350)
-  ≈ 893.74 < 894,
+1.144253 · (2 · 1.22660 · 182.186 + 2 · 0.688613 · 167.7 + 2/250)
+  ≈ 775.70 < 776,
 ```
 
-and the cubic solver covers `4096 ≤ n ≤ 3·2^25` within the same coefficient.
+and the cubic solver covers `4096 ≤ n ≤ 2^26 + 2^13` within the same
+coefficient (it reaches about `775.03` at the top of that range).
 The exponent and the lower threshold `4096` are unchanged.
 
 For more speculative structural changes, see
@@ -16,7 +17,7 @@ For more speculative structural changes, see
 proposal tracks tiles through successive distance bands; its rate sum
 telescopes and may remove the logarithmic factor from the current algorithm.
 
-## Implemented in the latest pass (19,319 → 894)
+## Implemented in the latest pass (19,319 → 776)
 
 | Step | Constant |
 | --- | --- |
@@ -30,6 +31,7 @@ telescopes and may remove the logarithmic factor from the current algorithm.
 | Strip jumps charged `13(d+1)` instead of `25(d+1)`; aligned relocations are one jump | 1,215 |
 | Lower tail `θ = 7/8` (capacity `317kL`), hub regime from `9·2^24` | 1,044 |
 | Jumps via a three-cycle in the target square's own box and three strip jumps; hub regime from `3·2^25` | 894 |
+| Cleanup: a three-cycle fixes two misplaced tiles, a double swap four (`26n` per tile); lower tail `θ = 5/6` (capacity `169kL`); grid factor `24 → 14`, hub regime from `2^26 + 2^13` | 776 |
 
 Each step re-tuned the grid factor `hubA`, the hub threshold and the
 certificate constants; [PROOF_NOTES.md](PROOF_NOTES.md) lists the final
@@ -37,18 +39,22 @@ estimates.
 
 ## Where the bound now comes from
 
-With `A = 182.25` (coefficient of `X = n²s`) and `B = 255.6` (of `Y = k²n²L`),
-the constant is `2r(1.46947A + 0.48075B)` with `r ≈ 1.1437`:
+With `A = 182.19` (coefficient of `X = n²s`) and `B = 167.7` (of `Y = k²n²L`),
+the constant is `2r(1.22660A + 0.688613B)` with `r ≈ 1.1443`:
 
 - `A`: hops `2·55 = 110`, relocations `66` (a round weighs at most `66k²`
-  jump units of `s`), local Finish `5`, remainders `1.3`.
-- `B`: bypass jumps `39·1.473 = 57.4`, cleanup `104·1.473 = 153.2`,
-  terms without the logarithm `≈ 44.8` (at `L = 26`), remainders `≈ 0.2`.
+  jump units of `s`), local Finish `5`, remainders `1.2` (mostly `132/k`).
+- `B`: bypass jumps `39·1.5467 = 60.3`, cleanup `52·1.5467 = 80.4`,
+  terms without the logarithm `≈ 26.6` (at `L = 27`), remainders `≈ 0.4`.
 
-The three-cycle constant `52` enters hops (`52s` of `55s`), jumps (`52s` of
-`(54 + 39d)s`) and cleanup (`52n` per tile). The hub regime is limited at its
-threshold by the Chernoff capacity condition and by `s ≤ k³`; below it the
-cubic solver's `5n³` term sets the coefficient near `887`.
+The weighted parts are now `1.2266A ≈ 223.5` and `0.6886B ≈ 115.5`: the local
+side dominates, which is why the grid factor dropped to `14`. The three-cycle
+constant `52` enters hops (`52s` of `55s`), jumps (`52s` of
+`(54 + 39d)s`) and cleanup (`26n` per tile). The threshold `2^26 + 2^13` balances the
+two regimes: the hub coefficient falls only slowly above it (about `773` at
+`2^27`), while the cubic solver's coefficient grows as `(n/ln n)^(1/3)` and
+equals the hub's near `2^26`. Lowering the hub coefficient therefore also
+needs a better solver on the initial range (§5).
 
 ## 1. Cheaper insertions and jumps
 

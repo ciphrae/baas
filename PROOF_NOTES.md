@@ -119,7 +119,7 @@ through the reservoir of a hub square. The pen-and-paper proof is
   (`Hub/Chernoff*.lean`, `Hub/InFlight*.lean`), counting permutations rather
   than using probability theory.
 
-The boardwise constant is now `894` for `n ≥ 4096`, down from `19,319`
+The boardwise constant is now `776` for `n ≥ 4096`, down from `19,319`
 at the start of the latest optimization pass, `20,816` before combined
 accounting and the fractional in-flight budget, `27,508` before retaining
 size-dependent budgets, `849,303` in an earlier version and
@@ -150,33 +150,36 @@ certified estimates are:
 - Round walk: a cycle relocation serves at least two new squares, and along
   the snake order only row changes need a second jump, so a round weighs at
   most `66k² + 132k + 30 + (78k + 30)·#dummy` (`exists_round_events`).
-- In-flight order: the lower tail uses weights `1 - g/(8K)` with
-  `exp(-(134/125)v) ≤ 1 - v` on `[0, 1/8]`, so windows need only `8/7` of the
-  expected pushes, and costs capacity `317kL ≤ s`. The upper tail uses weights
+- In-flight order: the lower tail uses weights `1 - g/(6K)` with
+  `exp(-(11/10)v) ≤ 1 - v` on `[0, 1/6]`, so windows need `6/5` of the
+  expected pushes, and costs capacity `169kL ≤ s`. The upper tail uses weights
   `(9/8)^a`: since `(9/8)^17 ≥ e²`, at most `(17/16)μ + 6λ` insertions occur in a
   window, with `λ = 4L` and `L = log₂ n + 1`.
 - In-flight budget: with `s ≤ k³`, `ln(kΔ) ≤ (7/4)ln n + 1/s²`, which gives
-  `Rhub n = ⌊(14730nL + 13743n)/10000⌋ + 1`.
+  `Rhub n = ⌊(15467nL + 15676n)/10000⌋ + 1`.
 - Free tiles: home tiles pad the set-aside reserve only up to `Q'` tiles per
   square, so at most `k²(Rhub n + 8n + 10)` free tiles remain for cleanup.
 - Cleanup (`Hub/Cleanup.lean`): a misplaced tile goes to its square in exchange
   for a wrong tile of that square, which goes home through a third wrong tile
   by one three-cycle, or, if it belongs where the first tile was, by a double
-  swap. Each step removes at least two misplaced tiles: `52n(misplaced + 2n + 2)`.
-- Whole hub algorithm (`AsympAccounting.lean`, `k ≥ 106`, `L ≥ 26`, capacity):
-  `1000·hubBound ≤ 182251X + 255642Y`, with `X = n²s`, `Y = k²n²L`.
-- Grid for `n ≥ 3·2^25`: `k = 2m` with `24m³L ≤ n < 24(m+1)³L`; then
-  `m ≥ 53`, `8L ≤ 5m` (hence `s ≤ k³`), and `1268m²L ≤ n` (capacity). Cube
-  scales: `(100000X)³ ≤ 146947³n⁸L`, `(10⁶Y)³ ≤ 480750³n⁸L`, `(350Z)³ ≤ n⁸L`.
-- Natural logarithms: `L ≤ 1.496129 ln n` for `n ≥ 3·2^25`, whose cube root is
-  at most `1.143729`.
-- Initial range: for `4096 ≤ n ≤ 3·2^25`, the Parberry solver's exact bound
-  `5n³ + 1509n² + 1505n + 4796` is at most `894·hubError n`, split at `2^20`,
-  `2^25` and `2^26`.
+  swap. A three-cycle through a third misplaced tile fixes two tiles, and a
+  double swap of two crossing pairs fixes four (`exists_cleanup_step_big`):
+  `26n(misplaced + 2n + 2)`.
+- Whole hub algorithm (`AsympAccounting.lean`, `k ≥ 112`, `L ≥ 27`, capacity):
+  `1000·hubBound ≤ 182186X + 167700Y`, with `X = n²s`, `Y = k²n²L`.
+- Grid for `n ≥ 2^26 + 2^13`: `k = 2m` with `14m³L ≤ n < 14(m+1)³L`; then
+  `m ≥ 56`, `L ≤ m` (hence `s ≤ k³`), `676m²L ≤ n` (capacity), and the
+  residual side is at least `2^26`. Cube scales: `(100000X)³ ≤ 122660³n⁸L`,
+  `(10⁶Y)³ ≤ 688613³n⁸L`, `(250Z)³ ≤ n⁸L`.
+- Natural logarithms: `L ≤ 1.498184 ln n` for `n ≥ 2^26`, whose cube root is
+  at most `1.144253`.
+- Initial range: for `4096 ≤ n ≤ 2^26 + 2^13`, the Parberry solver's exact
+  bound `5n³ + 1509n² + 1505n + 4796` is at most `776·hubError n`, split at
+  `2^20`, `2^25` and `15·2^22`.
 
 Consequently the hub branch's real coefficient is
-`1.143729·(2·1.46947·182.251 + 2·0.48075·255.642 + 2/350)`,
-approximately `893.74`. Rounding upward gives `C = 894` (`hubLargeConstant_rounding`),
+`1.144253·(2·1.22660·182.186 + 2·0.688613·167.7 + 2/250)`,
+approximately `775.70`. Rounding upward gives `C = 776` (`hubLargeConstant_rounding`),
 which also covers the initial range. `Hub.uniform_approximation_explicit`
 exposes the numerical bound directly. This is a certified upper bound, not a
 claim of optimality.
@@ -184,7 +187,7 @@ claim of optimality.
 ## Remaining structural improvements
 
 The three-cycle constant `52` now drives most of the bound: hops (`55s`),
-jumps (`52s` of `(54 + 39d)s`) and cleanup (`52n` per tile). In insertions and
+jumps (`52s` of `(54 + 39d)s`) and cleanup (`26n` per tile). In insertions and
 jumps one of the three cycled cells is a free choice of reservoir cell; staging
 from a reservoir corner with that tile already in place would save one of the
 three placements. A jump or insertion could avoid the three-cycle altogether

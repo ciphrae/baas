@@ -5,7 +5,7 @@
 
 | Theorem | Statement |
 | --- | --- |
-| `Hub.uniform_approximation_explicit` | `OPT(B) ≤ M(B) + 894·n^(8/3)(ln n)^(1/3)` for every reachable board, `n ≥ 4096` |
+| `Hub.uniform_approximation_explicit` | `OPT(B) ≤ M(B) + 776·n^(8/3)(ln n)^(1/3)` for every reachable board, `n ≥ 4096` |
 | `Hub.uniform_approximation` | `OPT(B) ≤ M(B) + C·n^(8/3)(log n)^(1/3)` for every reachable board, `n ≥ 4096` |
 | `Hub.average_optimal_length` | mean optimal length `= (2/3)n³ + O(n^(8/3)(log n)^(1/3))` |
 | `Hub.gods_number` | God's number `= n³ + O(n^(8/3)(log n)^(1/3))` |
@@ -14,7 +14,7 @@
 They depend only on `propext`, `Classical.choice` and `Quot.sound`
 (`Checks/Axioms.lean`). The mathematics is `PROOF.md`; this file records how
 the Lean proof is organized and where it departs from `PROOF.md`. The current
-certified constant is **894**, about 5.4 billion times smaller than the
+certified constant is **776**, about 6.2 billion times smaller than the
 original `4,828,800,024,144`. It is not claimed optimal.
 [PROOF_NOTES.md](../../PROOF_NOTES.md) records the accounting improvements.
 
@@ -157,8 +157,8 @@ distance `d` in every `w_d + 1` consecutive rounds, `λ = 4(log₂ n + 1)`.
 * Maclaurin's inequality `e_w(y)/C(N,w) ≤ (Σy/N)^w` (not in Mathlib) is proved
   by induction on the number of elements with Bernoulli's inequality.
 * Lower tail with weights `1 - g/(8K)` and `exp(-(134/125)v) ≤ 1 - v` on
-  `[0, 1/8]`: at most `Δ!·exp(-31μ/(4000K))` orders have a window sum
-  `≤ (7/8)μ`. Upper tail with weights `1 + a/8 = (9/8)^a`: since
+  `[0, 1/6]`: at most `Δ!·exp(-μ/(72K))` orders have a window sum
+  `≤ (5/6)μ`. Upper tail with weights `1 + a/8 = (9/8)^a`: since
   `(9/8)^17 ≥ e²`, at most `Δ!/(9/8)^λ'` orders have a window sum
   `≥ (17/16)μ + λ'`; `λ' = 6λ` covers the union bound.
 * All fibres of `σ ↦ σ '' T` have the same size, so subset counts are
@@ -168,11 +168,11 @@ distance `d` in every `w_d + 1` consecutive rounds, `λ = 4(log₂ n + 1)`.
   of class `x` from distance `d` present are few.
 * The room condition bounds the total event count by `n⁴`, so `λ = 4L`
   suffices for the union bound.
-* Harmonic sums give at most `(17/14)n(1 + ln(kΔ)) + (17/4)k + 48k²L` per hub.
+* Harmonic sums give at most `(51/40)n(1 + ln(kΔ)) + (17/4)k + 48k²L` per hub.
   With `s ≤ k³`, `ln(kΔ) ≤ (7/4)ln n + 1/s²` (`log_kΔ_le_sharp`).
-  The capacity hypothesis `317kL ≤ s` and the room condition give
-  `Rhub n = ⌊(14730nL + 13743n)/10000⌋ + 1` (`Hub.exists_good_order`).
-  Capacity bounds `48k²L` by `48n/317`; `s ≥ 500` bounds `(17/4)k`.
+  The capacity hypothesis `169kL ≤ s` and the room condition give
+  `Rhub n = ⌊(15467nL + 15676n)/10000⌋ + 1` (`Hub.exists_good_order`).
+  Capacity bounds `48k²L` by `48n/169`; `s ≥ 500` bounds `(17/4)k`.
   `Rhub_lower` and `Rhub_upper` certify the integer rounding, while
   `Rhub_le_seven` recovers the old `7nL` estimate.
 * `capacity_lower_bounds` proves `L ≥ 10`, `s ≥ 500`, and `n ≥ 1000`
@@ -209,7 +209,8 @@ With `L = log₂ n + 1`, the certified totals are:
   (`2883·n²s + 2148·k²n²L` when `k ≥ 1000` and `L ≥ 39`) still hold.
 - `misplacedBound = 2k²·Rhub n + 13k²n + k⁴ + 10k²`; it is bounded by
   `24k²nL` generically and by `22k²nL` when `L ≥ 39`.
-- Cleanup costs at most `52·n·(misplaced + 2n + 2)` inefficient moves.
+- Cleanup costs at most `26·n·(misplaced + 2n + 2)` inefficient moves: each
+  three-cycle fixes two misplaced tiles and each double swap fixes four.
 
 `Hub.cost_arith` separates the local coefficient `576 + 3456`
 from the corridor coefficient `0.4 + 6 + 3067.2 + 518.4`, using `L ≥ 10`.
@@ -222,45 +223,45 @@ These arithmetic lemmas are in `RunBounds.lean`.
 
 On side `n = k*s`, with `s ≥ 500`, `hubBound_le_sharp` gives the coarse
 `hubBound n k s ≤ 4042·n²s + 15888·k²n²L`. The certified bound uses the
-combined `hubBound_le_scaled` in `AsympAccounting.lean`: for `k ≥ 106`,
-`L ≥ 26` and capacity `317kL ≤ s`,
-`1000·hubBound ≤ 182251X + 255642Y` with `X = n²s` and `Y = k²n²L`. It keeps
+combined `hubBound_le_scaled` in `AsympAccounting.lean`: for `k ≥ 112`,
+`L ≥ 27` and capacity `169kL ≤ s`,
+`1000·hubBound ≤ 182186X + 167700Y` with `X = n²s` and `Y = k²n²L`. It keeps
 transport, cleanup and Finish in one polynomial and uses capacity for the
-`k⁴` remainders; capacity also gives `s ≥ 873652`, making the Finish
+`k⁵s` remainders; capacity also gives `s ≥ 511056`, making the Finish
 remainders small.
 
-For `n ≥ 3·2^25`, take `k = 2m` with `24·m³L ≤ n < 24(m+1)³L` and
+For `n ≥ 2^26 + 2^13`, take `k = 2m` with `14·m³L ≤ n < 14(m+1)³L` and
 `s = ⌊n/k⌋`. Solve the outer `n - k*s < k` layers by the Parberry prefix
-(`Parberry/Prefix.lean`). The threshold guarantees `m ≥ 53`
-(`half_width_large`, split at `2^27`), so grid rounding loses at most `54/53`;
-`8L ≤ 5m` (`log_le_half_width`), hence `s ≤ k³` (`div_le_cube_large`); and
-`1268m²L ≤ n`, hence capacity. The residual side satisfies `ks ≥ 2^25`, so
-its own logarithm satisfies `log₂(ks) + 1 ≥ 26`. The residual estimates
+(`Parberry/Prefix.lean`). The threshold guarantees `m ≥ 56`
+(`half_width_large`, split at `2^27`), so grid rounding loses at most `57/56`;
+`L ≤ m` (`log_le_half_width`), hence `s ≤ k³` (`div_le_cube_large`); and
+`676m²L ≤ n`, hence capacity. Since `k ≤ s`, a residual side below `2^26`
+would force `k < 2^13`; so `ks ≥ 2^26` and `log₂(ks) + 1 ≥ 27`. The residual estimates
 extend monotonically to the original side `n`.
 
 `optimalLength_le_hub_scaled` keeps three terms separate:
 
 | Term | Definition | Cube bound |
 | --- | --- | --- |
-| `X` | `n²s` | `(100000X)³ ≤ 146947³n⁸L` |
-| `Y` | `k²n²L` | `(10⁶Y)³ ≤ 480750³n⁸L` |
-| `Z` | `(15n² + 3002n + 1)(n - k*s)` | `(350Z)³ ≤ n⁸L` |
+| `X` | `n²s` | `(100000X)³ ≤ 122660³n⁸L` |
+| `Y` | `k²n²L` | `(10⁶Y)³ ≤ 688613³n⁸L` |
+| `Z` | `(15n² + 3002n + 1)(n - k*s)` | `(250Z)³ ≤ n⁸L` |
 
-The solution length is at most `M + 2·182.251X + 2·255.642Y + 2Z`.
+The solution length is at most `M + 2·182.186X + 2·167.7Y + 2Z`.
 The natural-number theorem multiplies this inequality by `1000`, preserving
 all coefficients until the final real conversion.
-On this range, `L ≤ 1.496129 ln n` (`natLog_succ_le_grid_log`, split at
-`2^27`), bounded by the cube of `1.143729`. The coefficient is therefore
+On this range, `L ≤ 1.498184 ln n` (`natLog_succ_le_grid_log`), bounded by
+the cube of `1.144253`. The coefficient is therefore
 
 ```text
-1.143729·(2·1.46947·182.251 + 2·0.48075·255.642 + 2/350) ≈ 893.74.
+1.144253·(2·1.22660·182.186 + 2·0.688613·167.7 + 2/250) ≈ 775.70.
 ```
 
-`hubLargeConstant` is `894`; `hubLargeConstant_rounding` verifies the exact
-ceiling. For `4096 ≤ n ≤ 3·2^25` the cubic solver's exact bound
-`5n³ + 1509n² + 1505n + 4796` is at most `894·hubError n`
-(`cubic_solver_le_hubError`, split at `2^20`, `2^25` and `2^26`), so
-`hubConstant = 894` covers every `n ≥ 4096`; `hubConstant_eq` exposes the
+`hubLargeConstant` is `776`; `hubLargeConstant_rounding` verifies the exact
+ceiling. For `4096 ≤ n ≤ 2^26 + 2^13` the cubic solver's exact bound
+`5n³ + 1509n² + 1505n + 4796` is at most `776·hubError n`
+(`cubic_solver_le_hubError`, split at `2^20`, `2^25` and `15·2^22`), so
+`hubConstant = 776` covers every `n ≥ 4096`; `hubConstant_eq` exposes the
 value and `uniform_approximation_explicit` proves the resulting bound.
 `hubBound_le`, `hubBound_le_large`, `optimalLength_le_hub_sharp`,
 `optimalLength_le_hub`, and `le_hubError_of_cube` retain
@@ -268,5 +269,5 @@ coarser forms of the estimates.
 
 The statistical reduction of the paper (Section 5) is proved for any error
 scale `f ≥ n²` (`AsympStats.lean`). It yields the average and maximum
-asymptotics from the boardwise bound; **894 is the boardwise coefficient**,
+asymptotics from the boardwise bound; **776 is the boardwise coefficient**,
 not an asserted exact coefficient for the two-sided statistical errors.
