@@ -11,7 +11,7 @@ theorem exists_double_swap (B : Board n) (hn : 4 ≤ n)
     (hbc : b ≠ c) (hbd : b ≠ d) (hcd : c ≠ d)
     (ha : B a ≠ 0) (hb : B b ≠ 0) (hc : B c ≠ 0) (hd : B d ≠ 0) :
     ∃ C : Board n, ∃ p : Path B C,
-      p.length ≤ 6044*n ∧ blank C = blank B ∧
+      p.length ≤ 508*n ∧ blank C = blank B ∧
       C a = B c ∧ C b = B d ∧ C c = B a ∧ C d = B b ∧
       ∀ x, x ≠ a → x ≠ b → x ≠ c → x ≠ d → C x = B x := by
   obtain ⟨D,p,hp,hbD,hDa,hDb,hDc,hfixD⟩ :=

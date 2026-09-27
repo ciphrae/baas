@@ -11,6 +11,8 @@ import SlidingPuzzle
 
 -- The boardwise bounds
 #print axioms SlidingPuzzle.Hub.uniform_approximation
+#print axioms SlidingPuzzle.Hub.uniform_approximation_explicit
+#print axioms SlidingPuzzle.Hub.hubConstant_rounding
 #print axioms SlidingPuzzle.Hub.exists_hub_solution
 
 -- Foundations

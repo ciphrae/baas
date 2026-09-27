@@ -47,14 +47,14 @@ theorem boxEmb_surj (r0 c0 m : ℕ) (hr : r0 + m ≤ n) (hc : c0 + m ≤ n) (x :
   exact Prod.ext (Fin.ext (by rw [boxEmb_fst]; dsimp only; omega)) (Fin.ext (by rw [boxEmb_snd]; dsimp only; omega))
 
 /-- Local three-cycle: rotate three distinct nonblank cells of a square box of
-side `m ≥ 4` containing the blank, in at most `3022*m` moves; every other cell
+side `m ≥ 4` containing the blank, in at most `254*m` moves; every other cell
 (the blank's included) is fixed. -/
 theorem exists_box_three_cycle (B : Board n) (r0 c0 m : ℕ) (hm : 4 ≤ m)
     (hr : r0 + m ≤ n) (hc : c0 + m ≤ n) (hbl : InBox r0 c0 m (blank B))
     (a b c : Cell n) (ha : InBox r0 c0 m a) (hb : InBox r0 c0 m b) (hc' : InBox r0 c0 m c)
     (hab : a ≠ b) (hac : a ≠ c) (hbc : b ≠ c)
     (ha0 : B a ≠ 0) (hb0 : B b ≠ 0) (hc0 : B c ≠ 0) :
-    ∃ C : Board n, ∃ p : Path B C, p.length ≤ 3022 * m ∧
+    ∃ C : Board n, ∃ p : Path B C, p.length ≤ 254 * m ∧
       C a = B b ∧ C b = B c ∧ C c = B a ∧
       ∀ x, x ≠ a → x ≠ b → x ≠ c → C x = B x := by
   have : NeZero m := ⟨by omega⟩

@@ -56,87 +56,79 @@ end junk
 
 section arith
 
-theorem cost_T3 (k s L B : ℕ) (hk : 2 ≤ k) (hks : k ≤ s) (hL : 1 ≤ L)
-    (hB : B ≤ k ^ 2 * (200 * (k * s) * L + k ^ 2)) :
-    4000 * s * (1 + k) * B ≤ 1608000 * (k ^ 2 * (k * s) ^ 2 * L) := by
-  have h1 : 4000 * s * (1 + k) * B ≤ 4000 * s * (1 + k) * (k ^ 2 * (200 * (k * s) * L + k ^ 2)) :=
-    Nat.mul_le_mul_left _ hB
-  have h2 : s * (1 + k) ≤ 2 * k * s := by nlinarith
-  have h3 : k ^ 2 * k ^ 2 ≤ k ^ 2 * (k * s) * L := by
-    have : k ^ 2 ≤ k * s := by nlinarith
-    have : k ^ 2 * k ^ 2 ≤ k ^ 2 * (k * s) := Nat.mul_le_mul_left _ this
+theorem cost_T3 (k s L B : ℕ) (hk : 2 ≤ k) (hks : k ≤ s) (hL : 10 ≤ L)
+    (hB : B ≤ k ^ 2 * (7 * (k * s) * L + k ^ 2)) :
+    288 * s * (1 + k) * B ≤ 3068 * (k ^ 2 * (k * s) ^ 2 * L) := by
+  have h1 : k ^ 2 ≤ k * s := by nlinarith
+  have h2 : 10 * (k * s) ≤ k * s * L := by nlinarith
+  have h3 := Nat.mul_le_mul_left (k ^ 2) (h1.trans (by omega : k * s ≤ k * s * L))
+  have h4 := Nat.mul_le_mul_left (k ^ 2) h2
+  have hb : 10 * B ≤ 71 * k ^ 2 * (k * s) * L := by
+    have hh := Nat.mul_le_mul_left (k ^ 2) h1
     nlinarith
-  have h4 : 4000 * s * (1 + k) * (k ^ 2 * (200 * (k * s) * L + k ^ 2)) ≤
-      4000 * (2 * k * s) * (k ^ 2 * (200 * (k * s) * L + k ^ 2)) := by
-    have := Nat.mul_le_mul_right (k ^ 2 * (200 * (k * s) * L + k ^ 2))
-      (Nat.mul_le_mul_left 4000 h2)
-    simpa [mul_assoc] using this
-  have h5 : 4000 * (2 * k * s) * (k ^ 2 * (200 * (k * s) * L + k ^ 2)) ≤
-      1608000 * (k ^ 2 * (k * s) ^ 2 * L) := by
-    have : 4000 * (2 * k * s) * (k ^ 2 * (200 * (k * s) * L + k ^ 2)) =
-        1600000 * (k ^ 2 * (k * s) ^ 2 * L) + 8000 * (k * s) * (k ^ 2 * k ^ 2) := by ring
-    rw [this]
-    have : 8000 * (k * s) * (k ^ 2 * k ^ 2) ≤ 8000 * (k * s) * (k ^ 2 * (k * s) * L) :=
-      Nat.mul_le_mul_left _ h3
-    nlinarith
-  omega
+  have hc : 288 * s * (1 + k) ≤ 432 * (k * s) := by nlinarith
+  have hh := Nat.mul_le_mul hc hb
+  nlinarith
 
-theorem cost_T4 (k s L W : ℕ) (hk : 2 ≤ k) (hks : k ≤ s) (hL : 1 ≤ L)
+theorem cost_T4 (k s L W : ℕ) (hk : 2 ≤ k) (hks : k ≤ s) (hL : 10 ≤ L)
     (hW : W ≤ s ^ 2 * (4 * k ^ 2 + 4 * k) + 4 * k * (k ^ 2 * (2 * k * s + 1))) :
-    8000 * s * W ≤ 64000 * ((k * s) ^ 2 * s) + 96000 * (k ^ 2 * (k * s) ^ 2 * L) := by
-  have h1 : 8000 * s * W ≤ 8000 * s * (s ^ 2 * (4 * k ^ 2 + 4 * k) +
+    576 * s * W ≤ 3456 * ((k * s) ^ 2 * s) + 692 * (k ^ 2 * (k * s) ^ 2 * L) := by
+  have h1 : 576 * s * W ≤ 576 * s * (s ^ 2 * (4 * k ^ 2 + 4 * k) +
       4 * k * (k ^ 2 * (2 * k * s + 1))) := Nat.mul_le_mul_left _ hW
-  have h2 : 4 * k ^ 2 + 4 * k ≤ 8 * k ^ 2 := by nlinarith
+  have h2 : 4 * k ^ 2 + 4 * k ≤ 6 * k ^ 2 := by nlinarith
   have h3 : 2 * k * s + 1 ≤ 3 * k * s := by nlinarith
-  have h4 : s ^ 2 * (4 * k ^ 2 + 4 * k) ≤ s ^ 2 * (8 * k ^ 2) := Nat.mul_le_mul_left _ h2
+  have h4 : s ^ 2 * (4 * k ^ 2 + 4 * k) ≤ s ^ 2 * (6 * k ^ 2) := Nat.mul_le_mul_left _ h2
   have h5 : 4 * k * (k ^ 2 * (2 * k * s + 1)) ≤ 4 * k * (k ^ 2 * (3 * k * s)) :=
     Nat.mul_le_mul_left _ (Nat.mul_le_mul_left _ h3)
-  have h6 : 8000 * s * (s ^ 2 * (8 * k ^ 2) + 4 * k * (k ^ 2 * (3 * k * s))) =
-      64000 * ((k * s) ^ 2 * s) + 96000 * (k ^ 2 * (k * s) ^ 2) := by ring
-  have h7 : k ^ 2 * (k * s) ^ 2 ≤ k ^ 2 * (k * s) ^ 2 * L := Nat.le_mul_of_pos_right _ hL
-  have h8 : 8000 * s * (s ^ 2 * (4 * k ^ 2 + 4 * k) + 4 * k * (k ^ 2 * (2 * k * s + 1))) ≤
-      8000 * s * (s ^ 2 * (8 * k ^ 2) + 4 * k * (k ^ 2 * (3 * k * s))) :=
+  have h6 : 576 * s * (s ^ 2 * (6 * k ^ 2) + 4 * k * (k ^ 2 * (3 * k * s))) =
+      3456 * ((k * s) ^ 2 * s) + 6912 * (k ^ 2 * (k * s) ^ 2) := by ring
+  have h7 : 10 * (k ^ 2 * (k * s) ^ 2) ≤ k ^ 2 * (k * s) ^ 2 * L := by nlinarith [Nat.mul_le_mul_left (k ^ 2 * (k * s) ^ 2) hL]
+  have h8 : 576 * s * (s ^ 2 * (4 * k ^ 2 + 4 * k) + 4 * k * (k ^ 2 * (2 * k * s + 1))) ≤
+      576 * s * (s ^ 2 * (6 * k ^ 2) + 4 * k * (k ^ 2 * (3 * k * s))) :=
     Nat.mul_le_mul_left _ (add_le_add h4 h5)
   omega
 
-theorem cost_arith (k s L P S0 B W : ℕ) (hk : 2 ≤ k) (hks : k ≤ s) (hL : 1 ≤ L)
+/-- Keep the local coefficient `576 + 3456` separate from the corridor
+coefficient `1 + 6 + 3068 + 692`. -/
+theorem cost_arith (k s L P S0 B W : ℕ) (hk : 2 ≤ k) (hks : k ≤ s) (hL : 10 ≤ L)
     (hP : P ≤ 4 * k ^ 2 * (k * s) * (k * s)) (hS : S0 ≤ (k * s) ^ 2)
-    (hB : B ≤ k ^ 2 * (200 * (k * s) * L + k ^ 2))
+    (hB : B ≤ k ^ 2 * (7 * (k * s) * L + k ^ 2))
     (hW : W ≤ s ^ 2 * (4 * k ^ 2 + 4 * k) + 4 * k * (k ^ 2 * (2 * k * s + 1))) :
-    P + 2 * (4000 * s + 30 * k ^ 2) * S0 + 4000 * s * (1 + k) * B + 8000 * s * W ≤
-      10 ^ 7 * ((k * s) ^ 2 * s + k ^ 2 * (k * s) ^ 2 * L) := by
+    P + 2 * (288 * s + 30 * k ^ 2) * S0 + 288 * s * (1 + k) * B + 576 * s * W ≤
+      4032 * ((k * s) ^ 2 * s) + 3767 * (k ^ 2 * (k * s) ^ 2 * L) := by
   have t3 := cost_T3 k s L B hk hks hL hB
   have t4 := cost_T4 k s L W hk hks hL hW
-  have h7 : k ^ 2 * (k * s) ^ 2 ≤ k ^ 2 * (k * s) ^ 2 * L := Nat.le_mul_of_pos_right _ hL
-  have t1 : P ≤ 4 * (k ^ 2 * (k * s) ^ 2 * L) := by
+  have h7 : 10 * (k ^ 2 * (k * s) ^ 2) ≤ k ^ 2 * (k * s) ^ 2 * L := by nlinarith [Nat.mul_le_mul_left (k ^ 2 * (k * s) ^ 2) hL]
+  have t1 : P ≤ 1 * (k ^ 2 * (k * s) ^ 2 * L) := by
     have : 4 * k ^ 2 * (k * s) * (k * s) = 4 * (k ^ 2 * (k * s) ^ 2) := by ring
     omega
-  have t2 : 2 * (4000 * s + 30 * k ^ 2) * S0 ≤ 8000 * ((k * s) ^ 2 * s) +
-      60 * (k ^ 2 * (k * s) ^ 2 * L) := by
-    have := Nat.mul_le_mul_left (2 * (4000 * s + 30 * k ^ 2)) hS
-    have e : 2 * (4000 * s + 30 * k ^ 2) * (k * s) ^ 2 =
-        8000 * ((k * s) ^ 2 * s) + 60 * (k ^ 2 * (k * s) ^ 2) := by ring
+  have t2 : 2 * (288 * s + 30 * k ^ 2) * S0 ≤ 576 * ((k * s) ^ 2 * s) +
+      6 * (k ^ 2 * (k * s) ^ 2 * L) := by
+    have := Nat.mul_le_mul_left (2 * (288 * s + 30 * k ^ 2)) hS
+    have e : 2 * (288 * s + 30 * k ^ 2) * (k * s) ^ 2 =
+        576 * ((k * s) ^ 2 * s) + 60 * (k ^ 2 * (k * s) ^ 2) := by ring
     omega
   omega
 
-theorem mis_arith (k s L A : ℕ) (hk : 2 ≤ k) (hks : k ≤ s) (hL : 1 ≤ L)
-    (h : A ≤ k ^ 2 * (k * s) + k ^ 2 * (200 * (k * s) * L + k ^ 2) +
-      k ^ 2 * (2 * (200 * (k * s) * L + 8 * (k * s) + 10)) + 4 * k ^ 2 * (k * s)) :
-    A ≤ 1000 * k ^ 2 * (k * s) * L := by
-  have hn : 1 ≤ k * s := by nlinarith
+/-- The leading coefficient is `21`; `L ≥ 10` absorbs the remainder into `3`. -/
+theorem mis_arith (k s L A : ℕ) (hk : 2 ≤ k) (hks : k ≤ s) (hL : 10 ≤ L)
+    (h : A ≤ k ^ 2 * (k * s) + k ^ 2 * (7 * (k * s) * L + k ^ 2) +
+      k ^ 2 * (2 * (7 * (k * s) * L + 8 * (k * s) + 10)) + 4 * k ^ 2 * (k * s)) :
+    A ≤ 24 * k ^ 2 * (k * s) * L := by
+  have hn : 4 ≤ k * s := by nlinarith
   have hk2 : k ^ 2 ≤ k * s := by nlinarith
-  have h1 : k * s ≤ k * s * L := Nat.le_mul_of_pos_right _ hL
-  have h2 : k ^ 2 * (k ^ 2) ≤ k ^ 2 * (k * s * L) := Nat.mul_le_mul_left _ (hk2.trans h1)
-  have h3 : k ^ 2 * 1 ≤ k ^ 2 * (k * s * L) := Nat.mul_le_mul_left _ (hn.trans h1)
-  have h4 : k ^ 2 * (k * s) ≤ k ^ 2 * (k * s * L) := Nat.mul_le_mul_left _ h1
-  have e : A ≤ 600 * (k ^ 2 * (k * s * L)) + 21 * (k ^ 2 * (k * s)) + k ^ 2 * k ^ 2 +
+  have h1 : 10 * (k * s) ≤ k * s * L := by nlinarith
+  have h2 : k ^ 2 * (k ^ 2) ≤ k ^ 2 * (k * s) := Nat.mul_le_mul_left _ hk2
+  have h3 : k ^ 2 * 4 ≤ k ^ 2 * (k * s) := Nat.mul_le_mul_left _ hn
+  have h4 : 10 * (k ^ 2 * (k * s)) ≤ k ^ 2 * (k * s * L) := by nlinarith [Nat.mul_le_mul_left (k ^ 2) h1]
+  have e : A ≤ 21 * (k ^ 2 * (k * s * L)) + 21 * (k ^ 2 * (k * s)) + k ^ 2 * k ^ 2 +
       20 * (k ^ 2 * 1) := by
-    have : k ^ 2 * (k * s) + k ^ 2 * (200 * (k * s) * L + k ^ 2) +
-      k ^ 2 * (2 * (200 * (k * s) * L + 8 * (k * s) + 10)) + 4 * k ^ 2 * (k * s) =
-        600 * (k ^ 2 * (k * s * L)) + 21 * (k ^ 2 * (k * s)) + k ^ 2 * k ^ 2 +
+    have : k ^ 2 * (k * s) + k ^ 2 * (7 * (k * s) * L + k ^ 2) +
+      k ^ 2 * (2 * (7 * (k * s) * L + 8 * (k * s) + 10)) + 4 * k ^ 2 * (k * s) =
+        21 * (k ^ 2 * (k * s * L)) + 21 * (k ^ 2 * (k * s)) + k ^ 2 * k ^ 2 +
           20 * (k ^ 2 * 1) := by ring
     omega
-  have : 1000 * k ^ 2 * (k * s) * L = 1000 * (k ^ 2 * (k * s * L)) := by ring
+  have : 24 * k ^ 2 * (k * s) * L = 24 * (k ^ 2 * (k * s * L)) := by ring
   omega
 
 end arith

@@ -24,8 +24,28 @@ namespace SlidingPuzzle.Hub
 
 open Finset
 
-/-- The bypass budget of one hub. -/
-def Rhub (n : ℕ) : ℕ := 200 * n * (Nat.log 2 n + 1)
+/-- The bypass budget of one hub. The capacity hypothesis bounds the
+`8 k² L` contribution by `8n/25`; the logarithmic estimate gives `7nL`. -/
+def Rhub (n : ℕ) : ℕ := 7 * n * (Nat.log 2 n + 1)
+
+/-- The capacity condition already forces large squares and a logarithm of
+at least ten; retain these facts in the later cost estimates. -/
+theorem capacity_lower_bounds {n k s : ℕ} (hd : HDims n k s)
+    (hP1 : 25 * k * (Nat.log 2 n + 1) ≤ s) :
+    10 ≤ Nat.log 2 n + 1 ∧ 500 ≤ s ∧ 1000 ≤ n := by
+  have hk := hd.two_le
+  have hroom := hd.room
+  have hn := hd.mul
+  have hn16 : 16 ≤ n := by nlinarith
+  have hlog4 : 4 ≤ Nat.log 2 n := Nat.le_log_of_pow_le (by norm_num) (by norm_num; omega)
+  have hs250 : 250 ≤ s := by nlinarith
+  have hn500 : 500 ≤ n := by nlinarith
+  have hlog8 : 8 ≤ Nat.log 2 n := Nat.le_log_of_pow_le (by norm_num) (by norm_num; omega)
+  have hs450 : 450 ≤ s := by nlinarith
+  have hn900 : 900 ≤ n := by nlinarith
+  have hlog9 : 9 ≤ Nat.log 2 n := Nat.le_log_of_pow_le (by norm_num) (by norm_num; omega)
+  have hs500 : 500 ≤ s := by nlinarith
+  exact ⟨by omega, hs500, by nlinarith⟩
 
 /-- The number of window events is below `2^λ`. -/
 theorem card_events_lt {n k s Δ : ℕ} (hd : HDims n k s) (hΔ : Δ ≤ s ^ 2 + 1) :
@@ -40,29 +60,26 @@ theorem card_events_lt {n k s Δ : ℕ} (hd : HDims n k s) (hΔ : Δ ≤ s ^ 2 +
   rw [hcard]
   have h1 : k ^ 3 ≤ k ^ 5 := Nat.pow_le_pow_right (by omega) (by omega)
   have h2 : Δ ≤ 2 * s ^ 2 := by nlinarith
-  have h4 : k ^ 5 * s ^ 2 ≤ n ^ 5 := by
-    rw [hn, mul_pow]
-    exact Nat.mul_le_mul_left _ (Nat.pow_le_pow_right hs (by omega))
-  have hn2 : 2 ≤ n := by rw [hn]; nlinarith
-  have h5 : 8 * n ^ 5 < (n + 1) ^ 7 := by
-    have a : 9 * n ^ 5 ≤ (n + 1) ^ 2 * (n + 1) ^ 5 := by
-      apply Nat.mul_le_mul (by nlinarith) (Nat.pow_le_pow_left (by omega) 5)
-    have b : 0 < n ^ 5 := by positivity
-    have c : (n + 1) ^ 7 = (n + 1) ^ 2 * (n + 1) ^ 5 := by ring
-    omega
-  have h6 : (n + 1) ^ 7 ≤ 2 ^ lamN n := by
+  have hroom := hd.room
+  have hsmall : 8 * k ≤ s ^ 2 := by nlinarith
+  have h4 : 8 * (k ^ 5 * s ^ 2) ≤ n ^ 4 := by
+    have := Nat.mul_le_mul_left (k ^ 4 * s ^ 2) hsmall
+    rw [hn]
+    nlinarith only [this]
+  have h5 : n ^ 4 < (n + 1) ^ 4 := Nat.pow_lt_pow_left (by omega) (by norm_num)
+  have h6 : (n + 1) ^ 4 ≤ 2 ^ lamN n := by
     have := Nat.lt_pow_succ_log_self (by norm_num : 1 < 2) n
     rw [lamN, mul_comm, pow_mul]
-    exact Nat.pow_le_pow_left this 7
+    exact Nat.pow_le_pow_left this 4
   calc 2 * k ^ 3 * Δ + 2 * k ^ 5 * Δ ≤ 4 * k ^ 5 * Δ := by nlinarith
     _ ≤ 4 * k ^ 5 * (2 * s ^ 2) := Nat.mul_le_mul_left _ h2
     _ = 8 * (k ^ 5 * s ^ 2) := by ring
-    _ ≤ 8 * n ^ 5 := Nat.mul_le_mul_left _ h4
+    _ ≤ n ^ 4 := h4
     _ < _ := lt_of_lt_of_le h5 h6
 
-/-- `log (k Δ) ≤ 2 (log₂ n + 1)`. -/
+/-- `log (k Δ) ≤ (7/5) (log₂ n + 1)`. -/
 theorem log_kΔ_le {n k s Δ : ℕ} (hd : HDims n k s) (hΔ : Δ ≤ s ^ 2 + 1) :
-    Real.log ((k : ℝ) * Δ) ≤ 2 * ((Nat.log 2 n : ℝ) + 1) := by
+    Real.log ((k : ℝ) * Δ) ≤ (7 / 5 : ℝ) * ((Nat.log 2 n : ℝ) + 1) := by
   have hk : 2 ≤ k := hd.two_le
   have hs : 1 ≤ s := by have := hd.room; omega
   have hn : n = k * s := hd.mul.symm
@@ -75,13 +92,13 @@ theorem log_kΔ_le {n k s Δ : ℕ} (hd : HDims n k s) (hΔ : Δ ≤ s ^ 2 + 1) 
       _ ≤ k * k * s ^ 2 := Nat.mul_le_mul_right _ (Nat.mul_le_mul_right _ hk)
       _ = (k * s) ^ 2 := by ring
   have hnpos : 0 < n := by rw [hn]; positivity
-  have hlogn : Real.log n ≤ (Nat.log 2 n : ℝ) + 1 := by
+  have hlogn : Real.log n ≤ (7 / 10 : ℝ) * ((Nat.log 2 n : ℝ) + 1) := by
     have h := Nat.lt_pow_succ_log_self (by norm_num : 1 < 2) n
     have h' : (n : ℝ) ≤ 2 ^ (Nat.log 2 n + 1) := by exact_mod_cast h.le
     calc Real.log n ≤ Real.log (2 ^ (Nat.log 2 n + 1)) :=
           Real.log_le_log (by exact_mod_cast hnpos) h'
       _ = (Nat.log 2 n + 1 : ℕ) * Real.log 2 := Real.log_pow _ _
-      _ ≤ (Nat.log 2 n + 1 : ℕ) := by
+      _ ≤ (7 / 10 : ℝ) * (Nat.log 2 n + 1 : ℕ) := by
           have := Real.log_two_lt_d9
           have : (0 : ℝ) ≤ (Nat.log 2 n + 1 : ℕ) := Nat.cast_nonneg _
           nlinarith
@@ -96,7 +113,7 @@ theorem log_kΔ_le {n k s Δ : ℕ} (hd : HDims n k s) (hΔ : Δ ≤ s ^ 2 + 1) 
 
 /-- Some order of the rounds keeps every hub's in-flight maxima small. -/
 theorem exists_good_order {n k s : ℕ} (hd : HDims n k s)
-    (hP1 : 64 * k * (Nat.log 2 n + 1) ≤ s) {Δ : ℕ} (hΔ : Δ ≤ s ^ 2 + 1)
+    (hP1 : 25 * k * (Nat.log 2 n + 1) ≤ s) {Δ : ℕ} (hΔ : Δ ≤ s ^ 2 + 1)
     (rs : Fin Δ → Round k) :
     ∃ σ : Equiv.Perm (Fin Δ), ∀ L : List (InsRec k), Consistent rs σ L →
       ∃ N : Sq k → Sq k → ℕ, (∀ h, ∑ x, N h x ≤ Rhub n) ∧
@@ -107,8 +124,8 @@ theorem exists_good_order {n k s : ℕ} (hd : HDims n k s)
   have hn : n = k * s := hd.mul.symm
   set ℓ := Nat.log 2 n + 1 with hℓ
   have hlam : 6 * k * lamN n ≤ s - k := by
-    have e1 : 6 * k * lamN n = 42 * (k * ℓ) := by rw [lamN]; ring
-    have e2 : 64 * k * ℓ = 64 * (k * ℓ) := by ring
+    have e1 : 6 * k * lamN n = 24 * (k * ℓ) := by rw [lamN]; ring
+    have e2 : 25 * k * ℓ = 25 * (k * ℓ) := by ring
     have e3 : k ≤ k * ℓ := Nat.le_mul_of_pos_right k (by omega)
     omega
   obtain ⟨σ, hσ⟩ := exists_goodOrder s rs n hk hlam (card_events_lt hd hΔ)
@@ -139,8 +156,21 @@ theorem exists_good_order {n k s : ℕ} (hd : HDims n k s)
     have hkn : (k : ℝ) ≤ n := by
       have : k ≤ n := by rw [hn]; exact Nat.le_mul_of_pos_right k (by omega)
       exact_mod_cast this
-    have hℓR : (1 : ℝ) ≤ ℓ := by exact_mod_cast (show 1 ≤ ℓ by omega)
-    have hlamR : (lamN n : ℝ) = 7 * ℓ := by simp only [lamN, hℓ]; push_cast; ring
+    have hstock : 25 * (k : ℝ) * k * ℓ ≤ n := by
+      have h := Nat.mul_le_mul_left k hP1
+      rw [hd.mul] at h
+      have h' : 25 * k * k * ℓ ≤ n := by
+        simpa only [← hℓ, mul_assoc, mul_left_comm, mul_comm] using h
+      exact_mod_cast h'
+    have hsmall : 12 * (k : ℝ) ≤ n := by
+      have hs12 : 12 ≤ s := by have := hd.room; omega
+      have h := Nat.mul_le_mul_left k hs12
+      rw [hd.mul] at h
+      exact_mod_cast (show 12 * k ≤ n by omega)
+    have hn16 : 16 ≤ n := by have := hd.room; have := hd.two_le; nlinarith [hd.mul]
+    have hlog4 : 4 ≤ Nat.log 2 n := Nat.le_log_of_pow_le (by norm_num) (by norm_num; omega)
+    have hℓR : (5 : ℝ) ≤ ℓ := by exact_mod_cast (show 5 ≤ ℓ by omega)
+    have hlamR : (lamN n : ℝ) = 4 * ℓ := by simp only [lamN, hℓ]; push_cast; ring
     have hnR : (0 : ℝ) ≤ n := Nat.cast_nonneg _
     have hℓdef : ((Nat.log 2 n : ℕ) : ℝ) + 1 = ℓ := by rw [hℓ]; push_cast; ring
     rw [hℓdef] at hlog
@@ -148,13 +178,13 @@ theorem exists_good_order {n k s : ℕ} (hd : HDims n k s)
         (Rhub n : ℝ) := by
       refine hsum.trans ?_
       rw [Fintype.sum_bool, hlamR]
-      have hR : (Rhub n : ℝ) = 200 * n * ℓ := by rw [Rhub]; push_cast; rw [← hℓdef]
+      have hR : (Rhub n : ℝ) = 7 * n * ℓ := by rw [Rhub]; push_cast; rw [← hℓdef]
       rw [hR]
       have hl0 : (0 : ℝ) ≤ rowLen k s (h.1, h.2, true) := Nat.cast_nonneg _
       have hl1 : (0 : ℝ) ≤ rowLen k s (h.1, h.2, false) := Nat.cast_nonneg _
-      have hlg : 1 + Real.log (k * Δ) ≤ 1 + 2 * ℓ := by linarith
+      have hlg : 1 + Real.log (k * Δ) ≤ 1 + (7 / 5 : ℝ) * ℓ := by linarith
       have hA : (4 * (rowLen k s (h.1, h.2, true) : ℝ)) * (1 + Real.log (k * Δ)) +
-          4 * (rowLen k s (h.1, h.2, false) : ℝ) * (1 + Real.log (k * Δ)) ≤ 4 * n * (1 + 2 * ℓ) := by
+          4 * (rowLen k s (h.1, h.2, false) : ℝ) * (1 + Real.log (k * Δ)) ≤ 4 * n * (1 + (7 / 5 : ℝ) * ℓ) := by
         have hlpos : 0 ≤ 1 + Real.log (k * Δ) := by
           rcases Nat.eq_zero_or_pos (k * Δ) with h0 | hpos
           · have : (k : ℝ) * Δ = 0 := by exact_mod_cast h0

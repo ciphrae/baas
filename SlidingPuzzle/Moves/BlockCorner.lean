@@ -12,7 +12,7 @@ theorem exists_correct_block_corner (B T : Board n) (hn : 4 ≤ n)
     (hzero : ∀ c, T (ι c) ≠ 0)
     (hlabels : ∀ c, ∃ d, B (ι c) = T (ι d)) :
     ∃ C : Board n, ∃ p : Path B C,
-      p.length ≤ 3022*n ∧ blank C = blank B ∧ C (ι z) = T (ι z) ∧
+      p.length ≤ 254*n ∧ blank C = blank B ∧ C (ι z) = T (ι z) ∧
       (∀ c, ∃ d, C (ι c) = T (ι d)) ∧
       (∀ x, x ∉ Set.range ι → C x = B x) := by
   classical

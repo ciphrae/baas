@@ -9,6 +9,13 @@ transport plan and its execution (sections 3-5), the in-flight bound (section 6)
 Cleanup phase (section 7). The division into squares, the local Finish and the statistical
 reduction follow the paper.
 
+The formalization now certifies the explicit boardwise bound
+`OPT(B) ≤ M(B) + 27609·n^(8/3)(ln n)^(1/3)` for `n ≥ 4096`.
+The argument below retains its original asymptotic parameters; the current
+numerical budgets and their derivation are in
+[LEAN_PLAN.md](LEAN_PLAN.md#asymptotics) and
+[PROOF_NOTES.md](../../PROOF_NOTES.md).
+
 **Theorem.** Every reachable n x n board has a solution with
 O(n^(8/3) (log n)^(1/3)) inefficient moves.
 
@@ -332,7 +339,9 @@ With k^3 = n/ln n: O(n^(8/3) (ln n)^(1/3)).
   with the three hop kinds and the bypass (`Hub/Simulate.lean`).
 - Lemma 1 is an invariant of the count run; Lemmas 2-4 concern only the row halves' position
   dynamics, which are a function of the insertion sequence (a clean combinatorial model).
-- Constants are not optimized anywhere; (P1)-(P2) decide the threshold on n.
+- The constants in this pen-and-paper argument are not optimized; (P1)-(P2)
+  decide its threshold on n. The Lean proof uses the different parameters
+  and optimized numerical budgets recorded in `LEAN_PLAN.md`.
 - The initial blank may sit in a corridor: the first relocation (a blank/tile swap) moves it
   into a reservoir and puts one tile into that corridor cell, which is then junk.
 - Cleanup's blank/tile swaps take their parity buffer in the blank's current square.

@@ -13,7 +13,7 @@ theorem exists_stage_three (B : Board n) (hn : 4 ≤ n)
     (a b c : Cell n) (hab : a ≠ b) (hac : a ≠ c) (hbc : b ≠ c)
     (ha : B a ≠ 0) (hb : B b ≠ 0) (hc : B c ≠ 0) :
     ∃ C : Board n, ∃ p : Path B C,
-      p.length ≤ 1508*n ∧ blank C = (⟨1,by omega⟩,0) ∧
+      p.length + 8 ≤ 126*n ∧ blank C = (⟨1,by omega⟩,0) ∧
       C (0,0) = B a ∧ C (0,⟨1,by omega⟩) = B b ∧
       C (0,⟨2,by omega⟩) = B c := by
   classical
@@ -32,7 +32,7 @@ theorem exists_stage_three (B : Board n) (hn : 4 ≤ n)
     intro i
     exact Zhong.target_ne_zero 0 i.val (by omega) (by omega)
   obtain ⟨T,hT,hTu⟩ := exists_board_extending_cell_embedding u f hu hf
-  obtain ⟨D,p,hp,hD⟩ := exists_top_prefix_path_relabel B T hn hT 3 (by omega)
+  obtain ⟨D,p,hp,hD⟩ := exists_top_three_prefix_path_relabel B T hn hT
   have hplaced (i : Fin 3) : D (u i) = B (v i) :=
     (hD ⟨i.val,by omega⟩ i.isLt).trans (hTu i)
   have hnonzero (j : Fin n) (hj : j.val < 3) : D (0,j) ≠ 0 := by
@@ -54,7 +54,7 @@ theorem exists_three_cycle (B : Board n) (hn : 4 ≤ n)
     (a b c : Cell n) (hab : a ≠ b) (hac : a ≠ c) (hbc : b ≠ c)
     (ha : B a ≠ 0) (hb : B b ≠ 0) (hc : B c ≠ 0) :
     ∃ C : Board n, ∃ p : Path B C,
-      p.length ≤ 3022*n ∧ blank C = blank B ∧
+      p.length ≤ 254*n ∧ blank C = blank B ∧
       C a = B b ∧ C b = B c ∧ C c = B a ∧
       ∀ x, x ≠ a → x ≠ b → x ≠ c → C x = B x := by
   obtain ⟨D,p,hp,hbD,hDa,hDb,hDc⟩ := exists_stage_three B hn a b c hab hac hbc ha hb hc

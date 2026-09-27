@@ -172,8 +172,8 @@ noncomputable def Atot (H : RowH k) (d : ℕ) (x : Sq k) : ℕ := ∑ j, acnt rs
 noncomputable def win (H : RowH k) (d : ℕ) : ℕ :=
   if Btot rs H d = 0 then Δ else min Δ (2 * (insPos k s H d + 1) * Δ / Btot rs H d + 1)
 
-/-- The additive slack `λ = 7 (log₂ n + 1)`. -/
-def lamN (n : ℕ) : ℕ := 7 * (Nat.log 2 n + 1)
+/-- The additive slack `λ = 4 (log₂ n + 1)`. -/
+def lamN (n : ℕ) : ℕ := 4 * (Nat.log 2 n + 1)
 
 /-- The bound on present `(H, d, x)` tiles. -/
 noncomputable def Nb (n : ℕ) (H : RowH k) (d : ℕ) (x : Sq k) : ℕ :=

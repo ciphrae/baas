@@ -351,10 +351,12 @@ theorem simulate_hop2 (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
       rw [(hRcol V q (by omega)).2]
       exact Iff.rfl
     rw [hj] at hi4
-    change _ ≤ 4000 * s + 30 * k ^ 2 +
+    change _ ≤ 288 * s + 30 * k ^ 2 +
       ((Finset.range (P + 1)).filter fun q => σ.col V q ≠ (V.2.1, V.1)).card
     have e1 : 25 * (k + 2) * k = 25 * (k * k) + 50 * k := by ring
     have e3 : k ^ 2 = k * k := sq k
+    have hk2 := hd.two_le
+    have hk4 : 4 ≤ k ^ 2 := by nlinarith
     omega
 
 end SlidingPuzzle.Hub

@@ -1,10 +1,11 @@
 # The Lean proof of O(n^(8/3) (log n)^(1/3))
 
 **Status: complete.** The final theorems in
-`SlidingPuzzle/Hub/Main.lean`:
+[`SlidingPuzzle/Hub/Main.lean`](../../SlidingPuzzle/Hub/Main.lean):
 
 | Theorem | Statement |
 | --- | --- |
+| `Hub.uniform_approximation_explicit` | `OPT(B) ≤ M(B) + 27609·n^(8/3)(ln n)^(1/3)` for every reachable board, `n ≥ 4096` |
 | `Hub.uniform_approximation` | `OPT(B) ≤ M(B) + C·n^(8/3)(log n)^(1/3)` for every reachable board, `n ≥ 4096` |
 | `Hub.average_optimal_length` | mean optimal length `= (2/3)n³ + O(n^(8/3)(log n)^(1/3))` |
 | `Hub.gods_number` | God's number `= n³ + O(n^(8/3)(log n)^(1/3))` |
@@ -12,8 +13,10 @@
 
 They depend only on `propext`, `Classical.choice` and `Quot.sound`
 (`Checks/Axioms.lean`). The mathematics is `PROOF.md`; this file records how
-the Lean proof is organized and where it departs from `PROOF.md`. Constants
-are generous and unoptimized.
+the Lean proof is organized and where it departs from `PROOF.md`. The current
+certified constant is **27,609**, about 174.9 million times smaller than the
+original `4,828,800,024,144`. It is not claimed optimal.
+[PROOF_NOTES.md](../../PROOF_NOTES.md) records the accounting improvements.
 
 ## Departures from PROOF.md
 
@@ -21,7 +24,7 @@ are generous and unoptimized.
    inside a reservoir rectangle, straight blank walks along a line (a walk may
    also cross a row group by a jump), vertical/horizontal jumps (blank/tile
    swaps across a straight segment, `≤ 25*(dist+1)` moves, opposite colours),
-   and three-cycles inside an embedded square sub-board (`3022*m` moves for an
+   and three-cycles inside an embedded square sub-board (`254*m` moves for an
    `m × m` box, `Hub/PrimCycle.lean`). There are no restoring carries: region
    contents are tracked only as counts per class, so shuffling tiles inside one
    region costs only its length.
@@ -37,7 +40,7 @@ are generous and unoptimized.
 4. **Roles** `sched`, `stock`, `free`, `home`, no tokens. Relocations and
    bypasses move free tiles, so the total of free tiles grows only by junk
    heads, and one invariant keeps every square's free count positive.
-5. **Cleanup by double swaps** (`exists_double_swap`, `6044·n` moves): with the
+5. **Cleanup by double swaps** (`exists_double_swap`, `508·n` moves): with the
    blank in the last square, a misplaced tile of class `Q` is exchanged with a
    wrong tile of square `Q`, together with an exchange inside one square for
    parity; `misplaced` drops by at least one each time.
@@ -100,7 +103,17 @@ the first cell of the column half inside the hub's band.
   groups by jumps of length `k + 1`; jump into `h`'s reservoir and place the
   tile by a three-cycle. `≤ 3024 s + 25(k+2)(k+4) + junkCol`.
 * **jump E Z y**: align in `E`'s reservoir, one jump into `Z`, a three-cycle in
-  a box covering both squares. `≤ 2s + 25(d·s + 2) + 3022(d+1)s`, `d = sqDist`.
+  a box covering both squares. `≤ 2s + 25(d·s + 2) + 254(d+1)s`, `d = sqDist`.
+The budgets exposed by `IState.cost` and verified by `OpHop1`, `OpHop2`,
+and `OpJump` are:
+
+| Operation | Inefficiency budget |
+| --- | --- |
+| `hop1` | `288s + junkRow` |
+| `hop2` | `288s + 30k² + junkCol` |
+| `jump E Z` | `288s(1 + sqDist E Z)` |
+| General relocation through a corner | `6200s(1 + sqDist E Z)` |
+
 Region counts are rewritten as sums over tiles (`PrimCount.lean`), so moves
 inside one region leave them unchanged and one- and two-tile moves give exactly
 `incCnt`/`decCnt`.
@@ -129,7 +142,7 @@ single square). With `B_d` the insertions from distance `≥ d` over the plan an
 window `w_d = min Δ (⌊2(p_d+1)Δ/B_d⌋ + 1)`, a good order has (a) at least
 `p_d + 1` insertions from distance `≥ d` in every `w_d` consecutive rounds and
 (b) at most `⌊2A_{x,d}(w_d+1)/Δ⌋ + λ` rounds inserting class `x` from distance
-`d` in every `w_d + 1` consecutive rounds, `λ = 7(log₂ n + 1)`.
+`d` in every `w_d + 1` consecutive rounds, `λ = 4(log₂ n + 1)`.
 * Maclaurin's inequality `e_w(y)/C(N,w) ≤ (Σy/N)^w` (not in Mathlib) is proved
   by induction on the number of elements with Bernoulli's inequality.
 * Lower tail with weights `1 - g/(4K)` (only `exp x ≥ 1 + x` is needed):
@@ -139,8 +152,14 @@ window `w_d = min Δ (⌊2(p_d+1)Δ/B_d⌋ + 1)`, a good order has (a) at least
 * Push lemma: a tile inserted at `p_d` leaves after `p_d + 1` insertions at
   positions `≥ p_d`; with (a) it leaves within `w_d` rounds; with (b) the tiles
   of class `x` from distance `d` present are few.
-* Harmonic sums `Σ_d G_d/B_d ≤ H(B_0)` give about `34·n(log₂ n + 1)` per hub,
-  under `Rhub n = 200·n(log₂ n + 1)`.
+* The room condition bounds the total event count by `n⁴`, so `λ = 4L`
+  suffices for the union bound.
+* Harmonic sums give at most `4n(1+(7/5)L) + 8k + 8k²L` per hub.
+  Here `ln(kΔ) ≤ (7/5)L`, retaining the logarithm-base conversion.
+  The capacity hypothesis `25kL ≤ s` and the room condition give
+  `Rhub n = 7nL` (`Hub.exists_good_order`).
+* `capacity_lower_bounds` proves `L ≥ 10`, `s ≥ 500`, and `n ≥ 1000`
+  for all admissible hub instances.
 
 ## The run
 
@@ -165,16 +184,54 @@ Facts proved:
   with `served ≤ sent + (#dummy rounds so far) + 1`, keeps free counts positive;
 * the cost potential `Σ_{junk positions} (q+1)`: each hop's junk term is
   exactly its drop, and inserted tiles are clean.
-Actual totals: cost `≤ 72000·n²s + 1.8·10⁶·k²n²(log₂ n + 1)` (budget
-`transportBound = 10⁷(n²s + k²n²(log₂ n + 1))`); region tiles outside their
-squares `≤ 643·k²n(log₂ n + 1)` (budget `misplacedBound`, `1000`).
+With `L = log₂ n + 1`, the certified totals are:
+
+- `transportBound = 4032·n²s + 3767·k²n²L`.
+- `misplacedBound = 24·k²nL` for region tiles outside their squares.
+- Cleanup costs at most `508·n·(misplaced + 2n + 1)` inefficient moves.
+
+`Hub.cost_arith` separates the local coefficient `576 + 3456`
+from the corridor coefficient `1 + 6 + 3068 + 692`, using `L ≥ 10`.
+`Hub.mis_arith` bounds the leading `21k²nL` and the remaining terms
+by `24k²nL`. Both arithmetic lemmas are in `RunBounds.lean`.
 
 ## Asymptotics
 
-`hubBound n k s ≤ 10⁸(n²s + k²n²(log₂ n + 1))` on side `n = k*s`. For `n ≥ 4096`
-take `k = 2m` with `256·m³(log₂ n + 1) ≤ n < 256(m+1)³(log₂ n + 1)` and
-`s = ⌊n/k⌋`, solve the outer `n - k*s < k` layers by the Parberry prefix
-(`Parberry/Prefix.lean`), and bound each term's cube by
-`6036³ n⁸ (log₂ n + 1)`, with `log₂ n + 1 ≤ 3 ln n`. The statistical
-reduction of the paper (Section 5) is proved for any error scale `f ≥ n²`
-(`AsympStats.lean`).
+On side `n = k*s`, with `s ≥ 500`, `hubBound_le_sharp` gives
+`hubBound n k s ≤ 4042·n²s + 16063·k²n²L`.
+For `n ≥ 2^39`, take `k = 2m` with
+`64·m³L ≤ n < 64(m+1)³L` and `s = ⌊n/k⌋`. Solve the outer
+`n - k*s < k` layers by the Parberry prefix (`Parberry/Prefix.lean`).
+The threshold guarantees `m ≥ 598`, so grid rounding loses at most
+`599/598`. It also guarantees the capacity condition `25kL ≤ s`.
+The residual estimates extend monotonically to the original side `n`.
+
+`optimalLength_le_hub_sharp` keeps three terms separate:
+
+| Term | Definition | Cube bound |
+| --- | --- | --- |
+| `X` | `n²s` | `(299X)³ ≤ 599³n⁸L` |
+| `Y` | `k²n²L` | `(4Y)³ ≤ n⁸L` |
+| `Z` | `(15n² + 3002n + 1)(n - k*s)` | `Z³ ≤ n⁸L` |
+
+The solution length is at most `M + 2·4042X + 2·16063Y + 2Z`.
+On this range, `L ≤ 1.479688 ln n`, bounded by the cube of `1.139524`.
+The coefficient is therefore
+
+```text
+2·1.139524·((599/299)·4042 + 16063/4 + 1) ≈ 27608.999156.
+```
+
+For `4096 ≤ n ≤ 2^39`, the existing cubic solver gives
+`OPT ≤ 6n³ ≤ 24576·hubError n`, using `ln n ≥ 8`.
+The larger of the two branch coefficients covers every `n ≥ 4096`.
+
+`hubConstant` is `27609`; `hubConstant_rounding` verifies the exact ceiling
+and `hubConstant_eq` exposes the value and `uniform_approximation_explicit` proves the resulting bound.
+`hubBound_le`, `optimalLength_le_hub`, and `le_hubError_of_cube` retain
+coarser forms of the estimates.
+
+The statistical reduction of the paper (Section 5) is proved for any error
+scale `f ≥ n²` (`AsympStats.lean`). It yields the average and maximum
+asymptotics from the boardwise bound; **27609 is the boardwise coefficient**,
+not an asserted exact coefficient for the two-sided statistical errors.

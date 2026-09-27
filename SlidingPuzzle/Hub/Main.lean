@@ -13,11 +13,59 @@ solution length is `(2/3)n³ + O(n^(8/3) (log n)^(1/3))` and God's number is
 `n³ + O(n^(8/3) (log n)^(1/3))`, improving Zhong's `O(n^(11/4))`. -/
 open Filter Asymptotics
 
+set_option maxRecDepth 4096
+
 namespace SlidingPuzzle.Hub
 
 /-! The error scale `hubError n = n^(8/3) (log n)^(1/3)` is defined in
 `Hub/AsympError.lean`; the natural-number bound of the algorithm is
 `optimalLength_le_hub` (`Hub/AsympBound.lean`). -/
+
+/-- Round up `2·1.139524·((599/299) hubKX + hubKY/4 + 1)`, keeping
+the three error coefficients separate. -/
+def hubConstant : ℕ := 27609
+
+theorem hubConstant_eq : hubConstant = 27609 := by
+  rfl
+
+/-- Integer inequalities certify the ceiling without evaluating a large division. -/
+theorem hubConstant_rounding :
+    1139524 * (2396 * hubKX + 299 * hubKY + 1196) ≤ 598000000 * hubConstant ∧
+      598000000 * (hubConstant - 1) < 1139524 * (2396 * hubKX + 299 * hubKY + 1196) := by
+  norm_num [hubConstant, hubKX, hubKY]
+
+/-- The optimized bound holds with `C = 27609` for every `n ≥ 4096`. -/
+theorem uniform_approximation_explicit {n : ℕ} [NeZero n]
+    (hn : hubN ≤ n) (B : ReachableBoard n) :
+    (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) + hubConstant * hubError n := by
+  by_cases hlarge : hubLargeN ≤ n
+  swap
+  · obtain ⟨p,hp⟩ := Parberry.exists_solution_cubic B (by unfold hubN at hn; omega)
+    have hopt := optimalLength_le_path_length B p
+    have hpoly : 5*n^3 + 1509*n^2 + 1505*n + 4796 ≤ 6*n^3 := by
+      have hh := Nat.mul_le_mul_left (n^2) hn
+      unfold hubN at hn hh
+      nlinarith
+    have hnat : optimalLength B ≤ 6*n^3 := hopt.trans (hp.trans hpoly)
+    have hreal : (optimalLength B : ℝ) ≤ 6*(n : ℝ)^3 := by exact_mod_cast hnat
+    have herr := six_cube_le_hubError hn (show n ≤ 2 ^ 39 by unfold hubLargeN at hlarge; omega)
+    have hM : (0 : ℝ) ≤ manhattan B.val := Nat.cast_nonneg _
+    have hE := hubError_nonneg n
+    norm_num [hubConstant, hubKX, hubKY] at *
+    nlinarith
+  obtain ⟨X, Y, Z, hX, hY, hZ, hopt⟩ := optimalLength_le_hub_sharp hlarge B
+  have hnlarge : 2 ^ 39 ≤ n := hlarge
+  have hXR := le_hubError_of_cube_grid hnlarge hX
+  have hYR := le_hubError_of_cube_grid hnlarge hY
+  have hZR := le_hubError_of_cube_grid hnlarge hZ
+  have hoptR : (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) +
+      2 * (hubKX : ℝ) * X + 2 * (hubKY : ℝ) * Y + 2 * Z := by exact_mod_cast hopt
+  have hx := mul_le_mul_of_nonneg_left hXR
+    (show (0 : ℝ) ≤ hubKX by positivity)
+  have hy := mul_le_mul_of_nonneg_left hYR
+    (show (0 : ℝ) ≤ hubKY by positivity)
+  norm_num [hubConstant, hubKX, hubKY, hubD] at *
+  linarith
 
 /-- The boardwise bound `OPT(B) ≤ M(B) + C n^(8/3) (log n)^(1/3)`. -/
 theorem uniform_approximation :
@@ -25,23 +73,10 @@ theorem uniform_approximation :
       letI : NeZero n := ⟨by omega⟩
       ∀ B : ReachableBoard n,
         (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) + C * hubError n := by
-  refine ⟨((8 * hubK * hubD + 4 * hubD : ℕ) : ℝ), by positivity, hubN, ?_⟩
+  refine ⟨(hubConstant : ℝ), by positivity, hubN, ?_⟩
   intro n hn hn2
   let : NeZero n := ⟨by omega⟩
-  intro B
-  obtain ⟨X, Y, Z, hX, hY, hZ, hopt⟩ := optimalLength_le_hub hn B
-  have hn2' : 2 ≤ n := hn2
-  have hXR := le_hubError_of_cube hn2' hX
-  have hYR := le_hubError_of_cube hn2' hY
-  have hZR := le_hubError_of_cube hn2' hZ
-  have hoptR : (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) +
-      2 * (hubK : ℝ) * ((X : ℝ) + Y) + 2 * Z := by exact_mod_cast hopt
-  have hK : (0 : ℝ) ≤ hubK := Nat.cast_nonneg _
-  have hXY : 2 * (hubK : ℝ) * ((X : ℝ) + Y) ≤
-      2 * (hubK : ℝ) * (2 * hubD * hubError n + 2 * hubD * hubError n) :=
-    mul_le_mul_of_nonneg_left (add_le_add hXR hYR) (by positivity)
-  push_cast
-  nlinarith
+  exact fun B => uniform_approximation_explicit hn B
 
 /-- The average optimal solution length is `(2/3)n³ + O(n^(8/3) (log n)^(1/3))`. -/
 theorem average_optimal_length :

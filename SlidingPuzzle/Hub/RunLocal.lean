@@ -209,7 +209,7 @@ theorem gHop1_linv {G : GS k} (hL : LInv s σ0 F0 G) (τ : ℕ) {S h y : Sq k}
 theorem gHop1_cost {G : GS k} (hL : LInv s σ0 F0 G) (τ : ℕ) {S h y : Sq k}
     (h2 : S.2 ≠ h.2) (hy : y.2 = h.2) (hs : k + 1 ≤ s) :
     IState.totalCost s σ0 (gHop1 s τ G S h y).evs + pot s (gHop1 s τ G S h y).σ =
-      IState.totalCost s σ0 G.evs + pot s G.σ + 4000 * s := by
+      IState.totalCost s σ0 G.evs + pot s G.σ + 288 * s := by
   show IState.totalCost s σ0 (G.evs ++ [.hop1 S h y]) + pot s (G.σ.step s (.hop1 S h y)) = _
   rw [cost_append hL]
   have := pot_hop1 s G.σ h2 hy hs
@@ -276,7 +276,7 @@ theorem gHop2_linv {G : GS k} (hL : LInv s σ0 F0 G) {st : Bool} {h D : Sq k}
 theorem gHop2_cost {G : GS k} (hL : LInv s σ0 F0 G) {st : Bool} {h D : Sq k}
     (h2 : h.1 ≠ D.1) (hs : k + 1 ≤ s) :
     IState.totalCost s σ0 (gHop2 s G st h D D).evs + pot s (gHop2 s G st h D D).σ =
-      IState.totalCost s σ0 G.evs + pot s G.σ + (4000 * s + 30 * k ^ 2) := by
+      IState.totalCost s σ0 G.evs + pot s G.σ + (288 * s + 30 * k ^ 2) := by
   show IState.totalCost s σ0 (G.evs ++ [.hop2 h D D]) + pot s (G.σ.step s (.hop2 h D D)) = _
   rw [cost_append hL]
   have := pot_hop2 s G.σ h2 hs
@@ -330,7 +330,7 @@ theorem gJump_linv {G : GS k} (hL : LInv s σ0 F0 G) {E Z y : Sq k}
 
 theorem gJump_cost {G : GS k} (hL : LInv s σ0 F0 G) {E Z y : Sq k} :
     IState.totalCost s σ0 (gJump s G E Z y).evs + pot s (gJump s G E Z y).σ =
-      IState.totalCost s σ0 G.evs + pot s G.σ + 4000 * s * (1 + sqDist E Z) := by
+      IState.totalCost s σ0 G.evs + pot s G.σ + 288 * s * (1 + sqDist E Z) := by
   show IState.totalCost s σ0 (G.evs ++ [.jump E Z y]) + pot s G.σ = _
   rw [cost_append hL]
   simp only [IState.cost]

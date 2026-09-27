@@ -314,7 +314,7 @@ theorem simulate_hop1 (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
       rw [(hRrow H q (by omega)).2]
       exact Iff.rfl
     rw [hj] at hi3
-    change _ ≤ 4000 * s + ((Finset.range (p + 1)).filter fun q => (σ.row H q).2 ≠ H.2.1).card
+    change _ ≤ 288 * s + ((Finset.range (p + 1)).filter fun q => (σ.row H q).2 ≠ H.2.1).card
     omega
 
 end SlidingPuzzle.Hub

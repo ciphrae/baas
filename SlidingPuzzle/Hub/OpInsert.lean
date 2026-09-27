@@ -20,7 +20,7 @@ theorem insert_by_cycle (hd : HDims n k s) (B : Board n) {Q y : Sq k} {v w : Cel
     ∃ C : Board n, ∃ p : Path B C, ∃ T : Tile n, T.val ≠ 0 ∧ classOf hd T = y ∧
       keyOf hd (position B T) = some Q ∧ C v = T ∧ blank C = w ∧
       (∀ x, x ≠ v → keyOf hd x ≠ some Q → C x = B x) ∧ KeepKey hd B C {T} ∧
-      p.inefficientMoves ≤ cj + 3022 * s := by
+      p.inefficientMoves ≤ cj + 254 * s := by
   obtain ⟨t, htQ, htT, htc⟩ := exists_of_regionCount hd B hT
   obtain ⟨p1, hp1⟩ := hjump
   have hkw : keyOf hd w = some Q := keyOf_reservoir hd hw

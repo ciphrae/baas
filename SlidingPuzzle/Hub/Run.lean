@@ -29,10 +29,10 @@ open Finset
 
 /-- Budget of the transport run. -/
 def transportBound (n k s : ℕ) : ℕ :=
-  10 ^ 7 * (n ^ 2 * s + k ^ 2 * n ^ 2 * (Nat.log 2 n + 1))
+  4032 * (n ^ 2 * s) + 3767 * (k ^ 2 * n ^ 2 * (Nat.log 2 n + 1))
 
 /-- Budget of the region tiles left outside their squares. -/
-def misplacedBound (n k : ℕ) : ℕ := 1000 * k ^ 2 * n * (Nat.log 2 n + 1)
+def misplacedBound (n k : ℕ) : ℕ := 24 * k ^ 2 * n * (Nat.log 2 n + 1)
 
 variable {k : ℕ}
 
@@ -57,7 +57,7 @@ theorem sum_freeInit_le (σ0 : IState k) {Δ0 : ℕ} (rs0 : Fin Δ0 → Round k)
 
 /-- The abstract run exists, is valid, and is cheap. -/
 theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
-    (hP1 : 64 * k * (Nat.log 2 n + 1) ≤ s) (σ0 : IState k)
+    (hP1 : 25 * k * (Nat.log 2 n + 1) ≤ s) (σ0 : IState k)
     (hF1 : ∀ Q, (∑ y, σ0.cnt Q y) + (if σ0.blank = Q then 1 else 0) = regionSize k s)
     (hF2 : ∀ y, (∑ Q, σ0.cnt Q y) + σ0.corrCount s y = s ^ 2 - (if IsLast y then 1 else 0)) :
     ∃ es : List (REvent k), σ0.Valid s es ∧ σ0.totalCost s es ≤ transportBound n k s ∧
@@ -68,6 +68,7 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
   have hk2 := hd.two_le
   have hroom4 := hd.room
   have hks : k ≤ s := by omega
+  have hsize := capacity_lower_bounds hd hP1
   have h2ks : 2 * k ≤ s := by omega
   have hroom : k + 1 ≤ s := by omega
   have hsqC := sqCorridor_le (k := k) (s := s)
@@ -210,8 +211,8 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
   refine ⟨Gf.evs, hOf.lin.valid, ?_, ?_⟩
   · -- cost
     have hcost : IState.totalCost s σ0 Gf.evs + pot s Gf.σ ≤ pot s σ0 +
-        2 * hopC k s * (∑ Z, Gf.served Z) + 4000 * s * (1 + k) * (∑ h, ∑ x, Gf.byp h x) +
-        8000 * s * Gf.wt := hOf.hin.cost
+        2 * hopC k s * (∑ Z, Gf.served Z) + 288 * s * (1 + k) * (∑ h, ∑ x, Gf.byp h x) +
+        576 * s * Gf.wt := hOf.hin.cost
     have hss : (∑ Z, Gf.served Z) + (∑ S, ∑ D, Gf.sched S D) = ∑ S, ∑ D, sched0 S D :=
       hOf.hin.sched_sum
     have hS0 : ∑ S, ∑ D, sched0 S D ≤ (k * s) ^ 2 := by
@@ -224,7 +225,7 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
       simp [Fintype.card_prod]; ring_nf; exact le_refl _
     have hserved : ∑ Z, Gf.served Z ≤ (k * s) ^ 2 := by
       omega
-    have hbyp : ∑ h, ∑ x, Gf.byp h x ≤ k ^ 2 * (200 * (k * s) * (Nat.log 2 (k * s) + 1) + k ^ 2) := by
+    have hbyp : ∑ h, ∑ x, Gf.byp h x ≤ k ^ 2 * (7 * (k * s) * (Nat.log 2 (k * s) + 1) + k ^ 2) := by
       have : ∀ h, ∑ x, Gf.byp h x ≤ Rhub (k * s) + k * k := by
         intro h
         refine (sum_le_sum fun x _ => hOf.hin.byp_le h x).trans ?_
@@ -283,7 +284,7 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
         omega
       refine (sum_le_sum fun Q _ => this Q).trans ?_
       simp [Fintype.card_prod]; ring_nf; exact le_refl _
-    have hbyp : ∑ h, ∑ x, Gf.byp h x ≤ k ^ 2 * (200 * (k * s) * (Nat.log 2 (k * s) + 1) + k ^ 2) := by
+    have hbyp : ∑ h, ∑ x, Gf.byp h x ≤ k ^ 2 * (7 * (k * s) * (Nat.log 2 (k * s) + 1) + k ^ 2) := by
       have : ∀ h, ∑ x, Gf.byp h x ≤ Rhub (k * s) + k * k := by
         intro h
         refine (sum_le_sum fun x _ => hOf.hin.byp_le h x).trans ?_
@@ -292,17 +293,17 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
       simp only [sum_const, card_univ, Fintype.card_prod, Fintype.card_fin, smul_eq_mul]
       unfold Rhub; ring_nf; exact le_refl _
     have hfree : ∑ Q, ∑ y, Gf.free Q y ≤
-        k ^ 2 * (2 * (200 * (k * s) * (Nat.log 2 (k * s) + 1) + 8 * (k * s) + 10)) +
+        k ^ 2 * (2 * (7 * (k * s) * (Nat.log 2 (k * s) + 1) + 8 * (k * s) + 10)) +
           4 * k ^ 2 * (k * s) := by
       have h1 := hOf.lin.free_junk
       have h2 := junkCnt_le s σ0
       have h3 : ∑ Q, ∑ y, free0 Q y ≤ ∑ _Q : Sq k, 2 * Q' :=
         sum_le_sum fun Q _ => sum_freeInit_le σ0 rs0 Q' Q
       simp only [sum_const, card_univ, Fintype.card_prod, Fintype.card_fin, smul_eq_mul] at h3
-      have h4 : k * k * (2 * Q') ≤ k ^ 2 * (2 * (200 * (k * s) * (Nat.log 2 (k * s) + 1) +
+      have h4 : k * k * (2 * Q') ≤ k ^ 2 * (2 * (7 * (k * s) * (Nat.log 2 (k * s) + 1) +
           8 * (k * s) + 10)) := by
         rw [sq]; refine Nat.mul_le_mul_left _ (Nat.mul_le_mul_left _ ?_)
-        have : Rhub (k * s) = 200 * (k * s) * (Nat.log 2 (k * s) + 1) := rfl
+        have : Rhub (k * s) = 7 * (k * s) * (Nat.log 2 (k * s) + 1) := rfl
         have : 8 * k * s = 8 * (k * s) := by ring
         omega
       have : junkCnt s Gf.σ ≥ 0 := Nat.zero_le _

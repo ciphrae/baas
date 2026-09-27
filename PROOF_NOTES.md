@@ -76,13 +76,14 @@ twice the access length (`Path.exists_conjugated_efficient`).
 
 The paper rounds `n` down to a fourth power, leaving up to `4*n^(3/4)` outer
 layers whose Parberry prefix costs `60*n^(11/4)`, which would dominate the new
-bound. Instead, for `n ≥ 4096` take `k = 2m` with
-`256·m³(log₂ n + 1) ≤ n < 256(m+1)³(log₂ n + 1)` and `s = ⌊n/k⌋`. The outer
+bound. Instead, for `n ≥ 2^39` take `k = 2m` with
+`64·m³(log₂ n + 1) ≤ n < 64(m+1)³(log₂ n + 1)` and `s = ⌊n/k⌋`. The outer
 `d = n - k*s < k` rows and columns are solved by the Parberry prefix
 (`Parberry/Prefix.lean`, `O(n²·k)`), and the remaining `k*s × k*s` board by the
 hub algorithm. The residual board is reachable and its Manhattan distance
 equals the original board's after the prefix (`Algorithm/Residual*.lean`,
-`Hub/AsympBound.lean`).
+`Hub/AsympBound.lean`). The existing cubic solver handles
+`4096 ≤ n ≤ 2^39`, so the final theorem still starts at `4096`.
 
 ## Hub transport: departures from the paper's scheme
 
@@ -118,16 +119,53 @@ through the reservoir of a hub square. The pen-and-paper proof is
   (`Hub/Chernoff*.lean`, `Hub/InFlight*.lean`), counting permutations rather
   than using probability theory.
 
-No constants were optimized; the boardwise constant is about `5·10¹²`, so the
-bound beats `C*n^(11/4)` for the paper's constant only for astronomically
-large `n`.
+The boardwise constant is now `27,609` for `n ≥ 4096`, down from
+`849,303` before this pass and `4,828,800,024,144` originally. The threshold
+and asymptotic exponent are unchanged. The certified estimates are:
 
-## Directions for improvement
+- Staging and rotations: the boundary placement costs `8n + 98m + 12`
+  on an `n × m` board, obtained by retaining the actual raising and strip
+  costs. For three-tile staging, the second and third placements use the
+  existing sharp Parberry routine. The resulting three-cycle costs `254n`
+  moves and a double swap costs `508n`.
+- Operations: hops and jumps use linear coefficient `288`; a two-jump
+  relocation uses `576`. The quadratic hop2 allowance remains `30k²`.
+- Union bound: the number of window events is at most `n⁴`, using the
+  existing room condition. Thus `λ = 4L` suffices, with `L = log₂ n + 1`.
+  The capacity condition becomes `25kL ≤ s`, since `6kλ ≤ s-k`.
+- In-flight budget: `Rhub n = 7nL`. The sum is bounded by
+  `4n(1+(7/5)L) + 8k + 8k²L`, using `ln(kΔ) ≤ (7/5)L`.
+- Capacity also implies `L ≥ 10`, `s ≥ 500`, and `n ≥ 1000`.
+  Retaining these lower bounds avoids charging small terms as full
+  leading-order contributions.
+- Transport: `4032X + 3767Y`, where `X = n²s`, `Y = k²n²L`.
+  Misplaced region tiles are bounded by `24k²nL`.
+- Cleanup: `508n(misplaced + 2n + 1)`.
+- Whole hub algorithm: `4042X + 16063Y`, including local Finish.
+- Grid for `n ≥ 2^39`: `k = 2m`, with `64m³L ≤ n < 64(m+1)³L`.
+  The threshold ensures `m ≥ 598`. Keeping the ratio `(m+1)/m ≤ 599/598`
+  gives `(299X)³ ≤ 599³n⁸L`; the corridor bound is `(4Y)³ ≤ n⁸L`.
+  The prefix satisfies `Z³ ≤ n⁸L`.
+- Natural logarithms on this range: `L ≤ 1.479688 ln n`.
+  The rational factor `1.139524` has cube at least `1.479688`.
+- Initial range: for `4096 ≤ n ≤ 2^39`, the existing Parberry solver
+  costs at most `6n³ ≤ 24576·hubError n`. Thus this branch fits the same
+  final coefficient without adding its cost to the hub branch.
 
-Nothing has been optimized. The leading terms are `n³/k` (hops, Finish) and
-`k²n² log n` (bypasses, cleanup), and the logarithm comes only from the
-in-flight bound: simulations in `research/exponent/` show no visible
-logarithm, so `O(n^(8/3))` may be provable with a sharper in-flight argument.
-The constants of the primitives (`3022*m` per three-cycle, `25*(dist+1)` per
-jump, `6044·n` per double swap) and the envelopes in `Hub/RunBounds.lean` and
-`Hub/AsympBound.lean` are loose.
+Consequently the hub branch's real coefficient is
+`2·1.139524·((599/299)·4042 + 16063/4 + 1)`, approximately
+`27608.999156`. Rounding upward gives `C = 27,609`, which also covers
+`24576` from the initial range.
+`Hub.uniform_approximation_explicit` exposes the numerical bound directly.
+This is a certified upper bound, not a claim of optimality.
+
+## Remaining structural improvements
+
+The inexpensive accounting and routine-reuse improvements have been carried
+through to the final bound. Small rational-rounding slack remains, but the
+main cost is now the relocation/local term. Substantial further reductions
+would need a more precise relocation analysis, a more tightly coupled treatment of the
+grid and run costs, or new staging/cleanup paths. These would reorganize
+proofs beyond this pass. Removing the logarithm would require a stronger
+in-flight argument; the simulations in `research/exponent/` suggest that
+possibility but do not prove it.

@@ -130,7 +130,7 @@ theorem placeStepFromNormal (r : ℕ) (hr : r + 1 < n) (hr2 : r + 2 < n) (hm : 4
       (∀ (y : Fin m), y.val < yc →
         (actSeq B σ) ((⟨r, by omega⟩ : Fin n), y)
           = target n m ((⟨r, by omega⟩ : Fin n), y)) ∧
-      σ.length ≤ 250 * (n + m) := by
+      σ.length ≤ 7 * n + 98 * m + 12 := by
   classical
   set T : Fin (n * m) := target n m c(r,yc) with hT
   set a : Cell n m := B.symm T with ha
@@ -349,7 +349,7 @@ theorem placeStep (r : ℕ) (hr : r + 1 < n) (hr2 : r + 2 < n) (hm : 4 ≤ m)
       (∀ (y : Fin m), y.val < yc →
         (actSeq B σ) ((⟨r, by omega⟩ : Fin n), y)
           = target n m ((⟨r, by omega⟩ : Fin n), y)) ∧
-      σ.length ≤ 251 * (n + m) := by
+      σ.length ≤ 8 * n + 98 * m + 12 := by
   classical
   set p0 : Cell n m := blank B with hp0
   have hp0row : r ≤ p0.1.val := by
@@ -443,7 +443,7 @@ theorem placeStep (r : ℕ) (hr : r + 1 < n) (hr2 : r + 2 < n) (hm : 4 ≤ m)
   · intro x y hy; rw [actSeq_append]; exact hcol1 x y hy
   · intro y hy; rw [actSeq_append]; exact hleft1 y hy
   · rw [List.length_append]
-    have hlen0 : σ0.length ≤ n + m := by
+    have hlen0 : σ0.length ≤ n := by
       rw [hσ0, length_moveXWord]
       have h1 : Nat.dist p0.1.val (r+1) ≤ n := by
         rw [Nat.dist_eq_max_sub_min]; omega
@@ -494,7 +494,7 @@ theorem solveRowAux (r : ℕ) (hr : r + 1 < n) (hr2 : r + 2 < n) (hm : 4 ≤ m)
       · rw [List.length_append]
         have hmj : m - j = m - (j+1) + 1 := by omega
         calc σ1.length + σ2.length
-            ≤ 251 * (n + m) + (m - (j+1)) * (251 * (n + m)) := add_le_add hlen1 hlen2
+            ≤ 251 * (n + m) + (m - (j+1)) * (251 * (n + m)) := add_le_add (by omega : σ1.length ≤ 251 * (n + m)) hlen2
           _ = (m - j) * (251 * (n + m)) := by rw [hmj]; ring
     · have hjm' : j = m := by omega
       refine ⟨[], ?_, ?_, ?_, by simp⟩
