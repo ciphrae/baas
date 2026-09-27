@@ -52,7 +52,7 @@ theorem nat_div_add_one_gt (x b : ℕ) (hb : 0 < b) : (x : ℝ) / b < ((x / b : 
   have : (x : ℝ) < ((x / b : ℕ) : ℝ) * b + b := by exact_mod_cast h
   linarith
 
-theorem card_badA {lam : ℕ} (hk : 0 < k) (hlam : 126 * k * lam ≤ s - k) (H : RowH k) (d : ℕ)
+theorem card_badA {lam : ℕ} (hk : 0 < k) (hlam : 79 * k * lam ≤ s - k) (H : RowH k) (d : ℕ)
     (τ0 : Fin Δ) : (badA s rs H d τ0).card * 2 ^ lam ≤ Δ.factorial := by
   set w := win s rs H d with hw
   set p := insPos k s H d with hp
@@ -67,15 +67,15 @@ theorem card_badA {lam : ℕ} (hk : 0 < k) (hlam : 126 * k * lam ≤ s - k) (H :
     intro h0
     have : w = Δ := by rw [hw, win, if_pos h0]
     omega
-  have hwdef : w = 10 * (p + 1) * Δ / (9 * B) + 1 := by
-    have : w = min Δ (10 * (p + 1) * Δ / (9 * B) + 1) := by rw [hw, win, if_neg hB0]
+  have hwdef : w = 8 * (p + 1) * Δ / (7 * B) + 1 := by
+    have : w = min Δ (8 * (p + 1) * Δ / (7 * B) + 1) := by rw [hw, win, if_neg hB0]
     rw [this] at hfit ⊢
-    rcases min_choice Δ (10 * (p + 1) * Δ / (9 * B) + 1) with h | h
+    rcases min_choice Δ (8 * (p + 1) * Δ / (7 * B) + 1) with h | h
     · rw [h] at hfit; omega
     · exact h
   have hΔ : 0 < Δ := Nat.lt_of_le_of_lt (Nat.zero_le _) τ0.isLt
   have hBpos : 0 < B := Nat.pos_of_ne_zero hB0
-  have hkey : 10 * (p + 1) * Δ < w * (9 * B) := by
+  have hkey : 8 * (p + 1) * Δ < w * (7 * B) := by
     rw [hwdef, add_mul, one_mul]; exact Nat.lt_div_mul_add (by omega)
   -- Chernoff
   set g : Fin Δ → ℝ := fun j => (gcnt rs H d j : ℝ) with hg
@@ -90,27 +90,27 @@ theorem card_badA {lam : ℕ} (hk : 0 < k) (hlam : 126 * k * lam ≤ s - k) (H :
   rw [hT, hsumg, hcard] at hch
   set μ : ℝ := (w : ℝ) * B / Δ with hμ
   have hΔR : (0 : ℝ) < Δ := by exact_mod_cast hΔ
-  have hμgt : 10 * ((p : ℝ) + 1) < 9 * μ := by
+  have hμgt : 8 * ((p : ℝ) + 1) < 7 * μ := by
     rw [hμ, mul_div_assoc', lt_div_iff₀ hΔR]
-    have : ((10 * (p + 1) * Δ : ℕ) : ℝ) < ((w * (9 * B) : ℕ) : ℝ) := by exact_mod_cast hkey
+    have : ((8 * (p + 1) * Δ : ℕ) : ℝ) < ((w * (7 * B) : ℕ) : ℝ) := by exact_mod_cast hkey
     push_cast at this; linarith
   have hsub : badA s rs H d τ0 ⊆ univ.filter fun σ : Equiv.Perm (Fin Δ) =>
-      ∑ τ ∈ winA Δ τ0.val w, g (σ τ) ≤ 9 / 10 * μ := by
+      ∑ τ ∈ winA Δ τ0.val w, g (σ τ) ≤ 7 / 8 * μ := by
     intro σ hσ
     simp only [badA, mem_filter, mem_univ, true_and] at hσ ⊢
     have h1 : ∑ τ ∈ winA Δ τ0.val w, g (σ τ) ≤ p := by
       simp only [hg]; exact_mod_cast Nat.lt_succ_iff.mp hσ.2
     linarith
-  have hc1 : ((badA s rs H d τ0).card : ℝ) ≤ Δ.factorial * Real.exp (-(31 * μ) / (6250 * k)) :=
+  have hc1 : ((badA s rs H d τ0).card : ℝ) ≤ Δ.factorial * Real.exp (-(31 * μ) / (4000 * k)) :=
     (Nat.cast_le.mpr (card_le_card hsub)).trans hch
-  -- `2^λ ≤ exp(31 μ / (6250 k))`
-  have hnat : 126 * k * lam ≤ p + 1 := hlam.trans (insPos_add_one_ge s H d)
-  have hlamR : 126 * (k : ℝ) * lam ≤ p + 1 := by exact_mod_cast hnat
-  have h2lam : (2 : ℝ) ^ lam ≤ Real.exp (31 * μ / (6250 * k)) := by
+  -- `2^λ ≤ exp(31 μ / (4000 k))`
+  have hnat : 79 * k * lam ≤ p + 1 := hlam.trans (insPos_add_one_ge s H d)
+  have hlamR : 79 * (k : ℝ) * lam ≤ p + 1 := by exact_mod_cast hnat
+  have h2lam : (2 : ℝ) ^ lam ≤ Real.exp (31 * μ / (4000 * k)) := by
     have hlog : Real.log 2 ≤ 6931471808 / 10000000000 := by linarith [Real.log_two_lt_d9]
     calc (2 : ℝ) ^ lam = Real.exp (lam * Real.log 2) := by
           rw [Real.exp_nat_mul, Real.exp_log two_pos]
-      _ ≤ Real.exp (31 * μ / (6250 * k)) := by
+      _ ≤ Real.exp (31 * μ / (4000 * k)) := by
           apply Real.exp_le_exp.mpr
           rw [le_div_iff₀ (by positivity)]
           have : (lam : ℝ) * Real.log 2 ≤ 6931471808 / 10000000000 * lam := by
@@ -119,8 +119,8 @@ theorem card_badA {lam : ℕ} (hk : 0 < k) (hlam : 126 * k * lam ≤ s - k) (H :
           nlinarith
   have hfin : ((badA s rs H d τ0).card : ℝ) * 2 ^ lam ≤ Δ.factorial := by
     calc ((badA s rs H d τ0).card : ℝ) * 2 ^ lam
-        ≤ Δ.factorial * Real.exp (-(31 * μ) / (6250 * k)) *
-            Real.exp (31 * μ / (6250 * k)) := by
+        ≤ Δ.factorial * Real.exp (-(31 * μ) / (4000 * k)) *
+            Real.exp (31 * μ / (4000 * k)) := by
           gcongr
       _ = Δ.factorial := by
           rw [mul_assoc, ← Real.exp_add]; simp [neg_div]
@@ -203,7 +203,7 @@ theorem goodOrder_of_not_bad (n : ℕ) (σ : Equiv.Perm (Fin Δ))
     exact this
 
 /-- Union bound: some order avoids every bad event. -/
-theorem exists_goodOrder (n : ℕ) (hk : 0 < k) (hlam : 126 * k * lamN n ≤ s - k)
+theorem exists_goodOrder (n : ℕ) (hk : 0 < k) (hlam : 79 * k * lamN n ≤ s - k)
     (hcount : Fintype.card (RowH k × Fin k × Fin Δ) +
       Fintype.card (RowH k × Fin k × Sq k × Fin Δ) < 2 ^ lamN n) :
     ∃ σ, GoodOrder s rs n σ := by

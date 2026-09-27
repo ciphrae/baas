@@ -18,7 +18,7 @@ def hubBound (n k s : ℕ) : ℕ :=
     (k ^ 2 * (5 * s ^ 3 + 1509 * s ^ 2 + 1505 * s + 4796) + 9354 * k ^ 2 * n)
 
 theorem exists_hub_solution (hd : HDims n k s) [NeZero n]
-    (hP1 : 505 * k * (Nat.log 2 n + 1) ≤ s) (hsk : s ≤ k ^ 3) (B : Board n) (hB : Reachable B) :
+    (hP1 : 317 * k * (Nat.log 2 n + 1) ≤ s) (hsk : s ≤ k ^ 3) (B : Board n) (hB : Reachable B) :
     ∃ p : Path B (target n), p.inefficientMoves ≤ hubBound n k s := by
   obtain ⟨B1, p1, hb1, hp1⟩ := exists_normalize hd B
   have hR1 := rel_absState hd B1 hb1
