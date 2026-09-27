@@ -37,12 +37,12 @@ theorem insPos_add_one_ge (H : RowH k) (d : ℕ) : s - k ≤ insPos k s H d + 1 
 /-- Orders violating (A) at `(H, d, τ0)`. -/
 noncomputable def badA (H : RowH k) (d : ℕ) (τ0 : Fin Δ) : Finset (Equiv.Perm (Fin Δ)) :=
   univ.filter fun σ => τ0.val + win s rs H d < Δ ∧
-    ∑ τ ∈ winA Δ τ0.val (win s rs H d), gcnt rs H d (σ τ) < insPos k s H d + 1
+    ∑ τ ∈ winA Δ τ0.val (win s rs H d), gcnt rs H d (σ τ) < s
 
 /-- Orders violating (B) at `(H, d, x, τ0)`. -/
 noncomputable def badB (n : ℕ) (H : RowH k) (d : ℕ) (x : Sq k) (τ0 : Fin Δ) :
     Finset (Equiv.Perm (Fin Δ)) :=
-  univ.filter fun σ => Nb s rs n H d x < ∑ τ ∈ winB Δ τ0.val (win s rs H d), acnt rs H d x (σ τ)
+  univ.filter fun σ => Nb s rs n H d x < ∑ τ ∈ winB Δ τ0.val (wsum s rs H d), acnt rs H d x (σ τ)
 
 /-- `x < (x / b + 1) * b` as reals. -/
 theorem nat_div_add_one_gt (x b : ℕ) (hb : 0 < b) : (x : ℝ) / b < ((x / b : ℕ) : ℝ) + 1 := by
@@ -52,10 +52,9 @@ theorem nat_div_add_one_gt (x b : ℕ) (hb : 0 < b) : (x : ℝ) / b < ((x / b : 
   have : (x : ℝ) < ((x / b : ℕ) : ℝ) * b + b := by exact_mod_cast h
   linarith
 
-theorem card_badA {lam : ℕ} (hk : 0 < k) (hlam : 42 * k * lam ≤ s - k) (H : RowH k) (d : ℕ)
+theorem card_badA {lam : ℕ} (hk : 0 < k) (hlam : 42 * k * lam ≤ s) (H : RowH k) (d : ℕ)
     (τ0 : Fin Δ) : (badA s rs H d τ0).card * 2 ^ lam ≤ Δ.factorial := by
   set w := win s rs H d with hw
-  set p := insPos k s H d with hp
   set B := Btot rs H d with hB
   -- trivial cases: the window does not fit
   by_cases hfit : τ0.val + w < Δ
@@ -67,15 +66,15 @@ theorem card_badA {lam : ℕ} (hk : 0 < k) (hlam : 42 * k * lam ≤ s - k) (H : 
     intro h0
     have : w = Δ := by rw [hw, win, if_pos h0]
     omega
-  have hwdef : w = 6 * (p + 1) * Δ / (5 * B) + 1 := by
-    have : w = min Δ (6 * (p + 1) * Δ / (5 * B) + 1) := by rw [hw, win, if_neg hB0]
+  have hwdef : w = 6 * s * Δ / (5 * B) + 1 := by
+    have : w = min Δ (6 * s * Δ / (5 * B) + 1) := by rw [hw, win, if_neg hB0]
     rw [this] at hfit ⊢
-    rcases min_choice Δ (6 * (p + 1) * Δ / (5 * B) + 1) with h | h
+    rcases min_choice Δ (6 * s * Δ / (5 * B) + 1) with h | h
     · rw [h] at hfit; omega
     · exact h
   have hΔ : 0 < Δ := Nat.lt_of_le_of_lt (Nat.zero_le _) τ0.isLt
   have hBpos : 0 < B := Nat.pos_of_ne_zero hB0
-  have hkey : 6 * (p + 1) * Δ < w * (5 * B) := by
+  have hkey : 6 * s * Δ < w * (5 * B) := by
     rw [hwdef, add_mul, one_mul]; exact Nat.lt_div_mul_add (by omega)
   -- Chernoff
   set g : Fin Δ → ℝ := fun j => (gcnt rs H d j : ℝ) with hg
@@ -90,22 +89,21 @@ theorem card_badA {lam : ℕ} (hk : 0 < k) (hlam : 42 * k * lam ≤ s - k) (H : 
   rw [hT, hsumg, hcard] at hch
   set μ : ℝ := (w : ℝ) * B / Δ with hμ
   have hΔR : (0 : ℝ) < Δ := by exact_mod_cast hΔ
-  have hμgt : 6 * ((p : ℝ) + 1) < 5 * μ := by
+  have hμgt : 6 * (s : ℝ) < 5 * μ := by
     rw [hμ, mul_div_assoc', lt_div_iff₀ hΔR]
-    have : ((6 * (p + 1) * Δ : ℕ) : ℝ) < ((w * (5 * B) : ℕ) : ℝ) := by exact_mod_cast hkey
+    have : ((6 * s * Δ : ℕ) : ℝ) < ((w * (5 * B) : ℕ) : ℝ) := by exact_mod_cast hkey
     push_cast at this; linarith
   have hsub : badA s rs H d τ0 ⊆ univ.filter fun σ : Equiv.Perm (Fin Δ) =>
       ∑ τ ∈ winA Δ τ0.val w, g (σ τ) ≤ 5 / 6 * μ := by
     intro σ hσ
     simp only [badA, mem_filter, mem_univ, true_and] at hσ ⊢
-    have h1 : ∑ τ ∈ winA Δ τ0.val w, g (σ τ) ≤ p := by
-      simp only [hg]; exact_mod_cast Nat.lt_succ_iff.mp hσ.2
+    have h1 : ∑ τ ∈ winA Δ τ0.val w, g (σ τ) + 1 ≤ s := by
+      simp only [hg]; exact_mod_cast hσ.2
     linarith
   have hc1 : ((badA s rs H d τ0).card : ℝ) ≤ Δ.factorial * Real.exp (-μ / (72 * k)) :=
     (Nat.cast_le.mpr (card_le_card hsub)).trans hch
   -- `2^λ ≤ exp(μ / (72 k))`
-  have hnat : 42 * k * lam ≤ p + 1 := hlam.trans (insPos_add_one_ge s H d)
-  have hlamR : 42 * (k : ℝ) * lam ≤ p + 1 := by exact_mod_cast hnat
+  have hlamR : 42 * (k : ℝ) * lam ≤ s := by exact_mod_cast hlam
   have h2lam : (2 : ℝ) ^ lam ≤ Real.exp (μ / (72 * k)) := by
     have hlog : Real.log 2 ≤ 6931471808 / 10000000000 := by linarith [Real.log_two_lt_d9]
     calc (2 : ℝ) ^ lam = Real.exp (lam * Real.log 2) := by
@@ -128,7 +126,7 @@ theorem card_badA {lam : ℕ} (hk : 0 < k) (hlam : 42 * k * lam ≤ s - k) (H : 
 
 theorem card_badB (n : ℕ) (H : RowH k) (d : ℕ) (x : Sq k) (τ0 : Fin Δ) :
     (badB s rs n H d x τ0).card * 2 ^ lamN n ≤ Δ.factorial := by
-  set w := win s rs H d with hw
+  set w := wsum s rs H d with hw
   set A := Atot rs H d x with hA
   by_cases hA0 : A = 0
   · have hz : ∀ j, acnt rs H d x j = 0 := by
@@ -180,11 +178,11 @@ theorem card_badB (n : ℕ) (H : RowH k) (d : ℕ) (x : Sq k) (τ0 : Fin Δ) :
 
 /-- The window properties (A) and (B), for times as natural numbers. -/
 structure GoodOrder (n : ℕ) (σ : Equiv.Perm (Fin Δ)) : Prop where
-  A : ∀ H d, d < k → ∀ τ0, τ0 + win s rs H d < Δ → insPos k s H d + 1 ≤
+  A : ∀ H d, d < k → ∀ τ0, τ0 + win s rs H d < Δ → s ≤
     ∑ τ ∈ Ioc τ0 (τ0 + win s rs H d),
       (rnd rs σ τ).countP (fun p => decide (p.1 = H ∧ d ≤ p.2.1))
   B : ∀ H d, d < k → ∀ x τ0, τ0 < Δ →
-    ∑ τ ∈ Icc τ0 (τ0 + win s rs H d), (rnd rs σ τ).countP (fun p => decide (p = (H, d, x))) ≤
+    ∑ τ ∈ Icc τ0 (τ0 + wsum s rs H d), (rnd rs σ τ).countP (fun p => decide (p = (H, d, x))) ≤
       Nb s rs n H d x
 
 theorem goodOrder_of_not_bad (n : ℕ) (σ : Equiv.Perm (Fin Δ))
@@ -203,7 +201,7 @@ theorem goodOrder_of_not_bad (n : ℕ) (σ : Equiv.Perm (Fin Δ))
     exact this
 
 /-- Union bound: some order avoids every bad event. -/
-theorem exists_goodOrder (n : ℕ) (hk : 0 < k) (hlam : 42 * k * lamN n ≤ s - k)
+theorem exists_goodOrder (n : ℕ) (hk : 0 < k) (hlam : 42 * k * lamN n ≤ s)
     (hcount : Fintype.card (RowH k × Fin k × Fin Δ) +
       Fintype.card (RowH k × Fin k × Sq k × Fin Δ) < 2 ^ lamN n) :
     ∃ σ, GoodOrder s rs n σ := by

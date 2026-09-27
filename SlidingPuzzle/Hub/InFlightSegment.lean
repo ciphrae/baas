@@ -18,6 +18,19 @@ open Finset
 
 variable {k : ℕ} (s : ℕ)
 
+/-- Consecutive insertion bands are one square width apart. -/
+theorem insPos_sub_prev (k s : ℕ) (H : RowH k) (hs : k + 1 ≤ s) {j : ℕ} (hj : 0 < j) :
+    insPos k s H j = insPos k s H (j - 1) + s := by
+  have hj' : j - 1 + 1 = j := by omega
+  have hmul : (j + 1) * s = j * s + s := by ring
+  have hprod : k + 1 ≤ j * s := le_trans hs (Nat.le_mul_of_pos_left s hj)
+  unfold insPos
+  split <;> rw [hmul, hj'] <;> omega
+
+/-- The lowest band lies within one square width of the head. -/
+theorem insPos_zero_lt (k s : ℕ) (H : RowH k) (hs : k + 1 ≤ s) : insPos k s H 0 < s := by
+  unfold insPos; split <;> omega
+
 /-- Insertions with index in `[t, m)` into `H` at a position `≥ B`. -/
 def pushesAbove (e : ℕ → InsRec k) (H : RowH k) (B t m : ℕ) : ℕ :=
   ((Ico t m).filter fun l => (e l).H = H ∧ B ≤ insPos k s (e l).H (e l).d).card
