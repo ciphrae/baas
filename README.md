@@ -19,14 +19,14 @@ These are `SlidingPuzzle.Hub.average_optimal_length` and
 `…_rpow` give `O(n^α)` for every `α > 8/3`. The boardwise bound behind them is
 `Hub.uniform_approximation`: for `n ≥ 4096`, every reachable board has a
 solution of length at most `Manhattan + C*n^(8/3)*(log n)^(1/3)`. The constant
-is `19,319`, proved by `Hub.uniform_approximation_explicit` (about
-250.0 million times smaller than the original `4,828,800,024,144`).
+is `1,044`, proved by `Hub.uniform_approximation_explicit` (about
+4.6 billion times smaller than the original `4,828,800,024,144`).
 
 Here `log` in the error term is the natural logarithm. In explicit form,
 for every reachable board and every `n ≥ 4096`,
 
 ```text
-OPT(B) ≤ Manhattan(B) + 19319·n^(8/3)·(ln n)^(1/3).
+OPT(B) ≤ Manhattan(B) + 1044·n^(8/3)·(ln n)^(1/3).
 ```
 
 `Hub.hubConstant_eq` verifies the numerical value. The derivation, including
@@ -67,7 +67,7 @@ All main results depend only on `propext`, `Classical.choice` and `Quot.sound`.
 | `SlidingPuzzle/Hub/Plan*`, `WalkSnake`, `RoundWalk` | König decomposition of the demand multigraph; the walk of one round |
 | `SlidingPuzzle/Hub/Chernoff*`, `InFlight*` | Maclaurin's inequality, subset Chernoff, a good order of the rounds, tiles in flight |
 | `SlidingPuzzle/Hub/Run*` | The abstract run: roles, stock identity, validity, cost, leftover misplaced tiles |
-| `SlidingPuzzle/Hub/Cleanup`, `FinishGen`, `Transport` | Cleanup by double swaps, Finish, the hub algorithm on side `k*s` |
+| `SlidingPuzzle/Hub/Cleanup`, `FinishGen`, `Transport` | Cleanup by three-cycles and double swaps, Finish, the hub algorithm on side `k*s` |
 | `SlidingPuzzle/Hub/Asymp*`, `Main` | Choice of `k ≈ (n/log n)^(1/3)`, general sides, the final theorems |
 | `Zhong/` | Word-level puzzle library in the paper's conventions: reachability criterion, orbit statistics, move words |
 | `research/exponent/` | Pen-and-paper proof, Lean blueprint, research log and simulations |
@@ -110,8 +110,9 @@ against `k²n²·log n` gives `k ≈ (n/log n)^(1/3)`.
   without replacement (Maclaurin's inequality), keeps the tiles in flight at
   `O(n log n)` per hub.
 * *Cleanup and Finish* (`Hub/Cleanup`, `FinishGen`). The `O(k²n log n)` tiles
-  left outside their squares are fixed by double swaps at `O(n)` each; each
-  square is then solved locally, `k²·O(s³) = O(n³/k)`.
+  left outside their squares are fixed at least two at a time, by a three-cycle
+  or a double swap at `O(n)` each; each square is then solved locally,
+  `k²·O(s³) = O(n³/k)`.
 * *Arbitrary sides* (`Hub/AsympBound`). With `s = ⌊n/k⌋`, the outer
   `n - k*s < k` layers are solved by a Parberry prefix, which is lower order.
 

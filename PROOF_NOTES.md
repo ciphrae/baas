@@ -76,14 +76,14 @@ twice the access length (`Path.exists_conjugated_efficient`).
 
 The paper rounds `n` down to a fourth power, leaving up to `4*n^(3/4)` outer
 layers whose Parberry prefix costs `60*n^(11/4)`, which would dominate the new
-bound. Instead, for `n ≥ 2^39` take `k = 2m` with
-`64·m³(log₂ n + 1) ≤ n < 64(m+1)³(log₂ n + 1)` and `s = ⌊n/k⌋`. The outer
+bound. Instead, for `n ≥ 9·2^24` take `k = 2m` with
+`21·m³(log₂ n + 1) ≤ n < 21(m+1)³(log₂ n + 1)` and `s = ⌊n/k⌋`. The outer
 `d = n - k*s < k` rows and columns are solved by the Parberry prefix
 (`Parberry/Prefix.lean`, `O(n²·k)`), and the remaining `k*s × k*s` board by the
 hub algorithm. The residual board is reachable and its Manhattan distance
 equals the original board's after the prefix (`Algorithm/Residual*.lean`,
 `Hub/AsympBound.lean`). The existing cubic solver handles
-`4096 ≤ n ≤ 2^39`, so the final theorem still starts at `4096`.
+`4096 ≤ n ≤ 9·2^24`, so the final theorem still starts at `4096`.
 
 ## Hub transport: departures from the paper's scheme
 
@@ -100,8 +100,8 @@ through the reservoir of a hub square. The pen-and-paper proof is
 - **No Preparation, no Arrangement.** Corridors start with whatever tiles the
   board has there. A junk tile only moves toward the head of its corridor half
   and costs at most `n` before it drops into a reservoir; the `O(k²n log n)`
-  tiles left outside their squares at the end are exchanged home by double
-  swaps (`Hub/Cleanup.lean`, `O(n)` each).
+  tiles left outside their squares at the end are sent home at least two at a
+  time, by a three-cycle or a double swap (`Hub/Cleanup.lean`, `O(n)` each).
 - **Rounds instead of Algorithm 4.** The reservoir demand multigraph, padded
   with dummy edges and loops, splits into perfect matchings (Hall/König,
   `Hub/Plan.lean`); a round follows its cycles backwards, and cycles start in
@@ -119,66 +119,73 @@ through the reservoir of a hub square. The pen-and-paper proof is
   (`Hub/Chernoff*.lean`, `Hub/InFlight*.lean`), counting permutations rather
   than using probability theory.
 
-The boardwise constant is now `19,319` for `n ≥ 4096`, down from
-`20,816` before combined accounting and the fractional in-flight budget,
-`27,508` before retaining size-dependent budgets,
-`27,607` before the transport-arithmetic refinement, `27,609` before the
-prefix refinement, `849,303` in an earlier version and
-`4,828,800,024,144` originally. The threshold and asymptotic exponent
-are unchanged. The certified estimates are:
+The boardwise constant is now `1,044` for `n ≥ 4096`, down from `19,319`
+at the start of the latest optimization pass, `20,816` before combined
+accounting and the fractional in-flight budget, `27,508` before retaining
+size-dependent budgets, `849,303` in an earlier version and
+`4,828,800,024,144` originally. The asymptotic exponent is unchanged. The
+certified estimates are:
 
-- Staging and rotations: the boundary placement costs `8n + 98m + 12`
-  on an `n × m` board, obtained by retaining the actual raising and strip
-  costs. For three-tile staging, the second and third placements use the
-  existing sharp Parberry routine. The resulting three-cycle costs `254n`
-  moves and a double swap costs `508n`.
-- Operations: hops and jumps use linear coefficient `288`; a two-jump
-  relocation uses `576`. The quadratic hop2 allowance remains `30k²`.
-- Union bound: the number of window events is at most `n⁴`, using the
-  existing room condition. Thus `λ = 4L` suffices, with `L = log₂ n + 1`.
-  The capacity condition becomes `25kL ≤ s`, since `6kλ ≤ s-k`.
-- In-flight budget: `Rhub n = ⌊(28nL + 22n)/5⌋ + 1`. The sum is bounded by
-  `4n(1+(7/5)L) + 8k + 8k²L`, using `ln(kΔ) ≤ (7/5)L`.
-  Capacity gives `8k²L ≤ 8n/25` and `s ≥ 500` gives `8k ≤ 8n/500`.
-  The old `7nL` estimate remains available as a compatibility bound.
-- Capacity also implies `L ≥ 10`, `s ≥ 500`, and `n ≥ 1000`.
-  Retaining these lower bounds avoids charging small terms as full
-  leading-order contributions.
-- Transport: `2883X + 2148Y` on the large grid, where `X = n²s`,
-  `Y = k²n²L`; the generic bound `4032X + 3592Y` remains available.
-  The raw run budgets retain their dependence on `k`, `n`, and `L`.
-  For `L ≥ 39`, misplaced region tiles are bounded by `22k²nL`,
-  improving the generic `24k²nL`.
-- Cleanup: `508n(misplaced + 2n + 1)`.
-- Whole hub algorithm on the large grid: `2886.937X + 10772.414Y`, including
-  local Finish. The proof carries integer numerators over `1000` through
-  `AsympAccounting.lean`, using `k ≥ 1196`, `L ≥ 39`, and capacity.
-  The older bounds `2893X + 13351Y` and `4042X + 15888Y` remain available.
-- Grid for `n ≥ 2^39`: `k = 2m`, with `64m³L ≤ n < 64(m+1)³L`.
-  The threshold ensures `m ≥ 598`. Keeping the ratio `(m+1)/m ≤ 599/598`
-  gives `(299X)³ ≤ 599³n⁸L`; the corridor bound is `(4Y)³ ≤ n⁸L`.
-  The prefix satisfies `(1000Z)³ ≤ n⁸L` for the large-board range.
-- Natural logarithms on this range: `L ≤ 1.479688 ln n`.
-  The rational factor `1.139524` has cube at least `1.479688`.
-- Initial range: for `4096 ≤ n ≤ 2^39`, the existing Parberry solver
-  costs at most `6n³ ≤ 18000·hubError n`, splitting at `2^36` and using
-  `ln n ≥ 24` above that split. Thus this branch fits the same
-  final coefficient without adding its cost to the hub branch.
+- Three-cycles (`Moves/ThreeCycleSharp.lean`): on a board of side `n ≥ 6`, the
+  blank is moved below the top-left corner (`≤ 2n`) and the three tiles are
+  staged by the sharp Parberry placements (`≤ 8n` each) at `(0,1),(0,2),(0,3)`,
+  or at `(0,1),(0,2)` when one of them already sits in the corner. A top-row
+  three-cycle at the staged columns (24 moves) and the reversed staging give
+  `≤ 52n` moves (`exists_three_cycle_sharp`), and a double swap `≤ 104n`. The
+  previous staging used Zhong's general placement for the first tile and cost
+  `254n` per three-cycle.
+- Jumps: `Zhong.strip_jump` costs at most `12m + 1` moves on a `2 × m` strip,
+  so a blank/tile jump over horizontal or vertical distance `d` costs
+  `≤ 13(d+1)` (previously charged `25(d+1)`).
+- Operations (`IState.cost`): hop1 `55s + 26(k+1) + junkRow`, hop2
+  `54s + 13k² + 65k + 78 + junkCol`, jump `65s(1 + sqDist)`. A relocation is a
+  single jump when the squares are aligned (weight `1 + d`) and two jumps
+  through the corner otherwise (weight `2 + d`), each weight unit costing `65s`.
+- Round walk: a cycle relocation serves at least two new squares, and along
+  the snake order only row changes need a second jump, so a round's
+  relocation weight is at most `(3k² + 6k)/2 + 2k·#dummy`
+  (`exists_round_events`).
+- In-flight order: the lower tail uses weights `1 - g/(8K)` with
+  `exp(-(134/125)v) ≤ 1 - v` on `[0, 1/8]`, so windows need only `8/7` of the
+  expected pushes, and costs capacity `317kL ≤ s`. The upper tail uses weights
+  `(9/8)^a`: since `(9/8)^17 ≥ e²`, at most `(17/16)μ + 6λ` insertions occur in a
+  window, with `λ = 4L` and `L = log₂ n + 1`.
+- In-flight budget: with `s ≤ k³`, `ln(kΔ) ≤ (7/4)ln n + 1/s²`, which gives
+  `Rhub n = ⌊(14730nL + 13743n)/10000⌋ + 1`.
+- Free tiles: home tiles pad the set-aside reserve only up to `Q'` tiles per
+  square, so at most `k²(Rhub n + 8n + 10)` free tiles remain for cleanup.
+- Cleanup (`Hub/Cleanup.lean`): a misplaced tile goes to its square in exchange
+  for a wrong tile of that square, which goes home through a third wrong tile
+  by one three-cycle, or, if it belongs where the first tile was, by a double
+  swap. Each step removes at least two misplaced tiles: `52n(misplaced + 2n + 2)`.
+- Whole hub algorithm (`AsympAccounting.lean`, `k ≥ 126`, `L ≥ 27`, capacity):
+  `1000·hubBound ≤ 214050X + 297996Y`, with `X = n²s`, `Y = k²n²L`.
+- Grid for `n ≥ 9·2^24`: `k = 2m` with `21m³L ≤ n < 21(m+1)³L`; then
+  `m ≥ 63`, `3L ≤ 2m` (hence `s ≤ k³`), and `1268m²L ≤ n` (capacity). Cube
+  scales: `(100000X)³ ≤ 140136³n⁸L`, `(10⁶Y)³ ≤ 525510³n⁸L`, `(400Z)³ ≤ n⁸L`.
+- Natural logarithms: `L ≤ 1.494220 ln n` for `n ≥ 9·2^24`, whose cube root is
+  at most `1.143243`.
+- Initial range: for `4096 ≤ n ≤ 9·2^24`, the Parberry solver's exact bound
+  `5n³ + 1509n² + 1505n + 4796` is at most `1044·hubError n`, split at `2^20`,
+  `2^26` and `2^27`.
 
 Consequently the hub branch's real coefficient is
-`2·1.139524·((599/299)·2886.937 + 10772.414/4 + 1/1000)`, approximately
-`19318.655326`. Rounding upward gives `C = 19,319`, which also covers
-`18000` from the initial range.
-`Hub.uniform_approximation_explicit` exposes the numerical bound directly.
-This is a certified upper bound, not a claim of optimality.
+`2·1.143243·(1.40136·214.050 + 0.52551·297.996 + 0.0025)`, approximately
+`1043.93`. Rounding upward gives `C = 1,044` (`hubLargeConstant_rounding`),
+which also covers the initial range. `Hub.uniform_approximation_explicit`
+exposes the numerical bound directly. This is a certified upper bound, not a
+claim of optimality.
 
 ## Remaining structural improvements
 
-The inexpensive accounting and routine-reuse improvements have been carried
-through to the final bound. The prefix term is now nearly negligible; the
-main cost is now the relocation/local term. Substantial further reductions
-would need a more precise relocation analysis, a more tightly coupled treatment
-of the grid and run costs, or new staging/cleanup paths. These would reorganize
-proofs beyond this pass. Removing the logarithm would require a stronger
-in-flight argument; the simulations in `research/exponent/` suggest that
-possibility but do not prove it.
+The three-cycle constant `52` now drives most of the bound: hops (`55s`), jumps
+(`65s` per unit, of which `52s` is the three-cycle in a box covering both
+squares) and cleanup (`52n` per tile). A jump or insertion could avoid the
+three-cycle altogether if the wanted tile lay in the reservoir, since it
+could then be reached by a single strip jump or a placement inside the
+reservoir. The obstacle is the rest of the region, the landing strip and the
+own column piece, where corridor heads drop in; a cheaper scheme would have to
+keep the tiles used by jumps and insertions out of those cells. [OPTIMIZATION_IDEAS.md](OPTIMIZATION_IDEAS.md) lists this
+and smaller remaining improvements. Removing the logarithm would require a
+stronger in-flight argument; the simulations in `research/exponent/` suggest
+that possibility but do not prove it.

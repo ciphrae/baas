@@ -5,7 +5,7 @@
 
 | Theorem | Statement |
 | --- | --- |
-| `Hub.uniform_approximation_explicit` | `OPT(B) ≤ M(B) + 19319·n^(8/3)(ln n)^(1/3)` for every reachable board, `n ≥ 4096` |
+| `Hub.uniform_approximation_explicit` | `OPT(B) ≤ M(B) + 1044·n^(8/3)(ln n)^(1/3)` for every reachable board, `n ≥ 4096` |
 | `Hub.uniform_approximation` | `OPT(B) ≤ M(B) + C·n^(8/3)(log n)^(1/3)` for every reachable board, `n ≥ 4096` |
 | `Hub.average_optimal_length` | mean optimal length `= (2/3)n³ + O(n^(8/3)(log n)^(1/3))` |
 | `Hub.gods_number` | God's number `= n³ + O(n^(8/3)(log n)^(1/3))` |
@@ -14,7 +14,7 @@
 They depend only on `propext`, `Classical.choice` and `Quot.sound`
 (`Checks/Axioms.lean`). The mathematics is `PROOF.md`; this file records how
 the Lean proof is organized and where it departs from `PROOF.md`. The current
-certified constant is **19,319**, about 250.0 million times smaller than the
+certified constant is **1,044**, about 4.6 billion times smaller than the
 original `4,828,800,024,144`. It is not claimed optimal.
 [PROOF_NOTES.md](../../PROOF_NOTES.md) records the accounting improvements.
 
@@ -23,9 +23,11 @@ original `4,828,800,024,144`. It is not claimed optimal.
 1. **Four primitives.** Every operation is built from walks of the blank
    inside a reservoir rectangle, straight blank walks along a line (a walk may
    also cross a row group by a jump), vertical/horizontal jumps (blank/tile
-   swaps across a straight segment, `≤ 25*(dist+1)` moves, opposite colours),
-   and three-cycles inside an embedded square sub-board (`254*m` moves for an
-   `m × m` box, `Hub/PrimCycle.lean`). There are no restoring carries: region
+   swaps across a straight segment, `≤ 13*(dist+1)` moves, opposite colours),
+   and three-cycles inside an embedded square sub-board (`52*m` moves for an
+   `m × m` box with `m ≥ 6`, `Hub/PrimCycle.lean`; the three tiles are staged
+   by sharp Parberry placements, `Moves/ThreeCycleSharp.lean`). There are no
+   restoring carries: region
    contents are tracked only as counts per class, so shuffling tiles inside one
    region costs only its length.
 2. **Insertion by a three-cycle.** After walking the corridor to the insertion
@@ -40,10 +42,12 @@ original `4,828,800,024,144`. It is not claimed optimal.
 4. **Roles** `sched`, `stock`, `free`, `home`, no tokens. Relocations and
    bypasses move free tiles, so the total of free tiles grows only by junk
    heads, and one invariant keeps every square's free count positive.
-5. **Cleanup by double swaps** (`exists_double_swap`, `508·n` moves): with the
-   blank in the last square, a misplaced tile of class `Q` is exchanged with a
-   wrong tile of square `Q`, together with an exchange inside one square for
-   parity; `misplaced` drops by at least one each time.
+5. **Cleanup by three-cycles** (`exists_three_cycle_sharp`, `52·n` moves): with
+   the blank in the last square, a misplaced tile of class `Q` goes into square
+   `Q` in exchange for a wrong tile there, which goes home through a third
+   wrong tile; if it belongs where the first tile was, a double swap
+   (`104·n` moves) exchanges the two, with an exchange inside one square for
+   parity. `misplaced` drops by at least two each time.
 6. **No Preparation.** The blank is first walked into a reservoir
    (`exists_normalize`); the run starts from the board's abstraction, junk
    corridors included.
@@ -95,24 +99,25 @@ the first cell of the column half inside the hub's band.
 * **hop1 S h y**: walk in `h`'s reservoir; jump to the landing strip; walk the
   row through the strip into the half up to position `p` (the head drops into
   the strip); jump down into `S` and place the class-`y` tile by a three-cycle.
-  Inefficiency `≤ 3025 s + 50(k+1) + junkRow`: a clean row tile moves toward
+  Inefficiency `≤ 55s + 26(k+1) + junkRow`: a clean row tile moves toward
   its target block column, so only strip steps and junk steps can be
   inefficient (`PrimWalk.lean` bounds a walk step by step).
 * **hop2 h D y**: walk in `D`'s reservoir; jump to the own column piece and
   across a row group into position `0`; walk the column half, crossing row
   groups by jumps of length `k + 1`; jump into `h`'s reservoir and place the
-  tile by a three-cycle. `≤ 3024 s + 25(k+2)(k+4) + junkCol`.
+  tile by a three-cycle. `≤ 54s + 13k² + 65k + 78 + junkCol`.
 * **jump E Z y**: align in `E`'s reservoir, one jump into `Z`, a three-cycle in
-  a box covering both squares. `≤ 2s + 25(d·s + 2) + 254(d+1)s`, `d = sqDist`.
+  a box covering both squares. `≤ 2s + 13(d·s + 2) + 52(d+1)s ≤ 65s(1+d)`,
+  `d = sqDist`.
 The budgets exposed by `IState.cost` and verified by `OpHop1`, `OpHop2`,
 and `OpJump` are:
 
 | Operation | Inefficiency budget |
 | --- | --- |
-| `hop1` | `288s + junkRow` |
-| `hop2` | `288s + 30k² + junkCol` |
-| `jump E Z` | `288s(1 + sqDist E Z)` |
-| General relocation through a corner | `6200s(1 + sqDist E Z)` |
+| `hop1` | `55s + 26(k+1) + junkRow` |
+| `hop2` | `54s + 13k² + 65k + 78 + junkCol` |
+| `jump E Z` | `65s(1 + sqDist E Z)` |
+| General relocation through a corner | `65s(2 + sqDist E Z)` |
 
 Region counts are rewritten as sums over tiles (`PrimCount.lean`), so moves
 inside one region leave them unchanged and one- and two-tile moves give exactly
@@ -131,22 +136,28 @@ has a positive entry.
 and a real in-edge; phase 2 starts, in snake order, at every unserved square
 with a real in-edge and walks until the cycle closes. Invariants: after phase 1
 no unserved square with a real in-edge lies on a cycle with a dummy edge, so
-phase-2 walks end where they start; relocations cost `≤ 2k` per dummy edge in
-phase 1 and telescope along the snake order in phase 2
-(`sqDist P Q ≤ |snake P - snake Q|`): `≤ 4k² + 4k(1 + #dummy)` per round.
+phase-2 walks end where they start. A relocation weighs `1 + sqDist` when its
+squares are aligned (one jump) and `2 + sqDist` otherwise. Relocations weigh
+`≤ 2k` per dummy edge in phase 1; in phase 2 they telescope along the snake
+order (`sqDist P Q ≤ |snake P - snake Q|`), only row changes need a second
+jump, and each serves at least two new squares, so a round weighs at most
+`(3k² + 6k)/2 + 2k·#dummy`.
 
 ## In-flight bound
 
 Per half and block distance `d` a round inserts at most once (the source is a
 single square). With `B_d` the insertions from distance `≥ d` over the plan and
-window `w_d = min Δ (⌊2(p_d+1)Δ/B_d⌋ + 1)`, a good order has (a) at least
+window `w_d = min Δ (⌊8(p_d+1)Δ/(7B_d)⌋ + 1)`, a good order has (a) at least
 `p_d + 1` insertions from distance `≥ d` in every `w_d` consecutive rounds and
-(b) at most `⌊2A_{x,d}(w_d+1)/Δ⌋ + λ` rounds inserting class `x` from distance
-`d` in every `w_d + 1` consecutive rounds, `λ = 4(log₂ n + 1)`.
+(b) at most `⌊17A_{x,d}(w_d+1)/(16Δ)⌋ + 6λ` rounds inserting class `x` from
+distance `d` in every `w_d + 1` consecutive rounds, `λ = 4(log₂ n + 1)`.
 * Maclaurin's inequality `e_w(y)/C(N,w) ≤ (Σy/N)^w` (not in Mathlib) is proved
   by induction on the number of elements with Bernoulli's inequality.
-* Lower tail with weights `1 - g/(4K)` (only `exp x ≥ 1 + x` is needed):
-  `≤ Δ!·exp(-μ/(12K))`; upper tail with weights `1 + a = 2^a`.
+* Lower tail with weights `1 - g/(8K)` and `exp(-(134/125)v) ≤ 1 - v` on
+  `[0, 1/8]`: at most `Δ!·exp(-31μ/(4000K))` orders have a window sum
+  `≤ (7/8)μ`. Upper tail with weights `1 + a/8 = (9/8)^a`: since
+  `(9/8)^17 ≥ e²`, at most `Δ!/(9/8)^λ'` orders have a window sum
+  `≥ (17/16)μ + λ'`; `λ' = 6λ` covers the union bound.
 * All fibres of `σ ↦ σ '' T` have the same size, so subset counts are
   permutation counts; a union bound gives the order.
 * Push lemma: a tile inserted at `p_d` leaves after `p_d + 1` insertions at
@@ -154,11 +165,11 @@ window `w_d = min Δ (⌊2(p_d+1)Δ/B_d⌋ + 1)`, a good order has (a) at least
   of class `x` from distance `d` present are few.
 * The room condition bounds the total event count by `n⁴`, so `λ = 4L`
   suffices for the union bound.
-* Harmonic sums give at most `4n(1+(7/5)L) + 8k + 8k²L` per hub.
-  Here `ln(kΔ) ≤ (7/5)L`, retaining the logarithm-base conversion.
-  The capacity hypothesis `25kL ≤ s` and the room condition give
-  `Rhub n = ⌊(28nL + 22n)/5⌋ + 1` (`Hub.exists_good_order`).
-  Capacity bounds `8k²L` by `8n/25`; `s ≥ 500` bounds `8k` by `8n/500`.
+* Harmonic sums give at most `(17/14)n(1 + ln(kΔ)) + (17/4)k + 48k²L` per hub.
+  With `s ≤ k³`, `ln(kΔ) ≤ (7/4)ln n + 1/s²` (`log_kΔ_le_sharp`).
+  The capacity hypothesis `317kL ≤ s` and the room condition give
+  `Rhub n = ⌊(14730nL + 13743n)/10000⌋ + 1` (`Hub.exists_good_order`).
+  Capacity bounds `48k²L` by `48n/317`; `s ≥ 500` bounds `(17/4)k`.
   `Rhub_lower` and `Rhub_upper` certify the integer rounding, while
   `Rhub_le_seven` recovers the old `7nL` estimate.
 * `capacity_lower_bounds` proves `L ≥ 10`, `s ≥ 500`, and `n ≥ 1000`
@@ -168,7 +179,7 @@ window `w_d = min Δ (⌊2(p_d+1)Δ/B_d⌋ + 1)`, a good order has (a) at least
 
 `T S D = cnt S D`; `exists_rounds`; the first
 `Q' = min Δ0 (Rhub n + 8ks + 10)` rounds are set aside (their real edges' tiles
-and `min(home0, Q')` home tiles start as free); the other rounds are ordered by
+start as free, padded with home tiles up to `Q'` in total); the other rounds are ordered by
 `exists_good_order` and walked by `exists_round_events`; each high-level event
 is resolved into operations:
 * `serve S D`, same block column: `hop2 S D D`; same band: `hop1 S D D`;
@@ -190,12 +201,12 @@ Facts proved:
 With `L = log₂ n + 1`, the certified totals are:
 
 - `transportBound` retains the potential, served, bypass, and relocation
-  terms with their actual dimensions; `transportBound_le` gives the generic
-  `4032·n²s + 3592·k²n²L`, and `transportBound_le_large` improves this to
-  `2883·n²s + 2148·k²n²L` when `k ≥ 1000` and `L ≥ 39`.
-- `misplacedBound = 3k²·Rhub n + 21k²n + k⁴ + 20k²`; it is bounded by
+  terms with their actual dimensions; the coarser compatibility bounds
+  `transportBound_le` (`4032·n²s + 3592·k²n²L`) and `transportBound_le_large`
+  (`2883·n²s + 2148·k²n²L` when `k ≥ 1000` and `L ≥ 39`) still hold.
+- `misplacedBound = 2k²·Rhub n + 13k²n + k⁴ + 10k²`; it is bounded by
   `24k²nL` generically and by `22k²nL` when `L ≥ 39`.
-- Cleanup costs at most `508·n·(misplaced + 2n + 1)` inefficient moves.
+- Cleanup costs at most `52·n·(misplaced + 2n + 2)` inefficient moves.
 
 `Hub.cost_arith` separates the local coefficient `576 + 3456`
 from the corridor coefficient `0.4 + 6 + 3067.2 + 518.4`, using `L ≥ 10`.
@@ -206,54 +217,53 @@ These arithmetic lemmas are in `RunBounds.lean`.
 
 ## Asymptotics
 
-On side `n = k*s`, with `s ≥ 500`, `hubBound_le_sharp` gives
-`hubBound n k s ≤ 4042·n²s + 15888·k²n²L`.
-For `n ≥ 2^39`, take `k = 2m` with
-`64·m³L ≤ n < 64(m+1)³L` and `s = ⌊n/k⌋`. Solve the outer
-`n - k*s < k` layers by the Parberry prefix (`Parberry/Prefix.lean`).
-The threshold guarantees `m ≥ 598`, so grid rounding loses at most
-`599/598`. It also guarantees the capacity condition `25kL ≤ s`.
-The residual side satisfies `ks ≥ 2^38`, proved using the division remainder,
-so its own logarithm satisfies `log₂(ks) + 1 ≥ 39`. Thus `k ≥ 1196 ≥ 1000`
-and `hubBound_le_large` applies with coefficients
-`hubLargeKX = 2893`, `hubLargeKY = 13351`.
-The combined `hubBound_le_scaled` in `AsympAccounting.lean` improves this to
-`1000·hubBound ≤ 2886937X + 10772414Y`, applying capacity directly to
-transport and cleanup and using the fractional `Rhub` budget. Capacity
-also ensures `s ≥ 1000000`, making the Finish remainders small.
-The residual estimates extend monotonically to the original side `n`.
+On side `n = k*s`, with `s ≥ 500`, `hubBound_le_sharp` gives the coarse
+`hubBound n k s ≤ 4042·n²s + 15888·k²n²L`. The certified bound uses the
+combined `hubBound_le_scaled` in `AsympAccounting.lean`: for `k ≥ 126`,
+`L ≥ 27` and capacity `317kL ≤ s`,
+`1000·hubBound ≤ 214050X + 297996Y` with `X = n²s` and `Y = k²n²L`. It keeps
+transport, cleanup and Finish in one polynomial and uses capacity for the
+`k⁴` remainders; capacity also gives `s ≥ 1078434`, making the Finish
+remainders small.
+
+For `n ≥ 9·2^24`, take `k = 2m` with `21·m³L ≤ n < 21(m+1)³L` and
+`s = ⌊n/k⌋`. Solve the outer `n - k*s < k` layers by the Parberry prefix
+(`Parberry/Prefix.lean`). The threshold guarantees `m ≥ 63`
+(`half_width_large`, split at `2^28`), so grid rounding loses at most `64/63`;
+`3L ≤ 2m` (`log_le_half_width`), hence `s ≤ k³` (`div_le_cube_large`); and
+`1268m²L ≤ n`, hence capacity. The residual side satisfies `ks ≥ 2^26`, so
+its own logarithm satisfies `log₂(ks) + 1 ≥ 27`. The residual estimates
+extend monotonically to the original side `n`.
 
 `optimalLength_le_hub_scaled` keeps three terms separate:
 
 | Term | Definition | Cube bound |
 | --- | --- | --- |
-| `X` | `n²s` | `(299X)³ ≤ 599³n⁸L` |
-| `Y` | `k²n²L` | `(4Y)³ ≤ n⁸L` |
-| `Z` | `(15n² + 3002n + 1)(n - k*s)` | `(1000Z)³ ≤ n⁸L` |
+| `X` | `n²s` | `(100000X)³ ≤ 140136³n⁸L` |
+| `Y` | `k²n²L` | `(10⁶Y)³ ≤ 525510³n⁸L` |
+| `Z` | `(15n² + 3002n + 1)(n - k*s)` | `(400Z)³ ≤ n⁸L` |
 
-The solution length is at most `M + 2·2886.937X + 2·10772.414Y + 2Z`.
+The solution length is at most `M + 2·214.050X + 2·297.996Y + 2Z`.
 The natural-number theorem multiplies this inequality by `1000`, preserving
 all coefficients until the final real conversion.
-On this range, `L ≤ 1.479688 ln n`, bounded by the cube of `1.139524`.
-The coefficient is therefore
+On this range, `L ≤ 1.494220 ln n` (`natLog_succ_le_grid_log`, split at
+`2^28`), bounded by the cube of `1.143243`. The coefficient is therefore
 
 ```text
-2·1.139524·((599/299)·2886.937 + 10772.414/4 + 1/1000) ≈ 19318.655326.
+2·1.143243·(1.40136·214.050 + 0.52551·297.996 + 0.0025) ≈ 1043.93.
 ```
 
-For `4096 ≤ n ≤ 2^39`, the existing cubic solver gives
-`OPT ≤ 6n³ ≤ 18000·hubError n`. Split at `2^36`: below it use
-`ln n ≥ 8`; above it use `ln n ≥ 24`. This prevents the finite initial
-range from limiting the improved large-grid coefficient.
-The larger of the two branch coefficients covers every `n ≥ 4096`.
-
-`hubConstant` is `19319`; `hubConstant_rounding` verifies the exact ceiling
-and `hubConstant_eq` exposes the value and `uniform_approximation_explicit` proves the resulting bound.
+`hubLargeConstant` is `1044`; `hubLargeConstant_rounding` verifies the exact
+ceiling. For `4096 ≤ n ≤ 9·2^24` the cubic solver's exact bound
+`5n³ + 1509n² + 1505n + 4796` is at most `1044·hubError n`
+(`cubic_solver_le_hubError`, split at `2^20`, `2^26` and `2^27`), so
+`hubConstant = 1044` covers every `n ≥ 4096`; `hubConstant_eq` exposes the
+value and `uniform_approximation_explicit` proves the resulting bound.
 `hubBound_le`, `hubBound_le_large`, `optimalLength_le_hub_sharp`,
 `optimalLength_le_hub`, and `le_hubError_of_cube` retain
 coarser forms of the estimates.
 
 The statistical reduction of the paper (Section 5) is proved for any error
 scale `f ≥ n²` (`AsympStats.lean`). It yields the average and maximum
-asymptotics from the boardwise bound; **19319 is the boardwise coefficient**,
+asymptotics from the boardwise bound; **1044 is the boardwise coefficient**,
 not an asserted exact coefficient for the two-sided statistical errors.
