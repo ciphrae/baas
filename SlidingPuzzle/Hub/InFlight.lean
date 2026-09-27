@@ -102,7 +102,7 @@ theorem card_events_lt {n k s Δ : ℕ} (hd : HDims n k s) (hΔ : Δ ≤ s ^ 2 +
 
 /-- Some order of the rounds keeps every hub's in-flight maxima small. -/
 theorem exists_good_order {n k s : ℕ} (hd : HDims n k s)
-    (hP1 : 169 * k * (Nat.log 2 n + 1) ≤ s) (hsk : s ≤ k ^ 3) {Δ : ℕ} (hΔ : Δ ≤ s ^ 2 + 1)
+    (hP1 : 169 * k * (Nat.log 2 n + 1) ≤ s) {Δ : ℕ} (hΔ : Δ ≤ s ^ 2 + 1)
     (rs : Fin Δ → Round k) :
     ∃ σ : Equiv.Perm (Fin Δ), ∀ L : List (InsRec k), Consistent rs σ L →
       ∃ N : Sq k → Sq k → ℕ, (∀ h, ∑ x, N h x ≤ Rhub n) ∧
