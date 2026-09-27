@@ -87,7 +87,7 @@ theorem simulate_jump (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
     · simp only [IState.cost, Path.inefficientMoves_append]
       have c1 := p1.inefficientMoves_le_length
       have e1 : 52 * ((sqDist E Z + 1) * s) = 52 * (sqDist E Z * s) + 52 * s := by ring
-      have e2 : 77 * s * (1 + sqDist E Z) = 77 * (sqDist E Z * s) + 77 * s := by ring
+      have e2 : 65 * s * (1 + sqDist E Z) = 65 * (sqDist E Z * s) + 65 * s := by ring
       have := hd.room
       omega
   by_cases htz : t = z

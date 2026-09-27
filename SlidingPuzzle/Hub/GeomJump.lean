@@ -62,7 +62,7 @@ theorem jump_ends (hd : HDims n k s) {E Z : Sq k} (hal : E.1 = Z.1 ∨ E.2 = Z.2
     ∃ e0 z : Cell n, reservoir k s E e0 ∧ reservoir k s Z z ∧
       z.1.val ≠ Z.1.val * s + (k + 2) ∧
       ∀ B' : Board n, blank B' = e0 →
-        ∃ p : Path B' (swapCells B' (blank B') z), p.inefficientMoves ≤ 25 * (sqDist E Z * s + 2) := by
+        ∃ p : Path B' (swapCells B' (blank B') z), p.inefficientMoves ≤ 13 * (sqDist E Z * s + 2) := by
   have hks := hd.k_lt_s
   have hroom := hd.room
   have hE1 := hd.band_le E.1.isLt

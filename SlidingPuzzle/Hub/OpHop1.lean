@@ -25,7 +25,7 @@ theorem hop1_phase1 (hd : HDims n k s) (B : Board n) {S h : Sq k}
       (∀ x, keyOf hd x ≠ none → keyOf hd x ≠ some h → C x = B x) ∧
       KeepKey hd B C {B (rowCell k s (hop1Half S h) 0)} ∧
       keyOf hd (position C (B (rowCell k s (hop1Half S h) 0))) = some h ∧
-      p.inefficientMoves ≤ 3 * s + 25 * (k + 1) +
+      p.inefficientMoves ≤ 3 * s + 13 * (k + 1) +
         ((Finset.range (hop1Pos s S h + 1)).filter fun q =>
           (classOf hd (B (rowCell k s (hop1Half S h) q))).2 ≠ h.2).card := by
   set H := hop1Half S h with hH
@@ -151,7 +151,7 @@ theorem hop1_phase1 (hd : HDims n k s) (B : Board n) {S h : Sq k}
   · -- cost
     rw [Path.inefficientMoves_append, Path.inefficientMoves_append]
     have c1 := p1.inefficientMoves_le_length
-    have c2 : 25 * (Nat.dist (blank B1).1.val (f 0).1.val + 1) ≤ 25 * (k + 1) := by
+    have c2 : 13 * (Nat.dist (blank B1).1.val (f 0).1.val + 1) ≤ 13 * (k + 1) := by
       rw [hbB1, e0f, zf]; simp only [Nat.dist]; omega
     have hdsplit : d = j + (p + 1) := by omega
     rw [hdsplit, Finset.sum_range_add] at hi3
@@ -231,7 +231,7 @@ theorem simulate_hop1 (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
     (by rw [hb3, vs, ws]; exact hwc3) (by rw [hb3]; omega)
   obtain ⟨C, p5, T, hT0, hTc, hTk, hCv, hCbl, hCx, K2, hi5⟩ :=
     insert_by_cycle hd B3 (Q := S) (y := y) hb3 hkv hw (by rw [wf]; omega) hvbox hT3
-      (25 * (k + 1)) ⟨p4, hp4.trans (by rw [hb3]; simp only [Nat.dist]; omega)⟩
+      (13 * (k + 1)) ⟨p4, hp4.trans (by rw [hb3]; simp only [Nat.dist]; omega)⟩
   -- facts about C
   have hCc : ∀ x, keyOf hd x = none → x ≠ v → C x = B3 x := fun x hx hxv =>
     hCx x hxv (by rw [hx]; simp)
@@ -314,7 +314,7 @@ theorem simulate_hop1 (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
       rw [(hRrow H q (by omega)).2]
       exact Iff.rfl
     rw [hj] at hi3
-    change _ ≤ 55 * s + 50 * (k + 1) + ((Finset.range (p + 1)).filter fun q => (σ.row H q).2 ≠ H.2.1).card
+    change _ ≤ 55 * s + 26 * (k + 1) + ((Finset.range (p + 1)).filter fun q => (σ.row H q).2 ≠ H.2.1).card
     omega
 
 end SlidingPuzzle.Hub

@@ -231,7 +231,7 @@ private theorem cube_range_le {n a b : ℕ} (ha : 2 ^ a ≤ n) (hb : n ≤ 2 ^ b
 /-- The cubic solver's exact bound on the finite initial range, in three pieces:
 `6n³` below `2^20`, `5.0015 n³` on `[2^20, 2^27]` and `5.0001 n³` on `[2^27, 2^28]`. -/
 theorem cubic_solver_le_hubError {n : ℕ} (hn : 4096 ≤ n) (hhi : n ≤ 2 ^ 28) :
-    ((5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796 : ℕ) : ℝ) ≤ 1250 * hubError n := by
+    ((5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796 : ℕ) : ℝ) ≤ 1215 * hubError n := by
   have hP0 : (0 : ℝ) ≤ ((5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796 : ℕ) : ℝ) := Nat.cast_nonneg _
   by_cases h20 : n ≤ 2 ^ 20
   · have hpoly : 5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796 ≤ 6 * n ^ 3 := by

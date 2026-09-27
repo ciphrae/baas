@@ -40,7 +40,7 @@ theorem exists_vjump_step (hn : 2 ≤ n) (B : Board n) (y : Cell n)
     (hcol : Nat.dist (blank B).2.val y.2.val ≤ 1)
     (hcolor : ((blank B).1.val + (blank B).2.val + y.1.val + y.2.val) % 2 = 1) :
     ∃ p : Path B (swapCells B (blank B) y),
-      p.inefficientMoves ≤ 25 * (Nat.dist (blank B).1.val y.1.val + 1) := by
+      p.inefficientMoves ≤ 13 * (Nat.dist (blank B).1.val y.1.val + 1) := by
   obtain ⟨p, hp⟩ := exists_vertical_jump hn B y hcol hcolor
   exact ⟨p, p.inefficientMoves_le_length.trans hp⟩
 
@@ -49,7 +49,7 @@ theorem exists_hjump_step (hn : 2 ≤ n) (B : Board n) (y : Cell n)
     (hrow : Nat.dist (blank B).1.val y.1.val ≤ 1)
     (hcolor : ((blank B).1.val + (blank B).2.val + y.1.val + y.2.val) % 2 = 1) :
     ∃ p : Path B (swapCells B (blank B) y),
-      p.inefficientMoves ≤ 25 * (Nat.dist (blank B).2.val y.2.val + 1) := by
+      p.inefficientMoves ≤ 13 * (Nat.dist (blank B).2.val y.2.val + 1) := by
   obtain ⟨p, hp⟩ := exists_horizontal_jump hn B y hrow hcolor
   exact ⟨p, p.inefficientMoves_le_length.trans hp⟩
 

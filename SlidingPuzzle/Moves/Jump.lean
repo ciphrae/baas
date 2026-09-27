@@ -37,13 +37,13 @@ private theorem stripEmbedding_neighbor {n m : ℕ} (r c : ℕ)
 
 /-- Opposite-colour endpoints in the same or adjacent rows can be exchanged
 with the blank in a thin strip. Every other cell is restored, and the cost is
-at most `25*(horizontal distance + 1)`, including all boundary orientations. -/
+at most `13*(horizontal distance + 1)`, including all boundary orientations. -/
 theorem exists_horizontal_jump {n : ℕ} [NeZero n] (hn : 2 ≤ n)
     (B : Board n) (b : Cell n)
     (hrow : Nat.dist (blank B).1.val b.1.val ≤ 1)
     (hcolor : ((blank B).1.val + (blank B).2.val + b.1.val + b.2.val) % 2 = 1) :
     ∃ p : Path B (swapCells B (blank B) b),
-      p.length ≤ 25*(Nat.dist (blank B).2.val b.2.val + 1) := by
+      p.length ≤ 13*(Nat.dist (blank B).2.val b.2.val + 1) := by
   let a := blank B
   let r := min (min a.1.val b.1.val) (n-2)
   let c := min a.2.val b.2.val
@@ -80,7 +80,7 @@ theorem exists_horizontal_jump {n : ℕ} [NeZero n] (hn : 2 ≤ n)
   have hpath := path_of_zhong_word B w
   rw [he] at hpath
   obtain ⟨p, hp⟩ := hpath
-  have hlen' : w.length ≤ 25 * (Nat.dist (blank B).2.val b.2.val + 1) := by
+  have hlen' : w.length ≤ 13 * (Nat.dist (blank B).2.val b.2.val + 1) := by
     dsimp [m, a] at hlen ⊢
     omega
   exact ⟨p, hp.trans hlen'⟩
@@ -100,12 +100,12 @@ theorem exists_vertical_jump {n : ℕ} [NeZero n] (hn : 2 ≤ n)
     (hcol : Nat.dist (blank B).2.val b.2.val ≤ 1)
     (hcolor : ((blank B).1.val + (blank B).2.val + b.1.val + b.2.val) % 2 = 1) :
     ∃ p : Path B (swapCells B (blank B) b),
-      p.length ≤ 25*(Nat.dist (blank B).1.val b.1.val + 1) := by
+      p.length ≤ 13*(Nat.dist (blank B).1.val b.1.val + 1) := by
   obtain ⟨p, hp⟩ := exists_horizontal_jump hn (transposeBoard B) b.swap hcol (by
     simpa [Nat.add_comm, Nat.add_left_comm, Nat.add_assoc] using hcolor)
   have hout : ∃ q : Path (transposeBoard (transposeBoard B))
       (transposeBoard (swapCells (transposeBoard B) (blank (transposeBoard B)) b.swap)),
-      q.length ≤ 25*(Nat.dist (blank B).1.val b.1.val + 1) := by
+      q.length ≤ 13*(Nat.dist (blank B).1.val b.1.val + 1) := by
     obtain ⟨q, hq⟩ := p.exists_transpose
     exact ⟨q, hq.le.trans hp⟩
   rw [transposeBoard_swapCells, transposeBoard_transposeBoard,

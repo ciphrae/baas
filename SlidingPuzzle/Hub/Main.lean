@@ -21,24 +21,31 @@ namespace SlidingPuzzle.Hub
 `Hub/AsympError.lean`; the natural-number bound of the algorithm is
 `optimalLength_le_hub` (`Hub/AsympBound.lean`). -/
 
-/-- Round up `2·1.143243·((hubXNum/hubXDen) hubScaledKX/1000 +
-(hubYNum/hubYDen) hubScaledKY/1000 + 2/1000)`, keeping the three error
-coefficients separate. -/
-def hubConstant : ℕ := 1272
-
-theorem hubConstant_eq : hubConstant = 1272 := by
-  rfl
+/-- The coefficient of the hub algorithm for `n ≥ 2^28`: round up
+`2·1.143243·((hubXNum/hubXDen) hubScaledKX/1000 + (hubYNum/hubYDen) hubScaledKY/1000 + 2/1000)`,
+keeping the three error coefficients separate. -/
+def hubLargeConstant : ℕ := 1048
 
 /-- Integer inequalities certify the ceiling without evaluating a large division. -/
-theorem hubConstant_rounding :
+theorem hubLargeConstant_rounding :
     2 * 1143243 * (hubXNum * hubYDen * hubScaledKX + hubYNum * hubXDen * hubScaledKY +
-        2 * hubXDen * hubYDen) ≤ 1000000000 * hubXDen * hubYDen * hubConstant ∧
-      1000000000 * hubXDen * hubYDen * (hubConstant - 1) <
+        2 * hubXDen * hubYDen) ≤ 1000000000 * hubXDen * hubYDen * hubLargeConstant ∧
+      1000000000 * hubXDen * hubYDen * (hubLargeConstant - 1) <
         2 * 1143243 * (hubXNum * hubYDen * hubScaledKX + hubYNum * hubXDen * hubScaledKY +
           2 * hubXDen * hubYDen) := by
-  norm_num [hubConstant, hubScaledKX, hubScaledKY, hubXNum, hubXDen, hubYNum, hubYDen]
+  norm_num [hubLargeConstant, hubScaledKX, hubScaledKY, hubXNum, hubXDen, hubYNum, hubYDen]
 
-/-- The optimized bound holds with `C = 1272` for every `n ≥ 4096`. -/
+/-- The uniform coefficient: the cubic solver on `4096 ≤ n ≤ 2^28` needs `1215`
+(`cubic_solver_le_hubError`), which exceeds `hubLargeConstant`. -/
+def hubConstant : ℕ := 1215
+
+theorem hubConstant_eq : hubConstant = 1215 := by
+  rfl
+
+theorem hubLargeConstant_le : hubLargeConstant ≤ hubConstant := by
+  norm_num [hubLargeConstant, hubConstant]
+
+/-- The optimized bound holds with `C = 1215` for every `n ≥ 4096`. -/
 theorem uniform_approximation_explicit {n : ℕ} [NeZero n]
     (hn : hubN ≤ n) (B : ReachableBoard n) :
     (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) + hubConstant * hubError n := by
