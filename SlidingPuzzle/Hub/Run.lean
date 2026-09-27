@@ -36,7 +36,7 @@ def transportBound (n k s : ℕ) : ℕ :=
 /-- Region tiles left outside their squares, before absorbing lower-order terms. -/
 def misplacedBound (n k : ℕ) : ℕ :=
   k ^ 2 * n + k ^ 2 * (Rhub n + k ^ 2) +
-    k ^ 2 * (2 * (Rhub n + 8 * n + 10)) + 4 * k ^ 2 * n
+    k ^ 2 * (Rhub n + 8 * n + 10) + 4 * k ^ 2 * n
 
 /-- The fractional in-flight budget recovers the older polynomial bound. -/
 theorem transportBound_le_seven_budget {n k s : ℕ} (hn : 1 ≤ n)
@@ -61,7 +61,11 @@ theorem misplacedBound_le_seven_budget {n k : ℕ} (hn : 1 ≤ n)
     misplacedBound n k ≤ k ^ 2 * n + k ^ 2 * (7 * n * (Nat.log 2 n + 1) + k ^ 2) +
       k ^ 2 * (2 * (7 * n * (Nat.log 2 n + 1) + 8 * n + 10)) + 4 * k ^ 2 * n := by
   unfold misplacedBound
-  gcongr <;> exact Rhub_le_seven hn hL
+  have h7 := Rhub_le_seven hn hL
+  have h1 := Nat.mul_le_mul_left (k ^ 2) (Nat.add_le_add_right h7 (k ^ 2))
+  have h2 := Nat.mul_le_mul_left (k ^ 2) (show Rhub n + 8 * n + 10 ≤
+    2 * (7 * n * (Nat.log 2 n + 1) + 8 * n + 10) by omega)
+  omega
 
 theorem transportBound_le {k s : ℕ} (hk : 2 ≤ k) (hks : k ≤ s)
     (hL : 10 ≤ Nat.log 2 (k * s) + 1) :
@@ -104,20 +108,35 @@ variable {k : ℕ}
 /-- Scheduled tiles at the start: real plan edges. -/
 def schedInit (rd : ℕ → Round k) (Δ : ℕ) (S D : Sq k) : ℕ := ∑ τ ∈ range Δ, ind (rd τ) S D
 
-/-- Free tiles at the start: real edges of the set-aside rounds, and up to `Q'`
-home tiles. -/
+/-- Real edges of `S` among the set-aside rounds. -/
+def realInit {Δ0 : ℕ} (rs0 : Fin Δ0 → Round k) (Q' : ℕ) (S : Sq k) : ℕ :=
+  ∑ j ∈ range Q', if (rsN rs0 j).real S then 1 else 0
+
+/-- Free tiles at the start: real edges of the set-aside rounds, padded with
+home tiles up to `Q'` in total. -/
 def freeInit (σ0 : IState k) {Δ0 : ℕ} (rs0 : Fin Δ0 → Round k) (Q' : ℕ) (S D : Sq k) : ℕ :=
-  (∑ j ∈ range Q', ind (rsN rs0 j) S D) + if S = D then min (σ0.cnt S S) Q' else 0
+  (∑ j ∈ range Q', ind (rsN rs0 j) S D) +
+    if S = D then min (σ0.cnt S S) (Q' - realInit rs0 Q' S) else 0
+
+theorem realInit_le {Δ0 : ℕ} (rs0 : Fin Δ0 → Round k) (Q' : ℕ) (S : Sq k) :
+    realInit rs0 Q' S ≤ Q' := by
+  unfold realInit
+  have h1 : ∑ j ∈ range Q', (if (rsN rs0 j).real S then 1 else 0) ≤ ∑ _j ∈ range Q', 1 :=
+    sum_le_sum fun j _ => by split_ifs <;> omega
+  simpa using h1
+
+theorem sum_freeInit (σ0 : IState k) {Δ0 : ℕ} (rs0 : Fin Δ0 → Round k) (Q' : ℕ) (S : Sq k) :
+    ∑ D, freeInit σ0 rs0 Q' S D =
+      realInit rs0 Q' S + min (σ0.cnt S S) (Q' - realInit rs0 Q' S) := by
+  unfold freeInit realInit
+  rw [sum_add_distrib, sum_comm]
+  simp only [sum_ind_left, sum_ite_eq, mem_univ, if_true]
 
 theorem sum_freeInit_le (σ0 : IState k) {Δ0 : ℕ} (rs0 : Fin Δ0 → Round k) (Q' : ℕ) (S : Sq k) :
-    ∑ D, freeInit σ0 rs0 Q' S D ≤ 2 * Q' := by
-  unfold freeInit
-  rw [sum_add_distrib, sum_comm]
-  have h1 : ∑ j ∈ range Q', ∑ D, ind (rsN rs0 j) S D ≤ ∑ _j ∈ range Q', 1 :=
-    sum_le_sum fun j _ => by rw [sum_ind_left]; split_ifs <;> omega
-  have h2 : (∑ D, if S = D then min (σ0.cnt S S) Q' else 0) ≤ Q' := by
-    rw [sum_ite_eq]; simp
-  simp only [sum_const, card_range, smul_eq_mul, mul_one] at h1
+    ∑ D, freeInit σ0 rs0 Q' S D ≤ Q' := by
+  rw [sum_freeInit]
+  have := realInit_le rs0 Q' S
+  have := min_le_right (σ0.cnt S S) (Q' - realInit rs0 Q' S)
   omega
 
 /-- The abstract run exists, is valid, and is cheap. -/
@@ -201,7 +220,7 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
     · subst hQy
       rw [demand_diag] at this
       simp only [if_true]
-      have := min_le_left (σ0.cnt Q Q) Q'
+      have := min_le_left (σ0.cnt Q Q) (Q' - realInit rs0 Q' Q)
       omega
     · rw [if_neg hQy]
       simp only [demand, if_neg hQy] at this
@@ -250,18 +269,19 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
     have hd5 := recv_sub_sends hF1 hF2 h2ks Z
     have hd6 := sends_eq hF1 Z
     have hf : ∑ y, free0 Z y = (∑ j ∈ range Q', if (rsN rs0 j).real Z then 1 else 0) +
-        min (σ0.cnt Z Z) Q' := by
-      simp only [hfree0, freeInit, sum_add_distrib]
-      rw [sum_comm]
-      simp only [sum_ind_left, sum_ite_eq, mem_univ, if_true]
+        min (σ0.cnt Z Z) (Q' - realInit rs0 Q' Z) := by
+      rw [hfree0, sum_freeInit]; rfl
+    have hreal : realInit rs0 Q' Z = ∑ j ∈ range Q', if (rsN rs0 j).real Z then 1 else 0 := rfl
+    have hrealle := realInit_le rs0 Q' Z
     rw [hf]
     have hmax := le_max_left (sends (demand σ0) Z) (recv (demand σ0) Z)
     have hkk : k * k ≤ k * s := Nat.mul_le_mul_left _ hks
     have h8 : 8 * k * s = 8 * (k * s) := by ring
     have h2 : 2 * k * s = 2 * (k * s) := by ring
-    have hmin := min_le_left (σ0.cnt Z Z) Q'
-    have hmin2 : min (σ0.cnt Z Z) Q' = σ0.cnt Z Z ∨ min (σ0.cnt Z Z) Q' = Q' := by
-      rcases le_total (σ0.cnt Z Z) Q' with h | h
+    have hmin := min_le_left (σ0.cnt Z Z) (Q' - realInit rs0 Q' Z)
+    have hmin2 : min (σ0.cnt Z Z) (Q' - realInit rs0 Q' Z) = σ0.cnt Z Z ∨
+        min (σ0.cnt Z Z) (Q' - realInit rs0 Q' Z) = Q' - realInit rs0 Q' Z := by
+      rcases le_total (σ0.cnt Z Z) (Q' - realInit rs0 Q' Z) with h | h
       · left; exact min_eq_left h
       · right; exact min_eq_right h
     split_ifs at hd6 <;> omega
@@ -358,16 +378,16 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
       simp only [sum_const, card_univ, Fintype.card_prod, Fintype.card_fin, smul_eq_mul]
       unfold Rhub; ring_nf; exact le_refl _
     have hfree : ∑ Q, ∑ y, Gf.free Q y ≤
-        k ^ 2 * (2 * (Rhub (k * s) + 8 * (k * s) + 10)) +
+        k ^ 2 * (Rhub (k * s) + 8 * (k * s) + 10) +
           4 * k ^ 2 * (k * s) := by
       have h1 := hOf.lin.free_junk
       have h2 := junkCnt_le s σ0
-      have h3 : ∑ Q, ∑ y, free0 Q y ≤ ∑ _Q : Sq k, 2 * Q' :=
+      have h3 : ∑ Q, ∑ y, free0 Q y ≤ ∑ _Q : Sq k, Q' :=
         sum_le_sum fun Q _ => sum_freeInit_le σ0 rs0 Q' Q
       simp only [sum_const, card_univ, Fintype.card_prod, Fintype.card_fin, smul_eq_mul] at h3
-      have h4 : k * k * (2 * Q') ≤ k ^ 2 * (2 * (Rhub (k * s) +
-          8 * (k * s) + 10)) := by
-        rw [sq]; refine Nat.mul_le_mul_left _ (Nat.mul_le_mul_left _ ?_)
+      have h4 : k * k * Q' ≤ k ^ 2 * (Rhub (k * s) +
+          8 * (k * s) + 10) := by
+        rw [sq]; refine Nat.mul_le_mul_left _ ?_
         have : 8 * k * s = 8 * (k * s) := by ring
         omega
       have : junkCnt s Gf.σ ≥ 0 := Nat.zero_le _

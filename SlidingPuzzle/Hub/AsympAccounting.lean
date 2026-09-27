@@ -10,13 +10,13 @@ set_option maxRecDepth 4096
 namespace SlidingPuzzle.Hub
 
 /-- Numerators of the large-grid coefficients, with denominator `1000`. -/
-def hubScaledKX : ℕ := 1157865
-def hubScaledKY : ℕ := 6857720
+def hubScaledKX : ℕ := 1157967
+def hubScaledKY : ℕ := 4933452
 
 set_option maxHeartbeats 800000 in
 /-- Combined transport, cleanup, and Finish accounting using the actual capacity. -/
-theorem hubBound_le_scaled {k s : ℕ} (hk : 674 ≤ k)
-    (hL : 37 ≤ Nat.log 2 (k * s) + 1)
+theorem hubBound_le_scaled {k s : ℕ} (hk : 602 ≤ k)
+    (hL : 36 ≤ Nat.log 2 (k * s) + 1)
     (hcap : 25 * k * (Nat.log 2 (k * s) + 1) ≤ s) :
     1000 * hubBound (k * s) k s ≤ hubScaledKX * ((k * s) ^ 2 * s) +
       hubScaledKY * (k ^ 2 * (k * s) ^ 2 * (Nat.log 2 (k * s) + 1)) := by
@@ -32,32 +32,32 @@ theorem hubBound_le_scaled {k s : ℕ} (hk : 674 ≤ k)
   generalize Rhub (k * s) = R at *
   generalize sqCorridor k s = C at *
   generalize Nat.log 2 (k * s) + 1 = L at *
-  have hs : 600000 ≤ s := by
+  have hs : 500000 ≤ s := by
     have h := Nat.mul_le_mul (Nat.mul_le_mul_left 25 hk) hL
     omega
   have hn : 1000000 ≤ k * s := by nlinarith
-  -- Local relocation overhead: 576/k ≤ 0.855.
-  have hx0 : 576000 ≤ 855 * k := by omega
+  -- Local relocation overhead: 576/k ≤ 0.957.
+  have hx0 : 576000 ≤ 957 * k := by omega
   have hx := Nat.mul_le_mul_right (k * s ^ 3) hx0
-  -- Bypass leading overhead: 1009.2384/k ≤ 1.498.
-  have hy0 : 1009239 ≤ 1498 * k := by omega
+  -- Bypass leading overhead: 1009.2384/k ≤ 1.677.
+  have hy0 : 1009239 ≤ 1677 * k := by omega
   have hy := Nat.mul_le_mul_right (k ^ 3 * s ^ 2 * L) hy0
   -- All unlogged quadratic corridor terms are added before division by L.
   have hq := Nat.mul_le_mul_left (k ^ 4 * s ^ 2) hL
-  have hq0 : 927504 ≤ 1377 * k := by omega
+  have hq0 : 927504 ≤ 1541 * k := by omega
   have hq1 := Nat.mul_le_mul_right (k ^ 3 * s ^ 2) hq0
-  have hq' : 18735546 * (k ^ 4 * s ^ 2) + 927504 * (k ^ 3 * s ^ 2) ≤
-      506404 * (k ^ 4 * s ^ 2 * L) := by
+  have hq' : 13035532 * (k ^ 4 * s ^ 2) + 927504 * (k ^ 3 * s ^ 2) ≤
+      362141 * (k ^ 4 * s ^ 2 * L) := by
     nlinarith only [hq, hq1, Nat.zero_le (k ^ 4 * s ^ 2)]
   -- Capacity controls both the bypass and cleanup k^4 remainders together.
-  have hc0 : 1000 * (796 * k + 288) ≤ 821400 * k := by omega
-  have hc1 := Nat.mul_le_mul_left (600 * k) (Nat.pow_le_pow_left hL 2)
-  have hc2 : 1000 * (796 * k + 288) ≤ 600 * k * L ^ 2 := by
+  have hc0 : 1000 * (796 * k + 288) ≤ 810000 * k := by omega
+  have hc1 := Nat.mul_le_mul_left (625 * k) (Nat.pow_le_pow_left hL 2)
+  have hc2 : 1000 * (796 * k + 288) ≤ 625 * k * L ^ 2 := by
     nlinarith only [hc0, hc1]
   have hc3 := Nat.mul_le_mul_right (k ^ 4 * s) hc2
-  have hc4 := Nat.mul_le_mul_left (24 * k ^ 4 * s * L) hcap
+  have hc4 := Nat.mul_le_mul_left (25 * k ^ 4 * s * L) hcap
   have hc : 1000 * (796 * k ^ 5 * s + 288 * k ^ 4 * s) ≤
-      24 * (k ^ 4 * s ^ 2 * L) := by nlinarith only [hc3, hc4]
+      25 * (k ^ 4 * s ^ 2 * L) := by nlinarith only [hc3, hc4]
   -- Linear corridor terms cost less than one thousandth of Y.
   have hnL : 23630000 ≤ k * s * L := by nlinarith
   have hr := Nat.mul_le_mul_left (k ^ 3 * s) hnL
