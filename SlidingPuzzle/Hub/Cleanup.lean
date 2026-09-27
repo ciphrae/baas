@@ -1,5 +1,6 @@
 import SlidingPuzzle.Hub.Layout
 import SlidingPuzzle.Moves.Exchange
+import SlidingPuzzle.Moves.ThreeCycleSharp
 
 /-! # Cleanup
 
@@ -125,10 +126,16 @@ theorem four_le_n (hd : HDims n k s) : 4 ≤ n := by
   have := hd.two_le
   nlinarith
 
+theorem six_le_n (hd : HDims n k s) : 6 ≤ n := by
+  rw [← hd.mul]
+  have := hd.room
+  have := hd.two_le
+  nlinarith
+
 /-- One double swap lowers the misplaced count, keeping the blank. -/
 theorem exists_cleanup_step (hd : HDims n k s) [NeZero n] (D : Board n)
     (hb : IsLast (sqOf hd (blank D))) (hm : misplaced hd D ≠ 0) :
-    ∃ C : Board n, ∃ p : Path D C, blank C = blank D ∧ p.length ≤ 508 * n ∧
+    ∃ C : Board n, ∃ p : Path D C, blank C = blank D ∧ p.length ≤ 104 * n ∧
       misplaced hd C < misplaced hd D := by
   obtain ⟨x1, hx1⟩ : ∃ x1, Mis hd D x1 := by
     by_contra hno
@@ -142,7 +149,7 @@ theorem exists_cleanup_step (hd : HDims n k s) [NeZero n] (D : Board n)
   have hx12 : x1 ≠ x2 := fun h => hx1.2 (hx2Q.symm.trans (by rw [h]))
   have hx1u : x1 ≠ u := fun h => hx1.2 (hx2Q.symm.trans (hu.symm.trans (by rw [h])))
   have hx1u' : x1 ≠ u' := fun h => hx1.2 (hx2Q.symm.trans (hu'.symm.trans (by rw [h])))
-  obtain ⟨C, p, hp, hbC, hCa, hCb, hCc, hCd, hfix⟩ := exists_double_swap D (four_le_n hd)
+  obtain ⟨C, p, hp, hbC, hCa, hCb, hCc, hCd, hfix⟩ := exists_double_swap_sharp D (six_le_n hd)
     x1 u x2 u' hx1u hx12 hx1u' hux2 huu hu'x2.symm
     (fun h => hx1.1 (by rw [h]; rfl)) (fun h => val_ne_zero_of_ne_blank hub (by rw [h]; rfl))
     (fun h => hx2z (by rw [h]; rfl)) (fun h => val_ne_zero_of_ne_blank hu'b (by rw [h]; rfl))
@@ -196,7 +203,7 @@ theorem exists_cleanup_loop (hd : HDims n k s) [NeZero n] :
     ∀ m (D : Board n), misplaced hd D = m → IsLast (sqOf hd (blank D)) →
       ∃ C : Board n, ∃ p : Path D C,
         (∀ x, (C x).val ≠ 0 → classOf hd (C x) = sqOf hd x) ∧ IsLast (sqOf hd (blank C)) ∧
-        p.length ≤ 508 * n * m := by
+        p.length ≤ 104 * n * m := by
   intro m
   induction m using Nat.strong_induction_on with
   | _ m ih =>
@@ -208,7 +215,7 @@ theorem exists_cleanup_loop (hd : HDims n k s) [NeZero n] :
     obtain ⟨C, q, hC, hbC, hq⟩ := ih (misplaced hd E) (hm ▸ hlt) E rfl (hbE ▸ hb)
     refine ⟨C, p.append q, hC, hbC, ?_⟩
     rw [Path.length_append]
-    have : 508 * n * misplaced hd E + 508 * n ≤ 508 * n * m := by
+    have : 104 * n * misplaced hd E + 104 * n ≤ 104 * n * m := by
       rw [← Nat.mul_succ]
       exact Nat.mul_le_mul_left _ (by omega)
     omega
@@ -221,7 +228,7 @@ open CleanupAux LayoutFacts
 theorem exists_cleanup (hd : HDims n k s) [NeZero n] (B : Board n) :
     ∃ C : Board n, ∃ p : Path B C,
       (∀ x, (C x).val ≠ 0 → classOf hd (C x) = sqOf hd x) ∧ IsLast (sqOf hd (blank C)) ∧
-      p.inefficientMoves ≤ 508 * n * (misplaced hd B + 2 * n + 1) := by
+      p.inefficientMoves ≤ 104 * n * (misplaced hd B + 2 * n + 1) := by
   obtain ⟨D, p, hD, hp, -⟩ := exists_blank_access_path_preserving B (blank (target n))
   have hpn : p.length ≤ 2 * n := by
     refine hp.trans ?_
@@ -239,11 +246,11 @@ theorem exists_cleanup (hd : HDims n k s) [NeZero n] (B : Board n) :
   refine (Path.inefficientMoves_le_length _).trans ?_
   rw [Path.length_append]
   set m := misplaced hd B
-  have h1 : 508 * n * misplaced hd D ≤ 508 * n * (m + 2 * n) := by
-    calc 508 * n * misplaced hd D ≤ 508 * n * misplaced hd D :=
+  have h1 : 104 * n * misplaced hd D ≤ 104 * n * (m + 2 * n) := by
+    calc 104 * n * misplaced hd D ≤ 104 * n * misplaced hd D :=
           Nat.mul_le_mul_right _ (Nat.mul_le_mul_right _ (by norm_num))
-      _ ≤ 508 * n * (m + 2 * n) := Nat.mul_le_mul_left _ (by omega)
-  have h2 : 508 * n * (m + 2 * n + 1) = 508 * n * (m + 2 * n) + 508 * n := by ring
+      _ ≤ 104 * n * (m + 2 * n) := Nat.mul_le_mul_left _ (by omega)
+  have h2 : 104 * n * (m + 2 * n + 1) = 104 * n * (m + 2 * n) + 104 * n := by ring
   omega
 
 end SlidingPuzzle.Hub

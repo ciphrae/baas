@@ -58,7 +58,7 @@ theorem simulate_jump (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
   -- the final board: general facts needed for `Rel`
   suffices H : ∃ C : Board n, ∃ p : Path B2 C, blank C = z ∧
       (∀ x, keyOf hd x = none → C x = B2 x) ∧ KeepKey hd B C {B t} ∧
-      keyOf hd (position C (B t)) = some E ∧ p.inefficientMoves ≤ 254 * ((sqDist E Z + 1) * s) by
+      keyOf hd (position C (B t)) = some E ∧ p.inefficientMoves ≤ 52 * ((sqDist E Z + 1) * s) by
     obtain ⟨C, p3, hCbl, hCc, K, hkC, hi3⟩ := H
     have hcor : ∀ x, keyOf hd x = none → C x = B x := by
       intro x hx
@@ -86,8 +86,8 @@ theorem simulate_jump (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
       rw [hCbl]; exact hz
     · simp only [IState.cost, Path.inefficientMoves_append]
       have c1 := p1.inefficientMoves_le_length
-      have e1 : 254 * ((sqDist E Z + 1) * s) = 254 * (sqDist E Z * s) + 254 * s := by ring
-      have e2 : 288 * s * (1 + sqDist E Z) = 288 * (sqDist E Z * s) + 288 * s := by ring
+      have e1 : 52 * ((sqDist E Z + 1) * s) = 52 * (sqDist E Z * s) + 52 * s := by ring
+      have e2 : 77 * s * (1 + sqDist E Z) = 77 * (sqDist E Z * s) + 77 * s := by ring
       have := hd.room
       omega
   by_cases htz : t = z
@@ -112,7 +112,7 @@ theorem simulate_jump (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
     have inE := hbox E (Or.inl rfl)
     have inZ := hbox Z (Or.inr rfl)
     obtain ⟨C, p3, hp3, hCe, hCt, hCu, hCx⟩ := exists_box_three_cycle B2 r0 c0
-      ((sqDist E Z + 1) * s) (by have := hd.room; nlinarith) hr0 hc0
+      ((sqDist E Z + 1) * s) (by have := hd.room; have := hd.two_le; nlinarith) hr0 hc0
       (by rw [hbB2]; exact inZ z (inBox_of_reservoir hd hz)) e0 t u
       (inE e0 (inBox_of_reservoir hd he0)) (inZ t (inBox_of_region hd htZ))
       (inZ u (inBox_of_reservoir hd hu)) he0t he0u (Ne.symm hut)

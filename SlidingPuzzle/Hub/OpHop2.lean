@@ -351,7 +351,7 @@ theorem simulate_hop2 (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
       rw [(hRcol V q (by omega)).2]
       exact Iff.rfl
     rw [hj] at hi4
-    change _ ≤ 288 * s + 30 * k ^ 2 +
+    change _ ≤ 54 * s + 25 * k ^ 2 + 125 * k + 150 +
       ((Finset.range (P + 1)).filter fun q => σ.col V q ≠ (V.2.1, V.1)).card
     have e1 : 25 * (k + 2) * k = 25 * (k * k) + 50 * k := by ring
     have e3 : k ^ 2 = k * k := sq k

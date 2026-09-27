@@ -20,7 +20,7 @@ theorem insert_by_cycle (hd : HDims n k s) (B : Board n) {Q y : Sq k} {v w : Cel
     ∃ C : Board n, ∃ p : Path B C, ∃ T : Tile n, T.val ≠ 0 ∧ classOf hd T = y ∧
       keyOf hd (position B T) = some Q ∧ C v = T ∧ blank C = w ∧
       (∀ x, x ≠ v → keyOf hd x ≠ some Q → C x = B x) ∧ KeepKey hd B C {T} ∧
-      p.inefficientMoves ≤ cj + 254 * s := by
+      p.inefficientMoves ≤ cj + 52 * s := by
   obtain ⟨t, htQ, htT, htc⟩ := exists_of_regionCount hd B hT
   obtain ⟨p1, hp1⟩ := hjump
   have hkw : keyOf hd w = some Q := keyOf_reservoir hd hw
@@ -59,7 +59,7 @@ theorem insert_by_cycle (hd : HDims n k s) (B : Board n) {Q y : Sq k} {v w : Cel
     have hU0 : (B u).val ≠ 0 := val_ne_zero_of_ne_blank (by rw [hbv]; exact hvu.symm)
     have hbl4 : blank B4 = w := blank_swapCells B w
     obtain ⟨C, p2, hp2, hCv, hCt, hCu, hCx⟩ := exists_box_three_cycle B4 (Q.1.val * s)
-      (Q.2.val * s) s (by have := hd.room; omega) (hd.band_le Q.1.isLt) (hd.band_le Q.2.isLt)
+      (Q.2.val * s) s (by have := hd.room; have := hd.two_le; omega) (hd.band_le Q.1.isLt) (hd.band_le Q.2.isLt)
       (by rw [hbl4]; exact inBox_of_reservoir hd hw) v t u hvbox (inBox_of_region hd htQ)
       (inBox_of_reservoir hd hu) hvt hvu (Ne.symm hut)
       (by rw [hB4v]; exact fun e => hW0 (by rw [e]; rfl))

@@ -1,9 +1,9 @@
-import SlidingPuzzle.Moves.ThreeCycle
+import SlidingPuzzle.Moves.ThreeCycleSharp
 import SlidingPuzzle.Moves.Embedding
 
 /-! # Three-cycles inside a square box
 
-`exists_three_cycle` on an `m × m` board, lifted by `Path.exists_embedded` into
+`exists_three_cycle_sharp` on an `m × m` board, lifted by `Path.exists_embedded` into
 a square box of the `n × n` board containing the blank. Only the three rotated
 cells change; the blank stays where it is. -/
 namespace SlidingPuzzle.Hub
@@ -47,14 +47,14 @@ theorem boxEmb_surj (r0 c0 m : ℕ) (hr : r0 + m ≤ n) (hc : c0 + m ≤ n) (x :
   exact Prod.ext (Fin.ext (by rw [boxEmb_fst]; dsimp only; omega)) (Fin.ext (by rw [boxEmb_snd]; dsimp only; omega))
 
 /-- Local three-cycle: rotate three distinct nonblank cells of a square box of
-side `m ≥ 4` containing the blank, in at most `254*m` moves; every other cell
+side `m ≥ 6` containing the blank, in at most `52*m` moves; every other cell
 (the blank's included) is fixed. -/
-theorem exists_box_three_cycle (B : Board n) (r0 c0 m : ℕ) (hm : 4 ≤ m)
+theorem exists_box_three_cycle (B : Board n) (r0 c0 m : ℕ) (hm : 6 ≤ m)
     (hr : r0 + m ≤ n) (hc : c0 + m ≤ n) (hbl : InBox r0 c0 m (blank B))
     (a b c : Cell n) (ha : InBox r0 c0 m a) (hb : InBox r0 c0 m b) (hc' : InBox r0 c0 m c)
     (hab : a ≠ b) (hac : a ≠ c) (hbc : b ≠ c)
     (ha0 : B a ≠ 0) (hb0 : B b ≠ 0) (hc0 : B c ≠ 0) :
-    ∃ C : Board n, ∃ p : Path B C, p.length ≤ 254 * m ∧
+    ∃ C : Board n, ∃ p : Path B C, p.length ≤ 52 * m ∧
       C a = B b ∧ C b = B c ∧ C c = B a ∧
       ∀ x, x ≠ a → x ≠ b → x ≠ c → C x = B x := by
   have : NeZero m := ⟨by omega⟩
@@ -85,7 +85,7 @@ theorem exists_box_three_cycle (B : Board n) (r0 c0 m : ℕ) (hm : 4 ≤ m)
     apply hx
     rw [hB, h, hη0]
   have hne : ∀ {x y : Cell m}, ι x ≠ ι y → x ≠ y := fun h h' => h (by rw [h'])
-  obtain ⟨D, p, hp, _, hDa, hDb, hDc, hfix⟩ := exists_three_cycle e hm a' b' c'
+  obtain ⟨D, p, hp, _, hDa, hDb, hDc, hfix⟩ := exists_three_cycle_sharp e hm a' b' c'
     (hne (by change boxEmb _ _ _ _ _ a' ≠ boxEmb _ _ _ _ _ b'; rw [ha', hb']; exact hab))
     (hne (by change boxEmb _ _ _ _ _ a' ≠ boxEmb _ _ _ _ _ c'; rw [ha', hc'']; exact hac))
     (hne (by change boxEmb _ _ _ _ _ b' ≠ boxEmb _ _ _ _ _ c'; rw [hb', hc'']; exact hbc))

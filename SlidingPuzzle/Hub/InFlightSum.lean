@@ -104,7 +104,7 @@ theorem card_Atot_ne_zero (H : RowH k) (d : ℕ) :
     _ = k := by simp
 
 theorem sum_x_Nb_le (hs : 1 ≤ s) (n : ℕ) (H : RowH k) (d : ℕ) :
-    ∑ x, (Nb s rs n H d x : ℝ) ≤ 17 / 15 * rowLen k s H * ((Gtot rs H d : ℝ) / Btot rs H d) +
+    ∑ x, (Nb s rs n H d x : ℝ) ≤ 85 / 72 * rowLen k s H * ((Gtot rs H d : ℝ) / Btot rs H d) +
       17 / 8 * (Gtot rs H d : ℝ) / Δ + k * (6 * lamN n) := by
   set w := win s rs H d with hw
   set G := Gtot rs H d with hG
@@ -129,7 +129,7 @@ theorem sum_x_Nb_le (hs : 1 ≤ s) (n : ℕ) (H : RowH k) (d : ℕ) :
     congr 3
     rw [hG, ← sum_Atot]; push_cast; rfl
   have h5 : 17 * (G : ℝ) * (w + 1) / (16 * Δ) ≤
-      17 / 15 * rowLen k s H * ((G : ℝ) / B) + 17 / 8 * (G : ℝ) / Δ := by
+      85 / 72 * rowLen k s H * ((G : ℝ) / B) + 17 / 8 * (G : ℝ) / Δ := by
     by_cases hG0 : G = 0
     · rw [hG0]; simp
     obtain ⟨j, -, hj⟩ := exists_ne_zero_of_sum_ne_zero hG0
@@ -140,30 +140,30 @@ theorem sum_x_Nb_le (hs : 1 ≤ s) (n : ℕ) (H : RowH k) (d : ℕ) :
     rw [hpH.1, hpH.2] at hlen
     have hGB : G ≤ B := Gtot_le_Btot rs H d
     have hB0 : B ≠ 0 := by omega
-    have hwle : w ≤ 16 * (insPos k s H d + 1) * Δ / (15 * B) + 1 := by
+    have hwle : w ≤ 10 * (insPos k s H d + 1) * Δ / (9 * B) + 1 := by
       rw [hw, win, if_neg hB0]; exact min_le_right _ _
     have hBR : (0 : ℝ) < B := by exact_mod_cast Nat.pos_of_ne_zero hB0
     have hΔR : (0 : ℝ) < Δ := by exact_mod_cast hΔ
-    have hwR : (w : ℝ) ≤ 16 * (rowLen k s H : ℝ) * Δ / (15 * B) + 1 := by
-      have e1 : (w : ℝ) ≤ ((16 * (insPos k s H d + 1) * Δ / (15 * B) : ℕ) : ℝ) + 1 := by
+    have hwR : (w : ℝ) ≤ 10 * (rowLen k s H : ℝ) * Δ / (9 * B) + 1 := by
+      have e1 : (w : ℝ) ≤ ((10 * (insPos k s H d + 1) * Δ / (9 * B) : ℕ) : ℝ) + 1 := by
         exact_mod_cast hwle
-      have e2 := Nat.cast_div_le (α := ℝ) (m := 16 * (insPos k s H d + 1) * Δ) (n := 15 * B)
-      have e3 : ((16 * (insPos k s H d + 1) * Δ : ℕ) : ℝ) ≤ 16 * (rowLen k s H : ℝ) * Δ := by
+      have e2 := Nat.cast_div_le (α := ℝ) (m := 10 * (insPos k s H d + 1) * Δ) (n := 9 * B)
+      have e3 : ((10 * (insPos k s H d + 1) * Δ : ℕ) : ℝ) ≤ 10 * (rowLen k s H : ℝ) * Δ := by
         push_cast
         have : ((insPos k s H d : ℕ) : ℝ) + 1 ≤ rowLen k s H := by exact_mod_cast hlen
         nlinarith
-      have e4 : ((16 * (insPos k s H d + 1) * Δ : ℕ) : ℝ) / ((15 * B : ℕ) : ℝ) ≤
-          16 * (rowLen k s H : ℝ) * Δ / (15 * B) := by
+      have e4 : ((10 * (insPos k s H d + 1) * Δ : ℕ) : ℝ) / ((9 * B : ℕ) : ℝ) ≤
+          10 * (rowLen k s H : ℝ) * Δ / (9 * B) := by
         push_cast
         exact div_le_div_of_nonneg_right (by exact_mod_cast e3) (by positivity)
       linarith
     have hGR : (0 : ℝ) ≤ G := Nat.cast_nonneg _
     calc 17 * (G : ℝ) * (w + 1) / (16 * Δ) ≤
-          17 * (G : ℝ) * (16 * (rowLen k s H : ℝ) * Δ / (15 * B) + 2) / (16 * Δ) := by
+          17 * (G : ℝ) * (10 * (rowLen k s H : ℝ) * Δ / (9 * B) + 2) / (16 * Δ) := by
           apply div_le_div_of_nonneg_right _ (by positivity)
           apply mul_le_mul_of_nonneg_left _ (by positivity)
           linarith
-      _ = 17 / 15 * rowLen k s H * ((G : ℝ) / B) + 17 / 8 * (G : ℝ) / Δ := by
+      _ = 85 / 72 * rowLen k s H * ((G : ℝ) / B) + 17 / 8 * (G : ℝ) / Δ := by
           field_simp; ring
   calc ∑ x, (Nb s rs n H d x : ℝ)
       ≤ ∑ x, (17 * (Atot rs H d x : ℝ) * (w + 1) / (16 * Δ) +
@@ -172,7 +172,7 @@ theorem sum_x_Nb_le (hs : 1 ≤ s) (n : ℕ) (H : RowH k) (d : ℕ) :
 
 theorem sum_half_le (hs : 1 ≤ s) (n : ℕ) (H : RowH k) :
     ∑ d ∈ range k, ∑ x, (Nb s rs n H d x : ℝ) ≤
-      17 / 15 * rowLen k s H * (1 + Real.log (k * Δ)) + 17 / 8 * k + k * k * (6 * lamN n) := by
+      85 / 72 * rowLen k s H * (1 + Real.log (k * Δ)) + 17 / 8 * k + k * k * (6 * lamN n) := by
   have hsum := sum_le_sum fun d (_ : d ∈ range k) => sum_x_Nb_le s rs hs n H d
   refine hsum.trans ?_
   rw [sum_add_distrib, sum_add_distrib, ← mul_sum, sum_const, card_range, nsmul_eq_mul]
@@ -194,7 +194,7 @@ theorem sum_half_le (hs : 1 ≤ s) (n : ℕ) (H : RowH k) :
     · subst h; simp
     · have hΔR : (0 : ℝ) < Δ := by exact_mod_cast h
       rw [div_le_iff₀ hΔR]; nlinarith
-  have hlen : (0 : ℝ) ≤ 17 / 15 * rowLen k s H := by positivity
+  have hlen : (0 : ℝ) ≤ 85 / 72 * rowLen k s H := by positivity
   have := mul_le_mul_of_nonneg_left hharm hlen
   nlinarith
 

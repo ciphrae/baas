@@ -316,4 +316,26 @@ theorem exists_three_cycle_sharp (B : Board n) (hn : 6 ≤ n)
         | exact hne _ (Or.inr (Or.inl rfl)) (by rw [← this]; assumption)
         | exact hne _ (Or.inr (Or.inr rfl)) (by rw [← this]; assumption)
 
+/-- Two disjoint swaps with two sharp three-cycles, in at most `104 n` moves. -/
+theorem exists_double_swap_sharp (B : Board n) (hn : 6 ≤ n)
+    (a b c d : Cell n)
+    (hab : a ≠ b) (hac : a ≠ c) (had : a ≠ d)
+    (hbc : b ≠ c) (hbd : b ≠ d) (hcd : c ≠ d)
+    (ha : B a ≠ 0) (hb : B b ≠ 0) (hc : B c ≠ 0) (hd : B d ≠ 0) :
+    ∃ C : Board n, ∃ p : Path B C,
+      p.length ≤ 104*n ∧ blank C = blank B ∧
+      C a = B c ∧ C b = B d ∧ C c = B a ∧ C d = B b ∧
+      ∀ x, x ≠ a → x ≠ b → x ≠ c → x ≠ d → C x = B x := by
+  obtain ⟨D,p,hp,hbD,hDa,hDb,hDc,hfixD⟩ :=
+    exists_three_cycle_sharp B hn a b c hab hac hbc ha hb hc
+  have hDd : D d = B d := hfixD d had.symm hbd.symm hcd.symm
+  obtain ⟨C,q,hq,hbC,hCa,hCb,hCd,hfixC⟩ := exists_three_cycle_sharp D hn a b d
+    hab had hbd (by rwa [hDa]) (by rwa [hDb]) (by rwa [hDd])
+  refine ⟨C,p.append q,?_,hbC.trans hbD,hCa.trans hDb,hCb.trans hDd,?_,
+    hCd.trans hDa,?_⟩
+  · rw [Path.length_append]; omega
+  · exact (hfixC c hac.symm hbc.symm hcd).trans hDc
+  · intro x hxa hxb hxc hxd
+    rw [hfixC x hxa hxb hxd,hfixD x hxa hxb hxc]
+
 end SlidingPuzzle

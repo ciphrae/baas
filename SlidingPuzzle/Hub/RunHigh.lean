@@ -363,9 +363,9 @@ variable {s : ℕ} {σ0 : IState k} {F0 : ℕ}
 theorem hServe_cost {G : GS k} (hL : LInv s σ0 F0 G) {N : Sq k → Sq k → ℕ} (τ : ℕ)
     {S D : Sq k} (ok : ServeOK s N G S D) :
     IState.totalCost s σ0 (hServe s τ G S D).evs + pot s (hServe s τ G S D).σ +
-        288 * s * (1 + k) * (∑ h, ∑ x, G.byp h x) ≤
-      IState.totalCost s σ0 G.evs + pot s G.σ + 2 * (288 * s + 30 * k ^ 2) +
-        288 * s * (1 + k) * (∑ h, ∑ x, (hServe s τ G S D).byp h x) := by
+        77 * s * (1 + k) * (∑ h, ∑ x, G.byp h x) ≤
+      IState.totalCost s σ0 G.evs + pot s G.σ + 2 * (55 * s + 25 * k ^ 2 + 125 * k + 150) +
+        77 * s * (1 + k) * (∑ h, ∑ x, (hServe s τ G S D).byp h x) := by
   have hbs := hServe_bypSum s τ G S D
   by_cases c1 : S.2 = D.2
   · have h1 : S.1 ≠ D.1 := fun e => ok.ne (Prod.ext e c1)
@@ -411,7 +411,7 @@ theorem hServe_cost {G : GS k} (hL : LInv s σ0 F0 G) {N : Sq k → Sq k → ℕ
       unfold Nat.dist
       have := D.1.isLt; have := S.1.isLt
       omega
-    have : 288 * s * (1 + sqDist D (S.1, D.2)) ≤ 288 * s * (1 + k) :=
+    have : 77 * s * (1 + sqDist D (S.1, D.2)) ≤ 77 * s * (1 + k) :=
       Nat.mul_le_mul_left _ (by omega)
     nlinarith
 
