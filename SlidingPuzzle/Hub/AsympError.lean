@@ -254,11 +254,10 @@ private theorem cube_range_log_le {n U : ℕ} (hb : n ≤ U) {c C P ℓ : ℝ} (
       _ ≤ C ^ 3 * ((n : ℝ) ^ 8 * Real.log n) := by nlinarith
   exact le_of_pow_le_pow_left₀ (by norm_num) (mul_nonneg hC (hubError_nonneg n)) hcube
 
-/-- The cubic solver's exact bound on the finite initial range, in four pieces:
-`6n³` below `2^20`, `5.0015 n³` on `[2^20, 2^25]`, and `5.00005 n³` on
-`[2^25, 15·2^22]` and `[15·2^22, 2^26 + 2^13]`. -/
-theorem cubic_solver_le_hubError {n : ℕ} (hn : 4096 ≤ n) (hhi : n ≤ 2 ^ 26 + 2 ^ 13) :
-    ((5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796 : ℕ) : ℝ) ≤ 776 * hubError n := by
+/-- The cubic solver's exact bound on the finite initial range, in three pieces:
+`6n³` below `2^20`, `5.0015 n³` on `[2^20, 2^23]` and `5.0002 n³` on `[2^23, 11·2^20]`. -/
+theorem cubic_solver_le_hubError {n : ℕ} (hn : 4096 ≤ n) (hhi : n ≤ 11 * 2 ^ 20) :
+    ((5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796 : ℕ) : ℝ) ≤ 450 * hubError n := by
   have hP0 : (0 : ℝ) ≤ ((5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796 : ℕ) : ℝ) := Nat.cast_nonneg _
   by_cases h20 : n ≤ 2 ^ 20
   · have hpoly : 5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796 ≤ 6 * n ^ 3 := by
@@ -267,7 +266,7 @@ theorem cubic_solver_le_hubError {n : ℕ} (hn : 4096 ≤ n) (hhi : n ≤ 2 ^ 26
     exact cube_range_le (a := 12) (b := 20) (by norm_num; omega) h20 (c := 6) (by norm_num)
       (by norm_num) hP0 (by exact_mod_cast hpoly) (by norm_num)
   have hbig : 2 ^ 20 ≤ n := Nat.le_of_lt (Nat.lt_of_not_le h20)
-  by_cases h25 : n ≤ 2 ^ 25
+  by_cases h23 : n ≤ 2 ^ 23
   · have hpoly : 10000 * (5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796) ≤ 50015 * n ^ 3 := by
       have hh := Nat.mul_le_mul_left (n ^ 2) hbig
       nlinarith
@@ -277,34 +276,20 @@ theorem cubic_solver_le_hubError {n : ℕ} (hn : 4096 ≤ n) (hhi : n ≤ 2 ^ 26
           ((50015 * n ^ 3 : ℕ) : ℝ) := by exact_mod_cast hpoly
       push_cast at this ⊢
       linarith
-    exact cube_range_le (a := 20) (b := 25) hbig h25 (by norm_num) (by norm_num) hP0 hpolyR
+    exact cube_range_le (a := 20) (b := 23) hbig h23 (by norm_num) (by norm_num) hP0 hpolyR
       (by norm_num)
-  have hbig25 : 2 ^ 25 ≤ n := Nat.le_of_lt (Nat.lt_of_not_le h25)
-  have hpoly : 100000 * (5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796) ≤ 500005 * n ^ 3 := by
-    have hh := Nat.mul_le_mul_left (n ^ 2) hbig25
+  have hbig23 : 2 ^ 23 ≤ n := Nat.le_of_lt (Nat.lt_of_not_le h23)
+  have hpoly : 10000 * (5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796) ≤ 50002 * n ^ 3 := by
+    have hh := Nat.mul_le_mul_left (n ^ 2) hbig23
     nlinarith
   have hpolyR : ((5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796 : ℕ) : ℝ) ≤
-      500005 / 100000 * (n : ℝ) ^ 3 := by
-    have : ((100000 * (5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796) : ℕ) : ℝ) ≤
-        ((500005 * n ^ 3 : ℕ) : ℝ) := by exact_mod_cast hpoly
+      50002 / 10000 * (n : ℝ) ^ 3 := by
+    have : ((10000 * (5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796) : ℕ) : ℝ) ≤
+        ((50002 * n ^ 3 : ℕ) : ℝ) := by exact_mod_cast hpoly
     push_cast at this ⊢
     linarith
-  by_cases h15 : n ≤ 15 * 2 ^ 22
-  · exact cube_range_le' (a := 25) (U := 15 * 2 ^ 22) hbig25 h15 (by norm_num) (by norm_num) hP0
-      hpolyR (by norm_num)
-  · -- `log n ≥ 26 log 2 + log (15/16) ≥ 26 log 2 - 1/15`
-    have hlo : ((15 * 2 ^ 22 : ℕ) : ℝ) ≤ n := by exact_mod_cast (Nat.le_of_lt (Nat.lt_of_not_le h15))
-    have hl1516 : (-1 / 15 : ℝ) ≤ Real.log (15 / 16) := by
-      have := Real.one_sub_inv_le_log_of_pos (show (0 : ℝ) < 15 / 16 by norm_num)
-      norm_num at this ⊢; linarith
-    have hl2 := Real.log_two_gt_d9
-    have hlog : 26 * (6931471803 / 10000000000 : ℝ) - 1 / 15 ≤ Real.log n := by
-      have h := Real.log_le_log (by positivity) hlo
-      have e : ((15 * 2 ^ 22 : ℕ) : ℝ) = 15 / 16 * 2 ^ 26 := by norm_num
-      rw [e, Real.log_mul (by norm_num) (by positivity), Real.log_pow] at h
-      push_cast at h
-      linarith
-    exact cube_range_log_le hhi hlog (by norm_num) (by norm_num) hP0 hpolyR (by norm_num)
+  exact cube_range_le' (a := 23) (U := 11 * 2 ^ 20) hbig23 hhi (by norm_num) (by norm_num) hP0
+    hpolyR (by norm_num)
 
 /-- `n² ≤ hubError n` once `ln n ≥ 1`. -/
 theorem sq_le_hubError {n : ℕ} (hn : 3 ≤ n) : (n : ℝ) ^ 2 ≤ hubError n := by
