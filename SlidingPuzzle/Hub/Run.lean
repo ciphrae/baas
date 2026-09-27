@@ -27,12 +27,70 @@ namespace SlidingPuzzle.Hub
 
 open Finset
 
-/-- Budget of the transport run. -/
+/-- Transport budget retaining the actual grid dimensions and logarithm. -/
 def transportBound (n k s : ℕ) : ℕ :=
-  4032 * (n ^ 2 * s) + 3767 * (k ^ 2 * n ^ 2 * (Nat.log 2 n + 1))
+  4 * k ^ 2 * n ^ 2 + 2 * (288 * s + 30 * k ^ 2) * n ^ 2 +
+    288 * s * (1 + k) * (k ^ 2 * (Rhub n + k ^ 2)) +
+    576 * s * (s ^ 2 * (4 * k ^ 2 + 4 * k) + 4 * k * (k ^ 2 * (2 * n + 1)))
 
-/-- Budget of the region tiles left outside their squares. -/
-def misplacedBound (n k : ℕ) : ℕ := 24 * k ^ 2 * n * (Nat.log 2 n + 1)
+/-- Region tiles left outside their squares, before absorbing lower-order terms. -/
+def misplacedBound (n k : ℕ) : ℕ :=
+  k ^ 2 * n + k ^ 2 * (Rhub n + k ^ 2) +
+    k ^ 2 * (2 * (Rhub n + 8 * n + 10)) + 4 * k ^ 2 * n
+
+/-- The fractional in-flight budget recovers the older polynomial bound. -/
+theorem transportBound_le_seven_budget {n k s : ℕ} (hn : 1 ≤ n)
+    (hL : 10 ≤ Nat.log 2 n + 1) :
+    transportBound n k s ≤
+      4 * k ^ 2 * n ^ 2 + 2 * (288 * s + 30 * k ^ 2) * n ^ 2 +
+        288 * s * (1 + k) * (k ^ 2 * (7 * n * (Nat.log 2 n + 1) + k ^ 2)) +
+        576 * s * (s ^ 2 * (4 * k ^ 2 + 4 * k) + 4 * k * (k ^ 2 * (2 * n + 1))) := by
+  unfold transportBound
+  gcongr
+  exact Rhub_le_seven hn hL
+
+theorem misplacedBound_le_seven_budget {n k : ℕ} (hn : 1 ≤ n)
+    (hL : 10 ≤ Nat.log 2 n + 1) :
+    misplacedBound n k ≤ k ^ 2 * n + k ^ 2 * (7 * n * (Nat.log 2 n + 1) + k ^ 2) +
+      k ^ 2 * (2 * (7 * n * (Nat.log 2 n + 1) + 8 * n + 10)) + 4 * k ^ 2 * n := by
+  unfold misplacedBound
+  gcongr <;> exact Rhub_le_seven hn hL
+
+theorem transportBound_le {k s : ℕ} (hk : 2 ≤ k) (hks : k ≤ s)
+    (hL : 10 ≤ Nat.log 2 (k * s) + 1) :
+    transportBound (k * s) k s ≤
+      4032 * ((k * s) ^ 2 * s) + 3592 * (k ^ 2 * (k * s) ^ 2 * (Nat.log 2 (k * s) + 1)) := by
+  refine (transportBound_le_seven_budget (by nlinarith : 1 ≤ k * s)
+    (by omega : 10 ≤ Nat.log 2 (k * s) + 1)).trans ?_
+  simpa only [mul_assoc, pow_two] using
+    cost_arith k s (Nat.log 2 (k * s) + 1) (4 * k ^ 2 * (k * s) * (k * s))
+      ((k * s) ^ 2) (k ^ 2 * (7 * (k * s) * (Nat.log 2 (k * s) + 1) + k ^ 2))
+      (s ^ 2 * (4 * k ^ 2 + 4 * k) + 4 * k * (k ^ 2 * (2 * k * s + 1)))
+      hk hks hL le_rfl le_rfl le_rfl le_rfl
+
+theorem misplacedBound_le {k s : ℕ} (hk : 2 ≤ k) (hks : k ≤ s)
+    (hL : 10 ≤ Nat.log 2 (k * s) + 1) :
+    misplacedBound (k * s) k ≤ 24 * k ^ 2 * (k * s) * (Nat.log 2 (k * s) + 1) := by
+  exact mis_arith k s _ _ hk hks hL
+    (misplacedBound_le_seven_budget (by nlinarith) hL)
+
+theorem transportBound_le_large {k s : ℕ} (hk : 1000 ≤ k) (hks : k ≤ s)
+    (hL : 39 ≤ Nat.log 2 (k * s) + 1) :
+    transportBound (k * s) k s ≤
+      2883 * ((k * s) ^ 2 * s) + 2148 * (k ^ 2 * (k * s) ^ 2 * (Nat.log 2 (k * s) + 1)) := by
+  refine (transportBound_le_seven_budget (by nlinarith : 1 ≤ k * s)
+    (by omega : 10 ≤ Nat.log 2 (k * s) + 1)).trans ?_
+  simpa only [mul_assoc, pow_two] using
+    cost_arith_large k s (Nat.log 2 (k * s) + 1) (4 * k ^ 2 * (k * s) * (k * s))
+      ((k * s) ^ 2) (k ^ 2 * (7 * (k * s) * (Nat.log 2 (k * s) + 1) + k ^ 2))
+      (s ^ 2 * (4 * k ^ 2 + 4 * k) + 4 * k * (k ^ 2 * (2 * k * s + 1)))
+      hk hks hL le_rfl le_rfl le_rfl le_rfl
+
+theorem misplacedBound_le_large {k s : ℕ} (hk : 2 ≤ k) (hks : k ≤ s)
+    (hL : 39 ≤ Nat.log 2 (k * s) + 1) :
+    misplacedBound (k * s) k ≤ 22 * k ^ 2 * (k * s) * (Nat.log 2 (k * s) + 1) := by
+  exact mis_arith_large k s _ _ hk hks hL
+    (misplacedBound_le_seven_budget (by nlinarith) (by omega))
 
 variable {k : ℕ}
 
@@ -225,7 +283,7 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
       simp [Fintype.card_prod]; ring_nf; exact le_refl _
     have hserved : ∑ Z, Gf.served Z ≤ (k * s) ^ 2 := by
       omega
-    have hbyp : ∑ h, ∑ x, Gf.byp h x ≤ k ^ 2 * (7 * (k * s) * (Nat.log 2 (k * s) + 1) + k ^ 2) := by
+    have hbyp : ∑ h, ∑ x, Gf.byp h x ≤ k ^ 2 * (Rhub (k * s) + k ^ 2) := by
       have : ∀ h, ∑ x, Gf.byp h x ≤ Rhub (k * s) + k * k := by
         intro h
         refine (sum_le_sum fun x _ => hOf.hin.byp_le h x).trans ?_
@@ -253,12 +311,12 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
       nlinarith
     have hpot : pot s σ0 ≤ 4 * k ^ 2 * (k * s) * (k * s) :=
       (pot_le s σ0).trans (Nat.mul_le_mul_right _ (junkCnt_le s σ0))
-    have := cost_arith k s (Nat.log 2 (k * s) + 1) (pot s σ0) (∑ Z, Gf.served Z)
-      (∑ h, ∑ x, Gf.byp h x) Gf.wt hk2 hks (by omega) hpot hserved hbyp hwt
+    have ht1 := Nat.mul_le_mul_left (2 * (288 * s + 30 * k ^ 2)) hserved
+    have ht2 := Nat.mul_le_mul_left (288 * s * (1 + k)) hbyp
+    have ht3 := Nat.mul_le_mul_left (576 * s) hwt
     unfold transportBound hopC at *
-    have : IState.totalCost s σ0 Gf.evs ≤ IState.totalCost s σ0 Gf.evs + pot s Gf.σ :=
-      Nat.le_add_right _ _
-    nlinarith
+    nlinarith only [hcost, hpot, ht1, ht2, ht3, Nat.zero_le (pot s Gf.σ)]
+
   · -- misplaced tiles
     rw [← hOf.lin.run_eq]
     have hsch0 : ∀ S D, Gf.sched S D = 0 := by
@@ -284,7 +342,7 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
         omega
       refine (sum_le_sum fun Q _ => this Q).trans ?_
       simp [Fintype.card_prod]; ring_nf; exact le_refl _
-    have hbyp : ∑ h, ∑ x, Gf.byp h x ≤ k ^ 2 * (7 * (k * s) * (Nat.log 2 (k * s) + 1) + k ^ 2) := by
+    have hbyp : ∑ h, ∑ x, Gf.byp h x ≤ k ^ 2 * (Rhub (k * s) + k ^ 2) := by
       have : ∀ h, ∑ x, Gf.byp h x ≤ Rhub (k * s) + k * k := by
         intro h
         refine (sum_le_sum fun x _ => hOf.hin.byp_le h x).trans ?_
@@ -293,17 +351,16 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
       simp only [sum_const, card_univ, Fintype.card_prod, Fintype.card_fin, smul_eq_mul]
       unfold Rhub; ring_nf; exact le_refl _
     have hfree : ∑ Q, ∑ y, Gf.free Q y ≤
-        k ^ 2 * (2 * (7 * (k * s) * (Nat.log 2 (k * s) + 1) + 8 * (k * s) + 10)) +
+        k ^ 2 * (2 * (Rhub (k * s) + 8 * (k * s) + 10)) +
           4 * k ^ 2 * (k * s) := by
       have h1 := hOf.lin.free_junk
       have h2 := junkCnt_le s σ0
       have h3 : ∑ Q, ∑ y, free0 Q y ≤ ∑ _Q : Sq k, 2 * Q' :=
         sum_le_sum fun Q _ => sum_freeInit_le σ0 rs0 Q' Q
       simp only [sum_const, card_univ, Fintype.card_prod, Fintype.card_fin, smul_eq_mul] at h3
-      have h4 : k * k * (2 * Q') ≤ k ^ 2 * (2 * (7 * (k * s) * (Nat.log 2 (k * s) + 1) +
+      have h4 : k * k * (2 * Q') ≤ k ^ 2 * (2 * (Rhub (k * s) +
           8 * (k * s) + 10)) := by
         rw [sq]; refine Nat.mul_le_mul_left _ (Nat.mul_le_mul_left _ ?_)
-        have : Rhub (k * s) = 7 * (k * s) * (Nat.log 2 (k * s) + 1) := rfl
         have : 8 * k * s = 8 * (k * s) := by ring
         omega
       have : junkCnt s Gf.σ ≥ 0 := Nat.zero_le _
@@ -319,8 +376,7 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
       refine sum_le_sum fun Q _ => ?_
       rw [← sum_add_distrib]
       exact sum_le_sum fun y _ => hstock Q y
-    have := mis_arith k s (Nat.log 2 (k * s) + 1) Gf.σ.offCount hk2 hks (by omega) (by omega)
     unfold misplacedBound
-    exact this
+    omega
 
 end SlidingPuzzle.Hub

@@ -166,10 +166,10 @@ theorem le_hubError_of_cube {n : ℕ} (hn : 2 ≤ n) {X D : ℕ}
   have hnonneg := mul_nonneg (Nat.cast_nonneg D) (hubError_nonneg n)
   nlinarith
 
-/-- On the finite initial range, the existing cubic solver has a much
-smaller coefficient than the hub bound. -/
+/-- Split the finite initial range at `2^36`: use `log n ≥ 8` below it
+and `log n ≥ 24` above it to keep the cubic solver below the hub bound. -/
 theorem six_cube_le_hubError {n : ℕ} (hn : 4096 ≤ n) (hhi : n ≤ 2 ^ 39) :
-    (6 * n ^ 3 : ℝ) ≤ 24576 * hubError n := by
+    (6 * n ^ 3 : ℝ) ≤ 18000 * hubError n := by
   have hnR : (4096 : ℝ) ≤ n := by exact_mod_cast hn
   have hhiR : (n : ℝ) ≤ 2 ^ 39 := by exact_mod_cast hhi
   have hlog : (8 : ℝ) ≤ Real.log n := by
@@ -178,11 +178,23 @@ theorem six_cube_le_hubError {n : ℕ} (hn : 4096 ≤ n) (hhi : n ≤ 2 ^ 39) :
     have := Real.log_two_gt_d9
     norm_num at hh
     linarith
-  have hc : (6 * (n : ℝ) ^ 3) ^ 3 ≤ (24576 * hubError n) ^ 3 := by
+  have hc : (6 * (n : ℝ) ^ 3) ^ 3 ≤ (18000 * hubError n) ^ 3 := by
     simp only [mul_pow, hubError_cube]
-    have h1 := mul_le_mul_of_nonneg_left hhiR (show 0 ≤ (n : ℝ) ^ 8 by positivity)
-    have h2 := mul_le_mul_of_nonneg_left hlog (show 0 ≤ (n : ℝ) ^ 8 by positivity)
-    nlinarith only [h1, h2]
+    by_cases hsmall : n ≤ 2 ^ 36
+    · have hsmallR : (n : ℝ) ≤ 2 ^ 36 := by exact_mod_cast hsmall
+      have h1 := mul_le_mul_of_nonneg_left hsmallR (show 0 ≤ (n : ℝ) ^ 8 by positivity)
+      have h2 := mul_le_mul_of_nonneg_left hlog (show 0 ≤ (n : ℝ) ^ 8 by positivity)
+      nlinarith only [h1, h2, pow_nonneg (Nat.cast_nonneg n : (0 : ℝ) ≤ n) 8]
+    · have hlog24 : (24 : ℝ) ≤ Real.log n := by
+        have hh := Real.log_le_log (by norm_num : (0 : ℝ) < 2 ^ 36)
+          (show (2 : ℝ) ^ 36 ≤ n by exact_mod_cast (show 2 ^ 36 ≤ n by omega))
+        rw [Real.log_pow] at hh
+        have := Real.log_two_gt_d9
+        norm_num at hh
+        linarith
+      have h1 := mul_le_mul_of_nonneg_left hhiR (show 0 ≤ (n : ℝ) ^ 8 by positivity)
+      have h2 := mul_le_mul_of_nonneg_left hlog24 (show 0 ≤ (n : ℝ) ^ 8 by positivity)
+      nlinarith only [h1, h2, pow_nonneg (Nat.cast_nonneg n : (0 : ℝ) ≤ n) 8]
   exact le_of_pow_le_pow_left₀ (by norm_num)
     (mul_nonneg (by norm_num) (hubError_nonneg n)) hc
 

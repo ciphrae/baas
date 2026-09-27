@@ -21,20 +21,20 @@ namespace SlidingPuzzle.Hub
 `Hub/AsympError.lean`; the natural-number bound of the algorithm is
 `optimalLength_le_hub` (`Hub/AsympBound.lean`). -/
 
-/-- Round up `2·1.139524·((599/299) hubKX + hubKY/4 + 1)`, keeping
+/-- Round up `2·1.139524·((599/299) hubScaledKX/1000 + hubScaledKY/4000 + 1/1000)`, keeping
 the three error coefficients separate. -/
-def hubConstant : ℕ := 27609
+def hubConstant : ℕ := 19319
 
-theorem hubConstant_eq : hubConstant = 27609 := by
+theorem hubConstant_eq : hubConstant = 19319 := by
   rfl
 
 /-- Integer inequalities certify the ceiling without evaluating a large division. -/
 theorem hubConstant_rounding :
-    1139524 * (2396 * hubKX + 299 * hubKY + 1196) ≤ 598000000 * hubConstant ∧
-      598000000 * (hubConstant - 1) < 1139524 * (2396 * hubKX + 299 * hubKY + 1196) := by
-  norm_num [hubConstant, hubKX, hubKY]
+    1139524 * (2396 * hubScaledKX + 299 * hubScaledKY + 1196) ≤ 598000000000 * hubConstant ∧
+      598000000000 * (hubConstant - 1) < 1139524 * (2396 * hubScaledKX + 299 * hubScaledKY + 1196) := by
+  norm_num [hubConstant, hubScaledKX, hubScaledKY]
 
-/-- The optimized bound holds with `C = 27609` for every `n ≥ 4096`. -/
+/-- The optimized bound holds with `C = 19319` for every `n ≥ 4096`. -/
 theorem uniform_approximation_explicit {n : ℕ} [NeZero n]
     (hn : hubN ≤ n) (B : ReachableBoard n) :
     (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) + hubConstant * hubError n := by
@@ -51,20 +51,20 @@ theorem uniform_approximation_explicit {n : ℕ} [NeZero n]
     have herr := six_cube_le_hubError hn (show n ≤ 2 ^ 39 by unfold hubLargeN at hlarge; omega)
     have hM : (0 : ℝ) ≤ manhattan B.val := Nat.cast_nonneg _
     have hE := hubError_nonneg n
-    norm_num [hubConstant, hubKX, hubKY] at *
+    norm_num [hubConstant, hubScaledKX, hubScaledKY] at *
     nlinarith
-  obtain ⟨X, Y, Z, hX, hY, hZ, hopt⟩ := optimalLength_le_hub_sharp hlarge B
+  obtain ⟨X, Y, Z, hX, hY, hZ, hopt⟩ := optimalLength_le_hub_scaled hlarge B
   have hnlarge : 2 ^ 39 ≤ n := hlarge
   have hXR := le_hubError_of_cube_grid hnlarge hX
   have hYR := le_hubError_of_cube_grid hnlarge hY
   have hZR := le_hubError_of_cube_grid hnlarge hZ
-  have hoptR : (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) +
-      2 * (hubKX : ℝ) * X + 2 * (hubKY : ℝ) * Y + 2 * Z := by exact_mod_cast hopt
+  have hoptR : 1000 * (optimalLength B : ℝ) ≤ 1000 * (manhattan B.val : ℝ) +
+      2 * (hubScaledKX : ℝ) * X + 2 * (hubScaledKY : ℝ) * Y + 2000 * Z := by exact_mod_cast hopt
   have hx := mul_le_mul_of_nonneg_left hXR
-    (show (0 : ℝ) ≤ hubKX by positivity)
+    (show (0 : ℝ) ≤ hubScaledKX by positivity)
   have hy := mul_le_mul_of_nonneg_left hYR
-    (show (0 : ℝ) ≤ hubKY by positivity)
-  norm_num [hubConstant, hubKX, hubKY, hubD] at *
+    (show (0 : ℝ) ≤ hubScaledKY by positivity)
+  norm_num [hubConstant, hubScaledKX, hubScaledKY, hubD] at *
   linarith
 
 /-- The boardwise bound `OPT(B) ≤ M(B) + C n^(8/3) (log n)^(1/3)`. -/

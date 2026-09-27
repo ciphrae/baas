@@ -24,9 +24,28 @@ namespace SlidingPuzzle.Hub
 
 open Finset
 
-/-- The bypass budget of one hub. The capacity hypothesis bounds the
-`8 k² L` contribution by `8n/25`; the logarithmic estimate gives `7nL`. -/
-def Rhub (n : ℕ) : ℕ := 7 * n * (Nat.log 2 n + 1)
+/-- Integer upper rounding of the fractional in-flight estimate. -/
+def Rhub (n : ℕ) : ℕ := (28 * n * (Nat.log 2 n + 1) + 22 * n) / 5 + 1
+
+theorem Rhub_lower (n : ℕ) :
+    28 * n * (Nat.log 2 n + 1) + 22 * n ≤ 5 * Rhub n := by
+  have := Nat.mod_add_div (28 * n * (Nat.log 2 n + 1) + 22 * n) 5
+  have := Nat.mod_lt (28 * n * (Nat.log 2 n + 1) + 22 * n) (by norm_num : 0 < 5)
+  unfold Rhub
+  omega
+
+theorem Rhub_upper (n : ℕ) :
+    5 * Rhub n ≤ 28 * n * (Nat.log 2 n + 1) + 22 * n + 5 := by
+  have := Nat.mod_add_div (28 * n * (Nat.log 2 n + 1) + 22 * n) 5
+  unfold Rhub
+  omega
+
+/-- Compatibility estimate for the generic run budgets. -/
+theorem Rhub_le_seven {n : ℕ} (hn : 1 ≤ n) (hL : 10 ≤ Nat.log 2 n + 1) :
+    Rhub n ≤ 7 * n * (Nat.log 2 n + 1) := by
+  have h := Rhub_upper n
+  have hlog := Nat.mul_le_mul_left n hL
+  nlinarith only [h, hlog, hn]
 
 /-- The capacity condition already forces large squares and a logarithm of
 at least ten; retain these facts in the later cost estimates. -/
@@ -162,11 +181,11 @@ theorem exists_good_order {n k s : ℕ} (hd : HDims n k s)
       have h' : 25 * k * k * ℓ ≤ n := by
         simpa only [← hℓ, mul_assoc, mul_left_comm, mul_comm] using h
       exact_mod_cast h'
-    have hsmall : 12 * (k : ℝ) ≤ n := by
-      have hs12 : 12 ≤ s := by have := hd.room; omega
-      have h := Nat.mul_le_mul_left k hs12
+    have hsmall : 500 * (k : ℝ) ≤ n := by
+      have hs500 : 500 ≤ s := (capacity_lower_bounds hd hP1).2.1
+      have h := Nat.mul_le_mul_left k hs500
       rw [hd.mul] at h
-      exact_mod_cast (show 12 * k ≤ n by omega)
+      exact_mod_cast (show 500 * k ≤ n by omega)
     have hn16 : 16 ≤ n := by have := hd.room; have := hd.two_le; nlinarith [hd.mul]
     have hlog4 : 4 ≤ Nat.log 2 n := Nat.le_log_of_pow_le (by norm_num) (by norm_num; omega)
     have hℓR : (5 : ℝ) ≤ ℓ := by exact_mod_cast (show 5 ≤ ℓ by omega)
@@ -178,8 +197,10 @@ theorem exists_good_order {n k s : ℕ} (hd : HDims n k s)
         (Rhub n : ℝ) := by
       refine hsum.trans ?_
       rw [Fintype.sum_bool, hlamR]
-      have hR : (Rhub n : ℝ) = 7 * n * ℓ := by rw [Rhub]; push_cast; rw [← hℓdef]
-      rw [hR]
+      have hR : 28 * (n : ℝ) * ℓ + 22 * n ≤ 5 * (Rhub n : ℝ) := by
+        have h := Rhub_lower n
+        rw [← hℓdef]
+        exact_mod_cast h
       have hl0 : (0 : ℝ) ≤ rowLen k s (h.1, h.2, true) := Nat.cast_nonneg _
       have hl1 : (0 : ℝ) ≤ rowLen k s (h.1, h.2, false) := Nat.cast_nonneg _
       have hlg : 1 + Real.log (k * Δ) ≤ 1 + (7 / 5 : ℝ) * ℓ := by linarith

@@ -119,9 +119,13 @@ through the reservoir of a hub square. The pen-and-paper proof is
   (`Hub/Chernoff*.lean`, `Hub/InFlight*.lean`), counting permutations rather
   than using probability theory.
 
-The boardwise constant is now `27,609` for `n ≥ 4096`, down from
-`849,303` before this pass and `4,828,800,024,144` originally. The threshold
-and asymptotic exponent are unchanged. The certified estimates are:
+The boardwise constant is now `19,319` for `n ≥ 4096`, down from
+`20,816` before combined accounting and the fractional in-flight budget,
+`27,508` before retaining size-dependent budgets,
+`27,607` before the transport-arithmetic refinement, `27,609` before the
+prefix refinement, `849,303` in an earlier version and
+`4,828,800,024,144` originally. The threshold and asymptotic exponent
+are unchanged. The certified estimates are:
 
 - Staging and rotations: the boundary placement costs `8n + 98m + 12`
   on an `n × m` board, obtained by retaining the actual raising and strip
@@ -133,39 +137,48 @@ and asymptotic exponent are unchanged. The certified estimates are:
 - Union bound: the number of window events is at most `n⁴`, using the
   existing room condition. Thus `λ = 4L` suffices, with `L = log₂ n + 1`.
   The capacity condition becomes `25kL ≤ s`, since `6kλ ≤ s-k`.
-- In-flight budget: `Rhub n = 7nL`. The sum is bounded by
+- In-flight budget: `Rhub n = ⌊(28nL + 22n)/5⌋ + 1`. The sum is bounded by
   `4n(1+(7/5)L) + 8k + 8k²L`, using `ln(kΔ) ≤ (7/5)L`.
+  Capacity gives `8k²L ≤ 8n/25` and `s ≥ 500` gives `8k ≤ 8n/500`.
+  The old `7nL` estimate remains available as a compatibility bound.
 - Capacity also implies `L ≥ 10`, `s ≥ 500`, and `n ≥ 1000`.
   Retaining these lower bounds avoids charging small terms as full
   leading-order contributions.
-- Transport: `4032X + 3767Y`, where `X = n²s`, `Y = k²n²L`.
-  Misplaced region tiles are bounded by `24k²nL`.
+- Transport: `2883X + 2148Y` on the large grid, where `X = n²s`,
+  `Y = k²n²L`; the generic bound `4032X + 3592Y` remains available.
+  The raw run budgets retain their dependence on `k`, `n`, and `L`.
+  For `L ≥ 39`, misplaced region tiles are bounded by `22k²nL`,
+  improving the generic `24k²nL`.
 - Cleanup: `508n(misplaced + 2n + 1)`.
-- Whole hub algorithm: `4042X + 16063Y`, including local Finish.
+- Whole hub algorithm on the large grid: `2886.937X + 10772.414Y`, including
+  local Finish. The proof carries integer numerators over `1000` through
+  `AsympAccounting.lean`, using `k ≥ 1196`, `L ≥ 39`, and capacity.
+  The older bounds `2893X + 13351Y` and `4042X + 15888Y` remain available.
 - Grid for `n ≥ 2^39`: `k = 2m`, with `64m³L ≤ n < 64(m+1)³L`.
   The threshold ensures `m ≥ 598`. Keeping the ratio `(m+1)/m ≤ 599/598`
   gives `(299X)³ ≤ 599³n⁸L`; the corridor bound is `(4Y)³ ≤ n⁸L`.
-  The prefix satisfies `Z³ ≤ n⁸L`.
+  The prefix satisfies `(1000Z)³ ≤ n⁸L` for the large-board range.
 - Natural logarithms on this range: `L ≤ 1.479688 ln n`.
   The rational factor `1.139524` has cube at least `1.479688`.
 - Initial range: for `4096 ≤ n ≤ 2^39`, the existing Parberry solver
-  costs at most `6n³ ≤ 24576·hubError n`. Thus this branch fits the same
+  costs at most `6n³ ≤ 18000·hubError n`, splitting at `2^36` and using
+  `ln n ≥ 24` above that split. Thus this branch fits the same
   final coefficient without adding its cost to the hub branch.
 
 Consequently the hub branch's real coefficient is
-`2·1.139524·((599/299)·4042 + 16063/4 + 1)`, approximately
-`27608.999156`. Rounding upward gives `C = 27,609`, which also covers
-`24576` from the initial range.
+`2·1.139524·((599/299)·2886.937 + 10772.414/4 + 1/1000)`, approximately
+`19318.655326`. Rounding upward gives `C = 19,319`, which also covers
+`18000` from the initial range.
 `Hub.uniform_approximation_explicit` exposes the numerical bound directly.
 This is a certified upper bound, not a claim of optimality.
 
 ## Remaining structural improvements
 
 The inexpensive accounting and routine-reuse improvements have been carried
-through to the final bound. Small rational-rounding slack remains, but the
+through to the final bound. The prefix term is now nearly negligible; the
 main cost is now the relocation/local term. Substantial further reductions
-would need a more precise relocation analysis, a more tightly coupled treatment of the
-grid and run costs, or new staging/cleanup paths. These would reorganize
+would need a more precise relocation analysis, a more tightly coupled treatment
+of the grid and run costs, or new staging/cleanup paths. These would reorganize
 proofs beyond this pass. Removing the logarithm would require a stronger
 in-flight argument; the simulations in `research/exponent/` suggest that
 possibility but do not prove it.

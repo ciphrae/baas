@@ -58,7 +58,7 @@ section arith
 
 theorem cost_T3 (k s L B : ℕ) (hk : 2 ≤ k) (hks : k ≤ s) (hL : 10 ≤ L)
     (hB : B ≤ k ^ 2 * (7 * (k * s) * L + k ^ 2)) :
-    288 * s * (1 + k) * B ≤ 3068 * (k ^ 2 * (k * s) ^ 2 * L) := by
+    10 * (288 * s * (1 + k) * B) ≤ 30672 * (k ^ 2 * (k * s) ^ 2 * L) := by
   have h1 : k ^ 2 ≤ k * s := by nlinarith
   have h2 : 10 * (k * s) ≤ k * s * L := by nlinarith
   have h3 := Nat.mul_le_mul_left (k ^ 2) (h1.trans (by omega : k * s ≤ k * s * L))
@@ -72,34 +72,34 @@ theorem cost_T3 (k s L B : ℕ) (hk : 2 ≤ k) (hks : k ≤ s) (hL : 10 ≤ L)
 
 theorem cost_T4 (k s L W : ℕ) (hk : 2 ≤ k) (hks : k ≤ s) (hL : 10 ≤ L)
     (hW : W ≤ s ^ 2 * (4 * k ^ 2 + 4 * k) + 4 * k * (k ^ 2 * (2 * k * s + 1))) :
-    576 * s * W ≤ 3456 * ((k * s) ^ 2 * s) + 692 * (k ^ 2 * (k * s) ^ 2 * L) := by
+    10 * (576 * s * W) ≤ 34560 * ((k * s) ^ 2 * s) + 5184 * (k ^ 2 * (k * s) ^ 2 * L) := by
   have h1 : 576 * s * W ≤ 576 * s * (s ^ 2 * (4 * k ^ 2 + 4 * k) +
       4 * k * (k ^ 2 * (2 * k * s + 1))) := Nat.mul_le_mul_left _ hW
   have h2 : 4 * k ^ 2 + 4 * k ≤ 6 * k ^ 2 := by nlinarith
-  have h3 : 2 * k * s + 1 ≤ 3 * k * s := by nlinarith
-  have h4 : s ^ 2 * (4 * k ^ 2 + 4 * k) ≤ s ^ 2 * (6 * k ^ 2) := Nat.mul_le_mul_left _ h2
-  have h5 : 4 * k * (k ^ 2 * (2 * k * s + 1)) ≤ 4 * k * (k ^ 2 * (3 * k * s)) :=
-    Nat.mul_le_mul_left _ (Nat.mul_le_mul_left _ h3)
-  have h6 : 576 * s * (s ^ 2 * (6 * k ^ 2) + 4 * k * (k ^ 2 * (3 * k * s))) =
-      3456 * ((k * s) ^ 2 * s) + 6912 * (k ^ 2 * (k * s) ^ 2) := by ring
-  have h7 : 10 * (k ^ 2 * (k * s) ^ 2) ≤ k ^ 2 * (k * s) ^ 2 * L := by nlinarith [Nat.mul_le_mul_left (k ^ 2 * (k * s) ^ 2) hL]
-  have h8 : 576 * s * (s ^ 2 * (4 * k ^ 2 + 4 * k) + 4 * k * (k ^ 2 * (2 * k * s + 1))) ≤
-      576 * s * (s ^ 2 * (6 * k ^ 2) + 4 * k * (k ^ 2 * (3 * k * s))) :=
-    Nat.mul_le_mul_left _ (add_le_add h4 h5)
-  omega
+  have hn : 4 ≤ k * s := by nlinarith
+  have h3 : 4 * (2 * k * s + 1) ≤ 9 * (k * s) := by nlinarith
+  have h4 : s ^ 2 * (4 * k ^ 2 + 4 * k) ≤ s ^ 2 * (6 * k ^ 2) :=
+    Nat.mul_le_mul_left _ h2
+  have h5 := Nat.mul_le_mul_left (k ^ 3) h3
+  have h6 : 4 * k * (k ^ 2 * (2 * k * s + 1)) ≤ 9 * k ^ 3 * (k * s) := by
+    nlinarith only [h5]
+  have h8 := Nat.mul_le_mul_left (576 * s) (add_le_add h4 h6)
+  have h7 : 10 * (k ^ 2 * (k * s) ^ 2) ≤ k ^ 2 * (k * s) ^ 2 * L := by
+    nlinarith [Nat.mul_le_mul_left (k ^ 2 * (k * s) ^ 2) hL]
+  nlinarith only [h1, h8, h7]
 
 /-- Keep the local coefficient `576 + 3456` separate from the corridor
-coefficient `1 + 6 + 3068 + 692`. -/
+coefficient `0.4 + 6 + 3067.2 + 518.4`, rounding only the sum. -/
 theorem cost_arith (k s L P S0 B W : ℕ) (hk : 2 ≤ k) (hks : k ≤ s) (hL : 10 ≤ L)
     (hP : P ≤ 4 * k ^ 2 * (k * s) * (k * s)) (hS : S0 ≤ (k * s) ^ 2)
     (hB : B ≤ k ^ 2 * (7 * (k * s) * L + k ^ 2))
     (hW : W ≤ s ^ 2 * (4 * k ^ 2 + 4 * k) + 4 * k * (k ^ 2 * (2 * k * s + 1))) :
     P + 2 * (288 * s + 30 * k ^ 2) * S0 + 288 * s * (1 + k) * B + 576 * s * W ≤
-      4032 * ((k * s) ^ 2 * s) + 3767 * (k ^ 2 * (k * s) ^ 2 * L) := by
+      4032 * ((k * s) ^ 2 * s) + 3592 * (k ^ 2 * (k * s) ^ 2 * L) := by
   have t3 := cost_T3 k s L B hk hks hL hB
   have t4 := cost_T4 k s L W hk hks hL hW
   have h7 : 10 * (k ^ 2 * (k * s) ^ 2) ≤ k ^ 2 * (k * s) ^ 2 * L := by nlinarith [Nat.mul_le_mul_left (k ^ 2 * (k * s) ^ 2) hL]
-  have t1 : P ≤ 1 * (k ^ 2 * (k * s) ^ 2 * L) := by
+  have t1 : 10 * P ≤ 4 * (k ^ 2 * (k * s) ^ 2 * L) := by
     have : 4 * k ^ 2 * (k * s) * (k * s) = 4 * (k ^ 2 * (k * s) ^ 2) := by ring
     omega
   have t2 : 2 * (288 * s + 30 * k ^ 2) * S0 ≤ 576 * ((k * s) ^ 2 * s) +
@@ -130,6 +130,54 @@ theorem mis_arith (k s L A : ℕ) (hk : 2 ≤ k) (hks : k ≤ s) (hL : 10 ≤ L)
     omega
   have : 24 * k ^ 2 * (k * s) * L = 24 * (k ^ 2 * (k * s * L)) := by ring
   omega
+
+/-- Large grids retain the small `1/k` and `1/n` remainders. -/
+theorem cost_arith_large (k s L P S0 B W : ℕ) (hk : 1000 ≤ k) (hks : k ≤ s)
+    (hL : 39 ≤ L)
+    (hP : P ≤ 4 * k ^ 2 * (k * s) * (k * s)) (hS : S0 ≤ (k * s) ^ 2)
+    (hB : B ≤ k ^ 2 * (7 * (k * s) * L + k ^ 2))
+    (hW : W ≤ s ^ 2 * (4 * k ^ 2 + 4 * k) + 4 * k * (k ^ 2 * (2 * k * s + 1))) :
+    P + 2 * (288 * s + 30 * k ^ 2) * S0 + 288 * s * (1 + k) * B + 576 * s * W ≤
+      2883 * ((k * s) ^ 2 * s) + 2148 * (k ^ 2 * (k * s) ^ 2 * L) := by
+  have hn : 1000 ≤ k * s := by nlinarith
+  have hk2 : k ^ 2 ≤ k * s := by nlinarith
+  have hlog := Nat.mul_le_mul_left (k ^ 2 * (k * s) ^ 2) hL
+  have t1 : P ≤ k ^ 2 * (k * s) ^ 2 * L := by nlinarith only [hP, hlog]
+  have hs := Nat.mul_le_mul_left (2 * (288 * s + 30 * k ^ 2)) hS
+  have t2 : 2 * (288 * s + 30 * k ^ 2) * S0 ≤
+      576 * ((k * s) ^ 2 * s) + 2 * (k ^ 2 * (k * s) ^ 2 * L) := by
+    nlinarith only [hs, hlog]
+  have hb : 39 * B ≤ 274 * k ^ 2 * (k * s) * L := by
+    have h1 := Nat.mul_le_mul_left (k ^ 2) hk2
+    have h2 := Nat.mul_le_mul_left (k ^ 2 * (k * s)) hL
+    nlinarith only [hB, h1, h2]
+  have hc : 1000 * (288 * s * (1 + k)) ≤ 288288 * (k * s) := by nlinarith
+  have ht3 := Nat.mul_le_mul hc hb
+  have t3 : 288 * s * (1 + k) * B ≤ 2026 * (k ^ 2 * (k * s) ^ 2 * L) := by
+    nlinarith only [ht3, Nat.zero_le (k ^ 2 * (k * s) ^ 2 * L)]
+  have hw1 : 1000 * (4 * k ^ 2 + 4 * k) ≤ 4004 * k ^ 2 := by nlinarith
+  have hw2 : 1000 * (2 * k * s + 1) ≤ 2001 * (k * s) := by nlinarith
+  have hw3 := Nat.mul_le_mul_left (s ^ 2) hw1
+  have hw4 := Nat.mul_le_mul_left (4 * k ^ 3) hw2
+  have hw5 : 1000 * W ≤ 4004 * (k ^ 2 * s ^ 2) + 8004 * (k ^ 3 * (k * s)) := by
+    nlinarith only [hW, hw3, hw4]
+  have hw6 := Nat.mul_le_mul_left (576 * s) hw5
+  have t4 : 576 * s * W ≤ 2307 * ((k * s) ^ 2 * s) +
+      119 * (k ^ 2 * (k * s) ^ 2 * L) := by
+    nlinarith only [hw6, hlog, Nat.zero_le ((k * s) ^ 2 * s)]
+  omega
+
+/-- The logarithm absorbs the nonleading misplaced-tile terms into one unit. -/
+theorem mis_arith_large (k s L A : ℕ) (hk : 2 ≤ k) (hks : k ≤ s) (hL : 39 ≤ L)
+    (h : A ≤ k ^ 2 * (k * s) + k ^ 2 * (7 * (k * s) * L + k ^ 2) +
+      k ^ 2 * (2 * (7 * (k * s) * L + 8 * (k * s) + 10)) + 4 * k ^ 2 * (k * s)) :
+    A ≤ 22 * k ^ 2 * (k * s) * L := by
+  have hn : 4 ≤ k * s := by nlinarith
+  have hk2 : k ^ 2 ≤ k * s := by nlinarith
+  have h1 := Nat.mul_le_mul_left (k ^ 2) hk2
+  have h2 := Nat.mul_le_mul_left (k ^ 2) hn
+  have h3 := Nat.mul_le_mul_left (k ^ 2 * (k * s)) hL
+  nlinarith only [h, h1, h2, h3]
 
 end arith
 

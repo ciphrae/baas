@@ -10,7 +10,7 @@ Cleanup phase (section 7). The division into squares, the local Finish and the s
 reduction follow the paper.
 
 The formalization now certifies the explicit boardwise bound
-`OPT(B) ≤ M(B) + 27609·n^(8/3)(ln n)^(1/3)` for `n ≥ 4096`.
+`OPT(B) ≤ M(B) + 19319·n^(8/3)(ln n)^(1/3)` for `n ≥ 4096`.
 The argument below retains its original asymptotic parameters; the current
 numerical budgets and their derivation are in
 [LEAN_PLAN.md](LEAN_PLAN.md#asymptotics) and

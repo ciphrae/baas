@@ -5,7 +5,7 @@
 
 | Theorem | Statement |
 | --- | --- |
-| `Hub.uniform_approximation_explicit` | `OPT(B) ≤ M(B) + 27609·n^(8/3)(ln n)^(1/3)` for every reachable board, `n ≥ 4096` |
+| `Hub.uniform_approximation_explicit` | `OPT(B) ≤ M(B) + 19319·n^(8/3)(ln n)^(1/3)` for every reachable board, `n ≥ 4096` |
 | `Hub.uniform_approximation` | `OPT(B) ≤ M(B) + C·n^(8/3)(log n)^(1/3)` for every reachable board, `n ≥ 4096` |
 | `Hub.average_optimal_length` | mean optimal length `= (2/3)n³ + O(n^(8/3)(log n)^(1/3))` |
 | `Hub.gods_number` | God's number `= n³ + O(n^(8/3)(log n)^(1/3))` |
@@ -14,7 +14,7 @@
 They depend only on `propext`, `Classical.choice` and `Quot.sound`
 (`Checks/Axioms.lean`). The mathematics is `PROOF.md`; this file records how
 the Lean proof is organized and where it departs from `PROOF.md`. The current
-certified constant is **27,609**, about 174.9 million times smaller than the
+certified constant is **19,319**, about 250.0 million times smaller than the
 original `4,828,800,024,144`. It is not claimed optimal.
 [PROOF_NOTES.md](../../PROOF_NOTES.md) records the accounting improvements.
 
@@ -157,7 +157,10 @@ window `w_d = min Δ (⌊2(p_d+1)Δ/B_d⌋ + 1)`, a good order has (a) at least
 * Harmonic sums give at most `4n(1+(7/5)L) + 8k + 8k²L` per hub.
   Here `ln(kΔ) ≤ (7/5)L`, retaining the logarithm-base conversion.
   The capacity hypothesis `25kL ≤ s` and the room condition give
-  `Rhub n = 7nL` (`Hub.exists_good_order`).
+  `Rhub n = ⌊(28nL + 22n)/5⌋ + 1` (`Hub.exists_good_order`).
+  Capacity bounds `8k²L` by `8n/25`; `s ≥ 500` bounds `8k` by `8n/500`.
+  `Rhub_lower` and `Rhub_upper` certify the integer rounding, while
+  `Rhub_le_seven` recovers the old `7nL` estimate.
 * `capacity_lower_bounds` proves `L ≥ 10`, `s ≥ 500`, and `n ≥ 1000`
   for all admissible hub instances.
 
@@ -186,52 +189,71 @@ Facts proved:
   exactly its drop, and inserted tiles are clean.
 With `L = log₂ n + 1`, the certified totals are:
 
-- `transportBound = 4032·n²s + 3767·k²n²L`.
-- `misplacedBound = 24·k²nL` for region tiles outside their squares.
+- `transportBound` retains the potential, served, bypass, and relocation
+  terms with their actual dimensions; `transportBound_le` gives the generic
+  `4032·n²s + 3592·k²n²L`, and `transportBound_le_large` improves this to
+  `2883·n²s + 2148·k²n²L` when `k ≥ 1000` and `L ≥ 39`.
+- `misplacedBound = 3k²·Rhub n + 21k²n + k⁴ + 20k²`; it is bounded by
+  `24k²nL` generically and by `22k²nL` when `L ≥ 39`.
 - Cleanup costs at most `508·n·(misplaced + 2n + 1)` inefficient moves.
 
 `Hub.cost_arith` separates the local coefficient `576 + 3456`
-from the corridor coefficient `1 + 6 + 3068 + 692`, using `L ≥ 10`.
+from the corridor coefficient `0.4 + 6 + 3067.2 + 518.4`, using `L ≥ 10`.
 `Hub.mis_arith` bounds the leading `21k²nL` and the remaining terms
-by `24k²nL`. Both arithmetic lemmas are in `RunBounds.lean`.
+by `24k²nL`. The large-grid variants `cost_arith_large` and
+`mis_arith_large` retain the stronger dimension and logarithm bounds.
+These arithmetic lemmas are in `RunBounds.lean`.
 
 ## Asymptotics
 
 On side `n = k*s`, with `s ≥ 500`, `hubBound_le_sharp` gives
-`hubBound n k s ≤ 4042·n²s + 16063·k²n²L`.
+`hubBound n k s ≤ 4042·n²s + 15888·k²n²L`.
 For `n ≥ 2^39`, take `k = 2m` with
 `64·m³L ≤ n < 64(m+1)³L` and `s = ⌊n/k⌋`. Solve the outer
 `n - k*s < k` layers by the Parberry prefix (`Parberry/Prefix.lean`).
 The threshold guarantees `m ≥ 598`, so grid rounding loses at most
 `599/598`. It also guarantees the capacity condition `25kL ≤ s`.
+The residual side satisfies `ks ≥ 2^38`, proved using the division remainder,
+so its own logarithm satisfies `log₂(ks) + 1 ≥ 39`. Thus `k ≥ 1196 ≥ 1000`
+and `hubBound_le_large` applies with coefficients
+`hubLargeKX = 2893`, `hubLargeKY = 13351`.
+The combined `hubBound_le_scaled` in `AsympAccounting.lean` improves this to
+`1000·hubBound ≤ 2886937X + 10772414Y`, applying capacity directly to
+transport and cleanup and using the fractional `Rhub` budget. Capacity
+also ensures `s ≥ 1000000`, making the Finish remainders small.
 The residual estimates extend monotonically to the original side `n`.
 
-`optimalLength_le_hub_sharp` keeps three terms separate:
+`optimalLength_le_hub_scaled` keeps three terms separate:
 
 | Term | Definition | Cube bound |
 | --- | --- | --- |
 | `X` | `n²s` | `(299X)³ ≤ 599³n⁸L` |
 | `Y` | `k²n²L` | `(4Y)³ ≤ n⁸L` |
-| `Z` | `(15n² + 3002n + 1)(n - k*s)` | `Z³ ≤ n⁸L` |
+| `Z` | `(15n² + 3002n + 1)(n - k*s)` | `(1000Z)³ ≤ n⁸L` |
 
-The solution length is at most `M + 2·4042X + 2·16063Y + 2Z`.
+The solution length is at most `M + 2·2886.937X + 2·10772.414Y + 2Z`.
+The natural-number theorem multiplies this inequality by `1000`, preserving
+all coefficients until the final real conversion.
 On this range, `L ≤ 1.479688 ln n`, bounded by the cube of `1.139524`.
 The coefficient is therefore
 
 ```text
-2·1.139524·((599/299)·4042 + 16063/4 + 1) ≈ 27608.999156.
+2·1.139524·((599/299)·2886.937 + 10772.414/4 + 1/1000) ≈ 19318.655326.
 ```
 
 For `4096 ≤ n ≤ 2^39`, the existing cubic solver gives
-`OPT ≤ 6n³ ≤ 24576·hubError n`, using `ln n ≥ 8`.
+`OPT ≤ 6n³ ≤ 18000·hubError n`. Split at `2^36`: below it use
+`ln n ≥ 8`; above it use `ln n ≥ 24`. This prevents the finite initial
+range from limiting the improved large-grid coefficient.
 The larger of the two branch coefficients covers every `n ≥ 4096`.
 
-`hubConstant` is `27609`; `hubConstant_rounding` verifies the exact ceiling
+`hubConstant` is `19319`; `hubConstant_rounding` verifies the exact ceiling
 and `hubConstant_eq` exposes the value and `uniform_approximation_explicit` proves the resulting bound.
-`hubBound_le`, `optimalLength_le_hub`, and `le_hubError_of_cube` retain
+`hubBound_le`, `hubBound_le_large`, `optimalLength_le_hub_sharp`,
+`optimalLength_le_hub`, and `le_hubError_of_cube` retain
 coarser forms of the estimates.
 
 The statistical reduction of the paper (Section 5) is proved for any error
 scale `f ≥ n²` (`AsympStats.lean`). It yields the average and maximum
-asymptotics from the boardwise bound; **27609 is the boardwise coefficient**,
+asymptotics from the boardwise bound; **19319 is the boardwise coefficient**,
 not an asserted exact coefficient for the two-sided statistical errors.

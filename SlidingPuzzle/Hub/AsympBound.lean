@@ -1,4 +1,4 @@
-import SlidingPuzzle.Hub.Transport
+import SlidingPuzzle.Hub.AsympAccounting
 import SlidingPuzzle.Algorithm.ResidualPotential
 import SlidingPuzzle.Algorithm.ResidualReachability
 import SlidingPuzzle.Parberry.Prefix
@@ -13,11 +13,13 @@ solves the `k*s` residual board. The result (`optimalLength_le_hub`) is
 `OPT ≤ M + 2 hubK (X + Y) + 2 Z` with `X, Y, Z ≤ (hubD³ n⁸ L)^(1/3)`,
 
 namely `X = n² s`, `Y = k² n² L`, and `Z` the prefix cost.
-The sharper form uses `2 hubKX X + 2 hubKY Y + 2 Z`, with cube scales
-`599/299`, `1/4`, and `1`, so each cost retains its own coefficient.
+The scaled form uses `2 hubScaledKX X/1000 + 2 hubScaledKY Y/1000 + 2 Z`, with cube scales
+`599/299`, `1/4`, and `1/1000`, so each cost retains its own coefficient.
 
 Constants to adjust if the hub modules change theirs:
-* `hubKX`, `hubKY` bound `hubBound` (`hubBound_le_sharp`);
+* `hubScaledKX`, `hubScaledKY` retain fractional costs (`hubBound_le_scaled`);
+* `hubLargeKX`, `hubLargeKY` retain older large-grid bounds (`hubBound_le_large`);
+* `hubKX`, `hubKY` bound `hubBound` generically (`hubBound_le_sharp`);
   `hubK` gives the coarser common-coefficient form;
 * `hubA = 64`, with `m ≥ 598`, ensures the capacity hypothesis `hP1`;
   `hubN` satisfies `hubA * (log₂ n + 1) ≤ n` for `n ≥ hubN`;
@@ -31,7 +33,11 @@ open SlidingPuzzle
 /-- Coefficients of the local and corridor error terms, kept separate.
 The capacity lower bounds keep quadratic and linear remainders small. -/
 def hubKX : ℕ := 4042
-def hubKY : ℕ := 16063
+def hubKY : ℕ := 15888
+
+/-- Large-grid coefficients, using `k ≥ 1000` and the residual logarithm `L ≥ 39`. -/
+def hubLargeKX : ℕ := 2893
+def hubLargeKY : ℕ := 13351
 
 /-- Common coefficient for the compatibility bound. -/
 def hubK : ℕ := hubKY
@@ -57,6 +63,7 @@ theorem sqCorridor_le_asymp (k s : ℕ) : sqCorridor k s ≤ 2 * (k * s) := by
   have h2 : (k - 1) * (s - k) ≤ k * s := Nat.mul_le_mul (Nat.sub_le _ _) (Nat.sub_le _ _)
   omega
 
+set_option maxHeartbeats 800000 in
 theorem hubBound_le_sharp (hd : HDims n k s) (hs500 : 500 ≤ s) :
     hubBound n k s ≤ hubKX * (n ^ 2 * s) + hubKY * (k ^ 2 * n ^ 2 * (Nat.log 2 n + 1)) := by
   obtain ⟨hk2, -, hroom, hmul⟩ := hd
@@ -64,7 +71,15 @@ theorem hubBound_le_sharp (hd : HDims n k s) (hs500 : 500 ≤ s) :
   rw [hmul] at hC
   have hn1000' : 1000 ≤ n := by nlinarith
   have hlog9 : 9 ≤ Nat.log 2 n := Nat.le_log_of_pow_le (by norm_num) (by norm_num; omega)
-  unfold hubBound transportBound misplacedBound hubKX hubKY
+  have hT := transportBound_le hk2 (show k ≤ s by omega)
+    (show 10 ≤ Nat.log 2 (k * s) + 1 by rw [hmul]; omega)
+  have hM := misplacedBound_le hk2 (show k ≤ s by omega)
+    (show 10 ≤ Nat.log 2 (k * s) + 1 by rw [hmul]; omega)
+  rw [hmul] at hT hM
+  have hMcost := Nat.mul_le_mul_left (508 * n) hM
+  unfold hubBound hubKX hubKY
+  generalize transportBound n k s = T at *
+  generalize misplacedBound n k = M at *
   generalize sqCorridor k s = C at *
   have hL : 10 ≤ Nat.log 2 n + 1 := by omega
   generalize Nat.log 2 n + 1 = L at *
@@ -108,7 +123,72 @@ theorem hubBound_le_sharp (hd : HDims n k s) (hs500 : 500 ≤ s) :
   have f8sharp : 10000 * (k ^ 2 * (k * s)) ≤ k ^ 2 * (k * s) ^ 2 * L := by
     have := Nat.mul_le_mul_left (k ^ 2) (Nat.mul_le_mul f1sharp hL)
     nlinarith
-  nlinarith only [f1sharp, f3sharp, f4, f5, f6sharp, f7sharp, f2, f8sharp, f9,
+  nlinarith only [hT, hMcost, f1sharp, f3sharp, f4, f5, f6sharp, f7sharp, f2, f8sharp, f9,
+    Nat.zero_le ((k * s) ^ 2 * s), Nat.zero_le (k ^ 2 * (k * s) ^ 2 * L)]
+
+set_option maxHeartbeats 800000 in
+/-- Sharper accounting for the grid used above `hubLargeN`. -/
+theorem hubBound_le_large (hd : HDims n k s) (hs500 : 500 ≤ s)
+    (hk1000 : 1000 ≤ k) (hL39 : 39 ≤ Nat.log 2 n + 1) :
+    hubBound n k s ≤ hubLargeKX * (n ^ 2 * s) + hubLargeKY * (k ^ 2 * n ^ 2 * (Nat.log 2 n + 1)) := by
+  obtain ⟨hk2, -, hroom, hmul⟩ := hd
+  have hC := sqCorridor_le_asymp k s
+  rw [hmul] at hC
+  have hn1000' : 1000 ≤ n := by nlinarith
+  have hlog9 : 9 ≤ Nat.log 2 n := Nat.le_log_of_pow_le (by norm_num) (by norm_num; omega)
+  have hT := transportBound_le_large hk1000 (show k ≤ s by omega)
+    (show 39 ≤ Nat.log 2 (k * s) + 1 by rw [hmul]; omega)
+  have hM := misplacedBound_le_large hk2 (show k ≤ s by omega)
+    (show 39 ≤ Nat.log 2 (k * s) + 1 by rw [hmul]; omega)
+  rw [hmul] at hT hM
+  have hMcost := Nat.mul_le_mul_left (508 * n) hM
+  unfold hubBound hubLargeKX hubLargeKY
+  generalize transportBound n k s = T at *
+  generalize misplacedBound n k = M at *
+  generalize sqCorridor k s = C at *
+  have hL : 39 ≤ Nat.log 2 n + 1 := by omega
+  generalize Nat.log 2 n + 1 = L at *
+  subst hmul
+  have hs : 1 ≤ s := by omega
+  have hk : 1 ≤ k := by omega
+  have hks : 1 ≤ k * s := Nat.one_le_iff_ne_zero.mpr (by positivity)
+  have f1 : k * s ≤ (k * s) ^ 2 * s := by
+    calc k * s = k * s * 1 * 1 := by ring
+      _ ≤ k * s * (k * s) * s := by gcongr
+      _ = (k * s) ^ 2 * s := by ring
+  have f3 : (k * s) ^ 2 ≤ (k * s) ^ 2 * s := Nat.le_mul_of_pos_right _ hs
+  have f3sharp : 500 * (k * s) ^ 2 ≤ (k * s) ^ 2 * s := by
+    have h := Nat.mul_le_mul_left ((k * s) ^ 2) (show 500 ≤ s by omega)
+    nlinarith
+  have f4 : k ^ 2 * s ^ 3 = (k * s) ^ 2 * s := by ring
+  have f5 : k ^ 2 * s ^ 2 = (k * s) ^ 2 := by ring
+  have f6 : k ^ 2 * s ≤ (k * s) ^ 2 := by
+    calc k ^ 2 * s = k ^ 2 * s * 1 := by ring
+      _ ≤ k ^ 2 * s * s := by gcongr
+      _ = (k * s) ^ 2 := by ring
+  have f7 : k ^ 2 ≤ (k * s) ^ 2 := Nat.pow_le_pow_left (Nat.le_mul_of_pos_right _ hs) 2
+  have f2 : k * s * (k ^ 2 * C) ≤ 2 * (k ^ 2 * (k * s) ^ 2) := by
+    calc k * s * (k ^ 2 * C) ≤ k * s * (k ^ 2 * (2 * (k * s))) := by gcongr
+      _ = 2 * (k ^ 2 * (k * s) ^ 2) := by ring
+  have f8 : k ^ 2 * (k * s) ≤ k ^ 2 * (k * s) ^ 2 * L := by
+    calc k ^ 2 * (k * s) = k ^ 2 * (k * s) * 1 * 1 := by ring
+      _ ≤ k ^ 2 * (k * s) * (k * s) * L := by gcongr; omega
+      _ = k ^ 2 * (k * s) ^ 2 * L := by ring
+  have f9 : 39 * (k ^ 2 * (k * s) ^ 2) ≤ k ^ 2 * (k * s) ^ 2 * L := by
+    nlinarith [Nat.mul_le_mul_left (k ^ 2 * (k * s) ^ 2) hL]
+  have hn1000 : 1000 ≤ k * s := by nlinarith
+  have fs500 : 500 ≤ s := by omega
+  have f1sharp : 1000 * (k * s) ≤ (k * s) ^ 2 := by nlinarith
+  have f6sharp : 500 * (k ^ 2 * s) ≤ (k * s) ^ 2 := by
+    have := Nat.mul_le_mul_left (k ^ 2 * s) fs500
+    nlinarith
+  have f7sharp : 250000 * k ^ 2 ≤ (k * s) ^ 2 := by
+    have := Nat.mul_le_mul_left (k ^ 2) (Nat.pow_le_pow_left fs500 2)
+    nlinarith
+  have f8sharp : 39000 * (k ^ 2 * (k * s)) ≤ k ^ 2 * (k * s) ^ 2 * L := by
+    have := Nat.mul_le_mul_left (k ^ 2) (Nat.mul_le_mul f1sharp hL)
+    nlinarith
+  nlinarith only [hT, hMcost, f1sharp, f3sharp, f4, f5, f6sharp, f7sharp, f2, f8sharp, f9,
     Nat.zero_le ((k * s) ^ 2 * s), Nat.zero_le (k ^ 2 * (k * s) ^ 2 * L)]
 
 /-- Common-coefficient form of the sharper estimate. -/
@@ -288,39 +368,42 @@ theorem cube_Z_le {n m L : ℕ} (hm : 1 ≤ m) (hL : 1 ≤ L) (hlo : hubA * m ^ 
         (by positivity))
     _ = 8 * 3018 ^ 3 * n ^ 8 * L := by ring
 
-/-- Above the explicit threshold the prefix is lower order: its cube fits
-inside `n⁸ L`, without the old coarse factor `6036³`. -/
-theorem cube_Z_le_large {n m L : ℕ} (hn : 4096 ≤ n) (hm : 1 ≤ m)
+/-- Above the large-board threshold the prefix is lower order: even a
+thousand times its cost has cube at most `n⁸ L`. -/
+theorem cube_Z_le_large {n m L : ℕ} (hn : hubLargeN ≤ n) (hm : 1 ≤ m)
     (hL : 1 ≤ L) (hlo : hubA * m ^ 3 * L ≤ n) :
-    ((15 * n ^ 2 + 3002 * n + 1) * (n - 2 * m * (n / (2 * m)))) ^ 3 ≤
+    (1000 * ((15 * n ^ 2 + 3002 * n + 1) * (n - 2 * m * (n / (2 * m))))) ^ 3 ≤
       1 ^ 3 * n ^ 8 * L := by
   have hd : n - 2 * m * (n / (2 * m)) ≤ 2 * m := by
     have := Nat.mod_add_div n (2 * m)
     have := Nat.mod_lt n (by omega : 0 < 2 * m)
     omega
-  have hpoly : 15 * n ^ 2 + 3002 * n + 1 ≤ 16 * n ^ 2 := by nlinarith
-  have hZ := Nat.pow_le_pow_left (Nat.mul_le_mul hpoly hd) 3
+  have hpoly : 15 * n ^ 2 + 3002 * n + 1 ≤ 16 * n ^ 2 := by
+    unfold hubLargeN at hn
+    nlinarith
+  have hZ := Nat.pow_le_pow_left (Nat.mul_le_mul_left 1000 (Nat.mul_le_mul hpoly hd)) 3
   have hm3 : 64 * m ^ 3 ≤ n := by
     have := Nat.mul_le_mul_left (64 * m ^ 3) hL
     unfold hubA at hlo
     nlinarith
   have hmul := Nat.mul_le_mul_left (512 * n ^ 6) hm3
-  have hscale : 512 * n ^ 7 ≤ n ^ 8 * L := by
-    calc 512 * n ^ 7 ≤ n * n ^ 7 := by gcongr; omega
+  have hscale : 512000000000 * n ^ 7 ≤ n ^ 8 * L := by
+    calc 512000000000 * n ^ 7 ≤ n * n ^ 7 :=
+        Nat.mul_le_mul_right _ (by unfold hubLargeN at hn; omega)
       _ = n ^ 8 := by ring
       _ ≤ n ^ 8 * L := Nat.le_mul_of_pos_right _ hL
-  calc _ ≤ (16 * n ^ 2 * (2 * m)) ^ 3 := hZ
-    _ = 32768 * (n ^ 6 * m ^ 3) := by ring
-    _ ≤ 32768 * (n ^ 6 * m ^ 3) := Nat.mul_le_mul_right _ (by norm_num)
-    _ ≤ 512 * n ^ 7 := by nlinarith only [hmul]
+  calc _ ≤ (1000 * (16 * n ^ 2 * (2 * m))) ^ 3 := hZ
+    _ = 32768000000000 * (n ^ 6 * m ^ 3) := by ring
+    _ ≤ 512000000000 * n ^ 7 := by nlinarith only [hmul]
     _ ≤ _ := by simpa using hscale
 
 /-- The whole algorithm on a board of side `n ≥ hubLargeN`, in natural numbers. -/
-theorem optimalLength_le_hub_sharp {n : ℕ} [NeZero n] (hn : hubLargeN ≤ n) (B : ReachableBoard n) :
+theorem optimalLength_le_hub_scaled {n : ℕ} [NeZero n] (hn : hubLargeN ≤ n) (B : ReachableBoard n) :
     ∃ X Y Z : ℕ, (299 * X) ^ 3 ≤ 599 ^ 3 * n ^ 8 * (Nat.log 2 n + 1) ∧
       (4 * Y) ^ 3 ≤ 1 ^ 3 * n ^ 8 * (Nat.log 2 n + 1) ∧
-      Z ^ 3 ≤ 1 ^ 3 * n ^ 8 * (Nat.log 2 n + 1) ∧
-      optimalLength B ≤ manhattan B.val + 2 * hubKX * X + 2 * hubKY * Y + 2 * Z := by
+      (1000 * Z) ^ 3 ≤ 1 ^ 3 * n ^ 8 * (Nat.log 2 n + 1) ∧
+      1000 * optimalLength B ≤ 1000 * manhattan B.val +
+        2 * hubScaledKX * X + 2 * hubScaledKY * Y + 2000 * Z := by
   set L := Nat.log 2 n + 1 with hLdef
   have hL : 1 ≤ L := by omega
   obtain ⟨m, hm, hlo, hhi⟩ := exists_half_width hL (hubA_mul_log_le (show hubN ≤ n by unfold hubN hubLargeN at *; omega))
@@ -349,7 +432,17 @@ theorem optimalLength_le_hub_sharp {n : ℕ} [NeZero n] (hn : hubLargeN ≤ n) (
       _ ≤ n := hm2L
   have hres := optimalLength_le_hub_residual B hd hP1
   simp only [← hsdef] at hres
-  have hbound := hubBound_le_sharp hd (capacity_lower_bounds hd hP1).2.1
+  have hreslarge : 2 ^ 38 ≤ k * s := by
+    have hmod := Nat.mod_lt n hkpos
+    have heq := Nat.mod_add_div n k
+    change n % k + k * s = n at heq
+    have hks : k ≤ k * s := Nat.le_mul_of_pos_right _ (by omega)
+    unfold hubLargeN at hn
+    omega
+  have hL39 : 39 ≤ Nat.log 2 (k * s) + 1 := by
+    have := Nat.le_log_of_pow_le (by norm_num : 1 < 2) hreslarge
+    omega
+  have hbound := hubBound_le_scaled (show 1196 ≤ k by omega) hL39 hP1
   -- monotonicity from `k*s` to `n`
   have hX : (k * s) ^ 2 * s ≤ n ^ 2 * s := by gcongr
   have hY : k ^ 2 * (k * s) ^ 2 * (Nat.log 2 (k * s) + 1) ≤ k ^ 2 * n ^ 2 * L := by
@@ -359,10 +452,24 @@ theorem optimalLength_le_hub_sharp {n : ℕ} [NeZero n] (hn : hubLargeN ≤ n) (
     (15 * n ^ 2 + 3002 * n + 1) * (n - k * s), ?_, ?_, ?_, ?_⟩
   · exact cube_X_le_large hm598 hhi
   · exact cube_scaled_Y_le hlo
-  · exact cube_Z_le_large (show 4096 ≤ n by unfold hubLargeN at hn; omega) hm hL hlo
-  · have hx := Nat.mul_le_mul_left hubKX hX
-    have hy := Nat.mul_le_mul_left hubKY hY
+  · exact cube_Z_le_large hn hm hL hlo
+  · have hx := Nat.mul_le_mul_left hubScaledKX hX
+    have hy := Nat.mul_le_mul_left hubScaledKY hY
     nlinarith
+
+/-- The previous integral large-grid coefficients remain valid. -/
+theorem optimalLength_le_hub_sharp {n : ℕ} [NeZero n] (hn : hubLargeN ≤ n) (B : ReachableBoard n) :
+    ∃ X Y Z : ℕ, (299 * X) ^ 3 ≤ 599 ^ 3 * n ^ 8 * (Nat.log 2 n + 1) ∧
+      (4 * Y) ^ 3 ≤ 1 ^ 3 * n ^ 8 * (Nat.log 2 n + 1) ∧
+      (1000 * Z) ^ 3 ≤ 1 ^ 3 * n ^ 8 * (Nat.log 2 n + 1) ∧
+      optimalLength B ≤ manhattan B.val + 2 * hubLargeKX * X + 2 * hubLargeKY * Y + 2 * Z := by
+  obtain ⟨X, Y, Z, hX, hY, hZ, hopt⟩ := optimalLength_le_hub_scaled hn B
+  have hx := Nat.mul_le_mul_right X
+    (show hubScaledKX ≤ 1000 * hubLargeKX by norm_num [hubScaledKX, hubLargeKX])
+  have hy := Nat.mul_le_mul_right Y
+    (show hubScaledKY ≤ 1000 * hubLargeKY by norm_num [hubScaledKY, hubLargeKY])
+  refine ⟨X, Y, Z, hX, hY, hZ, ?_⟩
+  nlinarith
 
 /-- Compatibility form with a common cube bound for all three terms. -/
 theorem optimalLength_le_hub {n : ℕ} [NeZero n] (hn : hubLargeN ≤ n) (B : ReachableBoard n) :
@@ -377,10 +484,14 @@ theorem optimalLength_le_hub {n : ℕ} [NeZero n] (hn : hubLargeN ≤ n) (B : Re
   have hYsmall : Y ^ 3 ≤ hubD ^ 3 * n ^ 8 * (Nat.log 2 n + 1) := by
     have hmono : Y ^ 3 ≤ (4 * Y) ^ 3 := Nat.pow_le_pow_left (by omega) 3
     exact (hmono.trans hY).trans (by unfold hubD; gcongr; norm_num)
-  refine ⟨X, Y, Z, hXsmall, hYsmall, hZ.trans ?_, ?_⟩
-  · unfold hubD; gcongr; norm_num
-  · have hcoeff : hubKX ≤ hubKY := by norm_num [hubKX, hubKY]
+  have hZsmall : Z ^ 3 ≤ hubD ^ 3 * n ^ 8 * (Nat.log 2 n + 1) := by
+    have hmono : Z ^ 3 ≤ (1000 * Z) ^ 3 := Nat.pow_le_pow_left (by omega) 3
+    exact (hmono.trans hZ).trans (by unfold hubD; gcongr; norm_num)
+  refine ⟨X, Y, Z, hXsmall, hYsmall, hZsmall, ?_⟩
+  · have hcoeff : hubLargeKX ≤ hubKY := by norm_num [hubLargeKX, hubKY]
+    have hcoeffY : hubLargeKY ≤ hubKY := by norm_num [hubLargeKY, hubKY]
     have hmul := Nat.mul_le_mul_right X hcoeff
+    have hmulY := Nat.mul_le_mul_right Y hcoeffY
     unfold hubK
     nlinarith
 
