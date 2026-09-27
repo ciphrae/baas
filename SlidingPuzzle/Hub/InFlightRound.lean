@@ -168,16 +168,16 @@ noncomputable def Btot (H : RowH k) (d : ℕ) : ℕ := ∑ j, gcnt rs H d j
 /-- `A_{x,d}`: all insertions of `(H, d, x)`. -/
 noncomputable def Atot (H : RowH k) (d : ℕ) (x : Sq k) : ℕ := ∑ j, acnt rs H d x j
 
-/-- The window of band `d`: `w_d = min Δ (⌊6 s Δ / (5 B_d)⌋ + 1)` (`Δ` if `B_d = 0`),
+/-- The window of band `d`: `w_d = min Δ (⌊4 s Δ / (3 B_d)⌋ + 1)` (`Δ` if `B_d = 0`),
 long enough for `s` insertions from distances `≥ d`. -/
 noncomputable def win (H : RowH k) (d : ℕ) : ℕ :=
-  if Btot rs H d = 0 then Δ else min Δ (6 * s * Δ / (5 * Btot rs H d) + 1)
+  if Btot rs H d = 0 then Δ else min Δ (4 * s * Δ / (3 * Btot rs H d) + 1)
 
 /-- The residence window of a tile inserted from distance `d`: `∑_{j ≤ d} w_j`. -/
 noncomputable def wsum (H : RowH k) (d : ℕ) : ℕ := ∑ j ∈ Finset.range (d + 1), win s rs H j
 
-/-- The additive slack `λ = 4 (log₂ n + 1)`. -/
-def lamN (n : ℕ) : ℕ := 4 * (Nat.log 2 n + 1)
+/-- The additive slack `λ = 3 (log₂ n + 1)`. -/
+def lamN (n : ℕ) : ℕ := 3 * (Nat.log 2 n + 1)
 
 /-- The bound on present `(H, d, x)` tiles. -/
 noncomputable def Nb (n : ℕ) (H : RowH k) (d : ℕ) (x : Sq k) : ℕ :=

@@ -30,17 +30,17 @@ namespace SlidingPuzzle.Hub
 
 open Finset
 
-/-- Integer upper rounding of the in-flight estimate `1.5616 n` per hub. -/
-def Rhub (n : ℕ) : ℕ := 15616 * n / 10000 + 1
+/-- Integer upper rounding of the in-flight estimate `2.1756 n` per hub. -/
+def Rhub (n : ℕ) : ℕ := 21756 * n / 10000 + 1
 
-theorem Rhub_lower (n : ℕ) : 15616 * n ≤ 10000 * Rhub n := by
-  have := Nat.mod_add_div (15616 * n) 10000
-  have := Nat.mod_lt (15616 * n) (by norm_num : 0 < 10000)
+theorem Rhub_lower (n : ℕ) : 21756 * n ≤ 10000 * Rhub n := by
+  have := Nat.mod_add_div (21756 * n) 10000
+  have := Nat.mod_lt (21756 * n) (by norm_num : 0 < 10000)
   unfold Rhub
   omega
 
-theorem Rhub_upper (n : ℕ) : 10000 * Rhub n ≤ 15616 * n + 10000 := by
-  have := Nat.mod_add_div (15616 * n) 10000
+theorem Rhub_upper (n : ℕ) : 10000 * Rhub n ≤ 21756 * n + 10000 := by
+  have := Nat.mod_add_div (21756 * n) 10000
   unfold Rhub
   omega
 
@@ -54,24 +54,22 @@ theorem Rhub_le_seven {n : ℕ} (hn : 1 ≤ n) (hL : 10 ≤ Nat.log 2 n + 1) :
 /-- The capacity condition already forces large squares and a logarithm of
 at least ten; retain these facts in the later cost estimates. -/
 theorem capacity_lower_bounds {n k s : ℕ} (hd : HDims n k s)
-    (hP1 : 169 * k * (Nat.log 2 n + 1) ≤ s) :
+    (hP1 : 48 * k * (Nat.log 2 n + 1) ≤ s) :
     10 ≤ Nat.log 2 n + 1 ∧ 500 ≤ s ∧ 1000 ≤ n := by
   have hk := hd.two_le
   have hroom := hd.room
   have hn := hd.mul
   have hn16 : 16 ≤ n := by nlinarith
   have hlog4 : 4 ≤ Nat.log 2 n := Nat.le_log_of_pow_le (by norm_num) (by norm_num; omega)
-  have hs250 : 250 ≤ s := by nlinarith
-  have hn500 : 500 ≤ n := by nlinarith
-  have hlog8 : 8 ≤ Nat.log 2 n := Nat.le_log_of_pow_le (by norm_num) (by norm_num; omega)
-  have hs450 : 450 ≤ s := by nlinarith
-  have hn900 : 900 ≤ n := by nlinarith
+  have hs480 : 480 ≤ s := by nlinarith
+  have hn960 : 960 ≤ n := by nlinarith
   have hlog9 : 9 ≤ Nat.log 2 n := Nat.le_log_of_pow_le (by norm_num) (by norm_num; omega)
   have hs500 : 500 ≤ s := by nlinarith
   exact ⟨by omega, hs500, by nlinarith⟩
 
 /-- The number of window events is below `2^λ`. -/
-theorem card_events_lt {n k s Δ : ℕ} (hd : HDims n k s) (hΔ : Δ ≤ s ^ 2 + 1) :
+theorem card_events_lt {n k s Δ : ℕ} (hd : HDims n k s) (hks2 : 8 * k ^ 2 ≤ s)
+    (hΔ : Δ ≤ s ^ 2 + 1) :
     Fintype.card (RowH k × Fin k × Fin Δ) + Fintype.card (RowH k × Fin k × Sq k × Fin Δ) <
       2 ^ lamN n := by
   have hk : 2 ≤ k := hd.two_le
@@ -83,26 +81,24 @@ theorem card_events_lt {n k s Δ : ℕ} (hd : HDims n k s) (hΔ : Δ ≤ s ^ 2 +
   rw [hcard]
   have h1 : k ^ 3 ≤ k ^ 5 := Nat.pow_le_pow_right (by omega) (by omega)
   have h2 : Δ ≤ 2 * s ^ 2 := by nlinarith
-  have hroom := hd.room
-  have hsmall : 8 * k ≤ s ^ 2 := by nlinarith
-  have h4 : 8 * (k ^ 5 * s ^ 2) ≤ n ^ 4 := by
-    have := Nat.mul_le_mul_left (k ^ 4 * s ^ 2) hsmall
+  have h4 : 8 * (k ^ 5 * s ^ 2) ≤ n ^ 3 := by
+    have := Nat.mul_le_mul_left (k ^ 3 * s ^ 2) hks2
     rw [hn]
     nlinarith only [this]
-  have h5 : n ^ 4 < (n + 1) ^ 4 := Nat.pow_lt_pow_left (by omega) (by norm_num)
-  have h6 : (n + 1) ^ 4 ≤ 2 ^ lamN n := by
+  have h5 : n ^ 3 < (n + 1) ^ 3 := Nat.pow_lt_pow_left (by omega) (by norm_num)
+  have h6 : (n + 1) ^ 3 ≤ 2 ^ lamN n := by
     have := Nat.lt_pow_succ_log_self (by norm_num : 1 < 2) n
     rw [lamN, mul_comm, pow_mul]
-    exact Nat.pow_le_pow_left this 4
+    exact Nat.pow_le_pow_left this 3
   calc 2 * k ^ 3 * Δ + 2 * k ^ 5 * Δ ≤ 4 * k ^ 5 * Δ := by nlinarith
     _ ≤ 4 * k ^ 5 * (2 * s ^ 2) := Nat.mul_le_mul_left _ h2
     _ = 8 * (k ^ 5 * s ^ 2) := by ring
-    _ ≤ n ^ 4 := h4
+    _ ≤ n ^ 3 := h4
     _ < _ := lt_of_lt_of_le h5 h6
 
 /-- Some order of the rounds keeps every hub's in-flight maxima small. -/
 theorem exists_good_order {n k s : ℕ} (hd : HDims n k s)
-    (hP1 : 169 * k * (Nat.log 2 n + 1) ≤ s) {Δ : ℕ} (hΔ : Δ ≤ s ^ 2 + 1)
+    (hP1 : 48 * k * (Nat.log 2 n + 1) ≤ s) (hks2 : 8 * k ^ 2 ≤ s) {Δ : ℕ} (hΔ : Δ ≤ s ^ 2 + 1)
     (rs : Fin Δ → Round k) :
     ∃ σ : Equiv.Perm (Fin Δ), ∀ L : List (InsRec k), Consistent rs σ L →
       ∃ N : Sq k → Sq k → ℕ, (∀ h, ∑ x, N h x ≤ Rhub n) ∧
@@ -112,11 +108,10 @@ theorem exists_good_order {n k s : ℕ} (hd : HDims n k s)
   have hs : 1 ≤ s := by have := hd.room; omega
   have hn : n = k * s := hd.mul.symm
   set ℓ := Nat.log 2 n + 1 with hℓ
-  have hlam : 42 * k * lamN n ≤ s := by
-    have e1 : 42 * k * lamN n = 168 * (k * ℓ) := by rw [lamN]; ring
-    have e2 : 169 * k * ℓ = 169 * (k * ℓ) := by ring
+  have hlam : 16 * k * lamN n ≤ s := by
+    have e1 : 16 * k * lamN n = 48 * k * ℓ := by rw [lamN]; ring
     omega
-  obtain ⟨σ, hσ⟩ := exists_goodOrder s rs n hk hlam (card_events_lt hd hΔ)
+  obtain ⟨σ, hσ⟩ := exists_goodOrder s rs n hk hlam (card_events_lt hd hks2 hΔ)
   refine ⟨σ, fun L hL => ?_⟩
   let r0 : InsRec k := ⟨0, (⟨0, hk⟩, ⟨0, hk⟩, true), 0, (⟨0, hk⟩, ⟨0, hk⟩)⟩
   have hroom := hd.room
@@ -124,7 +119,7 @@ theorem exists_good_order {n k s : ℕ} (hd : HDims n k s)
   refine ⟨fun h x => ∑ side : Bool, ∑ d ∈ range k, Nb s rs n (h.1, h.2, side) d x, ?_, ?_⟩
   · intro h
     have hsum : ∑ x, ∑ side : Bool, ∑ d ∈ range k, (Nb s rs n (h.1, h.2, side) d x : ℝ) ≤
-        ∑ side : Bool, ((51 / 40 : ℝ) * ((rowLen k s (h.1, h.2, side) : ℝ) + k) +
+        ∑ side : Bool, ((17 / 12 : ℝ) * ((rowLen k s (h.1, h.2, side) : ℝ) + k) +
           17 / 16 * ((k : ℝ) * (k + 1)) + (k : ℝ) * k * (6 * (lamN n : ℝ))) := by
       rw [sum_comm]
       apply sum_le_sum; intro side _
@@ -140,25 +135,25 @@ theorem exists_good_order {n k s : ℕ} (hd : HDims n k s)
         omega
       exact_mod_cast this
     have hℓ10 : 10 ≤ ℓ := (capacity_lower_bounds hd hP1).1
-    have hstock : 169 * (k : ℝ) * k * ℓ ≤ n := by
+    have hstock : 48 * (k : ℝ) * k * ℓ ≤ n := by
       have h := Nat.mul_le_mul_left k hP1
       rw [hd.mul] at h
-      have h' : 169 * k * k * ℓ ≤ n := by
+      have h' : 48 * k * k * ℓ ≤ n := by
         simpa only [← hℓ, mul_assoc, mul_left_comm, mul_comm] using h
       exact_mod_cast h'
     have hℓR : (10 : ℝ) ≤ ℓ := by exact_mod_cast hℓ10
-    have hkk : 1690 * ((k : ℝ) * k) ≤ n := by
+    have hkk : 480 * ((k : ℝ) * k) ≤ n := by
       have : 0 ≤ (k : ℝ) * k := by positivity
       nlinarith
     have hk1 : (k : ℝ) ≤ k * k := by
       have : (1 : ℝ) ≤ k := by exact_mod_cast (show 1 ≤ k by omega)
       nlinarith
-    have hlamR : (lamN n : ℝ) = 4 * ℓ := by simp only [lamN, hℓ]; push_cast; ring
+    have hlamR : (lamN n : ℝ) = 3 * ℓ := by simp only [lamN, hℓ]; push_cast; ring
     have hfin : ∑ x, ∑ side : Bool, ∑ d ∈ range k, (Nb s rs n (h.1, h.2, side) d x : ℝ) ≤
         (Rhub n : ℝ) := by
       refine hsum.trans ?_
       rw [Fintype.sum_bool, hlamR]
-      have hR : 15616 * (n : ℝ) ≤ 10000 * (Rhub n : ℝ) := by exact_mod_cast Rhub_lower n
+      have hR : 21756 * (n : ℝ) ≤ 10000 * (Rhub n : ℝ) := by exact_mod_cast Rhub_lower n
       nlinarith
     exact_mod_cast hfin
   · intro m h x

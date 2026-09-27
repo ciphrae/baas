@@ -206,58 +206,65 @@ theorem card_upper_tail (T : Finset α) (a : α → ℕ) (ha : ∀ i, a i ≤ 1)
   rw [mul_comm (Real.exp μ), ← mul_assoc] at hfin
   exact le_of_mul_le_mul_right hfin (Real.exp_pos μ)
 
-/-- `exp(-(11/10) v) ≤ 1 - v` for `v ∈ [0, 1/6]`. -/
-theorem exp_neg_le_one_sub_sharp {v : ℝ} (h0 : 0 ≤ v) (h1 : v ≤ 1 / 6) :
-    Real.exp (-(11 / 10 * v)) ≤ 1 - v := by
-  have he := Real.quadratic_le_exp_of_nonneg (show 0 ≤ 11 / 10 * v by positivity)
-  have hp : 0 < Real.exp (11 / 10 * v) := Real.exp_pos _
-  have hprod : Real.exp (-(11 / 10 * v)) * Real.exp (11 / 10 * v) = 1 := by
+/-- `exp(-(29/25) v) ≤ 1 - v` for `v ∈ [0, 1/4]`. -/
+theorem exp_neg_le_one_sub_sharp {v : ℝ} (h0 : 0 ≤ v) (h1 : v ≤ 1 / 4) :
+    Real.exp (-(29 / 25 * v)) ≤ 1 - v := by
+  have he := Real.sum_le_exp_of_nonneg (show 0 ≤ 29 / 25 * v by positivity) 4
+  simp only [Finset.sum_range_succ, Finset.sum_range_zero, Nat.factorial] at he
+  norm_num at he
+  have hp : 0 < Real.exp (29 / 25 * v) := Real.exp_pos _
+  have hprod : Real.exp (-(29 / 25 * v)) * Real.exp (29 / 25 * v) = 1 := by
     rw [← Real.exp_add]; simp
-  have hpoly : 1 ≤ (1 - v) * (1 + 11 / 10 * v + (11 / 10 * v) ^ 2 / 2) := by
-    nlinarith [mul_nonneg h0 h0, mul_nonneg (mul_nonneg h0 h0) h0]
-  have hq : 1 ≤ (1 - v) * Real.exp (11 / 10 * v) := by
+  have hpoly : 1 ≤ (1 - v) * (1 + 29 / 25 * v + (29 / 25 * v) ^ 2 / 2 + (29 / 25 * v) ^ 3 / 6) := by
+    nlinarith [mul_nonneg h0 h0, mul_nonneg (mul_nonneg h0 h0) h0,
+      mul_nonneg (mul_nonneg (mul_nonneg h0 h0) h0) h0, mul_nonneg h0 (sub_nonneg.mpr h1),
+      mul_nonneg (mul_nonneg h0 h0) (sub_nonneg.mpr h1),
+      mul_nonneg (mul_nonneg (mul_nonneg h0 h0) h0) (sub_nonneg.mpr h1)]
+  have hq : 1 ≤ (1 - v) * Real.exp (29 / 25 * v) := by
     have : 0 ≤ 1 - v := by linarith
+    have h3 : 1 + 29 / 25 * v + (29 / 25 * v) ^ 2 / 2 + (29 / 25 * v) ^ 3 / 6 ≤
+        Real.exp (29 / 25 * v) := by linarith
     nlinarith
-  nlinarith [Real.exp_pos (-(11 / 10 * v))]
+  nlinarith [Real.exp_pos (-(29 / 25 * v))]
 
 /-- Sharper lower tail (terms in `[0, K]`): few permutations make the window sum
-at most `5/6` of its mean `μ`. -/
+at most `3/4` of its mean `μ`. -/
 theorem card_lower_tail_sharp (T : Finset α) (g : α → ℝ) {K : ℝ} (hK : 0 < K)
     (hg0 : ∀ i, 0 ≤ g i) (hgK : ∀ i, g i ≤ K) (hn : 0 < Fintype.card α) :
     ((univ.filter fun σ : Equiv.Perm α =>
-        ∑ τ ∈ T, g (σ τ) ≤ 5 / 6 * (T.card * (∑ i, g i) / Fintype.card α)).card : ℝ) ≤
+        ∑ τ ∈ T, g (σ τ) ≤ 3 / 4 * (T.card * (∑ i, g i) / Fintype.card α)).card : ℝ) ≤
       (Fintype.card α).factorial *
-        Real.exp (-(T.card * (∑ i, g i) / Fintype.card α) / (72 * K)) := by
+        Real.exp (-(13 * (T.card * (∑ i, g i) / Fintype.card α)) / (400 * K)) := by
   set n := Fintype.card α
   set μ : ℝ := T.card * (∑ i, g i) / n with hμ
   have hnR : (0 : ℝ) < n := by exact_mod_cast hn
-  set y : α → ℝ := fun i => 1 - g i / (6 * K) with hy
+  set y : α → ℝ := fun i => 1 - g i / (4 * K) with hy
   have hy0 : ∀ i, 0 ≤ y i := by
     intro i; simp only [hy]
-    have : g i / (6 * K) ≤ 1 / 6 := by
+    have : g i / (4 * K) ≤ 1 / 4 := by
       rw [div_le_iff₀ (by positivity)]; linarith [hgK i]
     linarith
   have hmom := sum_perm_prod_le T y hy0
-  have hmean : (∑ i, y i) / n = 1 - (∑ i, g i) / (6 * K * n) := by
+  have hmean : (∑ i, y i) / n = 1 - (∑ i, g i) / (4 * K * n) := by
     simp only [hy, sum_sub_distrib, sum_const, card_univ, nsmul_eq_mul, mul_one, ← sum_div]
     field_simp; simp only [n]; ring
   have hmean0 : 0 ≤ (∑ i, y i) / n := div_nonneg (sum_nonneg fun i _ => hy0 i) hnR.le
-  have hexp : ((∑ i, y i) / n) ^ T.card ≤ Real.exp (-(μ / (6 * K))) := by
-    calc ((∑ i, y i) / n) ^ T.card ≤ (Real.exp (-((∑ i, g i) / (6 * K * n)))) ^ T.card := by
+  have hexp : ((∑ i, y i) / n) ^ T.card ≤ Real.exp (-(μ / (4 * K))) := by
+    calc ((∑ i, y i) / n) ^ T.card ≤ (Real.exp (-((∑ i, g i) / (4 * K * n)))) ^ T.card := by
           apply pow_le_pow_left₀ hmean0
-          rw [hmean]; linarith [Real.add_one_le_exp (-((∑ i, g i) / (6 * K * n)))]
-      _ = Real.exp (-(μ / (6 * K))) := by
+          rw [hmean]; linarith [Real.add_one_le_exp (-((∑ i, g i) / (4 * K * n)))]
+      _ = Real.exp (-(μ / (4 * K))) := by
           rw [← Real.exp_nat_mul]; congr 1; rw [hμ]; field_simp
   have hmark := card_filter_mul_le_sum (fun σ : Equiv.Perm α => ∏ τ ∈ T, y (σ τ))
-    (fun σ => prod_nonneg fun τ _ => hy0 _) (Real.exp (-(11 * (5 * μ) / (360 * K))))
-    (fun σ => ∑ τ ∈ T, g (σ τ) ≤ 5 / 6 * μ) (by
+    (fun σ => prod_nonneg fun τ _ => hy0 _) (Real.exp (-(29 * (3 * μ) / (400 * K))))
+    (fun σ => ∑ τ ∈ T, g (σ τ) ≤ 3 / 4 * μ) (by
       intro σ hσ
-      calc Real.exp (-(11 * (5 * μ) / (360 * K))) ≤
-            Real.exp (-(11 / 10 * ∑ τ ∈ T, g (σ τ)) / (6 * K)) := by
+      calc Real.exp (-(29 * (3 * μ) / (400 * K))) ≤
+            Real.exp (-(29 / 25 * ∑ τ ∈ T, g (σ τ)) / (4 * K)) := by
             apply Real.exp_le_exp.mpr
             rw [neg_div, neg_le_neg_iff, div_le_div_iff₀ (by positivity) (by positivity)]
             nlinarith
-        _ = ∏ τ ∈ T, Real.exp (-(11 / 10 * (g (σ τ) / (6 * K)))) := by
+        _ = ∏ τ ∈ T, Real.exp (-(29 / 25 * (g (σ τ) / (4 * K)))) := by
             rw [← Real.exp_sum]; congr 1
             rw [neg_div, mul_sum, sum_div, ← sum_neg_distrib]
             refine sum_congr rfl fun τ _ => ?_
@@ -267,18 +274,18 @@ theorem card_lower_tail_sharp (T : Finset α) (g : α → ℝ) {K : ℝ} (hK : 0
             intro τ _
             apply exp_neg_le_one_sub_sharp (div_nonneg (hg0 _) (by positivity))
             rw [div_le_iff₀ (by positivity)]; linarith [hgK (σ τ)])
-  have hfin : ((univ.filter fun σ : Equiv.Perm α => ∑ τ ∈ T, g (σ τ) ≤ 5 / 6 * μ).card : ℝ) *
-      Real.exp (-(11 * (5 * μ) / (360 * K))) ≤ n.factorial * Real.exp (-(μ / (6 * K))) :=
+  have hfin : ((univ.filter fun σ : Equiv.Perm α => ∑ τ ∈ T, g (σ τ) ≤ 3 / 4 * μ).card : ℝ) *
+      Real.exp (-(29 * (3 * μ) / (400 * K))) ≤ n.factorial * Real.exp (-(μ / (4 * K))) :=
     hmark.trans (hmom.trans (mul_le_mul_of_nonneg_left hexp (Nat.cast_nonneg _)))
-  have hpos := Real.exp_pos (-(11 * (5 * μ) / (360 * K)))
-  have hsplit : Real.exp (-(μ / (6 * K))) =
-      Real.exp (-μ / (72 * K)) * Real.exp (-(11 * (5 * μ) / (360 * K))) := by
+  have hpos := Real.exp_pos (-(29 * (3 * μ) / (400 * K)))
+  have hsplit : Real.exp (-(μ / (4 * K))) =
+      Real.exp (-(13 * μ) / (400 * K)) * Real.exp (-(29 * (3 * μ) / (400 * K))) := by
     rw [← Real.exp_add]; congr 1; field_simp; ring
   rw [hsplit] at hfin
-  have hfin' : ((univ.filter fun σ : Equiv.Perm α => ∑ τ ∈ T, g (σ τ) ≤ 5 / 6 * μ).card : ℝ) *
-      Real.exp (-(11 * (5 * μ) / (360 * K))) ≤
-      (n.factorial * Real.exp (-μ / (72 * K))) *
-        Real.exp (-(11 * (5 * μ) / (360 * K))) := by
+  have hfin' : ((univ.filter fun σ : Equiv.Perm α => ∑ τ ∈ T, g (σ τ) ≤ 3 / 4 * μ).card : ℝ) *
+      Real.exp (-(29 * (3 * μ) / (400 * K))) ≤
+      (n.factorial * Real.exp (-(13 * μ) / (400 * K))) *
+        Real.exp (-(29 * (3 * μ) / (400 * K))) := by
     rw [mul_assoc]; exact hfin
   exact le_of_mul_le_mul_right hfin' hpos
 

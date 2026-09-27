@@ -245,7 +245,7 @@ theorem exists_half_width {n L : ℕ} (hL : 1 ≤ L) (hn : hubA * L ≤ n) :
 /-- Prefix plus hub on the residual board. -/
 theorem optimalLength_le_hub_residual {n k : ℕ} [NeZero n] (B : ReachableBoard n)
     (hd : HDims (k * (n / k)) k (n / k))
-    (hP1 : 169 * k * (Nat.log 2 (k * (n / k)) + 1) ≤ n / k) :
+    (hP1 : 48 * k * (Nat.log 2 (k * (n / k)) + 1) ≤ n / k) (hks2 : 8 * k ^ 2 ≤ n / k) :
     optimalLength B ≤ manhattan B.val + 2 * ((15 * n ^ 2 + 3002 * n + 1) * (n - k * (n / k))) +
       2 * hubBound (k * (n / k)) k (n / k) := by
   have hmn : k * (n / k) ≤ n := Nat.mul_div_le n k
@@ -263,7 +263,7 @@ theorem optimalLength_le_hub_residual {n k : ℕ} [NeZero n] (B : ReachableBoard
     exact ⟨r.append p⟩
   have hreachA : Reachable A :=
     residual_reachable (by omega : 2 ≤ k * (n / k)) (n - k * (n / k)) hdn C hC A hA hreachC
-  obtain ⟨q, hq⟩ := exists_hub_solution hd hP1 A hreachA
+  obtain ⟨q, hq⟩ := exists_hub_solution hd hP1 hks2 A hreachA
   have hlen := q.solution_length
   have hq' : q.length ≤ manhattan A + 2 * hubBound (k * (n / k)) k (n / k) := by omega
   have h := optimalLength_le_prefix_residual_solution B (n - k * (n / k)) hdn C p hC A hA q hq'
@@ -504,7 +504,17 @@ theorem optimalLength_le_hub_scaled {n : ℕ} [NeZero n] (hn : hubLargeN ≤ n) 
     calc 169 * k * (Nat.log 2 (k * s) + 1) * k ≤ 169 * k * L * k := by gcongr; omega
       _ = 676 * (m ^ 2 * L) := by rw [hkdef]; ring
       _ ≤ n := hmcap
-  have hres := optimalLength_le_hub_residual B hd hP1
+  have hP48 : 48 * k * (Nat.log 2 (k * s) + 1) ≤ s := le_trans (by
+    have := Nat.zero_le (k * (Nat.log 2 (k * s) + 1)); nlinarith) hP1
+  have hks2 : 8 * k ^ 2 ≤ s := by
+    apply (Nat.le_div_iff_mul_le hkpos).mpr
+    have hL27 : 27 ≤ L := by
+      have : 26 ≤ Nat.log 2 n := Nat.le_log_of_pow_le (by norm_num) (by unfold hubLargeN at hn; omega)
+      omega
+    have hh := Nat.mul_le_mul_left (14 * m ^ 3) hL27
+    unfold hubA at hlo
+    rw [hkdef]; nlinarith only [hh, hlo]
+  have hres := optimalLength_le_hub_residual B hd hP48 hks2
   simp only [← hsdef] at hres
   have hreslarge : 2 ^ 26 ≤ k * s := by
     have hmod := Nat.mod_lt n hkpos

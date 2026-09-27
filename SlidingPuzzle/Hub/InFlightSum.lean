@@ -5,11 +5,11 @@ import SlidingPuzzle.Hub.InFlightRound
 For a half `H` and distance `d`, summing `Nb H d x` over the classes gives at
 most `(17/16) G_d (W_d + 1)/Δ + k·6λ` (`sum_x_Nb_le`), where `G_d` counts the
 insertions from distance `d` and `W_d = ∑_{j ≤ d} w_j` is the segmented
-residence window. Since `w_j ≤ 6sΔ/(5B_j) + 1` with `B_j = ∑_{d' ≥ j} G_{d'}`,
+residence window. Since `w_j ≤ 4sΔ/(3B_j) + 1` with `B_j = ∑_{d' ≥ j} G_{d'}`,
 the rate-weighted windows telescope: `∑_d G_d ∑_{j ≤ d} 1/B_j` counts the
 bands `j` with `B_j ≠ 0` (`sum_mul_sum_inv_le`), and these bands lie in the
 half (`card_bands_mul_le`). A half therefore contributes at most
-`(51/40)(len + k) + (17/16)k(k+1) + 6k²λ` (`sum_half_le`), with no logarithm. -/
+`(17/12)(len + k) + (17/16)k(k+1) + 6k²λ` (`sum_half_le`), with no logarithm. -/
 namespace SlidingPuzzle.Hub
 
 open Finset
@@ -136,10 +136,10 @@ theorem sum_x_Nb_le (n : ℕ) (H : RowH k) (d : ℕ) :
     _ ≤ _ := by rw [sum_add_distrib, h3]; push_cast at h2 ⊢; linarith
 
 /-- The residence window against the tail rates: `G_d (W_d + 1) ≤
-(6sΔ/5) G_d ∑_{j ≤ d} 1/B_j + (d + 2) G_d`. -/
+(4sΔ/3) G_d ∑_{j ≤ d} 1/B_j + (d + 2) G_d`. -/
 theorem Gtot_mul_wsum_le (H : RowH k) (d : ℕ) :
     (Gtot rs H d : ℝ) * (wsum s rs H d + 1) ≤
-      6 * s * Δ / 5 * ((Gtot rs H d : ℝ) *
+      4 * s * Δ / 3 * ((Gtot rs H d : ℝ) *
         ∑ j ∈ range (d + 1), ((∑ d' ∈ Ico j k, Gtot rs H d' : ℕ) : ℝ)⁻¹) +
       (d + 2) * (Gtot rs H d : ℝ) := by
   by_cases hG0 : Gtot rs H d = 0
@@ -153,7 +153,7 @@ theorem Gtot_mul_wsum_le (H : RowH k) (d : ℕ) :
   have hGR : (0 : ℝ) ≤ Gtot rs H d := Nat.cast_nonneg _
   -- every band `j ≤ d` has positive tail rate
   have hwin : ∀ j ∈ range (d + 1), (win s rs H j : ℝ) ≤
-      6 * s * Δ / 5 * ((∑ d' ∈ Ico j k, Gtot rs H d' : ℕ) : ℝ)⁻¹ + 1 := by
+      4 * s * Δ / 3 * ((∑ d' ∈ Ico j k, Gtot rs H d' : ℕ) : ℝ)⁻¹ + 1 := by
     intro j hj
     have hjd := mem_range.mp hj
     have hGB : Gtot rs H d ≤ Btot rs H j := by
@@ -162,22 +162,22 @@ theorem Gtot_mul_wsum_le (H : RowH k) (d : ℕ) :
         (mem_Ico.mpr ⟨by omega, hdk⟩)
     have hB0 : Btot rs H j ≠ 0 := by omega
     have hBR : (0 : ℝ) < Btot rs H j := by exact_mod_cast Nat.pos_of_ne_zero hB0
-    have hle : win s rs H j ≤ 6 * s * Δ / (5 * Btot rs H j) + 1 := by
+    have hle : win s rs H j ≤ 4 * s * Δ / (3 * Btot rs H j) + 1 := by
       rw [win, if_neg hB0]; exact min_le_right _ _
-    have e2 := Nat.cast_div_le (α := ℝ) (m := 6 * s * Δ) (n := 5 * Btot rs H j)
+    have e2 := Nat.cast_div_le (α := ℝ) (m := 4 * s * Δ) (n := 3 * Btot rs H j)
     rw [← Btot_eq_sum]
-    have : (win s rs H j : ℝ) ≤ ((6 * s * Δ / (5 * Btot rs H j) : ℕ) : ℝ) + 1 := by
+    have : (win s rs H j : ℝ) ≤ ((4 * s * Δ / (3 * Btot rs H j) : ℕ) : ℝ) + 1 := by
       exact_mod_cast hle
-    have e3 : ((6 * s * Δ : ℕ) : ℝ) / ((5 * Btot rs H j : ℕ) : ℝ) =
-        6 * s * Δ / 5 * ((Btot rs H j : ℕ) : ℝ)⁻¹ := by
+    have e3 : ((4 * s * Δ : ℕ) : ℝ) / ((3 * Btot rs H j : ℕ) : ℝ) =
+        4 * s * Δ / 3 * ((Btot rs H j : ℕ) : ℝ)⁻¹ := by
       push_cast; field_simp
     linarith
-  have hsum : (wsum s rs H d : ℝ) ≤ 6 * s * Δ / 5 *
+  have hsum : (wsum s rs H d : ℝ) ≤ 4 * s * Δ / 3 *
       ∑ j ∈ range (d + 1), ((∑ d' ∈ Ico j k, Gtot rs H d' : ℕ) : ℝ)⁻¹ + (d + 1) := by
     unfold wsum
     push_cast
     calc ∑ j ∈ range (d + 1), (win s rs H j : ℝ)
-        ≤ ∑ j ∈ range (d + 1), (6 * s * Δ / 5 * ((∑ d' ∈ Ico j k, Gtot rs H d' : ℕ) : ℝ)⁻¹ + 1) :=
+        ≤ ∑ j ∈ range (d + 1), (4 * s * Δ / 3 * ((∑ d' ∈ Ico j k, Gtot rs H d' : ℕ) : ℝ)⁻¹ + 1) :=
           sum_le_sum hwin
       _ = _ := by rw [sum_add_distrib, ← mul_sum]; simp
   have := mul_le_mul_of_nonneg_left (add_le_add_right hsum 1) hGR
@@ -185,14 +185,14 @@ theorem Gtot_mul_wsum_le (H : RowH k) (d : ℕ) :
 
 theorem sum_half_le (hks : k + 1 ≤ s) (n : ℕ) (H : RowH k) :
     ∑ d ∈ range k, ∑ x, (Nb s rs n H d x : ℝ) ≤
-      51 / 40 * (rowLen k s H + k) + 17 / 16 * (k * (k + 1)) + k * k * (6 * lamN n) := by
+      17 / 12 * (rowLen k s H + k) + 17 / 16 * (k * (k + 1)) + k * k * (6 * lamN n) := by
   have hsum := sum_le_sum fun d (_ : d ∈ range k) => sum_x_Nb_le s rs n H d
   refine hsum.trans ?_
   rw [sum_add_distrib, sum_const, card_range, nsmul_eq_mul]
   rcases Nat.eq_zero_or_pos Δ with hΔ0 | hΔ
   · subst hΔ0
     simp only [Nat.cast_zero, mul_zero, div_zero, sum_const_zero, zero_add]
-    have : (0 : ℝ) ≤ 51 / 40 * (rowLen k s H + k) + 17 / 16 * (k * (k + 1)) := by positivity
+    have : (0 : ℝ) ≤ 17 / 12 * (rowLen k s H + k) + 17 / 16 * (k * (k + 1)) := by positivity
     nlinarith
   have hΔR : (0 : ℝ) < Δ := by exact_mod_cast hΔ
   have hsR : (0 : ℝ) < s := by exact_mod_cast (show 0 < s by omega)
@@ -206,7 +206,7 @@ theorem sum_half_le (hks : k + 1 ≤ s) (n : ℕ) (H : RowH k) :
     have := Btot_le rs H 0
     rw [Btot_eq_sum, ← range_eq_Ico] at this; exact_mod_cast this
   have hterm : ∀ d ∈ range k, 17 * (Gtot rs H d : ℝ) * (wsum s rs H d + 1) / (16 * Δ) ≤
-      17 / 16 * (6 * s / 5 * ((Gtot rs H d : ℝ) *
+      17 / 16 * (4 * s / 3 * ((Gtot rs H d : ℝ) *
         ∑ j ∈ range (d + 1), ((Btot rs H j : ℕ) : ℝ)⁻¹)) +
       17 / 16 * ((k + 1) * (Gtot rs H d : ℝ) / Δ) := by
     intro d hd
@@ -220,19 +220,19 @@ theorem sum_half_le (hks : k + 1 ≤ s) (n : ℕ) (H : RowH k) :
         linarith
       nlinarith
     rw [div_le_iff₀ (by positivity)]
-    have e : (17 / 16 * (6 * (s : ℝ) / 5 * ((Gtot rs H d : ℝ) *
+    have e : (17 / 16 * (4 * (s : ℝ) / 3 * ((Gtot rs H d : ℝ) *
         ∑ j ∈ range (d + 1), ((Btot rs H j : ℕ) : ℝ)⁻¹)) +
         17 / 16 * ((k + 1) * (Gtot rs H d : ℝ) / Δ)) * (16 * Δ) =
-        17 * (6 * s * Δ / 5 * ((Gtot rs H d : ℝ) *
+        17 * (4 * s * Δ / 3 * ((Gtot rs H d : ℝ) *
           ∑ j ∈ range (d + 1), ((Btot rs H j : ℕ) : ℝ)⁻¹) + ((k : ℝ) + 1) * Gtot rs H d) := by
       field_simp
     rw [e]
     nlinarith
   refine (add_le_add (sum_le_sum hterm) le_rfl).trans ?_
   rw [sum_add_distrib, ← mul_sum, ← mul_sum, ← mul_sum]
-  have h1 : 6 * (s : ℝ) / 5 * ∑ d ∈ range k, ((Gtot rs H d : ℝ) *
-      ∑ j ∈ range (d + 1), ((Btot rs H j : ℕ) : ℝ)⁻¹) ≤ 6 / 5 * (rowLen k s H + k) := by
-    have := mul_le_mul_of_nonneg_left htel (show (0 : ℝ) ≤ 6 * s / 5 by positivity)
+  have h1 : 4 * (s : ℝ) / 3 * ∑ d ∈ range k, ((Gtot rs H d : ℝ) *
+      ∑ j ∈ range (d + 1), ((Btot rs H j : ℕ) : ℝ)⁻¹) ≤ 4 / 3 * (rowLen k s H + k) := by
+    have := mul_le_mul_of_nonneg_left htel (show (0 : ℝ) ≤ 4 * s / 3 by positivity)
     nlinarith
   have h2 : ∑ d ∈ range k, ((k : ℝ) + 1) * (Gtot rs H d : ℝ) / Δ ≤ k * (k + 1) := by
     rw [← sum_div, ← mul_sum, div_le_iff₀ hΔR]
