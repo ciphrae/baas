@@ -149,7 +149,7 @@ theorem sum_freeInit_le (σ0 : IState k) {Δ0 : ℕ} (rs0 : Fin Δ0 → Round k)
 
 /-- The abstract run exists, is valid, and is cheap. -/
 theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
-    (hP1 : 317 * k * (Nat.log 2 n + 1) ≤ s) (hsk : s ≤ k ^ 3) (σ0 : IState k)
+    (hP1 : 169 * k * (Nat.log 2 n + 1) ≤ s) (hsk : s ≤ k ^ 3) (σ0 : IState k)
     (hF1 : ∀ Q, (∑ y, σ0.cnt Q y) + (if σ0.blank = Q then 1 else 0) = regionSize k s)
     (hF2 : ∀ y, (∑ Q, σ0.cnt Q y) + σ0.corrCount s y = s ^ 2 - (if IsLast y then 1 else 0)) :
     ∃ es : List (REvent k), σ0.Valid s es ∧ σ0.totalCost s es ≤ transportBound n k s ∧
