@@ -54,7 +54,7 @@ noncomputable def hReloc (s : ℕ) (G : GS k) (E Z : Sq k) : GS k :=
 noncomputable def hstep (s τ : ℕ) (G : GS k) : HEvent k → GS k
   | .serve S D =>
     { hServe s τ G S D with served := bump G.served D, sent := bump G.sent S }
-  | .reloc E Z => { hReloc s G E Z with wt := G.wt + (1 + sqDist E Z) }
+  | .reloc E Z => { hReloc s G E Z with wt := G.wt + (2 + sqDist E Z) }
 
 /-- The row insertion made by a high-level event. -/
 def hIns (τ : ℕ) : HEvent k → Option (InsRec k)

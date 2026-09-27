@@ -84,17 +84,17 @@ theorem natLog_succ_le_large_log {n : ℕ} (hn : 4096 ≤ n) :
   push_cast
   nlinarith
 
-/-- Above the algorithm's threshold, `log₂ n + 1 ≤ (1479688 / 1000000) ln n`. -/
-theorem natLog_succ_le_grid_log {n : ℕ} (hn : 2 ^ 39 ≤ n) :
-    ((Nat.log 2 n + 1 : ℕ) : ℝ) ≤ (1479688 / 1000000 : ℝ) * Real.log n := by
+/-- Above the algorithm's threshold, `log₂ n + 1 ≤ (1481687 / 1000000) ln n`. -/
+theorem natLog_succ_le_grid_log {n : ℕ} (hn : 2 ^ 37 ≤ n) :
+    ((Nat.log 2 n + 1 : ℕ) : ℝ) ≤ (1481687 / 1000000 : ℝ) * Real.log n := by
   set j := Nat.log 2 n with hj
-  have hj12 : 39 ≤ j := Nat.le_log_of_pow_le (by norm_num) (by norm_num; omega)
+  have hj12 : 37 ≤ j := Nat.le_log_of_pow_le (by norm_num) (by norm_num; omega)
   have hpow : (2 : ℝ) ^ j ≤ n := by exact_mod_cast Nat.pow_log_le_self 2 (by omega : n ≠ 0)
   have hlog : (j : ℝ) * Real.log 2 ≤ Real.log n := by
     rw [← Real.log_pow]
     exact Real.log_le_log (by positivity) hpow
   have hl2 := Real.log_two_gt_d9
-  have hjR : (39 : ℝ) ≤ j := by exact_mod_cast hj12
+  have hjR : (37 : ℝ) ≤ j := by exact_mod_cast hj12
   push_cast
   nlinarith
 
@@ -139,22 +139,22 @@ theorem le_hubError_of_cube_large {n : ℕ} (hn : 4096 ≤ n) {X D : ℕ}
     (mul_nonneg (by positivity) (hubError_nonneg n)) hcube
 
 /-- A natural number whose cube is at most `D³ n⁸ (log₂ n + 1)` is at most
-`(1139524/1000000) D hubError n`. -/
-theorem le_hubError_of_cube_grid {n : ℕ} (hn : 2 ^ 39 ≤ n) {X D : ℕ}
+`(1140037/1000000) D hubError n`. -/
+theorem le_hubError_of_cube_grid {n : ℕ} (hn : 2 ^ 37 ≤ n) {X D : ℕ}
     (h : X ^ 3 ≤ D ^ 3 * n ^ 8 * (Nat.log 2 n + 1)) :
-    (X : ℝ) ≤ (1139524 / 1000000 : ℝ) * D * hubError n := by
+    (X : ℝ) ≤ (1140037 / 1000000 : ℝ) * D * hubError n := by
   have hR : (X : ℝ) ^ 3 ≤ (D : ℝ) ^ 3 * (n : ℝ) ^ 8 * ((Nat.log 2 n + 1 : ℕ) : ℝ) := by
     exact_mod_cast h
   have hL := natLog_succ_le_grid_log hn
   have hA : (0 : ℝ) ≤ (D : ℝ) ^ 3 * (n : ℝ) ^ 8 := by positivity
-  have hcube : (X : ℝ) ^ 3 ≤ ((1139524 / 1000000 : ℝ) * D * hubError n) ^ 3 := by
+  have hcube : (X : ℝ) ^ 3 ≤ ((1140037 / 1000000 : ℝ) * D * hubError n) ^ 3 := by
     rw [mul_pow, hubError_cube]
     have hlog : 0 ≤ Real.log n := Real.log_natCast_nonneg n
     calc (X : ℝ) ^ 3 ≤ (D : ℝ) ^ 3 * (n : ℝ) ^ 8 * ((Nat.log 2 n + 1 : ℕ) : ℝ) := hR
-      _ ≤ (D : ℝ) ^ 3 * (n : ℝ) ^ 8 * ((1479688 / 1000000 : ℝ) * Real.log n) := mul_le_mul_of_nonneg_left hL hA
-      _ ≤ (D : ℝ) ^ 3 * (n : ℝ) ^ 8 * ((1139524 / 1000000 : ℝ) ^ 3 * Real.log n) :=
+      _ ≤ (D : ℝ) ^ 3 * (n : ℝ) ^ 8 * ((1481687 / 1000000 : ℝ) * Real.log n) := mul_le_mul_of_nonneg_left hL hA
+      _ ≤ (D : ℝ) ^ 3 * (n : ℝ) ^ 8 * ((1140037 / 1000000 : ℝ) ^ 3 * Real.log n) :=
           mul_le_mul_of_nonneg_left (by nlinarith) hA
-      _ = ((1139524 / 1000000 : ℝ) * (D : ℝ)) ^ 3 * ((n : ℝ) ^ 8 * Real.log n) := by ring
+      _ = ((1140037 / 1000000 : ℝ) * (D : ℝ)) ^ 3 * ((n : ℝ) ^ 8 * Real.log n) := by ring
   exact le_of_pow_le_pow_left₀ (by norm_num)
     (mul_nonneg (by positivity) (hubError_nonneg n)) hcube
 
@@ -198,59 +198,62 @@ theorem six_cube_le_hubError {n : ℕ} (hn : 4096 ≤ n) (hhi : n ≤ 2 ^ 39) :
   exact le_of_pow_le_pow_left₀ (by norm_num)
     (mul_nonneg (by norm_num) (hubError_nonneg n)) hc
 
-/-- The cubic solver's exact bound on the finite initial range. Below `2^36`
-use `6n³` and `log n ≥ 8`; above it the cubic term dominates, so use
-`5.0001 n³` and `log n ≥ 36 log 2`. -/
-theorem cubic_solver_le_hubError {n : ℕ} (hn : 4096 ≤ n) (hhi : n ≤ 2 ^ 39) :
-    ((5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796 : ℕ) : ℝ) ≤ 14100 * hubError n := by
-  have hnR : (4096 : ℝ) ≤ n := by exact_mod_cast hn
-  have hhiR : (n : ℝ) ≤ 2 ^ 39 := by exact_mod_cast hhi
+/-- `log n ≥ j log 2` from `2^j ≤ n`. -/
+private theorem log_ge_of_pow_le {n j : ℕ} (h : 2 ^ j ≤ n) :
+    (j : ℝ) * (6931471803 / 10000000000) ≤ Real.log n := by
+  have hh := Real.log_le_log (by positivity) (show (2 : ℝ) ^ j ≤ n by exact_mod_cast h)
+  rw [Real.log_pow] at hh
+  have := Real.log_two_gt_d9
+  have : (0 : ℝ) ≤ j := Nat.cast_nonneg j
+  nlinarith
+
+/-- `(c n³)³ ≤ (C hubError n)³` on a range `2^a ≤ n ≤ 2^b`. -/
+private theorem cube_range_le {n a b : ℕ} (ha : 2 ^ a ≤ n) (hb : n ≤ 2 ^ b) {c C P : ℝ}
+    (hc : 0 ≤ c) (hC : 0 ≤ C) (hP0 : 0 ≤ P) (hP : P ≤ c * (n : ℝ) ^ 3)
+    (hcoef : c ^ 3 * 2 ^ b ≤ C ^ 3 * ((a : ℝ) * (6931471803 / 10000000000))) :
+    P ≤ C * hubError n := by
+  have hlog := log_ge_of_pow_le ha
+  have hbR : (n : ℝ) ≤ 2 ^ b := by exact_mod_cast hb
   have hn8 : (0 : ℝ) ≤ (n : ℝ) ^ 8 := by positivity
-  have hP0 : (0 : ℝ) ≤ ((5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796 : ℕ) : ℝ) := Nat.cast_nonneg _
-  have hc : ((5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796 : ℕ) : ℝ) ^ 3 ≤
-      (14100 * hubError n) ^ 3 := by
+  have hcube : P ^ 3 ≤ (C * hubError n) ^ 3 := by
     rw [mul_pow, hubError_cube]
-    by_cases hsmall : n ≤ 2 ^ 36
-    · have hpoly : 5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796 ≤ 6 * n ^ 3 := by
-        have hh := Nat.mul_le_mul_left (n ^ 2) hn
-        nlinarith
-      have hpolyR : ((5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796 : ℕ) : ℝ) ≤ 6 * (n : ℝ) ^ 3 := by
-        exact_mod_cast hpoly
-      have hlog : (8 : ℝ) ≤ Real.log n := by
-        have hh := Real.log_le_log (by norm_num : (0 : ℝ) < 2 ^ 12)
-          (show (2 : ℝ) ^ 12 ≤ n by exact_mod_cast hn)
-        rw [Real.log_pow] at hh
-        have := Real.log_two_gt_d9
-        norm_num at hh
-        linarith
-      have hsmallR : (n : ℝ) ≤ 2 ^ 36 := by exact_mod_cast hsmall
-      have h1 := mul_le_mul_of_nonneg_left hsmallR hn8
-      have h2 := mul_le_mul_of_nonneg_left hlog hn8
-      have hp3 := pow_le_pow_left₀ hP0 hpolyR 3
-      nlinarith only [h1, h2, hp3, hn8]
-    · have hbig : 2 ^ 36 ≤ n := by omega
-      have hpoly : 10000 * (5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796) ≤ 50001 * n ^ 3 := by
-        have hh := Nat.mul_le_mul_left (n ^ 2) hbig
-        nlinarith
-      have hpolyR : ((5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796 : ℕ) : ℝ) ≤
-          50001 / 10000 * (n : ℝ) ^ 3 := by
-        have : ((10000 * (5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796) : ℕ) : ℝ) ≤
-            ((50001 * n ^ 3 : ℕ) : ℝ) := by exact_mod_cast hpoly
-        push_cast at this ⊢
-        linarith
-      have hlog : (249532 / 10000 : ℝ) ≤ Real.log n := by
-        have hh := Real.log_le_log (by norm_num : (0 : ℝ) < 2 ^ 36)
-          (show (2 : ℝ) ^ 36 ≤ n by exact_mod_cast hbig)
-        rw [Real.log_pow] at hh
-        have := Real.log_two_gt_d9
-        norm_num at hh
-        linarith
-      have h1 := mul_le_mul_of_nonneg_left hhiR hn8
-      have h2 := mul_le_mul_of_nonneg_left hlog hn8
-      have hp3 := pow_le_pow_left₀ hP0 hpolyR 3
-      nlinarith only [h1, h2, hp3, hn8]
-  exact le_of_pow_le_pow_left₀ (by norm_num)
-    (mul_nonneg (by norm_num) (hubError_nonneg n)) hc
+    have hp3 := pow_le_pow_left₀ hP0 hP 3
+    have h1 := mul_le_mul_of_nonneg_left hbR (mul_nonneg (pow_nonneg hc 3) hn8)
+    have h2 := mul_le_mul_of_nonneg_left hlog (mul_nonneg (pow_nonneg hC 3) hn8)
+    have h3 := mul_le_mul_of_nonneg_left hcoef hn8
+    calc P ^ 3 ≤ (c * (n : ℝ) ^ 3) ^ 3 := hp3
+      _ = c ^ 3 * (n : ℝ) ^ 8 * n := by ring
+      _ ≤ c ^ 3 * (n : ℝ) ^ 8 * 2 ^ b := by nlinarith
+      _ ≤ C ^ 3 * (n : ℝ) ^ 8 * ((a : ℝ) * (6931471803 / 10000000000)) := by nlinarith
+      _ ≤ C ^ 3 * ((n : ℝ) ^ 8 * Real.log n) := by nlinarith
+  exact le_of_pow_le_pow_left₀ (by norm_num) (mul_nonneg hC (hubError_nonneg n)) hcube
+
+/-- The cubic solver's exact bound on the finite initial range, in three pieces:
+`6n³` below `2^30`, then `5.0001 n³` on `[2^30, 2^36]` and `[2^36, 2^37]`. -/
+theorem cubic_solver_le_hubError {n : ℕ} (hn : 4096 ≤ n) (hhi : n ≤ 2 ^ 37) :
+    ((5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796 : ℕ) : ℝ) ≤ 9000 * hubError n := by
+  have hP0 : (0 : ℝ) ≤ ((5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796 : ℕ) : ℝ) := Nat.cast_nonneg _
+  by_cases h30 : n ≤ 2 ^ 30
+  · have hpoly : 5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796 ≤ 6 * n ^ 3 := by
+      have hh := Nat.mul_le_mul_left (n ^ 2) hn
+      nlinarith
+    exact cube_range_le (a := 12) (b := 30) (by norm_num; omega) h30 (c := 6) (by norm_num)
+      (by norm_num) hP0 (by exact_mod_cast hpoly) (by norm_num)
+  · have hbig : 2 ^ 30 ≤ n := by omega
+    have hpoly : 10000 * (5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796) ≤ 50001 * n ^ 3 := by
+      have hh := Nat.mul_le_mul_left (n ^ 2) hbig
+      nlinarith
+    have hpolyR : ((5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796 : ℕ) : ℝ) ≤
+        50001 / 10000 * (n : ℝ) ^ 3 := by
+      have : ((10000 * (5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796) : ℕ) : ℝ) ≤
+          ((50001 * n ^ 3 : ℕ) : ℝ) := by exact_mod_cast hpoly
+      push_cast at this ⊢
+      linarith
+    by_cases h36 : n ≤ 2 ^ 36
+    · exact cube_range_le (a := 30) (b := 36) hbig h36 (by norm_num) (by norm_num) hP0 hpolyR
+        (by norm_num)
+    · exact cube_range_le (a := 36) (b := 37) (Nat.le_of_lt (Nat.lt_of_not_le h36)) hhi (by norm_num) (by norm_num) hP0
+        hpolyR (by norm_num)
 
 /-- `n² ≤ hubError n` once `ln n ≥ 1`. -/
 theorem sq_le_hubError {n : ℕ} (hn : 3 ≤ n) : (n : ℝ) ^ 2 ≤ hubError n := by

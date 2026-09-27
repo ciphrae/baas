@@ -21,24 +21,24 @@ namespace SlidingPuzzle.Hub
 `Hub/AsympError.lean`; the natural-number bound of the algorithm is
 `optimalLength_le_hub` (`Hub/AsympBound.lean`). -/
 
-/-- Round up `2·1.139524·((hubXNum/hubXDen) hubScaledKX/1000 +
+/-- Round up `2·1.140037·((hubXNum/hubXDen) hubScaledKX/1000 +
 (hubYNum/hubYDen) hubScaledKY/1000 + 1/1000)`, keeping the three error
 coefficients separate. -/
-def hubConstant : ℕ := 16656
+def hubConstant : ℕ := 9046
 
-theorem hubConstant_eq : hubConstant = 16656 := by
+theorem hubConstant_eq : hubConstant = 9046 := by
   rfl
 
 /-- Integer inequalities certify the ceiling without evaluating a large division. -/
 theorem hubConstant_rounding :
-    2 * 1139524 * (hubXNum * hubYDen * hubScaledKX + hubYNum * hubXDen * hubScaledKY +
+    2 * 1140037 * (hubXNum * hubYDen * hubScaledKX + hubYNum * hubXDen * hubScaledKY +
         hubXDen * hubYDen) ≤ 1000000000 * hubXDen * hubYDen * hubConstant ∧
       1000000000 * hubXDen * hubYDen * (hubConstant - 1) <
-        2 * 1139524 * (hubXNum * hubYDen * hubScaledKX + hubYNum * hubXDen * hubScaledKY +
+        2 * 1140037 * (hubXNum * hubYDen * hubScaledKX + hubYNum * hubXDen * hubScaledKY +
           hubXDen * hubYDen) := by
   norm_num [hubConstant, hubScaledKX, hubScaledKY, hubXNum, hubXDen, hubYNum, hubYDen]
 
-/-- The optimized bound holds with `C = 16656` for every `n ≥ 4096`. -/
+/-- The optimized bound holds with `C = 9046` for every `n ≥ 4096`. -/
 theorem uniform_approximation_explicit {n : ℕ} [NeZero n]
     (hn : hubN ≤ n) (B : ReachableBoard n) :
     (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) + hubConstant * hubError n := by
@@ -50,13 +50,13 @@ theorem uniform_approximation_explicit {n : ℕ} [NeZero n]
     have hreal : (optimalLength B : ℝ) ≤ ((5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796 : ℕ) : ℝ) := by
       exact_mod_cast hnat
     have herr := cubic_solver_le_hubError (by unfold hubN at hn; omega)
-      (show n ≤ 2 ^ 39 by unfold hubLargeN at hlarge; omega)
+      (show n ≤ 2 ^ 37 by unfold hubLargeN at hlarge; omega)
     have hM : (0 : ℝ) ≤ manhattan B.val := Nat.cast_nonneg _
     have hE := hubError_nonneg n
     norm_num [hubConstant, hubScaledKX, hubScaledKY] at *
     nlinarith
   obtain ⟨X, Y, Z, hX, hY, hZ, hopt⟩ := optimalLength_le_hub_scaled hlarge B
-  have hnlarge : 2 ^ 39 ≤ n := hlarge
+  have hnlarge : 2 ^ 37 ≤ n := hlarge
   have hXR := le_hubError_of_cube_grid hnlarge hX
   have hYR := le_hubError_of_cube_grid hnlarge hY
   have hZR := le_hubError_of_cube_grid hnlarge hZ
