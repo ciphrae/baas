@@ -1,17 +1,17 @@
 # Further constant reductions
 
-The certified boardwise coefficient is **1,044** for `n ≥ 4096`
+The certified boardwise coefficient is **894** for `n ≥ 4096`
 (`Hub.uniform_approximation_explicit`). The large-board proof has the bound
 
 ```text
-2 · 1.143243 · (1.40136 · 214.050 + 0.52551 · 297.996 + 0.0025)
-  ≈ 1043.93 < 1044,
+1.143729 · (2 · 1.46947 · 182.251 + 2 · 0.48075 · 255.642 + 2/350)
+  ≈ 893.74 < 894,
 ```
 
-and the cubic solver covers `4096 ≤ n ≤ 9·2^24` within the same coefficient.
+and the cubic solver covers `4096 ≤ n ≤ 3·2^25` within the same coefficient.
 The exponent and the lower threshold `4096` are unchanged.
 
-## Implemented in the latest pass (19,319 → 1,044)
+## Implemented in the latest pass (19,319 → 894)
 
 | Step | Constant |
 | --- | --- |
@@ -24,6 +24,7 @@ The exponent and the lower threshold `4096` are unchanged.
 | Cleanup fixes two misplaced tiles per three-cycle or double swap | 1,272 |
 | Strip jumps charged `13(d+1)` instead of `25(d+1)`; aligned relocations are one jump | 1,215 |
 | Lower tail `θ = 7/8` (capacity `317kL`), hub regime from `9·2^24` | 1,044 |
+| Jumps via a three-cycle in the target square's own box and three strip jumps; hub regime from `3·2^25` | 894 |
 
 Each step re-tuned the grid factor `hubA`, the hub threshold and the
 certificate constants; [PROOF_NOTES.md](PROOF_NOTES.md) lists the final
@@ -31,31 +32,30 @@ estimates.
 
 ## Where the bound now comes from
 
-With `A = 214.05` (coefficient of `X = n²s`) and `B = 298.0` (of `Y = k²n²L`),
-the constant is `2r(1.40136A + 0.52551B)` with `r ≈ 1.1432`:
+With `A = 182.25` (coefficient of `X = n²s`) and `B = 255.6` (of `Y = k²n²L`),
+the constant is `2r(1.46947A + 0.48075B)` with `r ≈ 1.1437`:
 
-- `A`: hops `2·55 = 110`, relocations `1.5·65 = 97.5`, local Finish `5`,
-  remainders `1.5`.
-- `B`: bypass jumps `65·1.473 = 95.7`, cleanup `104·1.473 = 153.2`,
-  terms without the logarithm `≈ 48.3` (at `L = 27`), remainders `≈ 0.8`.
+- `A`: hops `2·55 = 110`, relocations `66` (a round weighs at most `66k²`
+  jump units of `s`), local Finish `5`, remainders `1.3`.
+- `B`: bypass jumps `39·1.473 = 57.4`, cleanup `104·1.473 = 153.2`,
+  terms without the logarithm `≈ 44.8` (at `L = 26`), remainders `≈ 0.2`.
 
-The three-cycle constant `52` enters hops (`52s` of `55s`), jumps (`52s` of the
-`65s` per unit) and cleanup (`52n` per tile). The hub regime is limited at its
+The three-cycle constant `52` enters hops (`52s` of `55s`), jumps (`52s` of
+`(54 + 39d)s`) and cleanup (`52n` per tile). The hub regime is limited at its
 threshold by the Chernoff capacity condition and by `s ≤ k³`; below it the
-cubic solver's `5n³` term sets the coefficient near `1003`.
+cubic solver's `5n³` term sets the coefficient near `887`.
 
-## 1. Avoid the three-cycle in jumps and insertions
+## 1. Cheaper insertions and jumps
 
-A jump from `E` to `Z` only has to bring some free tile of `Z` to `E`. If that
-tile lies in `Z`'s reservoir, one strip jump from an aligned cell of `E`
-delivers it directly, at about `13s` per unit distance instead of `65s`. An
-insertion could similarly use a placement inside the reservoir and a few short
-jumps instead of a three-cycle in the square's box. The obstacle is that
-region tiles may also lie in the landing strip and the own column piece, where
-corridor heads drop in, and the abstract run fixes the class of the moved tile
-before the board is known. Either the run must be allowed to choose the class
-from the board, or the scheme must keep the relevant tiles in the reservoir.
-Rough estimates suggest a further factor of about two.
+Insertions (`insert_by_cycle`) and jumps cycle three cells of one square's box,
+one of which is a free choice of reservoir cell. Staging from the box's
+reservoir corner, with that tile already at its staging position, would save
+one of the three Parberry placements: roughly `52s → 36s`, and about 10% of the
+constant. This needs a reflected box embedding and a staging variant with a
+pre-positioned tile. A jump or insertion could avoid the three-cycle
+altogether if the wanted tile lay in the reservoir, but region tiles may also
+sit in the landing strip and the own column piece, where corridor heads drop
+in, and the abstract run fixes the moved tile's class before the board is known.
 
 ## 2. Distance-aware staging
 

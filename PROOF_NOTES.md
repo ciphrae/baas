@@ -76,14 +76,14 @@ twice the access length (`Path.exists_conjugated_efficient`).
 
 The paper rounds `n` down to a fourth power, leaving up to `4*n^(3/4)` outer
 layers whose Parberry prefix costs `60*n^(11/4)`, which would dominate the new
-bound. Instead, for `n ≥ 9·2^24` take `k = 2m` with
-`21·m³(log₂ n + 1) ≤ n < 21(m+1)³(log₂ n + 1)` and `s = ⌊n/k⌋`. The outer
+bound. Instead, for `n ≥ 3·2^25` take `k = 2m` with
+`24·m³(log₂ n + 1) ≤ n < 24(m+1)³(log₂ n + 1)` and `s = ⌊n/k⌋`. The outer
 `d = n - k*s < k` rows and columns are solved by the Parberry prefix
 (`Parberry/Prefix.lean`, `O(n²·k)`), and the remaining `k*s × k*s` board by the
 hub algorithm. The residual board is reachable and its Manhattan distance
 equals the original board's after the prefix (`Algorithm/Residual*.lean`,
 `Hub/AsympBound.lean`). The existing cubic solver handles
-`4096 ≤ n ≤ 9·2^24`, so the final theorem still starts at `4096`.
+`4096 ≤ n ≤ 3·2^25`, so the final theorem still starts at `4096`.
 
 ## Hub transport: departures from the paper's scheme
 
@@ -119,7 +119,7 @@ through the reservoir of a hub square. The pen-and-paper proof is
   (`Hub/Chernoff*.lean`, `Hub/InFlight*.lean`), counting permutations rather
   than using probability theory.
 
-The boardwise constant is now `1,044` for `n ≥ 4096`, down from `19,319`
+The boardwise constant is now `894` for `n ≥ 4096`, down from `19,319`
 at the start of the latest optimization pass, `20,816` before combined
 accounting and the fractional in-flight budget, `27,508` before retaining
 size-dependent budgets, `849,303` in an earlier version and
@@ -137,14 +137,19 @@ certified estimates are:
 - Jumps: `Zhong.strip_jump` costs at most `12m + 1` moves on a `2 × m` strip,
   so a blank/tile jump over horizontal or vertical distance `d` costs
   `≤ 13(d+1)` (previously charged `25(d+1)`).
+- Jumps (`Hub/OpJump.lean`): the blank jumps from `E` into `Z`, a three-cycle
+  inside `Z`'s own `s × s` box puts a class-`y` tile on a second landing cell,
+  the blank jumps back, and a third jump carries that tile to `E`. This costs
+  `≤ 54s + 39s·d + 130 ≤ (s+3)(54 + 39d)`, `d = sqDist`, instead of a
+  three-cycle in a box covering both squares (`65s(1+d)`).
 - Operations (`IState.cost`): hop1 `55s + 26(k+1) + junkRow`, hop2
-  `54s + 13k² + 65k + 78 + junkCol`, jump `65s(1 + sqDist)`. A relocation is a
-  single jump when the squares are aligned (weight `1 + d`) and two jumps
-  through the corner otherwise (weight `2 + d`), each weight unit costing `65s`.
+  `54s + 13k² + 65k + 78 + junkCol`, jump `(s+3)(54 + 39·sqDist)`. A
+  relocation is a single jump when the squares are aligned (weight `54 + 39d`)
+  and two jumps through the corner otherwise (weight `108 + 39d`); it costs
+  `(s+3)` per weight unit. A bypass costs at most `(s+3)(39k + 15)`.
 - Round walk: a cycle relocation serves at least two new squares, and along
-  the snake order only row changes need a second jump, so a round's
-  relocation weight is at most `(3k² + 6k)/2 + 2k·#dummy`
-  (`exists_round_events`).
+  the snake order only row changes need a second jump, so a round weighs at
+  most `66k² + 132k + 30 + (78k + 30)·#dummy` (`exists_round_events`).
 - In-flight order: the lower tail uses weights `1 - g/(8K)` with
   `exp(-(134/125)v) ≤ 1 - v` on `[0, 1/8]`, so windows need only `8/7` of the
   expected pushes, and costs capacity `317kL ≤ s`. The upper tail uses weights
@@ -158,34 +163,33 @@ certified estimates are:
   for a wrong tile of that square, which goes home through a third wrong tile
   by one three-cycle, or, if it belongs where the first tile was, by a double
   swap. Each step removes at least two misplaced tiles: `52n(misplaced + 2n + 2)`.
-- Whole hub algorithm (`AsympAccounting.lean`, `k ≥ 126`, `L ≥ 27`, capacity):
-  `1000·hubBound ≤ 214050X + 297996Y`, with `X = n²s`, `Y = k²n²L`.
-- Grid for `n ≥ 9·2^24`: `k = 2m` with `21m³L ≤ n < 21(m+1)³L`; then
-  `m ≥ 63`, `3L ≤ 2m` (hence `s ≤ k³`), and `1268m²L ≤ n` (capacity). Cube
-  scales: `(100000X)³ ≤ 140136³n⁸L`, `(10⁶Y)³ ≤ 525510³n⁸L`, `(400Z)³ ≤ n⁸L`.
-- Natural logarithms: `L ≤ 1.494220 ln n` for `n ≥ 9·2^24`, whose cube root is
-  at most `1.143243`.
-- Initial range: for `4096 ≤ n ≤ 9·2^24`, the Parberry solver's exact bound
-  `5n³ + 1509n² + 1505n + 4796` is at most `1044·hubError n`, split at `2^20`,
-  `2^26` and `2^27`.
+- Whole hub algorithm (`AsympAccounting.lean`, `k ≥ 106`, `L ≥ 26`, capacity):
+  `1000·hubBound ≤ 182251X + 255642Y`, with `X = n²s`, `Y = k²n²L`.
+- Grid for `n ≥ 3·2^25`: `k = 2m` with `24m³L ≤ n < 24(m+1)³L`; then
+  `m ≥ 53`, `8L ≤ 5m` (hence `s ≤ k³`), and `1268m²L ≤ n` (capacity). Cube
+  scales: `(100000X)³ ≤ 146947³n⁸L`, `(10⁶Y)³ ≤ 480750³n⁸L`, `(350Z)³ ≤ n⁸L`.
+- Natural logarithms: `L ≤ 1.496129 ln n` for `n ≥ 3·2^25`, whose cube root is
+  at most `1.143729`.
+- Initial range: for `4096 ≤ n ≤ 3·2^25`, the Parberry solver's exact bound
+  `5n³ + 1509n² + 1505n + 4796` is at most `894·hubError n`, split at `2^20`,
+  `2^25` and `2^26`.
 
 Consequently the hub branch's real coefficient is
-`2·1.143243·(1.40136·214.050 + 0.52551·297.996 + 0.0025)`, approximately
-`1043.93`. Rounding upward gives `C = 1,044` (`hubLargeConstant_rounding`),
+`1.143729·(2·1.46947·182.251 + 2·0.48075·255.642 + 2/350)`,
+approximately `893.74`. Rounding upward gives `C = 894` (`hubLargeConstant_rounding`),
 which also covers the initial range. `Hub.uniform_approximation_explicit`
 exposes the numerical bound directly. This is a certified upper bound, not a
 claim of optimality.
 
 ## Remaining structural improvements
 
-The three-cycle constant `52` now drives most of the bound: hops (`55s`), jumps
-(`65s` per unit, of which `52s` is the three-cycle in a box covering both
-squares) and cleanup (`52n` per tile). A jump or insertion could avoid the
-three-cycle altogether if the wanted tile lay in the reservoir, since it
-could then be reached by a single strip jump or a placement inside the
-reservoir. The obstacle is the rest of the region, the landing strip and the
-own column piece, where corridor heads drop in; a cheaper scheme would have to
-keep the tiles used by jumps and insertions out of those cells. [OPTIMIZATION_IDEAS.md](OPTIMIZATION_IDEAS.md) lists this
+The three-cycle constant `52` now drives most of the bound: hops (`55s`),
+jumps (`52s` of `(54 + 39d)s`) and cleanup (`52n` per tile). In insertions and
+jumps one of the three cycled cells is a free choice of reservoir cell; staging
+from a reservoir corner with that tile already in place would save one of the
+three placements. A jump or insertion could avoid the three-cycle altogether
+if the wanted tile lay in the reservoir, but region tiles may also sit in the
+landing strip and the own column piece, where corridor heads drop in. [OPTIMIZATION_IDEAS.md](OPTIMIZATION_IDEAS.md) lists this
 and smaller remaining improvements. Removing the logarithm would require a
 stronger in-flight argument; the simulations in `research/exponent/` suggest
 that possibility but do not prove it.

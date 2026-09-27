@@ -19,14 +19,14 @@ These are `SlidingPuzzle.Hub.average_optimal_length` and
 `…_rpow` give `O(n^α)` for every `α > 8/3`. The boardwise bound behind them is
 `Hub.uniform_approximation`: for `n ≥ 4096`, every reachable board has a
 solution of length at most `Manhattan + C*n^(8/3)*(log n)^(1/3)`. The constant
-is `1,044`, proved by `Hub.uniform_approximation_explicit` (about
-4.6 billion times smaller than the original `4,828,800,024,144`).
+is `894`, proved by `Hub.uniform_approximation_explicit` (about
+5.4 billion times smaller than the original `4,828,800,024,144`).
 
 Here `log` in the error term is the natural logarithm. In explicit form,
 for every reachable board and every `n ≥ 4096`,
 
 ```text
-OPT(B) ≤ Manhattan(B) + 1044·n^(8/3)·(ln n)^(1/3).
+OPT(B) ≤ Manhattan(B) + 894·n^(8/3)·(ln n)^(1/3).
 ```
 
 `Hub.hubConstant_eq` verifies the numerical value. The derivation, including

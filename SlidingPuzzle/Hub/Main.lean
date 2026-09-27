@@ -22,7 +22,8 @@ namespace SlidingPuzzle.Hub
 `optimalLength_le_hub` (`Hub/AsympBound.lean`). -/
 
 /-- The coefficient of the hub algorithm for `n ≥ 3·2^25`: round up
-`1.143729·(2(hubXNum/hubXDen) hubScaledKX + 2(hubYNum/hubYDen) hubScaledKY + 2000/350)/1000`,
+`1.143729·(2(hubXNum/hubXDen) hubScaledKX + 2(hubYNum/hubYDen) hubScaledKY + 2000/350)/1000`
+(the scaled coefficients carry a factor `1000`),
 keeping the three error coefficients separate. -/
 def hubLargeConstant : ℕ := 894
 

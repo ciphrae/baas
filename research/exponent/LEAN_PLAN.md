@@ -5,7 +5,7 @@
 
 | Theorem | Statement |
 | --- | --- |
-| `Hub.uniform_approximation_explicit` | `OPT(B) ≤ M(B) + 1044·n^(8/3)(ln n)^(1/3)` for every reachable board, `n ≥ 4096` |
+| `Hub.uniform_approximation_explicit` | `OPT(B) ≤ M(B) + 894·n^(8/3)(ln n)^(1/3)` for every reachable board, `n ≥ 4096` |
 | `Hub.uniform_approximation` | `OPT(B) ≤ M(B) + C·n^(8/3)(log n)^(1/3)` for every reachable board, `n ≥ 4096` |
 | `Hub.average_optimal_length` | mean optimal length `= (2/3)n³ + O(n^(8/3)(log n)^(1/3))` |
 | `Hub.gods_number` | God's number `= n³ + O(n^(8/3)(log n)^(1/3))` |
@@ -14,7 +14,7 @@
 They depend only on `propext`, `Classical.choice` and `Quot.sound`
 (`Checks/Axioms.lean`). The mathematics is `PROOF.md`; this file records how
 the Lean proof is organized and where it departs from `PROOF.md`. The current
-certified constant is **1,044**, about 4.6 billion times smaller than the
+certified constant is **894**, about 5.4 billion times smaller than the
 original `4,828,800,024,144`. It is not claimed optimal.
 [PROOF_NOTES.md](../../PROOF_NOTES.md) records the accounting improvements.
 
@@ -37,8 +37,9 @@ original `4,828,800,024,144`. It is not claimed optimal.
 3. **Relocations and bypasses are straight jumps** (`REvent.jump`, same band or
    same block column). A general relocation `E → Z` goes through the corner
    square `(Z.1, E.2)`, which gives one free tile and gets one back. A jump
-   fetches any region cell of `Z` by a three-cycle in a box covering both
-   squares.
+   goes into `Z`, lines up the wanted region tile of `Z` on a second landing
+   cell by a three-cycle inside `Z`'s own box, jumps back, and jumps that tile
+   across.
 4. **Roles** `sched`, `stock`, `free`, `home`, no tokens. Relocations and
    bypasses move free tiles, so the total of free tiles grows only by junk
    heads, and one invariant keeps every square's free count positive.
@@ -106,9 +107,10 @@ the first cell of the column half inside the hub's band.
   across a row group into position `0`; walk the column half, crossing row
   groups by jumps of length `k + 1`; jump into `h`'s reservoir and place the
   tile by a three-cycle. `≤ 54s + 13k² + 65k + 78 + junkCol`.
-* **jump E Z y**: align in `E`'s reservoir, one jump into `Z`, a three-cycle in
-  a box covering both squares. `≤ 2s + 13(d·s + 2) + 52(d+1)s ≤ 65s(1+d)`,
-  `d = sqDist`.
+* **jump E Z y**: align in `E`'s reservoir, jump into `Z`, a three-cycle in
+  `Z`'s box putting the class-`y` tile on a second landing cell `z'`, jump back
+  to `E`, jump to `z'`. `≤ 2s + 26(d·s + 2) + 52s + 13(d·s + 6) ≤ (s+3)(54 + 39d)`,
+  `d = sqDist` (`jump_ends2`).
 The budgets exposed by `IState.cost` and verified by `OpHop1`, `OpHop2`,
 and `OpJump` are:
 
@@ -116,8 +118,8 @@ and `OpJump` are:
 | --- | --- |
 | `hop1` | `55s + 26(k+1) + junkRow` |
 | `hop2` | `54s + 13k² + 65k + 78 + junkCol` |
-| `jump E Z` | `65s(1 + sqDist E Z)` |
-| General relocation through a corner | `65s(2 + sqDist E Z)` |
+| `jump E Z` | `(s+3)(54 + 39·sqDist E Z)` |
+| General relocation through a corner | `(s+3)(108 + 39·sqDist E Z)` |
 
 Region counts are rewritten as sums over tiles (`PrimCount.lean`), so moves
 inside one region leave them unchanged and one- and two-tile moves give exactly
@@ -136,12 +138,13 @@ has a positive entry.
 and a real in-edge; phase 2 starts, in snake order, at every unserved square
 with a real in-edge and walks until the cycle closes. Invariants: after phase 1
 no unserved square with a real in-edge lies on a cycle with a dummy edge, so
-phase-2 walks end where they start. A relocation weighs `1 + sqDist` when its
-squares are aligned (one jump) and `2 + sqDist` otherwise. Relocations weigh
-`≤ 2k` per dummy edge in phase 1; in phase 2 they telescope along the snake
-order (`sqDist P Q ≤ |snake P - snake Q|`), only row changes need a second
-jump, and each serves at least two new squares, so a round weighs at most
-`(3k² + 6k)/2 + 2k·#dummy`.
+phase-2 walks end where they start. A relocation weighs `54 + 39·sqDist` when
+its squares are aligned (one jump) and `108 + 39·sqDist` otherwise, and costs
+`(s+3)` per unit. Relocations weigh `≤ 78k + 30` per dummy edge in phase 1; in
+phase 2 they telescope along the snake order
+(`sqDist P Q ≤ |snake P - snake Q|`), only row changes need a second jump, and
+each serves at least two new squares, so a round weighs at most
+`66k² + 132k + 30 + (78k + 30)·#dummy`.
 
 ## In-flight bound
 
@@ -219,45 +222,45 @@ These arithmetic lemmas are in `RunBounds.lean`.
 
 On side `n = k*s`, with `s ≥ 500`, `hubBound_le_sharp` gives the coarse
 `hubBound n k s ≤ 4042·n²s + 15888·k²n²L`. The certified bound uses the
-combined `hubBound_le_scaled` in `AsympAccounting.lean`: for `k ≥ 126`,
-`L ≥ 27` and capacity `317kL ≤ s`,
-`1000·hubBound ≤ 214050X + 297996Y` with `X = n²s` and `Y = k²n²L`. It keeps
+combined `hubBound_le_scaled` in `AsympAccounting.lean`: for `k ≥ 106`,
+`L ≥ 26` and capacity `317kL ≤ s`,
+`1000·hubBound ≤ 182251X + 255642Y` with `X = n²s` and `Y = k²n²L`. It keeps
 transport, cleanup and Finish in one polynomial and uses capacity for the
-`k⁴` remainders; capacity also gives `s ≥ 1078434`, making the Finish
+`k⁴` remainders; capacity also gives `s ≥ 873652`, making the Finish
 remainders small.
 
-For `n ≥ 9·2^24`, take `k = 2m` with `21·m³L ≤ n < 21(m+1)³L` and
+For `n ≥ 3·2^25`, take `k = 2m` with `24·m³L ≤ n < 24(m+1)³L` and
 `s = ⌊n/k⌋`. Solve the outer `n - k*s < k` layers by the Parberry prefix
-(`Parberry/Prefix.lean`). The threshold guarantees `m ≥ 63`
-(`half_width_large`, split at `2^28`), so grid rounding loses at most `64/63`;
-`3L ≤ 2m` (`log_le_half_width`), hence `s ≤ k³` (`div_le_cube_large`); and
-`1268m²L ≤ n`, hence capacity. The residual side satisfies `ks ≥ 2^26`, so
-its own logarithm satisfies `log₂(ks) + 1 ≥ 27`. The residual estimates
+(`Parberry/Prefix.lean`). The threshold guarantees `m ≥ 53`
+(`half_width_large`, split at `2^27`), so grid rounding loses at most `54/53`;
+`8L ≤ 5m` (`log_le_half_width`), hence `s ≤ k³` (`div_le_cube_large`); and
+`1268m²L ≤ n`, hence capacity. The residual side satisfies `ks ≥ 2^25`, so
+its own logarithm satisfies `log₂(ks) + 1 ≥ 26`. The residual estimates
 extend monotonically to the original side `n`.
 
 `optimalLength_le_hub_scaled` keeps three terms separate:
 
 | Term | Definition | Cube bound |
 | --- | --- | --- |
-| `X` | `n²s` | `(100000X)³ ≤ 140136³n⁸L` |
-| `Y` | `k²n²L` | `(10⁶Y)³ ≤ 525510³n⁸L` |
-| `Z` | `(15n² + 3002n + 1)(n - k*s)` | `(400Z)³ ≤ n⁸L` |
+| `X` | `n²s` | `(100000X)³ ≤ 146947³n⁸L` |
+| `Y` | `k²n²L` | `(10⁶Y)³ ≤ 480750³n⁸L` |
+| `Z` | `(15n² + 3002n + 1)(n - k*s)` | `(350Z)³ ≤ n⁸L` |
 
-The solution length is at most `M + 2·214.050X + 2·297.996Y + 2Z`.
+The solution length is at most `M + 2·182.251X + 2·255.642Y + 2Z`.
 The natural-number theorem multiplies this inequality by `1000`, preserving
 all coefficients until the final real conversion.
-On this range, `L ≤ 1.494220 ln n` (`natLog_succ_le_grid_log`, split at
-`2^28`), bounded by the cube of `1.143243`. The coefficient is therefore
+On this range, `L ≤ 1.496129 ln n` (`natLog_succ_le_grid_log`, split at
+`2^27`), bounded by the cube of `1.143729`. The coefficient is therefore
 
 ```text
-2·1.143243·(1.40136·214.050 + 0.52551·297.996 + 0.0025) ≈ 1043.93.
+1.143729·(2·1.46947·182.251 + 2·0.48075·255.642 + 2/350) ≈ 893.74.
 ```
 
-`hubLargeConstant` is `1044`; `hubLargeConstant_rounding` verifies the exact
-ceiling. For `4096 ≤ n ≤ 9·2^24` the cubic solver's exact bound
-`5n³ + 1509n² + 1505n + 4796` is at most `1044·hubError n`
-(`cubic_solver_le_hubError`, split at `2^20`, `2^26` and `2^27`), so
-`hubConstant = 1044` covers every `n ≥ 4096`; `hubConstant_eq` exposes the
+`hubLargeConstant` is `894`; `hubLargeConstant_rounding` verifies the exact
+ceiling. For `4096 ≤ n ≤ 3·2^25` the cubic solver's exact bound
+`5n³ + 1509n² + 1505n + 4796` is at most `894·hubError n`
+(`cubic_solver_le_hubError`, split at `2^20`, `2^25` and `2^26`), so
+`hubConstant = 894` covers every `n ≥ 4096`; `hubConstant_eq` exposes the
 value and `uniform_approximation_explicit` proves the resulting bound.
 `hubBound_le`, `hubBound_le_large`, `optimalLength_le_hub_sharp`,
 `optimalLength_le_hub`, and `le_hubError_of_cube` retain
@@ -265,5 +268,5 @@ coarser forms of the estimates.
 
 The statistical reduction of the paper (Section 5) is proved for any error
 scale `f ≥ n²` (`AsympStats.lean`). It yields the average and maximum
-asymptotics from the boardwise bound; **1044 is the boardwise coefficient**,
+asymptotics from the boardwise bound; **894 is the boardwise coefficient**,
 not an asserted exact coefficient for the two-sided statistical errors.
