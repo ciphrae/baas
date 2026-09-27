@@ -168,16 +168,16 @@ noncomputable def Btot (H : RowH k) (d : ℕ) : ℕ := ∑ j, gcnt rs H d j
 /-- `A_{x,d}`: all insertions of `(H, d, x)`. -/
 noncomputable def Atot (H : RowH k) (d : ℕ) (x : Sq k) : ℕ := ∑ j, acnt rs H d x j
 
-/-- The window length `w_d = min Δ (⌊2 (p_d + 1) Δ / B_d⌋ + 1)` (`Δ` if `B_d = 0`). -/
+/-- The window length `w_d = min Δ (⌊16 (p_d + 1) Δ / (15 B_d)⌋ + 1)` (`Δ` if `B_d = 0`). -/
 noncomputable def win (H : RowH k) (d : ℕ) : ℕ :=
-  if Btot rs H d = 0 then Δ else min Δ (2 * (insPos k s H d + 1) * Δ / Btot rs H d + 1)
+  if Btot rs H d = 0 then Δ else min Δ (16 * (insPos k s H d + 1) * Δ / (15 * Btot rs H d) + 1)
 
 /-- The additive slack `λ = 4 (log₂ n + 1)`. -/
 def lamN (n : ℕ) : ℕ := 4 * (Nat.log 2 n + 1)
 
 /-- The bound on present `(H, d, x)` tiles. -/
 noncomputable def Nb (n : ℕ) (H : RowH k) (d : ℕ) (x : Sq k) : ℕ :=
-  if Atot rs H d x = 0 then 0 else 13 * Atot rs H d x * (win s rs H d + 1) / (9 * Δ) + lamN n
+  if Atot rs H d x = 0 then 0 else 17 * Atot rs H d x * (win s rs H d + 1) / (16 * Δ) + 6 * lamN n
 
 /-- The row insertions at time `τ` of the order `σ` (none after the end). -/
 noncomputable def rnd (σ : Equiv.Perm (Fin Δ)) (τ : ℕ) : List (RowH k × ℕ × Sq k) :=

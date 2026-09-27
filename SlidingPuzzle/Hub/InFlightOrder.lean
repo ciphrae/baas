@@ -52,7 +52,7 @@ theorem nat_div_add_one_gt (x b : ℕ) (hb : 0 < b) : (x : ℝ) / b < ((x / b : 
   have : (x : ℝ) < ((x / b : ℕ) : ℝ) * b + b := by exact_mod_cast h
   linarith
 
-theorem card_badA {lam : ℕ} (hk : 0 < k) (hlam : 6 * k * lam ≤ s - k) (H : RowH k) (d : ℕ)
+theorem card_badA {lam : ℕ} (hk : 0 < k) (hlam : 340 * k * lam ≤ s - k) (H : RowH k) (d : ℕ)
     (τ0 : Fin Δ) : (badA s rs H d τ0).card * 2 ^ lam ≤ Δ.factorial := by
   set w := win s rs H d with hw
   set p := insPos k s H d with hp
@@ -67,16 +67,16 @@ theorem card_badA {lam : ℕ} (hk : 0 < k) (hlam : 6 * k * lam ≤ s - k) (H : R
     intro h0
     have : w = Δ := by rw [hw, win, if_pos h0]
     omega
-  have hwdef : w = 2 * (p + 1) * Δ / B + 1 := by
-    have : w = min Δ (2 * (p + 1) * Δ / B + 1) := by rw [hw, win, if_neg hB0]
+  have hwdef : w = 16 * (p + 1) * Δ / (15 * B) + 1 := by
+    have : w = min Δ (16 * (p + 1) * Δ / (15 * B) + 1) := by rw [hw, win, if_neg hB0]
     rw [this] at hfit ⊢
-    rcases min_choice Δ (2 * (p + 1) * Δ / B + 1) with h | h
+    rcases min_choice Δ (16 * (p + 1) * Δ / (15 * B) + 1) with h | h
     · rw [h] at hfit; omega
     · exact h
   have hΔ : 0 < Δ := Nat.lt_of_le_of_lt (Nat.zero_le _) τ0.isLt
   have hBpos : 0 < B := Nat.pos_of_ne_zero hB0
-  have hkey : 2 * (p + 1) * Δ < w * B := by
-    rw [hwdef, add_mul, one_mul]; exact Nat.lt_div_mul_add hBpos
+  have hkey : 16 * (p + 1) * Δ < w * (15 * B) := by
+    rw [hwdef, add_mul, one_mul]; exact Nat.lt_div_mul_add (by omega)
   -- Chernoff
   set g : Fin Δ → ℝ := fun j => (gcnt rs H d j : ℝ) with hg
   have hkR : (0 : ℝ) < k := by exact_mod_cast hk
@@ -86,38 +86,41 @@ theorem card_badA {lam : ℕ} (hk : 0 < k) (hlam : 6 * k * lam ≤ s - k) (H : R
   have hcard : (Fintype.card (Fin Δ)) = Δ := Fintype.card_fin Δ
   have hT := card_winA (Δ := Δ) hfit
   have hsumg : ∑ j, g j = B := by simp only [hg, hB, Btot]; push_cast; rfl
-  have hch := card_lower_tail (winA Δ τ0.val w) g hkR hg0 hgK (by rw [hcard]; exact hΔ)
+  have hch := card_lower_tail_sharp (winA Δ τ0.val w) g hkR hg0 hgK (by rw [hcard]; exact hΔ)
   rw [hT, hsumg, hcard] at hch
   set μ : ℝ := (w : ℝ) * B / Δ with hμ
   have hΔR : (0 : ℝ) < Δ := by exact_mod_cast hΔ
-  have hμgt : 2 * ((p : ℝ) + 1) < μ := by
-    rw [hμ, lt_div_iff₀ hΔR]; exact_mod_cast hkey
+  have hμgt : 16 * ((p : ℝ) + 1) < 15 * μ := by
+    rw [hμ, mul_div_assoc', lt_div_iff₀ hΔR]
+    have : ((16 * (p + 1) * Δ : ℕ) : ℝ) < ((w * (15 * B) : ℕ) : ℝ) := by exact_mod_cast hkey
+    push_cast at this; linarith
   have hsub : badA s rs H d τ0 ⊆ univ.filter fun σ : Equiv.Perm (Fin Δ) =>
-      ∑ τ ∈ winA Δ τ0.val w, g (σ τ) ≤ μ / 2 := by
+      ∑ τ ∈ winA Δ τ0.val w, g (σ τ) ≤ 15 / 16 * μ := by
     intro σ hσ
     simp only [badA, mem_filter, mem_univ, true_and] at hσ ⊢
     have h1 : ∑ τ ∈ winA Δ τ0.val w, g (σ τ) ≤ p := by
       simp only [hg]; exact_mod_cast Nat.lt_succ_iff.mp hσ.2
     linarith
-  have hc1 : ((badA s rs H d τ0).card : ℝ) ≤ Δ.factorial * Real.exp (-μ / (12 * k)) :=
+  have hc1 : ((badA s rs H d τ0).card : ℝ) ≤ Δ.factorial * Real.exp (-(49 * μ) / (25600 * k)) :=
     (Nat.cast_le.mpr (card_le_card hsub)).trans hch
-  -- `2^λ ≤ exp(μ / (12 k))`
-  have hnat : 6 * k * lam ≤ p + 1 := hlam.trans (insPos_add_one_ge s H d)
-  have hlamR : 6 * (k : ℝ) * lam ≤ p + 1 := by exact_mod_cast hnat
-  have h2lam : (2 : ℝ) ^ lam ≤ Real.exp (μ / (12 * k)) := by
-    have hlog : Real.log 2 ≤ 1 := by linarith [Real.log_two_lt_d9]
+  -- `2^λ ≤ exp(49 μ / (25600 k))`
+  have hnat : 340 * k * lam ≤ p + 1 := hlam.trans (insPos_add_one_ge s H d)
+  have hlamR : 340 * (k : ℝ) * lam ≤ p + 1 := by exact_mod_cast hnat
+  have h2lam : (2 : ℝ) ^ lam ≤ Real.exp (49 * μ / (25600 * k)) := by
+    have hlog : Real.log 2 ≤ 6931471808 / 10000000000 := by linarith [Real.log_two_lt_d9]
     calc (2 : ℝ) ^ lam = Real.exp (lam * Real.log 2) := by
           rw [Real.exp_nat_mul, Real.exp_log two_pos]
-      _ ≤ Real.exp (μ / (12 * k)) := by
+      _ ≤ Real.exp (49 * μ / (25600 * k)) := by
           apply Real.exp_le_exp.mpr
           rw [le_div_iff₀ (by positivity)]
-          have : (lam : ℝ) * Real.log 2 ≤ lam := by
+          have : (lam : ℝ) * Real.log 2 ≤ 6931471808 / 10000000000 * lam := by
             have := Nat.cast_nonneg (α := ℝ) lam
             nlinarith
           nlinarith
   have hfin : ((badA s rs H d τ0).card : ℝ) * 2 ^ lam ≤ Δ.factorial := by
     calc ((badA s rs H d τ0).card : ℝ) * 2 ^ lam
-        ≤ Δ.factorial * Real.exp (-μ / (12 * k)) * Real.exp (μ / (12 * k)) := by
+        ≤ Δ.factorial * Real.exp (-(49 * μ) / (25600 * k)) *
+            Real.exp (49 * μ / (25600 * k)) := by
           gcongr
       _ = Δ.factorial := by
           rw [mul_assoc, ← Real.exp_add]; simp [neg_div]
@@ -139,37 +142,40 @@ theorem card_badB (n : ℕ) (H : RowH k) (d : ℕ) (x : Sq k) (τ0 : Fin Δ) :
     rw [this]; simp
   have hΔ : 0 < Δ := Nat.lt_of_le_of_lt (Nat.zero_le _) τ0.isLt
   have hΔR : (0 : ℝ) < Δ := by exact_mod_cast hΔ
-  have hNb : Nb s rs n H d x = 13 * A * (w + 1) / (9 * Δ) + lamN n := by
+  have hNb : Nb s rs n H d x = 17 * A * (w + 1) / (16 * Δ) + 6 * lamN n := by
     rw [Nb, if_neg hA0]
   set a : Fin Δ → ℕ := fun j => acnt rs H d x j with ha
   have ha1 : ∀ j, a j ≤ 1 := fun j => count_roundIns_le_one (rs j) (H, d, x)
   have hcard : Fintype.card (Fin Δ) = Δ := Fintype.card_fin Δ
-  have hc : (1 : ℝ) ≤ 13 / 9 * Real.log 2 := by linarith [Real.log_two_gt_d9]
-  have hch := card_upper_tail (winB Δ τ0.val w) a ha1 (lamN n) hc (by rw [hcard]; exact hΔ)
+  have hch := card_upper_tail_sharp (winB Δ τ0.val w) a ha1 (6 * lamN n) (by rw [hcard]; exact hΔ)
   rw [hcard] at hch
   have hsumA : ∑ i, (a i : ℝ) = A := by simp only [ha, hA, Atot]; push_cast; rfl
   rw [hsumA] at hch
   have hT : ((winB Δ τ0.val w).card : ℝ) ≤ w + 1 := by exact_mod_cast card_winB_le τ0.val w
   have hsub : badB s rs n H d x τ0 ⊆ univ.filter fun σ : Equiv.Perm (Fin Δ) =>
-      13 / 9 * ((winB Δ τ0.val w).card * (A : ℝ) / Δ) + lamN n ≤
+      17 / 16 * ((winB Δ τ0.val w).card * (A : ℝ) / Δ) + ((6 * lamN n : ℕ) : ℝ) ≤
         ((∑ τ ∈ winB Δ τ0.val w, a (σ τ) : ℕ) : ℝ) := by
     intro σ hσ
     simp only [badB, mem_filter, mem_univ, true_and] at hσ ⊢
     rw [hNb] at hσ
-    have h1 : ((13 * A * (w + 1) / (9 * Δ) : ℕ) : ℝ) + lamN n + 1 ≤
+    have h1 : ((17 * A * (w + 1) / (16 * Δ) : ℕ) : ℝ) + ((6 * lamN n : ℕ) : ℝ) + 1 ≤
         ((∑ τ ∈ winB Δ τ0.val w, a (σ τ) : ℕ) : ℝ) := by exact_mod_cast hσ
-    have h2 := nat_div_add_one_gt (13 * A * (w + 1)) (9 * Δ) (by omega)
-    have h3 : 13 / 9 * ((winB Δ τ0.val w).card * (A : ℝ) / Δ) ≤
-        ((13 * A * (w + 1) : ℕ) : ℝ) / ((9 * Δ : ℕ) : ℝ) := by
+    have h2 := nat_div_add_one_gt (17 * A * (w + 1)) (16 * Δ) (by omega)
+    have h3 : 17 / 16 * ((winB Δ τ0.val w).card * (A : ℝ) / Δ) ≤
+        ((17 * A * (w + 1) : ℕ) : ℝ) / ((16 * Δ : ℕ) : ℝ) := by
       push_cast
-      rw [show (13 : ℝ) / 9 * ((winB Δ τ0.val w).card * (A : ℝ) / Δ) =
-        13 * ((winB Δ τ0.val w).card * (A : ℝ)) / (9 * Δ) by field_simp]
+      rw [show (17 : ℝ) / 16 * ((winB Δ τ0.val w).card * (A : ℝ) / Δ) =
+        17 * ((winB Δ τ0.val w).card * (A : ℝ)) / (16 * Δ) by field_simp]
       rw [div_le_div_iff_of_pos_right (by positivity)]
       have : (0 : ℝ) ≤ A := Nat.cast_nonneg _
       nlinarith
     linarith
+  have h98 : (2 : ℝ) ^ lamN n ≤ (9 / 8) ^ (6 * lamN n) := by
+    rw [pow_mul]
+    exact pow_le_pow_left₀ (by norm_num) (by norm_num) _
   have hfin : ((badB s rs n H d x τ0).card : ℝ) * 2 ^ lamN n ≤ Δ.factorial :=
-    (mul_le_mul_of_nonneg_right (Nat.cast_le.mpr (card_le_card hsub)) (by positivity)).trans hch
+    (mul_le_mul_of_nonneg_left h98 (Nat.cast_nonneg _)).trans
+      ((mul_le_mul_of_nonneg_right (Nat.cast_le.mpr (card_le_card hsub)) (by positivity)).trans hch)
   exact_mod_cast hfin
 
 /-- The window properties (A) and (B), for times as natural numbers. -/
@@ -197,7 +203,7 @@ theorem goodOrder_of_not_bad (n : ℕ) (σ : Equiv.Perm (Fin Δ))
     exact this
 
 /-- Union bound: some order avoids every bad event. -/
-theorem exists_goodOrder (n : ℕ) (hk : 0 < k) (hlam : 6 * k * lamN n ≤ s - k)
+theorem exists_goodOrder (n : ℕ) (hk : 0 < k) (hlam : 340 * k * lamN n ≤ s - k)
     (hcount : Fintype.card (RowH k × Fin k × Fin Δ) +
       Fintype.card (RowH k × Fin k × Sq k × Fin Δ) < 2 ^ lamN n) :
     ∃ σ, GoodOrder s rs n σ := by

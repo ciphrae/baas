@@ -206,4 +206,136 @@ theorem card_upper_tail (T : Finset α) (a : α → ℕ) (ha : ∀ i, a i ≤ 1)
   rw [mul_comm (Real.exp μ), ← mul_assoc] at hfin
   exact le_of_mul_le_mul_right hfin (Real.exp_pos μ)
 
+/-- `exp(-(517/500) v) ≤ 1 - v` for `v ∈ [0, 1/16]`. -/
+theorem exp_neg_le_one_sub_sharp {v : ℝ} (h0 : 0 ≤ v) (h1 : v ≤ 1 / 16) :
+    Real.exp (-(517 / 500 * v)) ≤ 1 - v := by
+  have he := Real.quadratic_le_exp_of_nonneg (show 0 ≤ 517 / 500 * v by positivity)
+  have hp : 0 < Real.exp (517 / 500 * v) := Real.exp_pos _
+  have hprod : Real.exp (-(517 / 500 * v)) * Real.exp (517 / 500 * v) = 1 := by
+    rw [← Real.exp_add]; simp
+  have hpoly : 1 ≤ (1 - v) * (1 + 517 / 500 * v + (517 / 500 * v) ^ 2 / 2) := by
+    nlinarith [mul_nonneg h0 h0, mul_nonneg (mul_nonneg h0 h0) h0]
+  have hq : 1 ≤ (1 - v) * Real.exp (517 / 500 * v) := by
+    have : 0 ≤ 1 - v := by linarith
+    nlinarith
+  nlinarith [Real.exp_pos (-(517 / 500 * v))]
+
+/-- Sharper lower tail (terms in `[0, K]`): few permutations make the window sum
+at most `15/16` of its mean `μ`. -/
+theorem card_lower_tail_sharp (T : Finset α) (g : α → ℝ) {K : ℝ} (hK : 0 < K)
+    (hg0 : ∀ i, 0 ≤ g i) (hgK : ∀ i, g i ≤ K) (hn : 0 < Fintype.card α) :
+    ((univ.filter fun σ : Equiv.Perm α =>
+        ∑ τ ∈ T, g (σ τ) ≤ 15 / 16 * (T.card * (∑ i, g i) / Fintype.card α)).card : ℝ) ≤
+      (Fintype.card α).factorial *
+        Real.exp (-(49 * (T.card * (∑ i, g i) / Fintype.card α)) / (25600 * K)) := by
+  set n := Fintype.card α
+  set μ : ℝ := T.card * (∑ i, g i) / n with hμ
+  have hnR : (0 : ℝ) < n := by exact_mod_cast hn
+  set y : α → ℝ := fun i => 1 - g i / (16 * K) with hy
+  have hy0 : ∀ i, 0 ≤ y i := by
+    intro i; simp only [hy]
+    have : g i / (16 * K) ≤ 1 / 16 := by
+      rw [div_le_iff₀ (by positivity)]; linarith [hgK i]
+    linarith
+  have hmom := sum_perm_prod_le T y hy0
+  have hmean : (∑ i, y i) / n = 1 - (∑ i, g i) / (16 * K * n) := by
+    simp only [hy, sum_sub_distrib, sum_const, card_univ, nsmul_eq_mul, mul_one, ← sum_div]
+    field_simp; simp only [n]; ring
+  have hmean0 : 0 ≤ (∑ i, y i) / n := div_nonneg (sum_nonneg fun i _ => hy0 i) hnR.le
+  have hexp : ((∑ i, y i) / n) ^ T.card ≤ Real.exp (-(μ / (16 * K))) := by
+    calc ((∑ i, y i) / n) ^ T.card ≤ (Real.exp (-((∑ i, g i) / (16 * K * n)))) ^ T.card := by
+          apply pow_le_pow_left₀ hmean0
+          rw [hmean]; linarith [Real.add_one_le_exp (-((∑ i, g i) / (16 * K * n)))]
+      _ = Real.exp (-(μ / (16 * K))) := by
+          rw [← Real.exp_nat_mul]; congr 1; rw [hμ]; field_simp
+  have hmark := card_filter_mul_le_sum (fun σ : Equiv.Perm α => ∏ τ ∈ T, y (σ τ))
+    (fun σ => prod_nonneg fun τ _ => hy0 _) (Real.exp (-(517 * (15 * μ) / (128000 * K))))
+    (fun σ => ∑ τ ∈ T, g (σ τ) ≤ 15 / 16 * μ) (by
+      intro σ hσ
+      calc Real.exp (-(517 * (15 * μ) / (128000 * K))) ≤
+            Real.exp (-(517 / 500 * ∑ τ ∈ T, g (σ τ)) / (16 * K)) := by
+            apply Real.exp_le_exp.mpr
+            rw [neg_div, neg_le_neg_iff, div_le_div_iff₀ (by positivity) (by positivity)]
+            nlinarith
+        _ = ∏ τ ∈ T, Real.exp (-(517 / 500 * (g (σ τ) / (16 * K)))) := by
+            rw [← Real.exp_sum]; congr 1
+            rw [neg_div, mul_sum, sum_div, ← sum_neg_distrib]
+            refine sum_congr rfl fun τ _ => ?_
+            field_simp
+        _ ≤ ∏ τ ∈ T, y (σ τ) := by
+            apply prod_le_prod (fun τ _ => (Real.exp_pos _).le)
+            intro τ _
+            apply exp_neg_le_one_sub_sharp (div_nonneg (hg0 _) (by positivity))
+            rw [div_le_iff₀ (by positivity)]; linarith [hgK (σ τ)])
+  have hfin : ((univ.filter fun σ : Equiv.Perm α => ∑ τ ∈ T, g (σ τ) ≤ 15 / 16 * μ).card : ℝ) *
+      Real.exp (-(517 * (15 * μ) / (128000 * K))) ≤ n.factorial * Real.exp (-(μ / (16 * K))) :=
+    hmark.trans (hmom.trans (mul_le_mul_of_nonneg_left hexp (Nat.cast_nonneg _)))
+  have hpos := Real.exp_pos (-(517 * (15 * μ) / (128000 * K)))
+  have hsplit : Real.exp (-(μ / (16 * K))) =
+      Real.exp (-(49 * μ) / (25600 * K)) * Real.exp (-(517 * (15 * μ) / (128000 * K))) := by
+    rw [← Real.exp_add]; congr 1; field_simp; ring
+  rw [hsplit] at hfin
+  have hfin' : ((univ.filter fun σ : Equiv.Perm α => ∑ τ ∈ T, g (σ τ) ≤ 15 / 16 * μ).card : ℝ) *
+      Real.exp (-(517 * (15 * μ) / (128000 * K))) ≤
+      (n.factorial * Real.exp (-(49 * μ) / (25600 * K))) *
+        Real.exp (-(517 * (15 * μ) / (128000 * K))) := by
+    rw [mul_assoc]; exact hfin
+  exact le_of_mul_le_mul_right hfin' hpos
+
+/-- `log (9/8) ≥ 2/17`, from `(9/8)^17 ≥ e²`. -/
+theorem two_div_seventeen_le_log : (2 / 17 : ℝ) ≤ Real.log (9 / 8) := by
+  have he := Real.exp_one_lt_d9
+  have he0 := Real.exp_pos 1
+  have h2 : Real.exp 2 ≤ (9 / 8 : ℝ) ^ 17 := by
+    have : Real.exp 2 = Real.exp 1 ^ 2 := by rw [← Real.exp_nat_mul]; norm_num
+    rw [this]
+    nlinarith
+  have := Real.log_le_log (Real.exp_pos 2) h2
+  rw [Real.log_exp, Real.log_pow] at this
+  push_cast at this
+  linarith
+
+/-- Sharper upper tail (terms in `{0,1}`): few permutations make the window sum
+at least `(17/16)μ + λ`. -/
+theorem card_upper_tail_sharp (T : Finset α) (a : α → ℕ) (ha : ∀ i, a i ≤ 1) (lam : ℕ)
+    (hn : 0 < Fintype.card α) :
+    ((univ.filter fun σ : Equiv.Perm α =>
+        17 / 16 * (T.card * (∑ i, (a i : ℝ)) / Fintype.card α) + lam ≤
+          ((∑ τ ∈ T, a (σ τ) : ℕ) : ℝ)).card : ℝ) * (9 / 8) ^ lam ≤
+      (Fintype.card α).factorial := by
+  set n := Fintype.card α
+  set μ : ℝ := T.card * (∑ i, (a i : ℝ)) / n with hμ
+  have hnR : (0 : ℝ) < n := by exact_mod_cast hn
+  have hμ0 : 0 ≤ μ := by positivity
+  set y : α → ℝ := fun i => 1 + (a i : ℝ) / 8 with hy
+  have hy0 : ∀ i, 0 ≤ y i := fun i => by positivity
+  have hy2 : ∀ i, y i = (9 / 8) ^ a i := by
+    intro i; simp only [hy]
+    rcases Nat.le_one_iff_eq_zero_or_eq_one.mp (ha i) with h | h <;> rw [h] <;> norm_num
+  have hmom := sum_perm_prod_le T y hy0
+  have hmean0 : 0 ≤ (∑ i, y i) / n := div_nonneg (sum_nonneg fun i _ => hy0 i) hnR.le
+  have hexp : ((∑ i, y i) / n) ^ T.card ≤ Real.exp (μ / 8) := by
+    have hmean : (∑ i, y i) / n = 1 + (∑ i, (a i : ℝ)) / (8 * n) := by
+      simp only [hy, sum_add_distrib, sum_const, card_univ, nsmul_eq_mul, mul_one, ← sum_div]
+      field_simp; simp only [n]; ring
+    calc ((∑ i, y i) / n) ^ T.card ≤ (Real.exp ((∑ i, (a i : ℝ)) / (8 * n))) ^ T.card := by
+          apply pow_le_pow_left₀ hmean0
+          rw [hmean]; linarith [Real.add_one_le_exp ((∑ i, (a i : ℝ)) / (8 * n))]
+      _ = Real.exp (μ / 8) := by
+          rw [← Real.exp_nat_mul]; congr 1; rw [hμ]; field_simp
+  have hlog := two_div_seventeen_le_log
+  have hl0 : 0 < Real.log (9 / 8) := by linarith
+  have h98pow : ∀ m : ℕ, (9 / 8 : ℝ) ^ m = Real.exp (m * Real.log (9 / 8)) := by
+    intro m; rw [Real.exp_nat_mul, Real.exp_log (by norm_num)]
+  have hmark := card_filter_mul_le_sum (fun σ : Equiv.Perm α => ∏ τ ∈ T, y (σ τ))
+    (fun σ => prod_nonneg fun τ _ => hy0 _) (Real.exp (μ / 8) * (9 / 8) ^ lam)
+    (fun σ => 17 / 16 * μ + lam ≤ ((∑ τ ∈ T, a (σ τ) : ℕ) : ℝ)) (by
+      intro σ hσ
+      rw [prod_congr rfl (fun τ _ => hy2 (σ τ)), prod_pow_eq_pow_sum, h98pow, h98pow,
+        ← Real.exp_add, Real.exp_le_exp]
+      nlinarith [mul_le_mul_of_nonneg_right hσ hl0.le, mul_le_mul_of_nonneg_left hlog hμ0])
+  have hfin := hmark.trans (hmom.trans (mul_le_mul_of_nonneg_left hexp (Nat.cast_nonneg _)))
+  rw [mul_comm (Real.exp (μ / 8)), ← mul_assoc] at hfin
+  exact le_of_mul_le_mul_right hfin (Real.exp_pos _)
+
 end SlidingPuzzle.Hub

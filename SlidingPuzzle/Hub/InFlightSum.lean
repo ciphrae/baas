@@ -104,31 +104,32 @@ theorem card_Atot_ne_zero (H : RowH k) (d : ℕ) :
     _ = k := by simp
 
 theorem sum_x_Nb_le (hs : 1 ≤ s) (n : ℕ) (H : RowH k) (d : ℕ) :
-    ∑ x, (Nb s rs n H d x : ℝ) ≤ 26 / 9 * rowLen k s H * ((Gtot rs H d : ℝ) / Btot rs H d) +
-      26 / 9 * (Gtot rs H d : ℝ) / Δ + k * lamN n := by
+    ∑ x, (Nb s rs n H d x : ℝ) ≤ 17 / 15 * rowLen k s H * ((Gtot rs H d : ℝ) / Btot rs H d) +
+      17 / 8 * (Gtot rs H d : ℝ) / Δ + k * (6 * lamN n) := by
   set w := win s rs H d with hw
   set G := Gtot rs H d with hG
   set B := Btot rs H d with hB
-  have h1 : ∀ x, (Nb s rs n H d x : ℝ) ≤ 13 * (Atot rs H d x : ℝ) * (w + 1) / (9 * Δ) +
-      (if Atot rs H d x ≠ 0 then (lamN n : ℝ) else 0) := by
+  have h1 : ∀ x, (Nb s rs n H d x : ℝ) ≤ 17 * (Atot rs H d x : ℝ) * (w + 1) / (16 * Δ) +
+      (if Atot rs H d x ≠ 0 then ((6 * lamN n : ℕ) : ℝ) else 0) := by
     intro x
     unfold Nb
     by_cases h : Atot rs H d x = 0
     · rw [if_pos h, if_neg (not_not.mpr h)]; simp only [Nat.cast_zero, add_zero]; positivity
     · rw [if_neg h, if_pos h]
-      have := Nat.cast_div_le (α := ℝ) (m := 13 * Atot rs H d x * (w + 1)) (n := 9 * Δ)
+      have := Nat.cast_div_le (α := ℝ) (m := 17 * Atot rs H d x * (w + 1)) (n := 16 * Δ)
       push_cast at this ⊢
       linarith
-  have h2 : ∑ x : Sq k, (if Atot rs H d x ≠ 0 then (lamN n : ℝ) else 0) ≤ k * lamN n := by
+  have h2 : ∑ x : Sq k, (if Atot rs H d x ≠ 0 then ((6 * lamN n : ℕ) : ℝ) else 0) ≤
+      k * ((6 * lamN n : ℕ) : ℝ) := by
     rw [← sum_filter, sum_const, nsmul_eq_mul]
     apply mul_le_mul_of_nonneg_right _ (Nat.cast_nonneg _)
     exact_mod_cast card_Atot_ne_zero rs H d
-  have h3 : ∑ x, 13 * (Atot rs H d x : ℝ) * (w + 1) / (9 * Δ) = 13 * (G : ℝ) * (w + 1) / (9 * Δ) := by
+  have h3 : ∑ x, 17 * (Atot rs H d x : ℝ) * (w + 1) / (16 * Δ) = 17 * (G : ℝ) * (w + 1) / (16 * Δ) := by
     rw [← sum_div, ← sum_mul, ← mul_sum]
     congr 3
     rw [hG, ← sum_Atot]; push_cast; rfl
-  have h5 : 13 * (G : ℝ) * (w + 1) / (9 * Δ) ≤
-      26 / 9 * rowLen k s H * ((G : ℝ) / B) + 26 / 9 * (G : ℝ) / Δ := by
+  have h5 : 17 * (G : ℝ) * (w + 1) / (16 * Δ) ≤
+      17 / 15 * rowLen k s H * ((G : ℝ) / B) + 17 / 8 * (G : ℝ) / Δ := by
     by_cases hG0 : G = 0
     · rw [hG0]; simp
     obtain ⟨j, -, hj⟩ := exists_ne_zero_of_sum_ne_zero hG0
@@ -139,37 +140,39 @@ theorem sum_x_Nb_le (hs : 1 ≤ s) (n : ℕ) (H : RowH k) (d : ℕ) :
     rw [hpH.1, hpH.2] at hlen
     have hGB : G ≤ B := Gtot_le_Btot rs H d
     have hB0 : B ≠ 0 := by omega
-    have hwle : w ≤ 2 * (insPos k s H d + 1) * Δ / B + 1 := by
+    have hwle : w ≤ 16 * (insPos k s H d + 1) * Δ / (15 * B) + 1 := by
       rw [hw, win, if_neg hB0]; exact min_le_right _ _
     have hBR : (0 : ℝ) < B := by exact_mod_cast Nat.pos_of_ne_zero hB0
     have hΔR : (0 : ℝ) < Δ := by exact_mod_cast hΔ
-    have hwR : (w : ℝ) ≤ 2 * (rowLen k s H : ℝ) * Δ / B + 1 := by
-      have e1 : (w : ℝ) ≤ ((2 * (insPos k s H d + 1) * Δ / B : ℕ) : ℝ) + 1 := by
+    have hwR : (w : ℝ) ≤ 16 * (rowLen k s H : ℝ) * Δ / (15 * B) + 1 := by
+      have e1 : (w : ℝ) ≤ ((16 * (insPos k s H d + 1) * Δ / (15 * B) : ℕ) : ℝ) + 1 := by
         exact_mod_cast hwle
-      have e2 := Nat.cast_div_le (α := ℝ) (m := 2 * (insPos k s H d + 1) * Δ) (n := B)
-      have e3 : ((2 * (insPos k s H d + 1) * Δ : ℕ) : ℝ) ≤ 2 * (rowLen k s H : ℝ) * Δ := by
+      have e2 := Nat.cast_div_le (α := ℝ) (m := 16 * (insPos k s H d + 1) * Δ) (n := 15 * B)
+      have e3 : ((16 * (insPos k s H d + 1) * Δ : ℕ) : ℝ) ≤ 16 * (rowLen k s H : ℝ) * Δ := by
         push_cast
         have : ((insPos k s H d : ℕ) : ℝ) + 1 ≤ rowLen k s H := by exact_mod_cast hlen
         nlinarith
-      have e4 : ((2 * (insPos k s H d + 1) * Δ : ℕ) : ℝ) / B ≤ 2 * (rowLen k s H : ℝ) * Δ / B :=
-        div_le_div_of_nonneg_right e3 hBR.le
+      have e4 : ((16 * (insPos k s H d + 1) * Δ : ℕ) : ℝ) / ((15 * B : ℕ) : ℝ) ≤
+          16 * (rowLen k s H : ℝ) * Δ / (15 * B) := by
+        push_cast
+        exact div_le_div_of_nonneg_right (by exact_mod_cast e3) (by positivity)
       linarith
     have hGR : (0 : ℝ) ≤ G := Nat.cast_nonneg _
-    calc 13 * (G : ℝ) * (w + 1) / (9 * Δ) ≤
-          13 * (G : ℝ) * (2 * (rowLen k s H : ℝ) * Δ / B + 2) / (9 * Δ) := by
+    calc 17 * (G : ℝ) * (w + 1) / (16 * Δ) ≤
+          17 * (G : ℝ) * (16 * (rowLen k s H : ℝ) * Δ / (15 * B) + 2) / (16 * Δ) := by
           apply div_le_div_of_nonneg_right _ (by positivity)
           apply mul_le_mul_of_nonneg_left _ (by positivity)
           linarith
-      _ = 26 / 9 * rowLen k s H * ((G : ℝ) / B) + 26 / 9 * (G : ℝ) / Δ := by
+      _ = 17 / 15 * rowLen k s H * ((G : ℝ) / B) + 17 / 8 * (G : ℝ) / Δ := by
           field_simp; ring
   calc ∑ x, (Nb s rs n H d x : ℝ)
-      ≤ ∑ x, (13 * (Atot rs H d x : ℝ) * (w + 1) / (9 * Δ) +
-          (if Atot rs H d x ≠ 0 then (lamN n : ℝ) else 0)) := sum_le_sum fun x _ => h1 x
-    _ ≤ _ := by rw [sum_add_distrib, h3]; linarith
+      ≤ ∑ x, (17 * (Atot rs H d x : ℝ) * (w + 1) / (16 * Δ) +
+          (if Atot rs H d x ≠ 0 then ((6 * lamN n : ℕ) : ℝ) else 0)) := sum_le_sum fun x _ => h1 x
+    _ ≤ _ := by rw [sum_add_distrib, h3]; push_cast at h2 ⊢; linarith
 
 theorem sum_half_le (hs : 1 ≤ s) (n : ℕ) (H : RowH k) :
     ∑ d ∈ range k, ∑ x, (Nb s rs n H d x : ℝ) ≤
-      26 / 9 * rowLen k s H * (1 + Real.log (k * Δ)) + 26 / 9 * k + k * k * lamN n := by
+      17 / 15 * rowLen k s H * (1 + Real.log (k * Δ)) + 17 / 8 * k + k * k * (6 * lamN n) := by
   have hsum := sum_le_sum fun d (_ : d ∈ range k) => sum_x_Nb_le s rs hs n H d
   refine hsum.trans ?_
   rw [sum_add_distrib, sum_add_distrib, ← mul_sum, sum_const, card_range, nsmul_eq_mul]
@@ -182,7 +185,7 @@ theorem sum_half_le (hs : 1 ≤ s) (n : ℕ) (H : RowH k) :
     refine this.trans ((harmonic_mono' (Btot_le rs H 0)).trans ?_)
     have := harmonic_le_one_add_log (k * Δ)
     push_cast at this; exact this
-  have hG : ∑ d ∈ range k, 26 / 9 * (Gtot rs H d : ℝ) / Δ ≤ 26 / 9 * k := by
+  have hG : ∑ d ∈ range k, 17 / 8 * (Gtot rs H d : ℝ) / Δ ≤ 17 / 8 * k := by
     rw [← sum_div, ← mul_sum]
     have : (∑ d ∈ range k, (Gtot rs H d : ℝ)) ≤ k * Δ := by
       have := Btot_le rs H 0
@@ -191,7 +194,7 @@ theorem sum_half_le (hs : 1 ≤ s) (n : ℕ) (H : RowH k) :
     · subst h; simp
     · have hΔR : (0 : ℝ) < Δ := by exact_mod_cast h
       rw [div_le_iff₀ hΔR]; nlinarith
-  have hlen : (0 : ℝ) ≤ 26 / 9 * rowLen k s H := by positivity
+  have hlen : (0 : ℝ) ≤ 17 / 15 * rowLen k s H := by positivity
   have := mul_le_mul_of_nonneg_left hharm hlen
   nlinarith
 
