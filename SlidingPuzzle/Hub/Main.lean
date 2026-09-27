@@ -23,9 +23,9 @@ namespace SlidingPuzzle.Hub
 
 /-- Round up `2·1.139524·((599/299) hubScaledKX/1000 + hubScaledKY/4000 + 1/1000)`, keeping
 the three error coefficients separate. -/
-def hubConstant : ℕ := 19319
+def hubConstant : ℕ := 17682
 
-theorem hubConstant_eq : hubConstant = 19319 := by
+theorem hubConstant_eq : hubConstant = 17682 := by
   rfl
 
 /-- Integer inequalities certify the ceiling without evaluating a large division. -/
@@ -34,7 +34,7 @@ theorem hubConstant_rounding :
       598000000000 * (hubConstant - 1) < 1139524 * (2396 * hubScaledKX + 299 * hubScaledKY + 1196) := by
   norm_num [hubConstant, hubScaledKX, hubScaledKY]
 
-/-- The optimized bound holds with `C = 19319` for every `n ≥ 4096`. -/
+/-- The optimized bound holds with `C = 17682` for every `n ≥ 4096`. -/
 theorem uniform_approximation_explicit {n : ℕ} [NeZero n]
     (hn : hubN ≤ n) (B : ReachableBoard n) :
     (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) + hubConstant * hubError n := by
@@ -42,13 +42,11 @@ theorem uniform_approximation_explicit {n : ℕ} [NeZero n]
   swap
   · obtain ⟨p,hp⟩ := Parberry.exists_solution_cubic B (by unfold hubN at hn; omega)
     have hopt := optimalLength_le_path_length B p
-    have hpoly : 5*n^3 + 1509*n^2 + 1505*n + 4796 ≤ 6*n^3 := by
-      have hh := Nat.mul_le_mul_left (n^2) hn
-      unfold hubN at hn hh
-      nlinarith
-    have hnat : optimalLength B ≤ 6*n^3 := hopt.trans (hp.trans hpoly)
-    have hreal : (optimalLength B : ℝ) ≤ 6*(n : ℝ)^3 := by exact_mod_cast hnat
-    have herr := six_cube_le_hubError hn (show n ≤ 2 ^ 39 by unfold hubLargeN at hlarge; omega)
+    have hnat : optimalLength B ≤ 5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796 := hopt.trans hp
+    have hreal : (optimalLength B : ℝ) ≤ ((5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796 : ℕ) : ℝ) := by
+      exact_mod_cast hnat
+    have herr := cubic_solver_le_hubError (by unfold hubN at hn; omega)
+      (show n ≤ 2 ^ 39 by unfold hubLargeN at hlarge; omega)
     have hM : (0 : ℝ) ≤ manhattan B.val := Nat.cast_nonneg _
     have hE := hubError_nonneg n
     norm_num [hubConstant, hubScaledKX, hubScaledKY] at *

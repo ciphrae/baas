@@ -25,18 +25,18 @@ namespace SlidingPuzzle.Hub
 open Finset
 
 /-- Integer upper rounding of the fractional in-flight estimate. -/
-def Rhub (n : ℕ) : ℕ := (28 * n * (Nat.log 2 n + 1) + 22 * n) / 5 + 1
+def Rhub (n : ℕ) : ℕ := (182 * n * (Nat.log 2 n + 1) + 145 * n) / 45 + 1
 
 theorem Rhub_lower (n : ℕ) :
-    28 * n * (Nat.log 2 n + 1) + 22 * n ≤ 5 * Rhub n := by
-  have := Nat.mod_add_div (28 * n * (Nat.log 2 n + 1) + 22 * n) 5
-  have := Nat.mod_lt (28 * n * (Nat.log 2 n + 1) + 22 * n) (by norm_num : 0 < 5)
+    182 * n * (Nat.log 2 n + 1) + 145 * n ≤ 45 * Rhub n := by
+  have := Nat.mod_add_div (182 * n * (Nat.log 2 n + 1) + 145 * n) 45
+  have := Nat.mod_lt (182 * n * (Nat.log 2 n + 1) + 145 * n) (by norm_num : 0 < 45)
   unfold Rhub
   omega
 
 theorem Rhub_upper (n : ℕ) :
-    5 * Rhub n ≤ 28 * n * (Nat.log 2 n + 1) + 22 * n + 5 := by
-  have := Nat.mod_add_div (28 * n * (Nat.log 2 n + 1) + 22 * n) 5
+    45 * Rhub n ≤ 182 * n * (Nat.log 2 n + 1) + 145 * n + 45 := by
+  have := Nat.mod_add_div (182 * n * (Nat.log 2 n + 1) + 145 * n) 45
   unfold Rhub
   omega
 
@@ -153,7 +153,7 @@ theorem exists_good_order {n k s : ℕ} (hd : HDims n k s)
   refine ⟨fun h x => ∑ side : Bool, ∑ d ∈ range k, Nb s rs n (h.1, h.2, side) d x, ?_, ?_⟩
   · intro h
     have hsum : ∑ x, ∑ side : Bool, ∑ d ∈ range k, (Nb s rs n (h.1, h.2, side) d x : ℝ) ≤
-        ∑ side : Bool, (4 * rowLen k s (h.1, h.2, side) * (1 + Real.log (k * Δ)) + 4 * k +
+        ∑ side : Bool, (26 / 9 * rowLen k s (h.1, h.2, side) * (1 + Real.log (k * Δ)) + 26 / 9 * k +
           k * k * lamN n) := by
       rw [sum_comm]
       apply sum_le_sum; intro side _
@@ -197,15 +197,16 @@ theorem exists_good_order {n k s : ℕ} (hd : HDims n k s)
         (Rhub n : ℝ) := by
       refine hsum.trans ?_
       rw [Fintype.sum_bool, hlamR]
-      have hR : 28 * (n : ℝ) * ℓ + 22 * n ≤ 5 * (Rhub n : ℝ) := by
+      have hR : 182 * (n : ℝ) * ℓ + 145 * n ≤ 45 * (Rhub n : ℝ) := by
         have h := Rhub_lower n
         rw [← hℓdef]
         exact_mod_cast h
       have hl0 : (0 : ℝ) ≤ rowLen k s (h.1, h.2, true) := Nat.cast_nonneg _
       have hl1 : (0 : ℝ) ≤ rowLen k s (h.1, h.2, false) := Nat.cast_nonneg _
       have hlg : 1 + Real.log (k * Δ) ≤ 1 + (7 / 5 : ℝ) * ℓ := by linarith
-      have hA : (4 * (rowLen k s (h.1, h.2, true) : ℝ)) * (1 + Real.log (k * Δ)) +
-          4 * (rowLen k s (h.1, h.2, false) : ℝ) * (1 + Real.log (k * Δ)) ≤ 4 * n * (1 + (7 / 5 : ℝ) * ℓ) := by
+      have hA : (26 / 9 * (rowLen k s (h.1, h.2, true) : ℝ)) * (1 + Real.log (k * Δ)) +
+          26 / 9 * (rowLen k s (h.1, h.2, false) : ℝ) * (1 + Real.log (k * Δ)) ≤
+            26 / 9 * n * (1 + (7 / 5 : ℝ) * ℓ) := by
         have hlpos : 0 ≤ 1 + Real.log (k * Δ) := by
           rcases Nat.eq_zero_or_pos (k * Δ) with h0 | hpos
           · have : (k : ℝ) * Δ = 0 := by exact_mod_cast h0

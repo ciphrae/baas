@@ -139,28 +139,32 @@ theorem card_badB (n : ℕ) (H : RowH k) (d : ℕ) (x : Sq k) (τ0 : Fin Δ) :
     rw [this]; simp
   have hΔ : 0 < Δ := Nat.lt_of_le_of_lt (Nat.zero_le _) τ0.isLt
   have hΔR : (0 : ℝ) < Δ := by exact_mod_cast hΔ
-  have hNb : Nb s rs n H d x = 2 * A * (w + 1) / Δ + lamN n := by
+  have hNb : Nb s rs n H d x = 13 * A * (w + 1) / (9 * Δ) + lamN n := by
     rw [Nb, if_neg hA0]
   set a : Fin Δ → ℕ := fun j => acnt rs H d x j with ha
   have ha1 : ∀ j, a j ≤ 1 := fun j => count_roundIns_le_one (rs j) (H, d, x)
   have hcard : Fintype.card (Fin Δ) = Δ := Fintype.card_fin Δ
-  have hch := card_upper_tail (winB Δ τ0.val w) a ha1 (lamN n) (by rw [hcard]; exact hΔ)
+  have hc : (1 : ℝ) ≤ 13 / 9 * Real.log 2 := by linarith [Real.log_two_gt_d9]
+  have hch := card_upper_tail (winB Δ τ0.val w) a ha1 (lamN n) hc (by rw [hcard]; exact hΔ)
   rw [hcard] at hch
   have hsumA : ∑ i, (a i : ℝ) = A := by simp only [ha, hA, Atot]; push_cast; rfl
   rw [hsumA] at hch
   have hT : ((winB Δ τ0.val w).card : ℝ) ≤ w + 1 := by exact_mod_cast card_winB_le τ0.val w
   have hsub : badB s rs n H d x τ0 ⊆ univ.filter fun σ : Equiv.Perm (Fin Δ) =>
-      2 * ((winB Δ τ0.val w).card * (A : ℝ) / Δ) + lamN n ≤
+      13 / 9 * ((winB Δ τ0.val w).card * (A : ℝ) / Δ) + lamN n ≤
         ((∑ τ ∈ winB Δ τ0.val w, a (σ τ) : ℕ) : ℝ) := by
     intro σ hσ
     simp only [badB, mem_filter, mem_univ, true_and] at hσ ⊢
     rw [hNb] at hσ
-    have h1 : ((2 * A * (w + 1) / Δ : ℕ) : ℝ) + lamN n + 1 ≤
+    have h1 : ((13 * A * (w + 1) / (9 * Δ) : ℕ) : ℝ) + lamN n + 1 ≤
         ((∑ τ ∈ winB Δ τ0.val w, a (σ τ) : ℕ) : ℝ) := by exact_mod_cast hσ
-    have h2 := nat_div_add_one_gt (2 * A * (w + 1)) Δ hΔ
-    have h3 : 2 * ((winB Δ τ0.val w).card * (A : ℝ) / Δ) ≤ ((2 * A * (w + 1) : ℕ) : ℝ) / Δ := by
-      rw [mul_div_assoc', div_le_div_iff_of_pos_right hΔR]
+    have h2 := nat_div_add_one_gt (13 * A * (w + 1)) (9 * Δ) (by omega)
+    have h3 : 13 / 9 * ((winB Δ τ0.val w).card * (A : ℝ) / Δ) ≤
+        ((13 * A * (w + 1) : ℕ) : ℝ) / ((9 * Δ : ℕ) : ℝ) := by
       push_cast
+      rw [show (13 : ℝ) / 9 * ((winB Δ τ0.val w).card * (A : ℝ) / Δ) =
+        13 * ((winB Δ τ0.val w).card * (A : ℝ)) / (9 * Δ) by field_simp]
+      rw [div_le_div_iff_of_pos_right (by positivity)]
       have : (0 : ℝ) ≤ A := Nat.cast_nonneg _
       nlinarith
     linarith

@@ -177,7 +177,7 @@ def lamN (n : ℕ) : ℕ := 4 * (Nat.log 2 n + 1)
 
 /-- The bound on present `(H, d, x)` tiles. -/
 noncomputable def Nb (n : ℕ) (H : RowH k) (d : ℕ) (x : Sq k) : ℕ :=
-  if Atot rs H d x = 0 then 0 else 2 * Atot rs H d x * (win s rs H d + 1) / Δ + lamN n
+  if Atot rs H d x = 0 then 0 else 13 * Atot rs H d x * (win s rs H d + 1) / (9 * Δ) + lamN n
 
 /-- The row insertions at time `τ` of the order `σ` (none after the end). -/
 noncomputable def rnd (σ : Equiv.Perm (Fin Δ)) (τ : ℕ) : List (RowH k × ℕ × Sq k) :=

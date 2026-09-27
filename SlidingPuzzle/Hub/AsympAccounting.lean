@@ -11,7 +11,7 @@ namespace SlidingPuzzle.Hub
 
 /-- Numerators of the large-grid coefficients, with denominator `1000`. -/
 def hubScaledKX : ℕ := 2886937
-def hubScaledKY : ℕ := 10772414
+def hubScaledKY : ℕ := 7898644
 
 set_option maxHeartbeats 800000 in
 /-- Combined transport, cleanup, and Finish accounting using the actual capacity. -/
@@ -39,15 +39,15 @@ theorem hubBound_le_scaled {k s : ℕ} (hk : 1196 ≤ k)
   -- Local relocation overhead: 2304/k ≤ 1.927.
   have hx0 : 2304000 ≤ 1927 * k := by omega
   have hx := Nat.mul_le_mul_right (k * s ^ 3) hx0
-  -- Bypass leading overhead: 1612.8/k ≤ 1.349.
-  have hy0 : 1612800 ≤ 1349 * k := by omega
+  -- Bypass leading overhead: 1164.8/k ≤ 0.974.
+  have hy0 : 1164800 ≤ 974 * k := by omega
   have hy := Nat.mul_le_mul_right (k ^ 3 * s ^ 2 * L) hy0
   -- All unlogged quadratic corridor terms are added before division by L.
   have hq := Nat.mul_le_mul_left (k ^ 4 * s ^ 2) hL
-  have hq0 : 1267200 ≤ 1060 * k := by omega
+  have hq0 : 928000 ≤ 776 * k := by omega
   have hq1 := Nat.mul_le_mul_right (k ^ 3 * s ^ 2) hq0
-  have hq' : 24328800 * (k ^ 4 * s ^ 2) + 1267200 * (k ^ 3 * s ^ 2) ≤
-      623843 * (k ^ 4 * s ^ 2 * L) := by
+  have hq' : 22194667 * (k ^ 4 * s ^ 2) + 928000 * (k ^ 3 * s ^ 2) ≤
+      569114 * (k ^ 4 * s ^ 2 * L) := by
     nlinarith only [hq, hq1, Nat.zero_le (k ^ 4 * s ^ 2)]
   -- Capacity controls both the bypass and cleanup k^4 remainders together.
   have hc0 : 1000 * (796 * k + 288) ≤ 798525 * k := by omega

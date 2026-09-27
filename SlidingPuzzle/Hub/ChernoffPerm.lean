@@ -164,11 +164,11 @@ theorem card_lower_tail (T : Finset α) (g : α → ℝ) {K : ℝ} (hK : 0 < K)
   exact le_of_mul_le_mul_right hfin hpos
 
 /-- Upper tail (terms in `{0,1}`): few permutations make the window sum at least
-`2μ + λ`, `μ = |T| · Σ a / n`. -/
+`cμ + λ`, `μ = |T| · Σ a / n`, whenever `c ln 2 ≥ 1`. -/
 theorem card_upper_tail (T : Finset α) (a : α → ℕ) (ha : ∀ i, a i ≤ 1) (lam : ℕ)
-    (hn : 0 < Fintype.card α) :
+    {c : ℝ} (hc : 1 ≤ c * Real.log 2) (hn : 0 < Fintype.card α) :
     ((univ.filter fun σ : Equiv.Perm α =>
-        2 * (T.card * (∑ i, (a i : ℝ)) / Fintype.card α) + lam ≤
+        c * (T.card * (∑ i, (a i : ℝ)) / Fintype.card α) + lam ≤
           ((∑ τ ∈ T, a (σ τ) : ℕ) : ℝ)).card : ℝ) * 2 ^ lam ≤
       (Fintype.card α).factorial := by
   set n := Fintype.card α
@@ -196,11 +196,12 @@ theorem card_upper_tail (T : Finset α) (a : α → ℕ) (ha : ∀ i, a i ≤ 1)
     intro m; rw [Real.exp_nat_mul, Real.exp_log two_pos]
   have hmark := card_filter_mul_le_sum (fun σ : Equiv.Perm α => ∏ τ ∈ T, y (σ τ))
     (fun σ => prod_nonneg fun τ _ => hy0 _) (Real.exp μ * 2 ^ lam)
-    (fun σ => 2 * μ + lam ≤ ((∑ τ ∈ T, a (σ τ) : ℕ) : ℝ)) (by
+    (fun σ => c * μ + lam ≤ ((∑ τ ∈ T, a (σ τ) : ℕ) : ℝ)) (by
       intro σ hσ
       rw [prod_congr rfl (fun τ _ => hy2 (σ τ)), prod_pow_eq_pow_sum, h2pow, h2pow,
         ← Real.exp_add, Real.exp_le_exp]
-      nlinarith)
+      have hl2 : 0 < Real.log 2 := by linarith
+      nlinarith [mul_le_mul_of_nonneg_right hc hμ0, mul_le_mul_of_nonneg_right hσ hl2.le])
   have hfin := hmark.trans (hmom.trans (mul_le_mul_of_nonneg_left hexp (Nat.cast_nonneg _)))
   rw [mul_comm (Real.exp μ), ← mul_assoc] at hfin
   exact le_of_mul_le_mul_right hfin (Real.exp_pos μ)
