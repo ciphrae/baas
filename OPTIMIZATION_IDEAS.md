@@ -11,6 +11,11 @@ The certified boardwise coefficient is **894** for `n ≥ 4096`
 and the cubic solver covers `4096 ≤ n ≤ 3·2^25` within the same coefficient.
 The exponent and the lower threshold `4096` are unchanged.
 
+For more speculative structural changes, see
+[BREAKTHROUGH_IDEAS.md](research/exponent/BREAKTHROUGH_IDEAS.md). The leading
+proposal tracks tiles through successive distance bands; its rate sum
+telescopes and may remove the logarithmic factor from the current algorithm.
+
 ## Implemented in the latest pass (19,319 → 894)
 
 | Step | Constant |
