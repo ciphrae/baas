@@ -209,7 +209,7 @@ theorem gHop1_linv {G : GS k} (hL : LInv s σ0 F0 G) (τ : ℕ) {S h y : Sq k}
 theorem gHop1_cost {G : GS k} (hL : LInv s σ0 F0 G) (τ : ℕ) {S h y : Sq k}
     (h2 : S.2 ≠ h.2) (hy : y.2 = h.2) (hs : k + 1 ≤ s) :
     IState.totalCost s σ0 (gHop1 s τ G S h y).evs + pot s (gHop1 s τ G S h y).σ =
-      IState.totalCost s σ0 G.evs + pot s G.σ + (14 * s + 14 * (k + 1)) := by
+      IState.totalCost s σ0 G.evs + pot s G.σ + (13 * s + 506 * k + 1024) := by
   show IState.totalCost s σ0 (G.evs ++ [.hop1 S h y]) + pot s (G.σ.step s (.hop1 S h y)) = _
   rw [cost_append hL]
   have := pot_hop1 s G.σ h2 hy hs
@@ -276,7 +276,7 @@ theorem gHop2_linv {G : GS k} (hL : LInv s σ0 F0 G) {st : Bool} {h D : Sq k}
 theorem gHop2_cost {G : GS k} (hL : LInv s σ0 F0 G) {st : Bool} {h D : Sq k}
     (h2 : h.1 ≠ D.1) (hs : k + 1 ≤ s) :
     IState.totalCost s σ0 (gHop2 s G st h D D).evs + pot s (gHop2 s G st h D D).σ =
-      IState.totalCost s σ0 G.evs + pot s G.σ + (13 * s + 7 * k ^ 2 + 35 * k + 42) := by
+      IState.totalCost s σ0 G.evs + pot s G.σ + (12 * s + 7 * k ^ 2 + 527 * k + 1052) := by
   show IState.totalCost s σ0 (G.evs ++ [.hop2 h D D]) + pot s (G.σ.step s (.hop2 h D D)) = _
   rw [cost_append hL]
   have := pot_hop2 s G.σ h2 hs

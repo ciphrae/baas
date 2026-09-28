@@ -365,7 +365,7 @@ theorem hServe_cost {G : GS k} (hL : LInv s σ0 F0 G) {N : Sq k → Sq k → ℕ
     {S D : Sq k} (ok : ServeOK s N G S D) :
     IState.totalCost s σ0 (hServe s τ G S D).evs + pot s (hServe s τ G S D).σ +
         (s + 3) * (21 * k + 9) * (∑ h, ∑ x, G.byp h x) ≤
-      IState.totalCost s σ0 G.evs + pot s G.σ + 2 * (14 * s + 7 * k ^ 2 + 35 * k + 42) +
+      IState.totalCost s σ0 G.evs + pot s G.σ + (25 * s + 7 * k ^ 2 + 1033 * k + 2076) +
         (s + 3) * (21 * k + 9) * (∑ h, ∑ x, (hServe s τ G S D).byp h x) := by
   have hbs := hServe_bypSum s τ G S D
   by_cases c1 : S.2 = D.2

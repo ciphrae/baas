@@ -29,7 +29,7 @@ open Finset
 
 /-- Transport budget retaining the actual grid dimensions and logarithm. -/
 def transportBound (n k s : ℕ) : ℕ :=
-  2 * k ^ 2 * n ^ 2 + 2 * (14 * s + 7 * k ^ 2 + 35 * k + 42) * n ^ 2 +
+  2 * k ^ 2 * n ^ 2 + (25 * s + 7 * k ^ 2 + 1033 * k + 2076) * n ^ 2 +
     (s + 3) * (21 * k + 9) * (k ^ 2 * (Rhub n + k ^ 2)) +
     (s + 3) * (s ^ 2 * (28 * k ^ 2 + 55 * k + 18) + (42 * k + 18) * (k ^ 2 * (2 * n + 1)))
 
@@ -234,7 +234,7 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
   refine ⟨Gf.evs, hOf.lin.valid, ?_, ?_⟩
   · -- cost
     have hcost : IState.totalCost s σ0 Gf.evs + pot s Gf.σ ≤ pot s σ0 +
-        2 * hopC k s * (∑ Z, Gf.served Z) + (s + 3) * (21 * k + 9) * (∑ h, ∑ x, Gf.byp h x) +
+        hopC k s * (∑ Z, Gf.served Z) + (s + 3) * (21 * k + 9) * (∑ h, ∑ x, Gf.byp h x) +
         (s + 3) * Gf.wt := hOf.hin.cost
     have hss : (∑ Z, Gf.served Z) + (∑ S, ∑ D, Gf.sched S D) = ∑ S, ∑ D, sched0 S D :=
       hOf.hin.sched_sum
@@ -277,7 +277,7 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
       nlinarith
     have hpot : pot s σ0 ≤ 2 * k ^ 2 * (k * s) * (k * s) :=
       (pot_le s σ0).trans (Nat.mul_le_mul_right _ (junkCnt_le s σ0))
-    have ht1 := Nat.mul_le_mul_left (2 * (14 * s + 7 * k ^ 2 + 35 * k + 42)) hserved
+    have ht1 := Nat.mul_le_mul_left (25 * s + 7 * k ^ 2 + 1033 * k + 2076) hserved
     have ht2 := Nat.mul_le_mul_left ((s + 3) * (21 * k + 9)) hbyp
     have ht3 := Nat.mul_le_mul_left (s + 3) hwt
     unfold transportBound hopC at *

@@ -7,7 +7,7 @@ into the reservoir of `Q` (cell `w`), and a three-cycle in the box of `Q`
 brings a tile of class `y` from the region of `Q` to `v`. Only `v` and cells of
 the region of `Q` change, and only the inserted tile changes its key. The
 three-cycle is staged from a corner of the box near `v`, `w` and the spare
-reservoir cell (`exists_box_three_cycle_near`), so it costs `11 s`. -/
+reservoir cell (`exists_box_three_cycle_near`), so it costs `10 s + O(k)`. -/
 namespace SlidingPuzzle.Hub
 open Classical
 
@@ -24,7 +24,7 @@ theorem insert_by_cycle (hd : HDims n k s) (B : Board n) {Q y : Sq k} {v w : Cel
     ∃ C : Board n, ∃ p : Path B C, ∃ T : Tile n, T.val ≠ 0 ∧ classOf hd T = y ∧
       keyOf hd (position B T) = some Q ∧ C v = T ∧ blank C = w ∧
       (∀ x, x ≠ v → keyOf hd x ≠ some Q → C x = B x) ∧ KeepKey hd B C {T} ∧
-      p.inefficientMoves ≤ cj + 11 * s := by
+      p.inefficientMoves ≤ cj + 10 * s + 492 * k + 1010 := by
   obtain ⟨t, htQ, htT, htc⟩ := exists_of_regionCount hd B hT
   obtain ⟨p1, hp1⟩ := hjump
   have hkw : keyOf hd w = some Q := keyOf_reservoir hd hw
@@ -103,7 +103,6 @@ theorem insert_by_cycle (hd : HDims n k s) (B : Board n) {Q y : Sq k} {v w : Cel
     · rw [Path.inefficientMoves_append]
       rw [hbl4] at hp2
       have h1 : cornerDist (Q.1.val * s) (Q.2.val * s) s fr fc w v u ≤ 6 * k + 7 := hD j hj
-      have := hd.big
       omega
 
 end SlidingPuzzle.Hub

@@ -92,7 +92,7 @@ end reloc
 /-! ## The high-level invariant -/
 
 /-- Budget constant of a hop. -/
-def hopC (k s : ℕ) : ℕ := 14 * s + 7 * k ^ 2 + 35 * k + 42
+def hopC (k s : ℕ) : ℕ := 25 * s + 7 * k ^ 2 + 1033 * k + 2076
 
 /-- Invariants holding between high-level events. -/
 structure HInv (s : ℕ) (σ0 : IState k) (free0 : Sq k → ℕ) (N : Sq k → Sq k → ℕ) (S0 : ℕ)
@@ -102,7 +102,7 @@ structure HInv (s : ℕ) (σ0 : IState k) (free0 : Sq k → ℕ) (N : Sq k → S
   free_lo : ∀ Z, free0 Z + G.sent Z + (if σ0.blank = Z then 1 else 0) ≤
     (∑ y, G.free Z y) + (∑ x, G.byp Z x) + G.served Z + (if G.σ.blank = Z then 1 else 0)
   cost : IState.totalCost s σ0 G.evs + pot s G.σ ≤ pot s σ0 +
-    2 * hopC k s * (∑ Z, G.served Z) + (s + 3) * (21 * k + 9) * (∑ h, ∑ x, G.byp h x) +
+    hopC k s * (∑ Z, G.served Z) + (s + 3) * (21 * k + 9) * (∑ h, ∑ x, G.byp h x) +
     (s + 3) * G.wt
   sched_sum : (∑ Z, G.served Z) + (∑ S, ∑ D, G.sched S D) = S0
 
@@ -137,7 +137,7 @@ theorem hstep_serve {G : GS k} (hL : LInv s σ0 F0 G) (hH : HInv s σ0 free0 N S
   · have h1 := hH.cost
     have h2 := hServe_cost hL τ ok
     show IState.totalCost s σ0 (hServe s τ G S D).evs + pot s (hServe s τ G S D).σ ≤
-      pot s σ0 + 2 * hopC k s * (∑ Z, bump G.served D Z) +
+      pot s σ0 + hopC k s * (∑ Z, bump G.served D Z) +
       (s + 3) * (21 * k + 9) * (∑ h, ∑ x, (hServe s τ G S D).byp h x) +
       (s + 3) * (hServe s τ G S D).wt
     rw [sum_bump, r3]
@@ -186,7 +186,7 @@ theorem hstep_reloc {G : GS k} (hL : LInv s σ0 F0 G) (hH : HInv s σ0 free0 N S
   · have h1 := hH.cost
     have h2 := hReloc_cost hL (Z := Z) hb hfree
     show IState.totalCost s σ0 (hReloc s G E Z).evs + pot s (hReloc s G E Z).σ ≤
-      pot s σ0 + 2 * hopC k s * (∑ Q, (hReloc s G E Z).served Q) +
+      pot s σ0 + hopC k s * (∑ Q, (hReloc s G E Z).served Q) +
       (s + 3) * (21 * k + 9) * (∑ h, ∑ x, (hReloc s G E Z).byp h x) +
       (s + 3) * (G.wt + (if E.1 = Z.1 ∨ E.2 = Z.2 then 13 + 21 * sqDist E Z else 26 + 21 * sqDist E Z))
     rw [r6, r4]

@@ -84,8 +84,8 @@ def junkCol (σ : IState k) (V : ColH k) (p : ℕ) : ℕ :=
 
 /-- Inefficient-move budget of each operation. -/
 def cost (s : ℕ) (σ : IState k) : REvent k → ℕ
-  | .hop1 S h _ => 14 * s + 14 * (k + 1) + σ.junkRow (hop1Half S h) (hop1Pos s S h)
-  | .hop2 h D _ => 13 * s + 7 * k ^ 2 + 35 * k + 42 + σ.junkCol (hop2Half h D) (hop2Pos s h D)
+  | .hop1 S h _ => 13 * s + 506 * k + 1024 + σ.junkRow (hop1Half S h) (hop1Pos s S h)
+  | .hop2 h D _ => 12 * s + 7 * k ^ 2 + 527 * k + 1052 + σ.junkCol (hop2Half h D) (hop2Pos s h D)
   | .jump E Z _ => (s + 3) * (13 + 21 * sqDist E Z)
 
 /-- The state after a list of operations. -/
