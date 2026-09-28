@@ -26,12 +26,15 @@ namespace SlidingPuzzle.Hub
 abbrev Sq (k : ℕ) := Fin k × Fin k
 
 /-- Dimensions of the hub layout: `k × k` squares of side `s`, `n = k*s`. `k` is
-even so that a column corridor crosses a row group (`k` rows) by an odd jump. -/
+even so that a column corridor crosses a row group (`k` rows) by an odd jump.
+The side is large against `k` (`big`), so that the corner terms of local
+three-cycles stay below one unit of `s`. -/
 structure HDims (n k s : ℕ) : Prop where
   two_le : 2 ≤ k
   even : Even k
   room : 4 * k + 4 ≤ s
   mul : k * s = n
+  big : 600 * k + 2000 ≤ s
 
 /-- Distance between squares in the `k × k` grid. -/
 def sqDist {k : ℕ} (P Q : Sq k) : ℕ := Nat.dist P.1.val Q.1.val + Nat.dist P.2.val Q.2.val

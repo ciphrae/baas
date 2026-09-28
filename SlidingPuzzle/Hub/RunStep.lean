@@ -69,7 +69,7 @@ theorem hReloc_free (G : GS k) (E Z Q : Sq k) :
 theorem hReloc_cost {G : GS k} (hL : LInv s σ0 F0 G) {E Z : Sq k} (hb : G.σ.blank = E)
     (hfree : ∀ Q, 1 ≤ ∑ y, G.free Q y) :
     IState.totalCost s σ0 (hReloc s G E Z).evs + pot s (hReloc s G E Z).σ ≤
-      IState.totalCost s σ0 G.evs + pot s G.σ + (s + 3) * (if E.1 = Z.1 ∨ E.2 = Z.2 then 30 + 21 * sqDist E Z else 60 + 21 * sqDist E Z) := by
+      IState.totalCost s σ0 G.evs + pot s G.σ + (s + 3) * (if E.1 = Z.1 ∨ E.2 = Z.2 then 13 + 21 * sqDist E Z else 26 + 21 * sqDist E Z) := by
   by_cases c : E.1 = Z.1 ∨ E.2 = Z.2
   · rw [if_pos c, hReloc_of_al c]
     have := gJump_cost hL (E := E) (Z := Z) (y := pickFree G Z)
@@ -82,8 +82,8 @@ theorem hReloc_cost {G : GS k} (hL : LInv s σ0 F0 G) {E Z : Sq k} (hb : G.σ.bl
       (y := pickFree (gJump s G E (Z.1, E.2) (pickFree G (Z.1, E.2))) Z)
     have hd : sqDist E (Z.1, E.2) + sqDist (Z.1, E.2) Z = sqDist E Z := by
       unfold sqDist; simp only [Nat.dist_self]; ring
-    have : (s + 3) * (30 + 21 * sqDist E (Z.1, E.2)) + (s + 3) * (30 + 21 * sqDist (Z.1, E.2) Z) ≤
-        (s + 3) * (60 + 21 * sqDist E Z) := by
+    have : (s + 3) * (13 + 21 * sqDist E (Z.1, E.2)) + (s + 3) * (13 + 21 * sqDist (Z.1, E.2) Z) ≤
+        (s + 3) * (26 + 21 * sqDist E Z) := by
       rw [← hd]; nlinarith
     omega
 
@@ -92,7 +92,7 @@ end reloc
 /-! ## The high-level invariant -/
 
 /-- Budget constant of a hop. -/
-def hopC (k s : ℕ) : ℕ := 31 * s + 7 * k ^ 2 + 35 * k + 42
+def hopC (k s : ℕ) : ℕ := 14 * s + 7 * k ^ 2 + 35 * k + 42
 
 /-- Invariants holding between high-level events. -/
 structure HInv (s : ℕ) (σ0 : IState k) (free0 : Sq k → ℕ) (N : Sq k → Sq k → ℕ) (S0 : ℕ)
@@ -188,7 +188,7 @@ theorem hstep_reloc {G : GS k} (hL : LInv s σ0 F0 G) (hH : HInv s σ0 free0 N S
     show IState.totalCost s σ0 (hReloc s G E Z).evs + pot s (hReloc s G E Z).σ ≤
       pot s σ0 + 2 * hopC k s * (∑ Q, (hReloc s G E Z).served Q) +
       (s + 3) * (21 * k + 9) * (∑ h, ∑ x, (hReloc s G E Z).byp h x) +
-      (s + 3) * (G.wt + (if E.1 = Z.1 ∨ E.2 = Z.2 then 30 + 21 * sqDist E Z else 60 + 21 * sqDist E Z))
+      (s + 3) * (G.wt + (if E.1 = Z.1 ∨ E.2 = Z.2 then 13 + 21 * sqDist E Z else 26 + 21 * sqDist E Z))
     rw [r6, r4]
     nlinarith
   · show (∑ Q, (hReloc s G E Z).served Q) + (∑ S', ∑ D', (hReloc s G E Z).sched S' D') = S0

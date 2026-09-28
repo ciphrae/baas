@@ -17,7 +17,7 @@ namespace SlidingPuzzle.Hub
 open SlidingPuzzle
 
 /-- The smallest side covered by the explicit bounds. -/
-def hubN : ℕ := 10 ^ 9
+def hubN : ℕ := 11 * 10 ^ 8
 
 /-- Prefix plus hub on the residual board. -/
 theorem optimalLength_le_hub_residual {n k : ℕ} [NeZero n] (B : ReachableBoard n)

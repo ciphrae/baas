@@ -29,9 +29,9 @@ open Finset
 
 /-- Transport budget retaining the actual grid dimensions and logarithm. -/
 def transportBound (n k s : ℕ) : ℕ :=
-  2 * k ^ 2 * n ^ 2 + 2 * (31 * s + 7 * k ^ 2 + 35 * k + 42) * n ^ 2 +
+  2 * k ^ 2 * n ^ 2 + 2 * (14 * s + 7 * k ^ 2 + 35 * k + 42) * n ^ 2 +
     (s + 3) * (21 * k + 9) * (k ^ 2 * (Rhub n + k ^ 2)) +
-    (s + 3) * (s ^ 2 * (36 * k ^ 2 + 72 * k + 18) + (42 * k + 18) * (k ^ 2 * (2 * n + 1)))
+    (s + 3) * (s ^ 2 * (28 * k ^ 2 + 55 * k + 18) + (42 * k + 18) * (k ^ 2 * (2 * n + 1)))
 
 /-- Region tiles left outside their squares, before absorbing lower-order terms. -/
 def misplacedBound (n k : ℕ) : ℕ :=
@@ -256,7 +256,7 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
       refine (sum_le_sum fun h _ => this h).trans ?_
       simp only [sum_const, card_univ, Fintype.card_prod, Fintype.card_fin, smul_eq_mul]
       unfold Rhub; ring_nf; exact le_refl _
-    have hwt : Gf.wt ≤ s ^ 2 * (36 * k ^ 2 + 72 * k + 18) +
+    have hwt : Gf.wt ≤ s ^ 2 * (28 * k ^ 2 + 55 * k + 18) +
         (42 * k + 18) * (k ^ 2 * (2 * k * s + 1)) := by
       refine hOf.wt.trans ?_
       have hdc : ∀ r : Round k, (univ.filter fun S => r.isDummy S).card = ∑ S, dummyAt r S := by
@@ -266,7 +266,7 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
       have h1 : ∑ S : Sq k, ∑ τ ∈ range (Δ0 - Q'), dummyAt (rd τ) S ≤
           ∑ _S : Sq k, (sqCorridor k s + 1) := sum_le_sum fun S _ => hdum_plan S
       simp only [sum_const, card_univ, Fintype.card_prod, Fintype.card_fin, smul_eq_mul] at h1
-      have h2 : (Δ0 - Q') * (36 * k ^ 2 + 72 * k + 18) ≤ s ^ 2 * (36 * k ^ 2 + 72 * k + 18) :=
+      have h2 : (Δ0 - Q') * (28 * k ^ 2 + 55 * k + 18) ≤ s ^ 2 * (28 * k ^ 2 + 55 * k + 18) :=
         Nat.mul_le_mul_right _ (by omega)
       have h3 : (42 * k + 18) * (k * k * (sqCorridor k s + 1)) ≤
           (42 * k + 18) * (k ^ 2 * (2 * k * s + 1)) := by
@@ -277,7 +277,7 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
       nlinarith
     have hpot : pot s σ0 ≤ 2 * k ^ 2 * (k * s) * (k * s) :=
       (pot_le s σ0).trans (Nat.mul_le_mul_right _ (junkCnt_le s σ0))
-    have ht1 := Nat.mul_le_mul_left (2 * (31 * s + 7 * k ^ 2 + 35 * k + 42)) hserved
+    have ht1 := Nat.mul_le_mul_left (2 * (14 * s + 7 * k ^ 2 + 35 * k + 42)) hserved
     have ht2 := Nat.mul_le_mul_left ((s + 3) * (21 * k + 9)) hbyp
     have ht3 := Nat.mul_le_mul_left (s + 3) hwt
     unfold transportBound hopC at *

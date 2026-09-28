@@ -180,6 +180,31 @@ theorem hop1_phase1 (hd : HDims n k s) (B : Board n) {S h : Sq k}
         rw [moveCost_lineCell (n := n) hd H (s - 1 + q) (by omega) (by omega) _ hjunk]
     omega
 
+/-- The corner of `S`'s box used by the insertion of a hop1: top right for right
+halves, top left for left halves. -/
+theorem hop1_cornerDist (hd : HDims n k s) {S h : Sq k} {v w : Cell n} (right : Bool)
+    (hS1 : S.1.val * s = h.1.val * s) (vf : v.1.val = h.1.val * s + h.2.val)
+    (vs : v.2.val = if right then S.2.val * s + s - 1 else S.2.val * s + k)
+    (wf : w.1.val = S.1.val * s + k) (hw3 : Nat.dist v.2.val w.2.val ≤ 1)
+    (hw1 : S.2.val * s + k ≤ w.2.val) (hw2 : w.2.val < S.2.val * s + s) :
+    ∀ j, j ≤ 2 → cornerDist (S.1.val * s) (S.2.val * s) s false right w v
+      (mkCell n (S.1.val * s + (k + 2)) (S.2.val * s + (if right then s - 3 else k) + j)) ≤
+        6 * k + 7 := by
+  intro j hj
+  have hroom := hd.room
+  have hb1 := hd.band_le S.1.isLt
+  have hb2 := hd.band_le S.2.isLt
+  have hh2 := h.2.isLt
+  cases right
+  all_goals
+    simp only [Bool.false_eq_true, if_false, if_true] at vs ⊢
+    unfold cornerDist reflC
+    simp only [Bool.false_eq_true, if_false, if_true]
+    rw [mkCell_fst (by omega), mkCell_snd (by omega), wf, vf, hS1]
+    rw [vs] at hw3
+    simp only [Nat.dist] at hw3 ⊢
+    omega
+
 /-- hop1 realized on the board. -/
 theorem simulate_hop1 (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel hd B σ)
     {S h y : Sq k} (hpre : σ.Pre (.hop1 S h y)) :
@@ -229,9 +254,15 @@ theorem simulate_hop1 (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
     rw [regionCount_congr hd hreg3, hRcnt]; exact hcnt
   obtain ⟨p4, hp4⟩ := exists_vjump_step hd.two_le_n B3 w
     (by rw [hb3, vs, ws]; exact hwc3) (by rw [hb3]; omega)
+  -- the three-cycle is staged from the top corner of `S`'s box on the side of `v`
+  have hwc3' : Nat.dist v.2.val w.2.val ≤ 1 := by rw [vs, ws]; exact hwc3
+  have hD := hop1_cornerDist hd (h := h) H.2.2 hS1' vf (vs.trans hvcol) wf hwc3'
+    (by rw [ws]; exact hwc1) (by rw [ws]; exact hwc2)
   obtain ⟨C, p5, T, hT0, hTc, hTk, hCv, hCbl, hCx, K2, hi5⟩ :=
-    insert_by_cycle hd B3 (Q := S) (y := y) hb3 hkv hw (by rw [wf]; omega) hvbox hT3
+    insert_by_cycle hd B3 (Q := S) (y := y) hb3 hkv hw hvbox hT3
       (7 * (k + 1)) ⟨p4, hp4.trans (by rw [hb3]; simp only [Nat.dist]; omega)⟩
+      false H.2.2 (ro := k + 2) (co := if H.2.2 then s - 3 else k) (by omega) (by omega)
+      (by split_ifs <;> omega) (by split_ifs <;> omega) hD
   -- facts about C
   have hCc : ∀ x, keyOf hd x = none → x ≠ v → C x = B3 x := fun x hx hxv =>
     hCx x hxv (by rw [hx]; simp)
@@ -314,7 +345,7 @@ theorem simulate_hop1 (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
       rw [(hRrow H q (by omega)).2]
       exact Iff.rfl
     rw [hj] at hi3
-    change _ ≤ 31 * s + 14 * (k + 1) + ((Finset.range (p + 1)).filter fun q => (σ.row H q).2 ≠ H.2.1).card
+    change _ ≤ 14 * s + 14 * (k + 1) + ((Finset.range (p + 1)).filter fun q => (σ.row H q).2 ≠ H.2.1).card
     omega
 
 end SlidingPuzzle.Hub

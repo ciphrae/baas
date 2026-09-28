@@ -21,7 +21,7 @@ def dummyAt (r : Round k) (Z : Sq k) : ℕ := if r.isDummy Z then 1 else 0
 
 /-- Budget of relocation weight of a round. -/
 def roundW (r : Round k) : ℕ :=
-  36 * k ^ 2 + 72 * k + 18 + (42 * k + 18) * (Finset.univ.filter fun S => r.isDummy S).card
+  28 * k ^ 2 + 55 * k + 18 + (42 * k + 18) * (Finset.univ.filter fun S => r.isDummy S).card
 
 /-- The events of a round. -/
 noncomputable def roundEvs (r : Round k) (cur : Sq k) : List (HEvent k) :=

@@ -7,7 +7,7 @@ The in-flight budget is linear in `n` (`Rhub`), so the hub algorithm on side
 `O(n^(8/3))`. The capacity condition `76kλ_A ≤ 5s` still involves
 `λ_A = log₂(k³s²) + 4 ≤ log₂(kn²) + 4`. Take `k = 2m` with `m` the largest
 integer such that `304 m² Λ(m) + 10 m ≤ 5n`, `Λ(m) = log₂(2m n²) + 4`
-(capacity), and `41 m³ ≤ n` (cube scale). For `n ≥ linN = 10⁹` the cube scale
+(capacity), and `70 m³ ≤ n` (cube scale). For `n ≥ linN = 1.1·10⁹` the cube scale
 is the binding one (`Hub/LinError.lean`).
 
 For `n ≥ linN` this grid has `m ≥ 250` (`exists_lin_width`), and
@@ -19,7 +19,7 @@ namespace SlidingPuzzle.Hub
 open SlidingPuzzle
 
 /-- The side from which the hub algorithm is used for the bound without the logarithm. -/
-def linN : ℕ := 10 ^ 9
+def linN : ℕ := 11 * 10 ^ 8
 
 /-- The capacity term of the grid. -/
 def gridCap (n m : ℕ) : ℕ := 304 * m ^ 2 * (Nat.log 2 (2 * m * n ^ 2) + 4) + 10 * m
@@ -68,17 +68,17 @@ theorem gridCap_le_of {n M N0 : ℕ} (T : ℕ) (hn : N0 ≤ n) (hM : 1 ≤ M)
     have h3 := Nat.le_of_mul_le_mul_left h2 (by omega)
     exact (Nat.pow_le_pow_iff_left (by norm_num)).mp h3
 
-/-- `m = 250` meets the capacity condition from `linN = 10⁹` on. -/
+/-- `m = 250` meets the capacity condition from `linN = 1.1·10⁹` on. -/
 theorem gridCap_250 {n : ℕ} (hn : linN ≤ n) : gridCap n 250 ≤ 5 * n :=
-  gridCap_le_of (N0 := 10 ^ 9) 64 hn (by norm_num) (by norm_num) (by norm_num)
+  gridCap_le_of (N0 := 11 * 10 ^ 8) 64 hn (by norm_num) (by norm_num) (by norm_num)
 
-/-- The grid: the largest `m` with `gridCap n m ≤ 5n` and `41 m³ ≤ n`. It is at
+/-- The grid: the largest `m` with `gridCap n m ≤ 5n` and `70 m³ ≤ n`. It is at
 least `250`. -/
 theorem exists_lin_width {n : ℕ} (hn : linN ≤ n) :
-    ∃ m : ℕ, 250 ≤ m ∧ gridCap n m ≤ 5 * n ∧ 41 * m ^ 3 ≤ n ∧
-      (5 * n < gridCap n (m + 1) ∨ n < 41 * (m + 1) ^ 3) := by
+    ∃ m : ℕ, 250 ≤ m ∧ gridCap n m ≤ 5 * n ∧ 70 * m ^ 3 ≤ n ∧
+      (5 * n < gridCap n (m + 1) ∨ n < 70 * (m + 1) ^ 3) := by
   classical
-  let P : ℕ → Prop := fun m => gridCap n m ≤ 5 * n ∧ 41 * m ^ 3 ≤ n
+  let P : ℕ → Prop := fun m => gridCap n m ≤ 5 * n ∧ 70 * m ^ 3 ≤ n
   have hP : P 250 := ⟨gridCap_250 hn, by unfold linN at hn; omega⟩
   have h250 : 250 ≤ n := by unfold linN at hn; omega
   set m := Nat.findGreatest P n
@@ -89,15 +89,15 @@ theorem exists_lin_width {n : ℕ} (hn : linN ≤ n) :
   push Not at hc
   have hle : m + 1 ≤ n := by
     calc m + 1 ≤ (m + 1) ^ 3 := Nat.le_self_pow (by norm_num) _
-      _ ≤ 41 * (m + 1) ^ 3 := Nat.le_mul_of_pos_left _ (by norm_num)
+      _ ≤ 70 * (m + 1) ^ 3 := Nat.le_mul_of_pos_left _ (by norm_num)
       _ ≤ n := hc.2
   have := Nat.le_findGreatest (P := P) hle hc
   omega
 
 /-- The hub algorithm on the grid, in natural numbers. -/
 theorem optimalLength_le_lin_nat {n : ℕ} [NeZero n] (hn : linN ≤ n) (B : ReachableBoard n) :
-    ∃ m : ℕ, 250 ≤ m ∧ 41 * m ^ 3 ≤ n ∧
-      (5 * n < gridCap n (m + 1) ∨ n < 41 * (m + 1) ^ 3) ∧
+    ∃ m : ℕ, 250 ≤ m ∧ 70 * m ^ 3 ≤ n ∧
+      (5 * n < gridCap n (m + 1) ∨ n < 70 * (m + 1) ^ 3) ∧
       1000 * optimalLength B ≤ 1000 * manhattan B.val +
         2 * hubLinKX * (n ^ 2 * (n / (2 * m))) + 2 * hubLinKW * ((2 * m) ^ 2 * n ^ 2) +
         2000 * ((15 * n ^ 2 + 3002 * n + 1) * (n - 2 * m * (n / (2 * m)))) := by
@@ -139,8 +139,18 @@ theorem optimalLength_le_lin_nat {n : ℕ} [NeZero n] (hn : linN ≤ n) (B : Rea
     have hΛ : 4 ≤ Nat.log 2 (2 * m * n ^ 2) + 4 := by omega
     have : 76 * k * 4 ≤ 5 * s := le_trans (by gcongr; unfold lamA; omega) hP1
     omega
-  have hd : HDims (k * s) k s := ⟨by omega, ⟨m, by omega⟩, hroom, rfl⟩
   have hk500 : 500 ≤ k := by omega
+  -- `λ_A ≥ 40`, so `s ≥ 608 k`
+  have hbig : 600 * k + 2000 ≤ s := by
+    have hks : 2 ^ 18 ≤ k * s := by
+      have : m ≤ m ^ 3 := Nat.le_self_pow (by norm_num) _
+      unfold linN at hn
+      omega
+    have hlog : 18 ≤ Nat.log 2 (k * s) := Nat.le_log_of_pow_le (by norm_num) hks
+    have hge := lamA_ge k s (by omega) hs0
+    have : 76 * k * 40 ≤ 5 * s := le_trans (Nat.mul_le_mul_left _ (by omega)) hP1
+    omega
+  have hd : HDims (k * s) k s := ⟨by omega, ⟨m, by omega⟩, hroom, rfl, hbig⟩
   have hres := optimalLength_le_hub_residual B hd hk500 hP1
   simp only [← hsdef] at hres
   have hcapk : 881 * k ≤ s := by

@@ -5,7 +5,9 @@ import SlidingPuzzle.Hub.PrimRes
 The blank sits on a corridor cell `v` inside the square box of `Q`. It jumps
 into the reservoir of `Q` (cell `w`), and a three-cycle in the box of `Q`
 brings a tile of class `y` from the region of `Q` to `v`. Only `v` and cells of
-the region of `Q` change, and only the inserted tile changes its key. -/
+the region of `Q` change, and only the inserted tile changes its key. The
+three-cycle is staged from a corner of the box near `v`, `w` and the spare
+reservoir cell (`exists_box_three_cycle_near`), so it costs `11 s`. -/
 namespace SlidingPuzzle.Hub
 open Classical
 
@@ -13,14 +15,16 @@ variable {n k s : ℕ} [NeZero n]
 
 theorem insert_by_cycle (hd : HDims n k s) (B : Board n) {Q y : Sq k} {v w : Cell n}
     (hbv : blank B = v) (hv : keyOf hd v = none) (hw : reservoir k s Q w)
-    (hwrow : w.1.val ≠ Q.1.val * s + (k + 2))
     (hvbox : InBox (Q.1.val * s) (Q.2.val * s) s v)
     (hT : 1 ≤ regionCount hd B Q y) (cj : ℕ)
-    (hjump : ∃ p : Path B (swapCells B (blank B) w), p.inefficientMoves ≤ cj) :
+    (hjump : ∃ p : Path B (swapCells B (blank B) w), p.inefficientMoves ≤ cj)
+    (fr fc : Bool) {ro co : ℕ} (hro : k ≤ ro) (hro' : ro < s) (hco : k ≤ co) (hco' : co + 2 < s)
+    (hD : ∀ j, j ≤ 2 → cornerDist (Q.1.val * s) (Q.2.val * s) s fr fc w v
+      (mkCell n (Q.1.val * s + ro) (Q.2.val * s + co + j)) ≤ 6 * k + 7) :
     ∃ C : Board n, ∃ p : Path B C, ∃ T : Tile n, T.val ≠ 0 ∧ classOf hd T = y ∧
       keyOf hd (position B T) = some Q ∧ C v = T ∧ blank C = w ∧
       (∀ x, x ≠ v → keyOf hd x ≠ some Q → C x = B x) ∧ KeepKey hd B C {T} ∧
-      p.inefficientMoves ≤ cj + 28 * s := by
+      p.inefficientMoves ≤ cj + 11 * s := by
   obtain ⟨t, htQ, htT, htc⟩ := exists_of_regionCount hd B hT
   obtain ⟨p1, hp1⟩ := hjump
   have hkw : keyOf hd w = some Q := keyOf_reservoir hd hw
@@ -50,16 +54,17 @@ theorem insert_by_cycle (hd : HDims n k s) (B : Board n) {Q y : Sq k} {v w : Cel
       rintro (e | e)
       · exact h0 (by rw [e]; rfl)
       · exact ht' e)
-  · obtain ⟨u, hu, hurow, hut⟩ := exists_reservoir_other hd Q t
+  · obtain ⟨j, hj, hu, hut, huw⟩ := exists_reservoir_near hd Q hro hro' hco hco' t w
+    set u := mkCell n (Q.1.val * s + ro) (Q.2.val * s + co + j) with hudef
     have hku : keyOf hd u = some Q := keyOf_reservoir hd hu
     have hvu : v ≠ u := ne_of_keyOf (by rw [hv, hku]; simp)
-    have huw : u ≠ w := cell_ne_of_fst (by rw [hurow]; exact fun e => hwrow e.symm)
     have hB4t : B4 t = B t := hB4x t (Ne.symm hvt) htw
     have hB4u : B4 u = B u := hB4x u (Ne.symm hvu) huw
     have hU0 : (B u).val ≠ 0 := val_ne_zero_of_ne_blank (by rw [hbv]; exact hvu.symm)
     have hbl4 : blank B4 = w := blank_swapCells B w
-    obtain ⟨C, p2, hp2, hCv, hCt, hCu, hCx⟩ := exists_box_three_cycle_ineff B4 (Q.1.val * s)
-      (Q.2.val * s) s (by have := hd.room; have := hd.two_le; omega) (hd.band_le Q.1.isLt) (hd.band_le Q.2.isLt)
+    obtain ⟨C, p2, hp2, hCv, hCt, hCu, hCx⟩ := exists_box_three_cycle_near B4 (Q.1.val * s)
+      (Q.2.val * s) s fr fc (by have := hd.room; have := hd.two_le; omega) (hd.band_le Q.1.isLt)
+      (hd.band_le Q.2.isLt)
       (by rw [hbl4]; exact inBox_of_reservoir hd hw) v t u hvbox (inBox_of_region hd htQ)
       (inBox_of_reservoir hd hu) hvt hvu (Ne.symm hut)
       (by rw [hB4v]; exact fun e => hW0 (by rw [e]; rfl))
@@ -96,6 +101,9 @@ theorem insert_by_cycle (hd : HDims n k s) (B : Board n) {Q y : Sq k} {v w : Cel
       simp only [Finset.mem_union, Finset.mem_insert, Finset.mem_singleton, not_or]
       exact ⟨⟨fun e => h0 (by rw [e]; rfl), e1⟩, e1, ht', e2⟩
     · rw [Path.inefficientMoves_append]
+      rw [hbl4] at hp2
+      have h1 : cornerDist (Q.1.val * s) (Q.2.val * s) s fr fc w v u ≤ 6 * k + 7 := hD j hj
+      have := hd.big
       omega
 
 end SlidingPuzzle.Hub

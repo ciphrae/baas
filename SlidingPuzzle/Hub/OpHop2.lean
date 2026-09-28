@@ -220,6 +220,29 @@ theorem hop2_phase1 (hd : HDims n k s) (B : Board n) {h D : Sq k}
     have hmul : 7 * (k + 2) * (P / (s - k)) ≤ 7 * (k + 2) * k := Nat.mul_le_mul_left _ hdivk
     omega
 
+/-- The corner of the hub's box used by the insertion of a hop2: top left when
+the column half leaves upwards, bottom left otherwise. -/
+theorem hop2_cornerDist (hd : HDims n k s) {h D : Sq k} {v w : Cell n} (top : Bool) {jp : ℕ}
+    (vf : v.1.val = h.1.val * s + (if top then k else s - 1))
+    (vs : v.2.val = h.2.val * s + D.1.val) (wf : w.1.val = v.1.val)
+    (ws : w.2.val = h.2.val * s + k + jp) (hjp : jp ≤ 1) :
+    ∀ j, j ≤ 2 → cornerDist (h.1.val * s) (h.2.val * s) s (!top) false w v
+      (mkCell n (h.1.val * s + (if top then k + 2 else s - 3)) (h.2.val * s + k + j)) ≤
+        6 * k + 7 := by
+  intro j hj
+  have hroom := hd.room
+  have hb1 := hd.band_le h.1.isLt
+  have hb2 := hd.band_le h.2.isLt
+  have ha := D.1.isLt
+  cases top
+  all_goals
+    simp only [Bool.false_eq_true, if_false, if_true, Bool.not_false, Bool.not_true] at vf ⊢
+    unfold cornerDist reflC
+    simp only [Bool.false_eq_true, if_false, if_true]
+    rw [mkCell_fst (by omega), mkCell_snd (by omega), wf, ws, vf, vs]
+    simp only [Nat.dist]
+    omega
+
 /-- hop2 realized on the board. -/
 theorem simulate_hop2 (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel hd B σ)
     {h D y : Sq k} (hpre : σ.Pre (.hop2 h D y)) :
@@ -268,9 +291,14 @@ theorem simulate_hop2 (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
     rw [regionCount_congr hd hreg4, hRcnt]; exact hcnt
   obtain ⟨p5, hp5⟩ := exists_hjump_step hd.two_le_n B4 w
     (by rw [hb4, wf]; simp [Nat.dist]) (by rw [hb4, wf, ws, vs]; omega)
+  have hvf : v.1.val = h.1.val * s + (if decide (D.1 < h.1) then k else s - 1) := by
+    rw [vf, hPo]; simp only [decide_eq_true_eq]
+  have hD := hop2_cornerDist hd (D := D) (decide (D.1 < h.1)) hvf (by rw [vs, hc2]) wf ws hjp1
   obtain ⟨C, p6, T, hT0, hTc, hTk, hCv, hCbl, hCx, K2, hi6⟩ :=
-    insert_by_cycle hd B4 (Q := h) (y := y) hb4 hkv hw (by rw [wf]; omega) hvbox hT4
+    insert_by_cycle hd B4 (Q := h) (y := y) hb4 hkv hw hvbox hT4
       (7 * (k + 2)) ⟨p5, hp5.trans (by rw [hb4, ws, vs]; simp only [Nat.dist]; omega)⟩
+      (!decide (D.1 < h.1)) false (ro := if decide (D.1 < h.1) then k + 2 else s - 3) (co := k)
+      (by split_ifs <;> omega) (by split_ifs <;> omega) le_rfl (by omega) hD
   have hCc : ∀ x, keyOf hd x = none → x ≠ v → C x = B4 x := fun x hx hxv =>
     hCx x hxv (by rw [hx]; simp)
   set head := B (colCell k s V 0) with hhead
@@ -351,7 +379,7 @@ theorem simulate_hop2 (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
       rw [(hRcol V q (by omega)).2]
       exact Iff.rfl
     rw [hj] at hi4
-    change _ ≤ 30 * s + 7 * k ^ 2 + 35 * k + 42 +
+    change _ ≤ 13 * s + 7 * k ^ 2 + 35 * k + 42 +
       ((Finset.range (P + 1)).filter fun q => σ.col V q ≠ (V.2.1, V.1)).card
     have e1 : 7 * (k + 2) * k = 7 * (k * k) + 14 * k := by ring
     have e3 : k ^ 2 = k * k := sq k

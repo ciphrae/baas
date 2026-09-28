@@ -10,7 +10,7 @@ set_option maxRecDepth 4096
 namespace SlidingPuzzle.Hub
 
 /-- Numerators of the coefficients without the logarithm, with denominator `1000`. -/
-def hubLinKX : ℕ := 100650
+def hubLinKX : ℕ := 58650
 def hubLinKW : ℕ := 255960
 
 set_option maxHeartbeats 1600000 in
@@ -108,10 +108,10 @@ theorem hubBound_le_lin {k s : ℕ} (hk : 500 ≤ k) (hcap : 881 * k ≤ s) :
     have := Nat.mul_le_mul_left (s ^ 3) hk
     linarith
   have key : 2000 * (2 * (k * s) + (2 * k ^ 2 * (k * s) ^ 2 +
-      2 * (31 * s + 7 * k ^ 2 + 35 * k + 42) * (k * s) ^ 2 +
+      2 * (14 * s + 7 * k ^ 2 + 35 * k + 42) * (k * s) ^ 2 +
       (s + 3) * (21 * k + 9) * (k ^ 2 * (R + k ^ 2)) +
-      (s + 3) * (s ^ 2 * (36 * k ^ 2 + 72 * k + 18) + (42 * k + 18) * (k ^ 2 * (2 * (k * s) + 1))))) +
-      1000 * Y ≤ 2 * (100650 * ((k * s) ^ 2 * s) + 255960 * (k ^ 2 * (k * s) ^ 2)) := by
+      (s + 3) * (s ^ 2 * (28 * k ^ 2 + 55 * k + 18) + (42 * k + 18) * (k ^ 2 * (2 * (k * s) + 1))))) +
+      1000 * Y ≤ 2 * (58650 * ((k * s) ^ 2 * s) + 255960 * (k ^ 2 * (k * s) ^ 2)) := by
     rw [hY]
     ring_nf
     ring_nf at hCcost hRcost

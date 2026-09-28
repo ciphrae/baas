@@ -55,7 +55,7 @@ noncomputable def hstep (s τ : ℕ) (G : GS k) : HEvent k → GS k
   | .serve S D =>
     { hServe s τ G S D with served := bump G.served D, sent := bump G.sent S }
   | .reloc E Z => { hReloc s G E Z with
-      wt := G.wt + if E.1 = Z.1 ∨ E.2 = Z.2 then 30 + 21 * sqDist E Z else 60 + 21 * sqDist E Z }
+      wt := G.wt + if E.1 = Z.1 ∨ E.2 = Z.2 then 13 + 21 * sqDist E Z else 26 + 21 * sqDist E Z }
 
 /-- The row insertion made by a high-level event. -/
 def hIns (τ : ℕ) : HEvent k → Option (InsRec k)
@@ -365,7 +365,7 @@ theorem hServe_cost {G : GS k} (hL : LInv s σ0 F0 G) {N : Sq k → Sq k → ℕ
     {S D : Sq k} (ok : ServeOK s N G S D) :
     IState.totalCost s σ0 (hServe s τ G S D).evs + pot s (hServe s τ G S D).σ +
         (s + 3) * (21 * k + 9) * (∑ h, ∑ x, G.byp h x) ≤
-      IState.totalCost s σ0 G.evs + pot s G.σ + 2 * (31 * s + 7 * k ^ 2 + 35 * k + 42) +
+      IState.totalCost s σ0 G.evs + pot s G.σ + 2 * (14 * s + 7 * k ^ 2 + 35 * k + 42) +
         (s + 3) * (21 * k + 9) * (∑ h, ∑ x, (hServe s τ G S D).byp h x) := by
   have hbs := hServe_bypSum s τ G S D
   by_cases c1 : S.2 = D.2
@@ -412,7 +412,7 @@ theorem hServe_cost {G : GS k} (hL : LInv s σ0 F0 G) {N : Sq k → Sq k → ℕ
       unfold Nat.dist
       have := D.1.isLt; have := S.1.isLt
       omega
-    have : (s + 3) * (30 + 21 * sqDist D (S.1, D.2)) ≤ (s + 3) * (21 * k + 9) :=
+    have : (s + 3) * (13 + 21 * sqDist D (S.1, D.2)) ≤ (s + 3) * (21 * k + 9) :=
       Nat.mul_le_mul_left _ (by omega)
     nlinarith
 
