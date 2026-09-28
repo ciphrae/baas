@@ -11,37 +11,26 @@ is linear in `n` (segmented residence, `Hub/InFlightSegment.lean`). The outer
 Hence the mean optimal solution length is `(2/3)n³ + O(n^(8/3))` and God's
 number is `n³ + O(n^(8/3))`, improving Zhong's `O(n^(11/4))`.
 
-Explicitly, `OPT(B) ≤ M(B) + 635 n^(8/3)` for every reachable board with
-`n ≥ 4096` (`uniform_approximation_explicit`). -/
+Explicitly, `OPT(B) ≤ M(B) + 583 n^(8/3)` for every reachable board with
+`n ≥ 10⁹` (`uniform_approximation_explicit`). -/
 open Filter Asymptotics
 
 set_option maxRecDepth 4096
 
 namespace SlidingPuzzle.Hub
 
-/-- The uniform coefficient of `n^(8/3)`: the hub algorithm above `linN = 2·10⁶`
-(`optimalLength_le_linError`) and the cubic solver on `4096 ≤ n ≤ linN`
-(`cubic_le_linError`). -/
-def linConstant : ℕ := 635
+/-- The uniform coefficient of `n^(8/3)`: the hub algorithm from `hubN = linN = 10⁹` on
+(`optimalLength_le_linError`). -/
+def linConstant : ℕ := 583
 
-theorem linConstant_eq : linConstant = 635 := rfl
+theorem linConstant_eq : linConstant = 583 := rfl
 
-/-- **The boardwise bound**: `OPT(B) ≤ M(B) + 635 n^(8/3)` for every `n ≥ 4096`. -/
+/-- **The boardwise bound**: `OPT(B) ≤ M(B) + 583 n^(8/3)` for every `n ≥ 10⁹`. -/
 theorem uniform_approximation_explicit {n : ℕ} [NeZero n]
     (hn : hubN ≤ n) (B : ReachableBoard n) :
     (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) + linConstant * linError n := by
   unfold linConstant
-  by_cases hlarge : linN ≤ n
-  · exact_mod_cast optimalLength_le_linError hlarge B
-  · obtain ⟨p, hp⟩ := Parberry.exists_solution_cubic B (by unfold hubN at hn; omega)
-    have hopt := optimalLength_le_path_length B p
-    have hnat : optimalLength B ≤ 5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796 := hopt.trans hp
-    have hreal : (optimalLength B : ℝ) ≤ ((5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796 : ℕ) : ℝ) := by
-      exact_mod_cast hnat
-    have herr := cubic_le_linError (by unfold hubN at hn; omega) (Nat.le_of_lt (not_le.mp hlarge))
-    have hM : (0 : ℝ) ≤ manhattan B.val := Nat.cast_nonneg _
-    push_cast at herr hreal ⊢
-    linarith
+  exact_mod_cast optimalLength_le_linError (by unfold linN; unfold hubN at hn; omega) B
 
 /-- The boardwise bound `OPT(B) ≤ M(B) + C n^(8/3)`. -/
 theorem uniform_approximation :
