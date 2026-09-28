@@ -107,3 +107,46 @@ in corridors, the reserve, stock and bypassed tiles and corridor junk.
 Finish solves every square by the `5s³` solver, `2.5` in `A`. For boards whose
 squares are themselves above `1.1·10⁹` the explicit bound applies to them
 recursively, and Finish becomes a lower-order term.
+
+## 7. Below 8/3: grouped corridors and preloaded home reserves
+
+New research proposal (not a proved bound): **two routing levels could give
+`OPT <= Manhattan + O(n^(13/5))`**. Split the `k` destination blocks into
+`sqrt(k)` groups and route to the near boundary of the target group, then
+within it. The proposed lane inventory is `O(k^(3/2)n)`, giving the balance
+`n^3/k + k^(3/2)n^2` at `k ~= n^(2/5)`.
+
+Two supporting ideas address the extra stages:
+
+- Tagged free placeholders preserve planned insertions. The stock identity
+  `S + F + D = B` bounds missing-stock events additively through the stages.
+- Preload correctly destined tiles as uneven local reserves, using the
+  existing `52n` three-cycle primitive. Preparation costs `O(n)` per tile;
+  the correct-home diagonal cancels from demand imbalance, so these reserves
+  do not introduce corresponding dummy deficits. This avoids reserving the
+  same number of whole rounds everywhere.
+
+The missing results are a lane-weighted bound on classwise in-flight maxima,
+the board layout, and complete local/blank/cleanup accounting. Fixed deeper
+hierarchies would target `5/2 + 1/(4h+2)`; two levels are the recommended first
+attempt. Finite checks passed for monotone routes, the pipeline identity and
+home-reserve preparation; no Lean exponent theorem has changed.
+
+See [the detailed proposal](research/exponent/BELOW_EIGHT_THIRDS.md) and
+[the reproducible checks](research/exponent/below_eight_thirds_check.py).
+
+### Conditional many-level result
+
+[The extension contract](research/exponent/HIERARCHY_CONDITIONAL.md) now spells
+out sufficient hypotheses for every fixed depth `h`. The companion
+[Lean file](research/exponent/HierarchyConditional.lean) verifies the resource
+recurrence, integer branching, and the conditional implication to
+`O_h(n^(5/2 + 1/(4h+2)))`, hence `O_epsilon(n^(5/2+epsilon))`.
+Its algorithmic `HierarchyBudget` hypothesis remains unproved for the puzzle.
+
+All levels should use one original matching plan and one shuffle. Keeping
+the final destination as the tag preserves at most one insertion per class
+per lane per round and at most `k` insertions per lane. Recursive route
+experiments passed through four levels. An additional `O_h(k^3 b)` rounding
+inventory term is needed; its cleanup cost is absorbed when `k^2 <= n`.
+The next target is a parametric residence lemma for these lane families.
