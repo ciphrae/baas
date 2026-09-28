@@ -262,7 +262,7 @@ theorem hop2_cornerDist (hd : HDims n k s) {h D : Sq k} {v w : Cell n} (top : Bo
 
 /-- hop2 realized on the board. -/
 theorem simulate_hop2 (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel hd B σ)
-    {h D y : Sq k} (hpre : σ.Pre (.hop2 h D y)) :
+    {h D y : Sq k} (hpre : σ.Pre s (.hop2 h D y)) :
     ∃ C : Board n, ∃ p : Path B C, Rel hd C (σ.step s (.hop2 h D y)) ∧
       p.inefficientMoves ≤ σ.cost s (.hop2 h D y) := by
   obtain ⟨hbl, hc2, hne, hcnt⟩ := hpre

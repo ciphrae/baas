@@ -30,7 +30,7 @@ theorem jump_cornerDist (hd : HDims n k s) {Z : Sq k} {z z' u : Cell n}
 /-- jump realized on the board: jump into `Z`, line up a class-`y` tile by a
 three-cycle inside `Z`'s box, jump back, and jump that tile across. -/
 theorem simulate_jump (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel hd B σ)
-    {E Z y : Sq k} (hpre : σ.Pre (.jump E Z y)) :
+    {E Z y : Sq k} (hpre : σ.Pre s (.jump E Z y)) :
     ∃ C : Board n, ∃ p : Path B C, Rel hd C (σ.step s (.jump E Z y)) ∧
       p.inefficientMoves ≤ σ.cost s (.jump E Z y) := by
   obtain ⟨hbl, hEZ, hal, hcnt⟩ := hpre

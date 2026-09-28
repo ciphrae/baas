@@ -125,7 +125,7 @@ variable {s : ℕ} {σ0 : IState k} {F0 : ℕ}
 theorem gHop1_linv {G : GS k} (hL : LInv s σ0 F0 G) (τ : ℕ) {S h y : Sq k}
     (hb : G.σ.blank = h) (h1 : S.1 = h.1) (h2 : S.2 ≠ h.2) (hy : y.2 = h.2)
     (hsch : 1 ≤ G.sched S y) (hs : k + 1 ≤ s) : LInv s σ0 F0 (gHop1 s τ G S h y) := by
-  have hpre : G.σ.Pre (.hop1 S h y) := ⟨hb, h1, h2, by
+  have hpre : G.σ.Pre s (.hop1 S h y) := ⟨hb, h1, h2, by
     have := hL.roles_le S y; have := hL.dfree S y; omega⟩
   obtain ⟨hrun, hval⟩ := pre_append hL hpre
   have hcnt : ∀ Q x, (gHop1 s τ G S h y).σ.cnt Q x = G.σ.cnt Q x -
@@ -139,7 +139,7 @@ theorem gHop1_linv {G : GS k} (hL : LInv s σ0 F0 G) (τ : ℕ) {S h y : Sq k}
   have hdf : ∀ Q x, (gHop1 s τ G S h y).σ.dcnt Q x ≤ (gHop1 s τ G S h y).free Q x := by
     intro Q x
     have e : (gHop1 s τ G S h y).σ.dcnt Q x = G.σ.dcnt Q x :=
-      congrFun (congrFun (IState.dcnt_step s G.σ (.hop1 S h y)) Q) x
+      congrFun (congrFun (IState.dcnt_step s G.σ (.hop1 S h y) trivial) Q) x
     rw [e, gHop1_free]; have := hL.dfree Q x; omega
   refine ⟨?_, ?_, ?_, ?_, ?_, ?_, hrun, hval, hdf⟩
   · intro Q x
@@ -229,7 +229,7 @@ theorem gHop2_linv {G : GS k} (hL : LInv s σ0 F0 G) {st : Bool} {h D : Sq k}
   have hrole' : G.σ.dcnt h D + 1 ≤ G.σ.cnt h D := by
     have := hL.roles_le h D; have := hL.dfree h D
     cases st <;> simp at hrole <;> omega
-  have hpre : G.σ.Pre (.hop2 h D D) := ⟨hb, h1, h2, hrole'⟩
+  have hpre : G.σ.Pre s (.hop2 h D D) := ⟨hb, h1, h2, hrole'⟩
   obtain ⟨hrun, hval⟩ := pre_append hL hpre
   have hcnt : ∀ Q x, (gHop2 s G st h D D).σ.cnt Q x = G.σ.cnt Q x -
       (if Q = h ∧ x = D then 1 else 0) + (if Q = D ∧ x = colHead G h D then 1 else 0) :=
@@ -250,7 +250,7 @@ theorem gHop2_linv {G : GS k} (hL : LInv s σ0 F0 G) {st : Bool} {h D : Sq k}
   have hdf : ∀ Q x, (gHop2 s G st h D D).σ.dcnt Q x ≤ (gHop2 s G st h D D).free Q x := by
     intro Q x
     have e : (gHop2 s G st h D D).σ.dcnt Q x = G.σ.dcnt Q x :=
-      congrFun (congrFun (IState.dcnt_step s G.σ (.hop2 h D D)) Q) x
+      congrFun (congrFun (IState.dcnt_step s G.σ (.hop2 h D D) trivial) Q) x
     rw [e, gHop2_free]; have := hL.dfree Q x; omega
   refine ⟨?_, ?_, ?_, ?_, ?_, ?_, hrun, hval, hdf⟩
   · intro Q x
@@ -297,7 +297,7 @@ theorem gHop2_cost {G : GS k} (hL : LInv s σ0 F0 G) {st : Bool} {h D : Sq k}
 theorem gJump_linv {G : GS k} (hL : LInv s σ0 F0 G) {E Z y : Sq k}
     (hb : G.σ.blank = E) (hEZ : E ≠ Z) (hal : E.1 = Z.1 ∨ E.2 = Z.2)
     (hfree : G.σ.dcnt Z y + 1 ≤ G.free Z y) : LInv s σ0 F0 (gJump s G E Z y) := by
-  have hpre : G.σ.Pre (.jump E Z y) :=
+  have hpre : G.σ.Pre s (.jump E Z y) :=
     ⟨hb, hEZ, hal, by have := hL.roles_le Z y; omega⟩
   obtain ⟨hrun, hval⟩ := pre_append hL hpre
   have hcnt : ∀ Q x, (gJump s G E Z y).σ.cnt Q x = G.σ.cnt Q x -
@@ -311,7 +311,7 @@ theorem gJump_linv {G : GS k} (hL : LInv s σ0 F0 G) {E Z y : Sq k}
   have hdf : ∀ Q x, (gJump s G E Z y).σ.dcnt Q x ≤ (gJump s G E Z y).free Q x := by
     intro Q x
     have e : (gJump s G E Z y).σ.dcnt Q x = G.σ.dcnt Q x :=
-      congrFun (congrFun (IState.dcnt_step s G.σ (.jump E Z y)) Q) x
+      congrFun (congrFun (IState.dcnt_step s G.σ (.jump E Z y) trivial) Q) x
     rw [e, gJump_free]; have := hL.dfree Q x; have := hA Q x
     by_cases h1 : Q = Z ∧ x = y
     · obtain ⟨rfl, rfl⟩ := h1; simp only [and_self, if_true]; split_ifs <;> omega

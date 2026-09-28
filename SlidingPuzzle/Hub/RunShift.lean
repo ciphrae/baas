@@ -185,7 +185,7 @@ theorem totalCost_append (σ : IState k) (l₁ l₂ : List (REvent k)) :
 
 theorem run_singleton (σ : IState k) (e : REvent k) : run s σ [e] = σ.step s e := rfl
 
-theorem valid_singleton (σ : IState k) (e : REvent k) : Valid s σ [e] ↔ σ.Pre e := by
+theorem valid_singleton (σ : IState k) (e : REvent k) : Valid s σ [e] ↔ σ.Pre s e := by
   simp [Valid]
 
 theorem totalCost_singleton (σ : IState k) (e : REvent k) :

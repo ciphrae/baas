@@ -36,7 +36,14 @@ inductive REvent (k : ℕ) where
   | hop1 (S h y : Sq k)
   | hop2 (h D y : Sq k)
   | jump (E Z y : Sq k)
+  | rjump (E Z : Sq k) (a : Bool) (y : Sq k)
+  | restore (Z : Sq k) (c : Bool) (y : Sq k)
   deriving DecidableEq
+
+/-- The designated cell of `Z` on which a jump from the designated cell `a` of
+`E` lands: the one that makes the jump odd. -/
+def landB {k : ℕ} (s : ℕ) (E Z : Sq k) (a : Bool) : Bool :=
+  decide (((E.1.val + E.2.val + Z.1.val + Z.2.val) * s + (if a then 1 else 0)) % 2 = 0)
 
 /-- Add one tile of class `y` to the region of `Q`. -/
 def incCnt {k : ℕ} (c : Sq k → Sq k → ℕ) (Q y : Sq k) : Sq k → Sq k → ℕ :=
@@ -54,12 +61,17 @@ variable {k : ℕ}
 def dcnt (σ : IState k) (Q y : Sq k) : ℕ :=
   (if σ.des Q false = some y then 1 else 0) + (if σ.des Q true = some y then 1 else 0)
 
-/-- Preconditions of the operations: the moved tile is not a recorded designated tile. -/
-def Pre (σ : IState k) : REvent k → Prop
+/-- Preconditions of the operations: the moved tile is not a recorded designated
+tile; a designated jump lands on a recorded designated tile; a restore fills an
+unrecorded designated cell. -/
+def Pre (s : ℕ) (σ : IState k) : REvent k → Prop
   | .hop1 S h y => σ.blank = h ∧ S.1 = h.1 ∧ S.2 ≠ h.2 ∧ σ.dcnt S y + 1 ≤ σ.cnt S y
   | .hop2 h D y => σ.blank = D ∧ h.2 = D.2 ∧ h.1 ≠ D.1 ∧ σ.dcnt h y + 1 ≤ σ.cnt h y
   | .jump E Z y =>
     σ.blank = E ∧ E ≠ Z ∧ (E.1 = Z.1 ∨ E.2 = Z.2) ∧ σ.dcnt Z y + 1 ≤ σ.cnt Z y
+  | .rjump E Z a y =>
+    σ.blank = E ∧ E ≠ Z ∧ (E.1 = Z.1 ∨ E.2 = Z.2) ∧ σ.des Z (landB s E Z a) = some y
+  | .restore Z c y => σ.blank = Z ∧ σ.des Z c = none ∧ σ.dcnt Z y + 1 ≤ σ.cnt Z y
 
 /-- Effect of the operations. -/
 def step (s : ℕ) (σ : IState k) : REvent k → IState k
@@ -83,12 +95,32 @@ def step (s : ℕ) (σ : IState k) : REvent k → IState k
       cnt := incCnt (decCnt σ.cnt Z y) E y
       blank := Z
       des := σ.des }
+  | .rjump E Z a y =>
+    { row := σ.row
+      col := σ.col
+      cnt := incCnt (decCnt σ.cnt Z y) E y
+      blank := Z
+      des := fun Q c => if Q = Z ∧ c = landB s E Z a then none
+        else if Q = E ∧ c = a then some y else σ.des Q c }
+  | .restore Z c y =>
+    { σ with des := fun Q c' => if Q = Z ∧ c' = c then some y else σ.des Q c' }
 
-theorem des_step (s : ℕ) (σ : IState k) (e : REvent k) : (σ.step s e).des = σ.des := by
-  cases e <;> rfl
+/-- The operations other than designated jumps and restores keep the designated
+record. -/
+def KeepsDes {k : ℕ} : REvent k → Prop
+  | .hop1 _ _ _ => True
+  | .hop2 _ _ _ => True
+  | .jump _ _ _ => True
+  | .rjump _ _ _ _ => False
+  | .restore _ _ _ => False
 
-theorem dcnt_step (s : ℕ) (σ : IState k) (e : REvent k) : (σ.step s e).dcnt = σ.dcnt := by
-  unfold dcnt; rw [des_step]
+theorem des_step (s : ℕ) (σ : IState k) (e : REvent k) (he : KeepsDes e) :
+    (σ.step s e).des = σ.des := by
+  cases e <;> first | rfl | exact absurd he id
+
+theorem dcnt_step (s : ℕ) (σ : IState k) (e : REvent k) (he : KeepsDes e) :
+    (σ.step s e).dcnt = σ.dcnt := by
+  unfold dcnt; rw [des_step s σ e he]
 
 /-- At most two recorded designated tiles per square. -/
 theorem sum_dcnt_le (σ : IState k) (Q : Sq k) : ∑ y, σ.dcnt Q y ≤ 2 := by
@@ -116,6 +148,8 @@ def cost (s : ℕ) (σ : IState k) : REvent k → ℕ
   | .hop1 S h _ => 13 * s + 506 * k + 1024 + σ.junkRow (hop1Half S h) (hop1Pos s S h)
   | .hop2 h D _ => 12 * s + 7 * k ^ 2 + 527 * k + 1052 + σ.junkCol (hop2Half h D) (hop2Pos s h D)
   | .jump E Z _ => (s + 3) * (13 + 21 * sqDist E Z)
+  | .rjump E Z _ _ => (s + 3) * (3 + 7 * sqDist E Z)
+  | .restore _ _ _ => 13 * s
 
 /-- The state after a list of operations. -/
 def run (s : ℕ) : IState k → List (REvent k) → IState k
@@ -125,7 +159,7 @@ def run (s : ℕ) : IState k → List (REvent k) → IState k
 /-- Every operation of the list meets its precondition. -/
 def Valid (s : ℕ) : IState k → List (REvent k) → Prop
   | _, [] => True
-  | σ, e :: es => σ.Pre e ∧ Valid s (σ.step s e) es
+  | σ, e :: es => σ.Pre s e ∧ Valid s (σ.step s e) es
 
 /-- The summed budgets of a list of operations. -/
 def totalCost (s : ℕ) : IState k → List (REvent k) → ℕ

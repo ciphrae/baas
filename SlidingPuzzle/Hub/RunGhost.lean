@@ -277,7 +277,7 @@ section pres
 
 variable {s : ℕ} {σ0 : IState k} {F0 : ℕ}
 
-theorem pre_append {G : GS k} (hL : LInv s σ0 F0 G) {e : REvent k} (he : G.σ.Pre e) :
+theorem pre_append {G : GS k} (hL : LInv s σ0 F0 G) {e : REvent k} (he : G.σ.Pre s e) :
     G.σ.step s e = IState.run s σ0 (G.evs ++ [e]) ∧ IState.Valid s σ0 (G.evs ++ [e]) := by
   rw [IState.run_append, ← hL.run_eq, IState.valid_append, ← hL.run_eq]
   exact ⟨rfl, hL.valid, (IState.valid_singleton s _ _).2 he⟩
