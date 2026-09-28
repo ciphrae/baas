@@ -230,7 +230,8 @@ theorem Outer.round {m : ℕ} {G : GS k} (hO : Outer c m G) (hm : m < c.Δ)
   have e3 : (runRound c.s m (c.rd m) G).sched = R.sched := rfl
   have e4 : ∀ Z, (runRound c.s m (c.rd m) G).dd Z = R.dd Z + dummyAt (c.rd m) Z := fun Z => rfl
   refine ⟨hm, hI.lin.congr rfl rfl rfl rfl rfl rfl rfl, ?_, ?_, ?_, ?_, ?_⟩
-  · exact ⟨hI.hin.ident, hI.hin.byp_le, hI.hin.free_lo, hI.hin.cost, hI.hin.sched_sum⟩
+  · exact ⟨hI.hin.ident, hI.hin.byp_le, hI.hin.free_lo, hI.hin.cost, hI.hin.sched_sum,
+      hI.hin.fbnd⟩
   · intro S D
     have := hI.sched S D
     rw [e3]; simpa using this

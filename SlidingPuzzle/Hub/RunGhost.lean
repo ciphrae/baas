@@ -31,6 +31,7 @@ structure GS (k : ℕ) where
   sent : Sq k → ℕ
   wt : ℕ
   dd : Sq k → ℕ
+  fb : ℕ
 
 /-- The ghost rows. -/
 def gh (s : ℕ) (G : GS k) : Ghost k := ghostRun s (fun _ _ => none) G.ins
@@ -110,6 +111,19 @@ def gJump (s : ℕ) (G : GS k) (E Z y : Sq k) : GS k :=
     evs := G.evs ++ [.jump E Z y]
     free := incCnt (decCnt G.free Z y) E y }
 
+/-- `rjump E Z a y`, moving the designated tile of `Z` (a free tile) to `E`. -/
+def gRJump (s : ℕ) (G : GS k) (E Z : Sq k) (a : Bool) (y : Sq k) : GS k :=
+  { G with
+    σ := G.σ.step s (.rjump E Z a y)
+    evs := G.evs ++ [.rjump E Z a y]
+    free := incCnt (decCnt G.free Z y) E y }
+
+/-- `restore Z c y`, designating a free class-`y` tile of `Z`. -/
+def gRestore (s : ℕ) (G : GS k) (Z : Sq k) (c : Bool) (y : Sq k) : GS k :=
+  { G with
+    σ := G.σ.step s (.restore Z c y)
+    evs := G.evs ++ [.restore Z c y] }
+
 /-! ## Effects -/
 
 section effects
@@ -139,6 +153,50 @@ theorem cnt_hop2 (σ : IState k) (h D y Q y' : Sq k) :
     (σ.step s (.hop2 h D y)).cnt Q y' = σ.cnt Q y' - (if Q = h ∧ y' = y then 1 else 0) +
       (if Q = D ∧ y' = σ.col (hop2Half h D) 0 then 1 else 0) := by
   simp only [IState.step, incCnt_apply, decCnt_apply]
+
+theorem cnt_rjump (σ : IState k) (E Z : Sq k) (a : Bool) (y Q y' : Sq k) :
+    (σ.step s (.rjump E Z a y)).cnt Q y' = σ.cnt Q y' - (if Q = Z ∧ y' = y then 1 else 0) +
+      (if Q = E ∧ y' = y then 1 else 0) := by
+  simp only [IState.step, incCnt_apply, decCnt_apply]
+
+omit s in
+/-- Clearing one recorded class and recording another at a different square. -/
+theorem dcnt_upd (d : Sq k → Bool → Option (Sq k)) {E Z : Sq k} (hEZ : E ≠ Z) (a b : Bool)
+    {y : Sq k} (hdes : d Z b = some y) (Q x : Sq k) :
+    ((if (if Q = Z ∧ false = b then none else if Q = E ∧ false = a then some y else d Q false) =
+          some x then 1 else 0) +
+        (if (if Q = Z ∧ true = b then none else if Q = E ∧ true = a then some y else d Q true) =
+          some x then 1 else 0)) + (if Q = Z ∧ x = y then 1 else 0) ≤
+      ((if d Q false = some x then 1 else 0) + (if d Q true = some x then 1 else 0)) +
+        (if Q = E ∧ x = y then 1 else 0) := by
+  by_cases hQZ : Q = Z
+  · subst hQZ
+    have hQE : ¬ (Q = E) := fun e => hEZ e.symm
+    cases b <;> simp only [hQE, true_and, false_and, if_false, Bool.false_eq_true, if_true,
+      reduceCtorEq] at hdes ⊢ <;> rw [hdes] <;> split_ifs <;> simp_all
+  · by_cases hQE : Q = E
+    · subst hQE
+      cases a <;> simp only [hQZ, true_and, false_and, if_false, Bool.false_eq_true, if_true] <;>
+        split_ifs <;> simp_all
+    · simp [hQE, hQZ]
+
+/-- A designated jump clears the landing record and records the departure cell. -/
+theorem dcnt_rjump (σ : IState k) {E Z : Sq k} (hEZ : E ≠ Z) (a : Bool) {y : Sq k}
+    (hdes : σ.des Z (landB s E Z a) = some y) (Q x : Sq k) :
+    (σ.step s (.rjump E Z a y)).dcnt Q x + (if Q = Z ∧ x = y then 1 else 0) ≤
+      σ.dcnt Q x + (if Q = E ∧ x = y then 1 else 0) :=
+  dcnt_upd σ.des hEZ a (landB s E Z a) hdes Q x
+
+theorem dcnt_restore (σ : IState k) {Z : Sq k} {c : Bool} {y : Sq k} (hnone : σ.des Z c = none)
+    (Q x : Sq k) :
+    (σ.step s (.restore Z c y)).dcnt Q x = σ.dcnt Q x + (if Q = Z ∧ x = y then 1 else 0) := by
+  unfold IState.dcnt
+  simp only [IState.step]
+  by_cases hQ : Q = Z
+  · subst hQ
+    cases c <;> simp only [true_and, Bool.false_eq_true, if_true, if_false] at hnone ⊢ <;>
+      rw [hnone] <;> split_ifs <;> simp_all
+  · simp [hQ]
 
 theorem cnt_jump (σ : IState k) (E Z y Q y' : Sq k) :
     (σ.step s (.jump E Z y)).cnt Q y' = σ.cnt Q y' - (if Q = Z ∧ y' = y then 1 else 0) +

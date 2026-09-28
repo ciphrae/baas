@@ -30,12 +30,12 @@ def hEnd {k : ℕ} : Sq k → List (HEvent k) → Sq k
   | _, .serve S _ :: es => hEnd S es
   | _, .reloc _ Z :: es => hEnd Z es
 
-/-- Weight of a relocation: `13 + 21·` its square distance for one jump between
-aligned squares, `26 + 21·` it for two jumps through a corner (a jump costs
-`(s + 3)(13 + 21 d)`); serves weigh nothing. -/
+/-- Weight of a relocation: `16 + 7·` its square distance for one designated
+jump and restore between aligned squares, `32 + 7·` it for two through a
+corner (a leg costs `(s + 3)(16 + 7 d)`); serves weigh nothing. -/
 def relocWeight {k : ℕ} : HEvent k → ℕ
   | .serve _ _ => 0
-  | .reloc E Z => if E.1 = Z.1 ∨ E.2 = Z.2 then 13 + 21 * sqDist E Z else 26 + 21 * sqDist E Z
+  | .reloc E Z => if E.1 = Z.1 ∨ E.2 = Z.2 then 16 + 7 * sqDist E Z else 32 + 7 * sqDist E Z
 
 /-! ## Chain lemmas -/
 
@@ -66,7 +66,7 @@ lemma relocTo_chain {k : ℕ} (b Z : Sq k) : HChain b (relocTo b Z) ∧ hEnd b (
 lemma relocTo_count {k : ℕ} (b Z S D : Sq k) : (relocTo b Z).count (.serve S D) = 0 := by
   unfold relocTo; split_ifs <;> simp
 
-lemma relocTo_weight {k : ℕ} (b Z : Sq k) : ((relocTo b Z).map relocWeight).sum ≤ 42 * k + 18 := by
+lemma relocTo_weight {k : ℕ} (b Z : Sq k) : ((relocTo b Z).map relocWeight).sum ≤ 14 * k + 18 := by
   have := sqDist_le_two b Z
   unfold relocTo; split_ifs <;> simp [relocWeight]
   all_goals split_ifs <;> omega
@@ -82,7 +82,7 @@ lemma row_le_of_snake_le {k : ℕ} {b Z : Sq k} (h : snake b ≤ snake Z) : b.1.
 /-- A relocation along the snake needs a second jump only when it changes rows. -/
 lemma relocTo_weight_snake {k : ℕ} (b Z : Sq k) (h : snake b ≤ snake Z) :
     ((relocTo b Z).map relocWeight).sum ≤
-      13 + 21 * (snake Z - snake b) + 13 * (Z.1.val - b.1.val) := by
+      16 + 7 * (snake Z - snake b) + 16 * (Z.1.val - b.1.val) := by
   have := sqDist_le_snake h
   have hrow := row_le_of_snake_le h
   unfold relocTo; split_ifs with hbZ <;> simp [relocWeight]
@@ -363,7 +363,7 @@ lemma phase_P2 (L : List (Sq k)) (sv : Finset (Sq k)) (b : Sq k) (h : P2 r sv) :
 
 lemma phase_cost1 (L : List (Sq k)) (sv : Finset (Sq k)) (b : Sq k) :
     ((phase r p L sv b).1.map relocWeight).sum ≤
-      (L.map fun Z => if p Z then 42 * k + 18 else 0).sum := by
+      (L.map fun Z => if p Z then 14 * k + 18 else 0).sum := by
   induction L generalizing sv b with
   | nil => simp [phase]
   | cons Z Zs ih =>
@@ -398,8 +398,8 @@ lemma walk_card_two {k : ℕ} (r : Round k) (sv : Finset (Sq k)) (Z : Sq k)
 lemma phase_costA {k : ℕ} (r : Round k) (L : List (Sq k)) (sv : Finset (Sq k)) (B : Sq k)
     (hL : L.Pairwise (fun P Q => snake P < snake Q)) (hB : ∀ Z ∈ L, snake B ≤ snake Z)
     (h1 : P1 r sv) (h2 : P2 r sv) :
-    ((phase r (fun _ => true) L sv B).1.map relocWeight).sum + 21 * snake B + 13 * B.1.val +
-      7 * sv.card ≤ 7 * (phase r (fun _ => true) L sv B).2.1.card + 21 * (k * k) + 13 * k := by
+    ((phase r (fun _ => true) L sv B).1.map relocWeight).sum + 7 * snake B + 16 * B.1.val +
+      8 * sv.card ≤ 8 * (phase r (fun _ => true) L sv B).2.1.card + 7 * (k * k) + 16 * k := by
   induction L generalizing sv B with
   | nil => simp only [phase]; have := snake_lt B; have := B.1.isLt; simp; omega
   | cons Z Zs ih =>
@@ -425,8 +425,8 @@ lemma phase_costA {k : ℕ} (r : Round k) (L : List (Sq k)) (sv : Finset (Sq k))
 
 lemma phase_costB {k : ℕ} (r : Round k) (L : List (Sq k)) (sv : Finset (Sq k)) (b : Sq k)
     (hL : L.Pairwise (fun P Q => snake P < snake Q)) (h1 : P1 r sv) (h2 : P2 r sv) :
-    ((phase r (fun _ => true) L sv b).1.map relocWeight).sum + 7 * sv.card ≤
-      42 * k + 18 + 7 * (phase r (fun _ => true) L sv b).2.1.card + 21 * (k * k) + 13 * k := by
+    ((phase r (fun _ => true) L sv b).1.map relocWeight).sum + 8 * sv.card ≤
+      14 * k + 18 + 8 * (phase r (fun _ => true) L sv b).2.1.card + 7 * (k * k) + 16 * k := by
   induction L generalizing sv b with
   | nil => simp [phase]; omega
   | cons Z Zs ih =>
@@ -453,7 +453,7 @@ theorem exists_round_events {k : ℕ} (r : Round k) (cur : Sq k) :
       HChain cur es ∧
       (∀ S D, es.count (.serve S D) = if r.perm S = D ∧ r.real S then 1 else 0) ∧
       (es.map relocWeight).sum ≤
-        28 * k ^ 2 + 55 * k + 18 + (42 * k + 18) * (Finset.univ.filter fun S => r.isDummy S).card := by
+        15 * k ^ 2 + 30 * k + 18 + (14 * k + 18) * (Finset.univ.filter fun S => r.isDummy S).card := by
   let p1 : Sq k → Bool := fun Z => decide (r.isDummy Z)
   let ph1 := phase r p1 Finset.univ.toList ∅ cur
   let ph2 := phase r (fun _ => true) (snakeList k) ph1.2.1 ph1.2.2
@@ -500,8 +500,8 @@ theorem exists_round_events {k : ℕ} (r : Round k) (cur : Sq k) :
   · rw [List.map_append, List.sum_append]
     have k1 := phase_cost1 r p1 Finset.univ.toList ∅ cur
     rw [Finset.sum_map_toList] at k1
-    have e : ∑ Z, (if p1 Z = true then 42 * k + 18 else 0) =
-        (Finset.univ.filter fun S => r.isDummy S).card * (42 * k + 18) := by
+    have e : ∑ Z, (if p1 Z = true then 14 * k + 18 else 0) =
+        (Finset.univ.filter fun S => r.isDummy S).card * (14 * k + 18) := by
       rw [← Finset.sum_filter]
       simp [p1]
     rw [e] at k1

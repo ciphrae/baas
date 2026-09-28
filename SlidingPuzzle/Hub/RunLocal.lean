@@ -355,6 +355,96 @@ theorem gJump_cost {G : GS k} (hL : LInv s σ0 F0 G) {E Z y : Sq k} :
   simp only [IState.cost]
   omega
 
+theorem gRJump_free (G : GS k) (E Z : Sq k) (a : Bool) (y Q x : Sq k) :
+    (gRJump s G E Z a y).free Q x =
+      G.free Q x - (if Q = Z ∧ x = y then 1 else 0) + (if Q = E ∧ x = y then 1 else 0) := by
+  simp [gRJump, incCnt_apply, decCnt_apply]
+
+theorem gRJump_linv {G : GS k} (hL : LInv s σ0 F0 G) {E Z : Sq k} {a : Bool} {y : Sq k}
+    (hb : G.σ.blank = E) (hEZ : E ≠ Z) (hal : E.1 = Z.1 ∨ E.2 = Z.2)
+    (hdes : G.σ.des Z (landB s E Z a) = some y) : LInv s σ0 F0 (gRJump s G E Z a y) := by
+  have hpre : G.σ.Pre s (.rjump E Z a y) := ⟨hb, hEZ, hal, hdes⟩
+  obtain ⟨hrun, hval⟩ := pre_append hL hpre
+  have hd1 : 1 ≤ G.σ.dcnt Z y := by
+    unfold IState.dcnt
+    cases hbz : landB s E Z a <;> rw [hbz] at hdes <;> simp [hdes]
+  have hcnt : ∀ Q x, (gRJump s G E Z a y).σ.cnt Q x = G.σ.cnt Q x -
+      (if Q = Z ∧ x = y then 1 else 0) + (if Q = E ∧ x = y then 1 else 0) :=
+    fun Q x => cnt_rjump s G.σ E Z a y Q x
+  have hA : ∀ Q x, (if Q = Z ∧ x = y then 1 else 0) ≤ G.free Q x := by
+    intro Q x
+    split_ifs with hA
+    · obtain ⟨rfl, rfl⟩ := hA; have := hL.dfree Q x; omega
+    · exact Nat.zero_le _
+  have hdf : ∀ Q x, (gRJump s G E Z a y).σ.dcnt Q x ≤ (gRJump s G E Z a y).free Q x := by
+    intro Q x
+    have h1 := dcnt_rjump s G.σ hEZ a hdes Q x
+    change (G.σ.step s (.rjump E Z a y)).dcnt Q x ≤ _
+    rw [gRJump_free]; have := hL.dfree Q x; have := hA Q x
+    omega
+  refine ⟨?_, ?_, hL.stock_supp, hL.ghost_row, hL.out_le, ?_, hrun, hval, hdf⟩
+  · intro Q x
+    rw [gRJump_free, hcnt]
+    have := hL.roles_le Q x; have := hA Q x
+    show G.sched Q x + G.stock Q x + _ ≤ _
+    omega
+  · intro Q x hx
+    rw [gRJump_free, hcnt]
+    have := hL.roles_ge Q x hx; have := hA Q x
+    show _ ≤ G.sched Q x + G.stock Q x + _
+    omega
+  · have e1 : ∑ Q, ∑ x, (gRJump s G E Z a y).free Q x = ∑ Q, ∑ x, G.free Q x := by
+      simp only [gRJump_free]
+      have h1 : ∀ Q x, G.free Q x - (if Q = Z ∧ x = y then 1 else 0) +
+          (if Q = E ∧ x = y then 1 else 0) + (if Q = Z ∧ x = y then 1 else 0) =
+          G.free Q x + (if Q = E ∧ x = y then 1 else 0) := by
+        intro Q x; have := hA Q x; omega
+      have h2 : (∑ Q, ∑ x, (G.free Q x - (if Q = Z ∧ x = y then 1 else 0) +
+          (if Q = E ∧ x = y then 1 else 0))) + ∑ Q, ∑ x, (if Q = Z ∧ x = y then 1 else 0) =
+          (∑ Q, ∑ x, G.free Q x) + ∑ Q, ∑ x, (if Q = E ∧ x = y then 1 else 0) := by
+        rw [← sum_add_distrib, ← sum_add_distrib]
+        refine sum_congr rfl fun Q _ => ?_
+        rw [← sum_add_distrib, ← sum_add_distrib]
+        exact sum_congr rfl fun x _ => h1 Q x
+      rw [sum_sum_ind, sum_sum_ind] at h2
+      omega
+    have := hL.free_junk
+    show _ + junkCnt s G.σ ≤ F0
+    rw [e1]
+    exact this
+
+theorem gRJump_cost {G : GS k} (hL : LInv s σ0 F0 G) {E Z : Sq k} {a : Bool} {y : Sq k} :
+    IState.totalCost s σ0 (gRJump s G E Z a y).evs + pot s (gRJump s G E Z a y).σ =
+      IState.totalCost s σ0 G.evs + pot s G.σ + (s + 3) * (3 + 7 * sqDist E Z) := by
+  show IState.totalCost s σ0 (G.evs ++ [.rjump E Z a y]) + pot s G.σ = _
+  rw [cost_append hL]
+  simp only [IState.cost]
+  omega
+
+theorem gRestore_linv {G : GS k} (hL : LInv s σ0 F0 G) {Z : Sq k} {c : Bool} {y : Sq k}
+    (hb : G.σ.blank = Z) (hnone : G.σ.des Z c = none) (hy : G.σ.dcnt Z y + 1 ≤ G.free Z y) :
+    LInv s σ0 F0 (gRestore s G Z c y) := by
+  have hpre : G.σ.Pre s (.restore Z c y) :=
+    ⟨hb, hnone, by have := hL.roles_le Z y; omega⟩
+  obtain ⟨hrun, hval⟩ := pre_append hL hpre
+  refine ⟨hL.roles_le, hL.roles_ge, hL.stock_supp, hL.ghost_row, hL.out_le, hL.free_junk,
+    hrun, hval, ?_⟩
+  intro Q x
+  change (G.σ.step s (.restore Z c y)).dcnt Q x ≤ G.free Q x
+  rw [dcnt_restore s G.σ hnone]
+  have := hL.dfree Q x
+  split_ifs with h
+  · obtain ⟨rfl, rfl⟩ := h; omega
+  · omega
+
+theorem gRestore_cost {G : GS k} (hL : LInv s σ0 F0 G) {Z : Sq k} {c : Bool} {y : Sq k} :
+    IState.totalCost s σ0 (gRestore s G Z c y).evs + pot s (gRestore s G Z c y).σ =
+      IState.totalCost s σ0 G.evs + pot s G.σ + 13 * s := by
+  show IState.totalCost s σ0 (G.evs ++ [.restore Z c y]) + pot s G.σ = _
+  rw [cost_append hL]
+  simp only [IState.cost]
+  omega
+
 end pres
 
 end SlidingPuzzle.Hub

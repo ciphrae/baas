@@ -17,6 +17,19 @@ variable {k : ℕ}
 noncomputable def pickFree (G : GS k) (Z : Sq k) : Sq k :=
   if h : ∃ y, G.σ.dcnt Z y + 1 ≤ G.free Z y then Classical.choose h else Z
 
+theorem pickFree_spec' (G : GS k) (Z : Sq k)
+    (h : (∑ y, G.σ.dcnt Z y) + 1 ≤ ∑ y, G.free Z y) :
+    G.σ.dcnt Z (pickFree G Z) + 1 ≤ G.free Z (pickFree G Z) := by
+  have hex : ∃ y, G.σ.dcnt Z y + 1 ≤ G.free Z y := by
+    by_contra hne
+    push Not at hne
+    have h1 : ∑ y, G.free Z y ≤ ∑ y, G.σ.dcnt Z y := sum_le_sum fun y _ => by
+      have := hne y; omega
+    omega
+  unfold pickFree
+  rw [dif_pos hex]
+  exact Classical.choose_spec hex
+
 theorem pickFree_spec (G : GS k) (Z : Sq k) (h : 3 ≤ ∑ y, G.free Z y) :
     G.σ.dcnt Z (pickFree G Z) + 1 ≤ G.free Z (pickFree G Z) := by
   have hex : ∃ y, G.σ.dcnt Z y + 1 ≤ G.free Z y := by
@@ -45,19 +58,28 @@ noncomputable def hServe (s τ : ℕ) (G : GS k) (S D : Sq k) : GS k :=
   else
     gHop1 s τ (addByp (gJump s G D (S.1, D.2) (pickFree G (S.1, D.2))) (S.1, D.2) D) S (S.1, D.2) D
 
-/-- Resolution of `reloc E Z`. -/
+/-- One aligned relocation: a designated jump onto the landing cell of `Z` and a
+restore of that cell, or, while the landing cell is not recorded yet, a jump
+carrying a free tile and a restore (counted in `fb`). -/
+noncomputable def hLeg (s : ℕ) (G : GS k) (E Z : Sq k) : GS k :=
+  match G.σ.des Z (landB s E Z false) with
+  | some y =>
+    gRestore s (gRJump s G E Z false y) Z (landB s E Z false)
+      (pickFree (gRJump s G E Z false y) Z)
+  | none =>
+    { gRestore s (gJump s G E Z (pickFree G Z)) Z (landB s E Z false)
+        (pickFree (gJump s G E Z (pickFree G Z)) Z) with fb := G.fb + 1 }
+
+/-- Resolution of `reloc E Z`: one leg, or two through the corner `(Z.1, E.2)`. -/
 noncomputable def hReloc (s : ℕ) (G : GS k) (E Z : Sq k) : GS k :=
-  if E.1 = Z.1 ∨ E.2 = Z.2 then gJump s G E Z (pickFree G Z)
-  else
-    gJump s (gJump s G E (Z.1, E.2) (pickFree G (Z.1, E.2))) (Z.1, E.2) Z
-      (pickFree (gJump s G E (Z.1, E.2) (pickFree G (Z.1, E.2))) Z)
+  if E.1 = Z.1 ∨ E.2 = Z.2 then hLeg s G E Z
+  else hLeg s (hLeg s G E (Z.1, E.2)) (Z.1, E.2) Z
 
 /-- One high-level event of round `τ`. -/
 noncomputable def hstep (s τ : ℕ) (G : GS k) : HEvent k → GS k
   | .serve S D =>
     { hServe s τ G S D with served := bump G.served D, sent := bump G.sent S }
-  | .reloc E Z => { hReloc s G E Z with
-      wt := G.wt + if E.1 = Z.1 ∨ E.2 = Z.2 then 13 + 21 * sqDist E Z else 26 + 21 * sqDist E Z }
+  | .reloc E Z => { hReloc s G E Z with wt := G.wt + relocWeight (.reloc E Z) }
 
 /-- The row insertion made by a high-level event. -/
 def hIns (τ : ℕ) : HEvent k → Option (InsRec k)

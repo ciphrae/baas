@@ -88,6 +88,7 @@ def G0 (σ0 : IState k) (sched0 free0 : Sq k → Sq k → ℕ) : GS k where
   sent := fun _ => 0
   wt := 0
   dd := fun _ => 0
+  fb := 0
 
 section init
 
@@ -119,7 +120,7 @@ theorem G0_linv (hle : ∀ Q y, sched0 Q y + free0 Q y ≤ σ0.cnt Q y)
 theorem G0_hinv (free0t : Sq k → ℕ) (hf : ∀ Z, free0t Z = ∑ y, free0 Z y)
     (N : Sq k → Sq k → ℕ) :
     HInv s σ0 free0t N (∑ S, ∑ D, sched0 S D) (G0 σ0 sched0 free0) := by
-  refine ⟨?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩
   · intro h x _
     rw [gh_G0, newCnt_eq_hubCnt, hubCnt_none s _ h (by simp)]
     simp [G0]
@@ -127,6 +128,7 @@ theorem G0_hinv (free0t : Sq k → ℕ) (hf : ∀ Z, free0t Z = ∑ y, free0 Z y
   · intro Z; rw [hf Z]; simp [G0]; split_ifs <;> simp_all
   · simp [G0, IState.totalCost]
   · simp [G0]
+  · show 0 + ndes σ0 ≤ _; rw [zero_add]; exact ndes_le σ0
 
 end init
 
