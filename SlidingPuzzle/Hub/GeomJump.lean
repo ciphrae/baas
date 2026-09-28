@@ -117,6 +117,7 @@ theorem jump_ends2 (hd : HDims n k s) {E Z : Sq k} (hal : E.1 = Z.1 ∨ E.2 = Z.
       z ≠ z' ∧ z.1.val ≠ Z.1.val * s + (k + 2) ∧ z'.1.val ≠ Z.1.val * s + (k + 2) ∧
       (z.1.val ≤ Z.1.val * s + k + 1 ∧ z.2.val ≤ Z.2.val * s + k + 1 ∧
         z'.1.val ≤ Z.1.val * s + k + 5 ∧ z'.2.val ≤ Z.2.val * s + k + 3) ∧
+      e0.1.val = E.1.val * s + k ∧
       (∀ B' : Board n, blank B' = e0 →
         ∃ p : Path B' (swapCells B' (blank B') z), p.inefficientMoves ≤ 7 * (sqDist E Z * s + 2)) ∧
       (∀ B' : Board n, blank B' = z →
@@ -149,7 +150,7 @@ theorem jump_ends2 (hd : HDims n k s) {E Z : Sq k} (hal : E.1 = Z.1 ∨ E.2 = Z.
     have z's : z'.2.val = Z.2.val * s + k + jp + 2 := mkCell_snd (by omega)
     refine ⟨e0, z, z', he0, (reservoir_iff hd).mpr (by omega), (reservoir_iff hd).mpr (by omega),
       fun e => by have := congrArg (fun c : Cell n => c.2.val) e; change z.2.val = z'.2.val at this; omega,
-      by omega, by omega, by omega, fun B' hB' => ?_, fun B' hB' => ?_, fun B' hB' => ?_⟩
+      by omega, by omega, by omega, e0f, fun B' hB' => ?_, fun B' hB' => ?_, fun B' hB' => ?_⟩
     · obtain ⟨p, hp⟩ := exists_hjump_step hd.two_le_n B' z
         (by rw [hB', e0f, zf]; simp [Nat.dist]; omega) (by rw [hB', e0f, e0s, zf, zs]; omega)
       refine ⟨p, hp.trans ?_⟩
@@ -183,7 +184,7 @@ theorem jump_ends2 (hd : HDims n k s) {E Z : Sq k} (hal : E.1 = Z.1 ∨ E.2 = Z.
     have z's : z'.2.val = Z.2.val * s + k := mkCell_snd (by omega)
     refine ⟨e0, z, z', he0, (reservoir_iff hd).mpr (by omega), (reservoir_iff hd).mpr (by omega),
       fun e => by have := congrArg (fun c : Cell n => c.1.val) e; change z.1.val = z'.1.val at this; omega,
-      by omega, by omega, by omega, fun B' hB' => ?_, fun B' hB' => ?_, fun B' hB' => ?_⟩
+      by omega, by omega, by omega, e0f, fun B' hB' => ?_, fun B' hB' => ?_, fun B' hB' => ?_⟩
     · obtain ⟨p, hp⟩ := exists_vjump_step hd.two_le_n B' z
         (by rw [hB', e0s, zs]; simp [Nat.dist]; omega) (by rw [hB', e0f, e0s, zf, zs]; omega)
       refine ⟨p, hp.trans ?_⟩

@@ -248,6 +248,7 @@ structure LInv (s : ℕ) (σ0 : IState k) (F0 : ℕ) (G : GS k) : Prop where
   free_junk : (∑ Q, ∑ y, G.free Q y) + junkCnt s G.σ ≤ F0
   run_eq : G.σ = IState.run s σ0 G.evs
   valid : IState.Valid s σ0 G.evs
+  dfree : ∀ Q y, G.σ.dcnt Q y ≤ G.free Q y
 
 section sums
 

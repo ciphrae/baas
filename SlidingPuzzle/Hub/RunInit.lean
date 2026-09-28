@@ -106,9 +106,10 @@ theorem noneCnt_none (h : Sq k) :
   simp [this]
 
 theorem G0_linv (hle : ∀ Q y, sched0 Q y + free0 Q y ≤ σ0.cnt Q y)
-    (hge : ∀ Q y, y ≠ Q → σ0.cnt Q y ≤ sched0 Q y + free0 Q y) :
+    (hge : ∀ Q y, y ≠ Q → σ0.cnt Q y ≤ sched0 Q y + free0 Q y)
+    (hdf : ∀ Q y, σ0.dcnt Q y ≤ free0 Q y) :
     LInv s σ0 ((∑ Q, ∑ y, free0 Q y) + junkCnt s σ0) (G0 σ0 sched0 free0) := by
-  refine ⟨?_, ?_, ?_, ?_, ?_, le_refl _, rfl, trivial⟩
+  refine ⟨?_, ?_, ?_, ?_, ?_, le_refl _, rfl, trivial, hdf⟩
   · intro Q y; have := hle Q y; simp only [G0]; omega
   · intro Q y hy; have := hge Q y hy; simp only [G0]; omega
   · intro h x hx; exact absurd rfl hx

@@ -26,6 +26,7 @@ theorem hop2_phase1 (hd : HDims n k s) (B : Board n) {h D : Sq k}
       (∀ x, keyOf hd x ≠ none → keyOf hd x ≠ some D → C x = B x) ∧
       KeepKey hd B C {B (colCell k s (hop2Half h D) 0)} ∧
       keyOf hd (position C (B (colCell k s (hop2Half h D) 0))) = some D ∧
+      (∀ b, dcell k s D b ≠ blank B → C (dcell k s D b) = B (dcell k s D b)) ∧
       p.inefficientMoves ≤ 2 * s + 14 * (k + 2) + 7 * (k + 2) * k +
         ((Finset.range (hop2Pos s h D + 1)).filter fun q =>
           classOf hd (B (colCell k s (hop2Half h D) q)) ≠ D).card := by
@@ -77,7 +78,7 @@ theorem hop2_phase1 (hd : HDims n k s) (B : Board n) {h D : Sq k}
   have hky0 : keyOf hd y0 = none := keyOf_colCell hd V 0 (by omega)
   have hx1y0 : x1 ≠ y0 := ne_of_keyOf (by rw [hkx1, hky0]; simp)
   -- A: walk
-  obtain ⟨B1, p1, hbB1, hl1, hf1⟩ := exists_reservoir_walk hd B hbl he0
+  obtain ⟨B1, p1, hbB1, hl1, hf1, hdc1⟩ := exists_reservoir_walk hd B hbl he0
   -- B: horizontal jump onto the own column piece
   obtain ⟨p2, hp2⟩ := exists_hjump_step hd.two_le_n B1 x1
     (by rw [hbB1, e0f, x1f]; simp [Nat.dist]) (by rw [hbB1, e0f, e0s, x1f, x1s]; omega)
@@ -139,7 +140,7 @@ theorem hop2_phase1 (hd : HDims n k s) (B : Board n) {h D : Sq k}
       hx1y0.symm]
   have offl : ∀ x, keyOf hd x ≠ none → ∀ t, t ≤ P → x ≠ f t :=
     fun x hx t ht e => hx (by rw [e]; exact hkf t ht)
-  refine ⟨B4, ((p1.append p2).append p3).append p4, hbB4, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨B4, ((p1.append p2).append p3).append p4, hbB4, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · intro x hx hq
     rw [hfix4 x (fun t ht => hq t ht), hB3 x hx (hq 0 (Nat.zero_le _))]
   · intro q hq
@@ -181,6 +182,22 @@ theorem hop2_phase1 (hd : HDims n k s) (B : Board n) {h D : Sq k}
   · have : B4 x1 = head := by
       rw [hfix4 x1 (offl x1 (by rw [hkx1]; simp)), hB3x1]
     rw [position_eq_of_apply this, hkx1]
+  · -- the designated cells of `D`
+    intro b hb
+    have hkey : keyOf hd (dcell (n := n) k s D b) = some D :=
+      keyOf_reservoir hd (reservoir_dcell hd D b)
+    have ds := dcell_snd (n := n) hd D b
+    have hne0 : dcell (n := n) k s D b ≠ e0 := fun e => by
+      rw [e, e0s] at ds; split_ifs at ds <;> omega
+    have hne1 : dcell (n := n) k s D b ≠ x1 := fun e => by
+      rw [e, x1s] at ds; split_ifs at ds <;> omega
+    have hne2 : dcell (n := n) k s D b ≠ y0 := ne_of_keyOf (by rw [hkey, hky0]; simp)
+    rw [hfix4 _ (offl _ (by rw [hkey]; simp))]
+    change swapCells B2 (blank B2) y0 _ = _
+    rw [swapCells_preserves B2 (by rw [hbB2]; exact hne1) hne2]
+    change swapCells B1 (blank B1) x1 _ = _
+    rw [swapCells_preserves B1 (by rw [hbB1]; exact hne0) hne1]
+    exact hdc1 b hb hne0
   · -- cost
     simp only [Path.inefficientMoves_append]
     have c1 := p1.inefficientMoves_le_length
@@ -249,13 +266,13 @@ theorem simulate_hop2 (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
     ∃ C : Board n, ∃ p : Path B C, Rel hd C (σ.step s (.hop2 h D y)) ∧
       p.inefficientMoves ≤ σ.cost s (.hop2 h D y) := by
   obtain ⟨hbl, hc2, hne, hcnt⟩ := hpre
-  obtain ⟨hRrow, hRcol, hRcnt, hRbl⟩ := hR
+  obtain ⟨hRrow, hRcol, hRcnt, hRbl, hRd⟩ := hR
   rw [hbl] at hRbl
   set V := hop2Half h D with hV
   set P := hop2Pos s h D with hP
   obtain ⟨hPl, hPb, hPo⟩ := hop2_geom hd hne
   rw [← hV, ← hP] at hPl hPb hPo
-  obtain ⟨B4, p4, hb4, hA, hBcol, hBreg, K1, hkhead, hi4⟩ := hop2_phase1 hd B hRbl hne
+  obtain ⟨B4, p4, hb4, hA, hBcol, hBreg, K1, hkhead, hdc4, hi4⟩ := hop2_phase1 hd B hRbl hne
   rw [← hP] at hi4
   have hV1 : V.1 = D.2 := rfl
   have hV2 : V.2.1 = D.1 := rfl
@@ -287,15 +304,24 @@ theorem simulate_hop2 (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
   have hreg4 : ∀ x, region k s h x → B4 x = B x := fun x hx =>
     hBreg x (by rw [(keyOf_eq_some hd).mpr hx]; simp)
       (by rw [(keyOf_eq_some hd).mpr hx]; exact fun e => hhD (Option.some.inj e))
-  have hT4 : 1 ≤ regionCount hd B4 h y := by
-    rw [regionCount_congr hd hreg4, hRcnt]; exact hcnt
+  obtain ⟨t, htF, htQ, htT, htc⟩ := exists_of_regionCount_avoid hd B4
+    (validD (n := n) (s := s) σ h y) (by
+      have := card_validD_le (n := n) (s := s) σ h y
+      rw [regionCount_congr hd hreg4, hRcnt]
+      exact (Nat.add_le_add_right this 1).trans hcnt)
+  have htd : ∀ b y', σ.des h b = some y' → t ≠ dcell k s h b := by
+    intro b y' hb e
+    have h1 := (hRd h b y' hb).2
+    rw [← e, ← hreg4 t htQ, htc] at h1
+    subst h1
+    exact htF (e ▸ mem_validD hb)
   obtain ⟨p5, hp5⟩ := exists_hjump_step hd.two_le_n B4 w
     (by rw [hb4, wf]; simp [Nat.dist]) (by rw [hb4, wf, ws, vs]; omega)
   have hvf : v.1.val = h.1.val * s + (if decide (D.1 < h.1) then k else s - 1) := by
     rw [vf, hPo]; simp only [decide_eq_true_eq]
   have hD := hop2_cornerDist hd (D := D) (decide (D.1 < h.1)) hvf (by rw [vs, hc2]) wf ws hjp1
-  obtain ⟨C, p6, T, hT0, hTc, hTk, hCv, hCbl, hCx, K2, hi6⟩ :=
-    insert_by_cycle hd B4 (Q := h) (y := y) hb4 hkv hw hvbox hT4
+  obtain ⟨C, p6, T, hT0, hTc, hTk, hCv, hCbl, hCx, hCfp, K2, hi6⟩ :=
+    insert_by_cycle hd B4 (Q := h) (y := y) hb4 hkv hw hvbox t htQ htT htc
       (7 * (k + 2)) ⟨p5, hp5.trans (by rw [hb4, ws, vs]; simp only [Nat.dist]; omega)⟩
       (!decide (D.1 < h.1)) false (ro := if decide (D.1 < h.1) then k + 2 else s - 3) (co := k)
       (by split_ifs <;> omega) (by split_ifs <;> omega) le_rfl (by omega) hD
@@ -308,7 +334,7 @@ theorem simulate_hop2 (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
     intro e
     rw [← e, hkhead] at hkB4T
     exact hhD (Option.some.inj hkB4T).symm
-  refine ⟨C, p4.append p6, ⟨?_, ?_, ?_, ?_⟩, ?_⟩
+  refine ⟨C, p4.append p6, ⟨?_, ?_, ?_, ?_, ?_⟩, ?_⟩
   · -- row halves
     intro H q hq
     simp only [IState.step]
@@ -368,6 +394,27 @@ theorem simulate_hop2 (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
   · -- the blank
     simp only [IState.step]
     rw [hCbl]; exact hw
+  · -- designated cells
+    intro Q b y' hdes
+    simp only [IState.step] at hdes
+    have hB := hRd Q b y' hdes
+    suffices C (dcell k s Q b) = B (dcell k s Q b) by rw [this]; exact hB
+    have hkey : keyOf hd (dcell (n := n) k s Q b) = some Q :=
+      keyOf_reservoir hd (reservoir_dcell hd Q b)
+    have hv' : dcell (n := n) k s Q b ≠ v := ne_of_keyOf (by rw [hkey, hkv]; simp)
+    have hbl' : dcell (n := n) k s Q b ≠ blank B := fun e => hB.1 (by
+      rw [e]; simp [blank, position])
+    have df := dcell_fst (n := n) hd Q b
+    have ds := dcell_snd (n := n) hd Q b
+    by_cases hQh : Q = h
+    · subst hQh
+      rw [hCfp _ hv' (fun e => by rw [e, ws] at ds; split_ifs at ds <;> omega)
+        (htd b y' hdes).symm (by rw [df]; split_ifs <;> omega),
+        hreg4 _ (region_of_reservoir (reservoir_dcell hd Q b))]
+    · rw [hCx _ hv' (by rw [hkey]; exact fun e => hQh (Option.some.inj e))]
+      by_cases hQD : Q = D
+      · subst hQD; exact hdc4 b hbl'
+      · exact hBreg _ (by rw [hkey]; simp) (by rw [hkey]; exact fun e => hQD (Option.some.inj e))
   · -- cost
     simp only [IState.cost, IState.junkCol]
     rw [Path.inefficientMoves_append]

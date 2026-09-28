@@ -22,12 +22,14 @@ inefficient moves (`Hub/Simulate.lean`); the abstract side constructs a valid
 list with small total cost (`Hub/Run.lean`). -/
 namespace SlidingPuzzle.Hub
 
-/-- The abstraction of a board used by the operations. -/
+/-- The abstraction of a board used by the operations. `des Q b` is the class
+of the tile on the designated cell `b` of `Q`'s reservoir when it is recorded. -/
 structure IState (k : ℕ) where
   row : RowH k → ℕ → Sq k
   col : ColH k → ℕ → Sq k
   cnt : Sq k → Sq k → ℕ
   blank : Sq k
+  des : Sq k → Bool → Option (Sq k)
 
 /-- Resolved operations. -/
 inductive REvent (k : ℕ) where
@@ -48,11 +50,16 @@ namespace IState
 
 variable {k : ℕ}
 
-/-- Preconditions of the operations. -/
+/-- Recorded designated tiles of class `y` in `Q`. -/
+def dcnt (σ : IState k) (Q y : Sq k) : ℕ :=
+  (if σ.des Q false = some y then 1 else 0) + (if σ.des Q true = some y then 1 else 0)
+
+/-- Preconditions of the operations: the moved tile is not a recorded designated tile. -/
 def Pre (σ : IState k) : REvent k → Prop
-  | .hop1 S h y => σ.blank = h ∧ S.1 = h.1 ∧ S.2 ≠ h.2 ∧ 1 ≤ σ.cnt S y
-  | .hop2 h D y => σ.blank = D ∧ h.2 = D.2 ∧ h.1 ≠ D.1 ∧ 1 ≤ σ.cnt h y
-  | .jump E Z y => σ.blank = E ∧ E ≠ Z ∧ (E.1 = Z.1 ∨ E.2 = Z.2) ∧ 1 ≤ σ.cnt Z y
+  | .hop1 S h y => σ.blank = h ∧ S.1 = h.1 ∧ S.2 ≠ h.2 ∧ σ.dcnt S y + 1 ≤ σ.cnt S y
+  | .hop2 h D y => σ.blank = D ∧ h.2 = D.2 ∧ h.1 ≠ D.1 ∧ σ.dcnt h y + 1 ≤ σ.cnt h y
+  | .jump E Z y =>
+    σ.blank = E ∧ E ≠ Z ∧ (E.1 = Z.1 ∨ E.2 = Z.2) ∧ σ.dcnt Z y + 1 ≤ σ.cnt Z y
 
 /-- Effect of the operations. -/
 def step (s : ℕ) (σ : IState k) : REvent k → IState k
@@ -61,18 +68,40 @@ def step (s : ℕ) (σ : IState k) : REvent k → IState k
         (shiftIn (σ.row (hop1Half S h)) (hop1Pos s S h) y)
       col := σ.col
       cnt := incCnt (decCnt σ.cnt S y) h (σ.row (hop1Half S h) 0)
-      blank := S }
+      blank := S
+      des := σ.des }
   | .hop2 h D y =>
     { row := σ.row
       col := Function.update σ.col (hop2Half h D)
         (shiftIn (σ.col (hop2Half h D)) (hop2Pos s h D) y)
       cnt := incCnt (decCnt σ.cnt h y) D (σ.col (hop2Half h D) 0)
-      blank := h }
+      blank := h
+      des := σ.des }
   | .jump E Z y =>
     { row := σ.row
       col := σ.col
       cnt := incCnt (decCnt σ.cnt Z y) E y
-      blank := Z }
+      blank := Z
+      des := σ.des }
+
+theorem des_step (s : ℕ) (σ : IState k) (e : REvent k) : (σ.step s e).des = σ.des := by
+  cases e <;> rfl
+
+theorem dcnt_step (s : ℕ) (σ : IState k) (e : REvent k) : (σ.step s e).dcnt = σ.dcnt := by
+  unfold dcnt; rw [des_step]
+
+/-- At most two recorded designated tiles per square. -/
+theorem sum_dcnt_le (σ : IState k) (Q : Sq k) : ∑ y, σ.dcnt Q y ≤ 2 := by
+  classical
+  unfold dcnt
+  rw [Finset.sum_add_distrib]
+  have h : ∀ o : Option (Sq k), (∑ y : Sq k, if o = some y then 1 else 0) ≤ 1 := by
+    intro o
+    cases o with
+    | none => simp
+    | some z => simp
+  have := h (σ.des Q false); have := h (σ.des Q true)
+  omega
 
 /-- Positions `0..p` of a row half holding a tile of another target block column. -/
 def junkRow (σ : IState k) (H : RowH k) (p : ℕ) : ℕ :=

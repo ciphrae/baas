@@ -36,7 +36,7 @@ def transportBound (n k s : ℕ) : ℕ :=
 /-- Region tiles left outside their squares, before absorbing lower-order terms. -/
 def misplacedBound (n k : ℕ) : ℕ :=
   k ^ 2 * n + k ^ 2 * (Rhub n + k ^ 2) +
-    k ^ 2 * (Rhub n + 2 * n + k ^ 2 + 6) + 2 * k ^ 2 * n
+    k ^ 2 * (Rhub n + 2 * n + k ^ 2 + 8) + 2 * k ^ 2 * n
 
 variable {k : ℕ}
 
@@ -78,7 +78,8 @@ theorem sum_freeInit_le (σ0 : IState k) {Δ0 : ℕ} (rs0 : Fin Δ0 → Round k)
 theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
     (hk500 : 500 ≤ k) (hP1 : 76 * k * lamA k s ≤ 5 * s) (σ0 : IState k)
     (hF1 : ∀ Q, (∑ y, σ0.cnt Q y) + (if σ0.blank = Q then 1 else 0) = regionSize k s)
-    (hF2 : ∀ y, (∑ Q, σ0.cnt Q y) + σ0.corrCount s y = s ^ 2 - (if IsLast y then 1 else 0)) :
+    (hF2 : ∀ y, (∑ Q, σ0.cnt Q y) + σ0.corrCount s y = s ^ 2 - (if IsLast y then 1 else 0))
+    (hdes0 : ∀ Q b, σ0.des Q b = none) :
     ∃ es : List (REvent k), σ0.Valid s es ∧ σ0.totalCost s es ≤ transportBound n k s ∧
       (σ0.run s es).offCount ≤ misplacedBound n k := by
   classical
@@ -97,9 +98,9 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
     have := sends_le hF1 S; omega
   have hrecv : ∀ S, recv (demand σ0) S ≤ s ^ 2 := fun S => by have := recv_le hF2 S; omega
   have hΔ0 : Δ0 ≤ s ^ 2 := hc5 _ fun S => ⟨hsends S, hrecv S⟩
-  obtain ⟨Q', hQ'⟩ : ∃ Q', Q' = min Δ0 (Rhub (k * s) + 2 * k * s + k ^ 2 + 6) := ⟨_, rfl⟩
+  obtain ⟨Q', hQ'⟩ : ∃ Q', Q' = min Δ0 (Rhub (k * s) + 2 * k * s + k ^ 2 + 8) := ⟨_, rfl⟩
   have hQle : Q' ≤ Δ0 := by rw [hQ']; exact min_le_left _ _
-  have hQle2 : Q' ≤ Rhub (k * s) + 2 * k * s + k ^ 2 + 6 := by rw [hQ']; exact min_le_right _ _
+  have hQle2 : Q' ≤ Rhub (k * s) + 2 * k * s + k ^ 2 + 8 := by rw [hQ']; exact min_le_right _ _
   have hΔ : Δ0 - Q' ≤ s ^ 2 + 1 := by omega
   obtain ⟨σo, hσo⟩ := exists_good_order hd hk500 hP1 hΔ (planRs rs0 Q')
   obtain ⟨rd, hrd⟩ : ∃ rd, rd = ordRd rs0 Q' σo := ⟨_, rfl⟩
@@ -187,9 +188,9 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
     refine ⟨hroom, hN, ?_, fun Z => le_rfl⟩
     intro hpos Z
     have hpos' : 0 < Δ0 - Q' := hpos
-    have hQ : Q' = Rhub (k * s) + 2 * k * s + k ^ 2 + 6 := by
+    have hQ : Q' = Rhub (k * s) + 2 * k * s + k ^ 2 + 8 := by
       rw [hQ']; exact min_eq_right (by omega)
-    show (∑ x, (N Z x + 1)) + (∑ τ ∈ range (Δ0 - Q'), dummyAt (rd τ) Z) + 3 ≤ ∑ y, free0 Z y
+    show (∑ x, (N Z x + 1)) + (∑ τ ∈ range (Δ0 - Q'), dummyAt (rd τ) Z) + 5 ≤ ∑ y, free0 Z y
     have hdp := hord (fun r => dummyAt r Z)
     beta_reduce at hdp
     rw [hNk]
@@ -224,7 +225,8 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
       · right; exact min_eq_right h
     split_ifs at hd6 <;> omega
   have hO0 : Outer c 0 G00 := by
-    refine ⟨Nat.zero_le _, G0_linv s σ0 sched0 free0 hle hge,
+    refine ⟨Nat.zero_le _, G0_linv s σ0 sched0 free0 hle hge
+        (fun Q y => by simp [IState.dcnt, hdes0]),
       G0_hinv s σ0 sched0 free0 _ (fun _ => rfl) N, ?_, ?_, ?_, ?_⟩
     · intro S D; simp [hG00, G0, hsched0, schedInit, c]
     · intro Z; simp [hG00, G0]
@@ -317,7 +319,7 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
       simp only [sum_const, card_univ, Fintype.card_prod, Fintype.card_fin, smul_eq_mul]
       unfold Rhub; ring_nf; exact le_refl _
     have hfree : ∑ Q, ∑ y, Gf.free Q y ≤
-        k ^ 2 * (Rhub (k * s) + 2 * (k * s) + k ^ 2 + 6) +
+        k ^ 2 * (Rhub (k * s) + 2 * (k * s) + k ^ 2 + 8) +
           2 * k ^ 2 * (k * s) := by
       have h1 := hOf.lin.free_junk
       have h2 := junkCnt_le s σ0
@@ -325,7 +327,7 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
         sum_le_sum fun Q _ => sum_freeInit_le σ0 rs0 Q' Q
       simp only [sum_const, card_univ, Fintype.card_prod, Fintype.card_fin, smul_eq_mul] at h3
       have h4 : k * k * Q' ≤ k ^ 2 * (Rhub (k * s) +
-          2 * (k * s) + k ^ 2 + 6) := by
+          2 * (k * s) + k ^ 2 + 8) := by
         have hkk : k ^ 2 = k * k := sq k
         rw [hkk]; refine Nat.mul_le_mul_left _ ?_
         have : 2 * k * s = 2 * (k * s) := by ring

@@ -28,7 +28,7 @@ structure Ctx (k : ℕ) where
 structure Ctx.OK (c : Ctx k) : Prop where
   room : k + 1 ≤ c.s
   newle : ∀ m h x, newCnt c.s (ghostRun c.s (fun _ _ => none) (c.L.take m)) h x ≤ c.N h x
-  free0 : 0 < c.Δ → ∀ Z, (∑ x, (c.N Z x + 1)) + c.dmax Z + 3 ≤ c.free0 Z
+  free0 : 0 < c.Δ → ∀ Z, (∑ x, (c.N Z x + 1)) + c.dmax Z + 5 ≤ c.free0 Z
   dmax : ∀ Z, (∑ τ ∈ range c.Δ, dummyAt (c.rd τ) Z) ≤ c.dmax Z
 
 /-- Invariant between the events of round `m`; `rem` are the remaining events. -/
@@ -104,7 +104,7 @@ variable {c : Ctx k} (hc : c.OK)
 include hc
 
 theorem Inner.free_pos {m : ℕ} {G : GS k} {rem : List (HEvent k)} (hI : Inner c m G rem)
-    (Q : Sq k) : 1 ≤ ∑ y, G.free Q y := by
+    (Q : Sq k) : 3 ≤ ∑ y, G.free Q y := by
   have h1 := hI.hin.free_lo Q
   have h2 := hI.bal Q
   have h3 := cntOut_le hI.cnt_le Q

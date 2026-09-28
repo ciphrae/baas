@@ -16,16 +16,18 @@ variable {n k s : ℕ} [NeZero n]
 theorem insert_by_cycle (hd : HDims n k s) (B : Board n) {Q y : Sq k} {v w : Cell n}
     (hbv : blank B = v) (hv : keyOf hd v = none) (hw : reservoir k s Q w)
     (hvbox : InBox (Q.1.val * s) (Q.2.val * s) s v)
-    (hT : 1 ≤ regionCount hd B Q y) (cj : ℕ)
+    (t : Cell n) (htQ : region k s Q t) (htT : (B t).val ≠ 0) (htc : classOf hd (B t) = y)
+    (cj : ℕ)
     (hjump : ∃ p : Path B (swapCells B (blank B) w), p.inefficientMoves ≤ cj)
     (fr fc : Bool) {ro co : ℕ} (hro : k ≤ ro) (hro' : ro < s) (hco : k ≤ co) (hco' : co + 2 < s)
     (hD : ∀ j, j ≤ 2 → cornerDist (Q.1.val * s) (Q.2.val * s) s fr fc w v
       (mkCell n (Q.1.val * s + ro) (Q.2.val * s + co + j)) ≤ 6 * k + 7) :
     ∃ C : Board n, ∃ p : Path B C, ∃ T : Tile n, T.val ≠ 0 ∧ classOf hd T = y ∧
       keyOf hd (position B T) = some Q ∧ C v = T ∧ blank C = w ∧
-      (∀ x, x ≠ v → keyOf hd x ≠ some Q → C x = B x) ∧ KeepKey hd B C {T} ∧
+      (∀ x, x ≠ v → keyOf hd x ≠ some Q → C x = B x) ∧
+      (∀ x, x ≠ v → x ≠ w → x ≠ t → x.1.val ≠ Q.1.val * s + ro → C x = B x) ∧
+      KeepKey hd B C {T} ∧
       p.inefficientMoves ≤ cj + 10 * s + 492 * k + 1010 := by
-  obtain ⟨t, htQ, htT, htc⟩ := exists_of_regionCount hd B hT
   obtain ⟨p1, hp1⟩ := hjump
   have hkw : keyOf hd w = some Q := keyOf_reservoir hd hw
   have hkt : keyOf hd t = some Q := (keyOf_eq_some hd).mpr htQ
@@ -47,7 +49,8 @@ theorem insert_by_cycle (hd : HDims n k s) (B : Board n) {Q y : Sq k} {v w : Cel
   by_cases htw : t = w
   · subst htw
     refine ⟨B4, p1, B t, htT, htc, by rw [hposT]; exact hkt, hB4v, blank_eq_of_apply hB4w,
-      fun x h1 h2 => hB4x x h1 (fun e => h2 (by rw [e]; exact hkw)), ?_, by omega⟩
+      fun x h1 h2 => hB4x x h1 (fun e => h2 (by rw [e]; exact hkw)),
+      fun x h1 h2 _ _ => hB4x x h1 h2, ?_, by omega⟩
     intro t' h0 ht'
     exact K1 t' h0 (by
       simp only [Finset.mem_insert, Finset.mem_singleton] at ht' ⊢
@@ -80,13 +83,18 @@ theorem insert_by_cycle (hd : HDims n k s) (B : Board n) {Q y : Sq k} {v w : Cel
       rwa [Finset.image_insert, Finset.image_insert, Finset.image_singleton, hB4v, hB4t,
         hB4u] at this
     have K := K1.trans K2
+    have hurow : u.1.val = Q.1.val * s + ro := by
+      rw [hudef]; exact mkCell_fst (by have := hd.band_le Q.1.isLt; omega)
     refine ⟨C, p1.append p2, B t, htT, htc, by rw [hposT]; exact hkt, by rw [hCv, hB4t],
-      blank_eq_of_apply hCw, ?_, ?_, ?_⟩
+      blank_eq_of_apply hCw, ?_, ?_, ?_, ?_⟩
     · intro x h1 h2
       have hxt : x ≠ t := fun e => h2 (by rw [e]; exact hkt)
       have hxu : x ≠ u := fun e => h2 (by rw [e]; exact hku)
       have hxw : x ≠ w := fun e => h2 (by rw [e]; exact hkw)
       rw [hCx x h1 hxt hxu, hB4x x h1 hxw]
+    · intro x h1 h2 h3 h4
+      have hxu : x ≠ u := fun e => h4 (by rw [e]; exact hurow)
+      rw [hCx x h1 h3 hxu, hB4x x h1 h2]
     · intro t' h0 ht'
       rw [Finset.mem_singleton] at ht'
       by_cases e1 : t' = B w

@@ -125,7 +125,8 @@ variable {s : ℕ} {σ0 : IState k} {F0 : ℕ}
 theorem gHop1_linv {G : GS k} (hL : LInv s σ0 F0 G) (τ : ℕ) {S h y : Sq k}
     (hb : G.σ.blank = h) (h1 : S.1 = h.1) (h2 : S.2 ≠ h.2) (hy : y.2 = h.2)
     (hsch : 1 ≤ G.sched S y) (hs : k + 1 ≤ s) : LInv s σ0 F0 (gHop1 s τ G S h y) := by
-  have hpre : G.σ.Pre (.hop1 S h y) := ⟨hb, h1, h2, by have := hL.roles_le S y; omega⟩
+  have hpre : G.σ.Pre (.hop1 S h y) := ⟨hb, h1, h2, by
+    have := hL.roles_le S y; have := hL.dfree S y; omega⟩
   obtain ⟨hrun, hval⟩ := pre_append hL hpre
   have hcnt : ∀ Q x, (gHop1 s τ G S h y).σ.cnt Q x = G.σ.cnt Q x -
       (if Q = S ∧ x = y then 1 else 0) + (if Q = h ∧ x = rowHead G S h then 1 else 0) :=
@@ -135,7 +136,12 @@ theorem gHop1_linv {G : GS k} (hL : LInv s σ0 F0 G) (τ : ℕ) {S h y : Sq k}
     split_ifs with hA
     · obtain ⟨rfl, rfl⟩ := hA; exact hsch
     · exact Nat.zero_le _
-  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, hrun, hval⟩
+  have hdf : ∀ Q x, (gHop1 s τ G S h y).σ.dcnt Q x ≤ (gHop1 s τ G S h y).free Q x := by
+    intro Q x
+    have e : (gHop1 s τ G S h y).σ.dcnt Q x = G.σ.dcnt Q x :=
+      congrFun (congrFun (IState.dcnt_step s G.σ (.hop1 S h y)) Q) x
+    rw [e, gHop1_free]; have := hL.dfree Q x; omega
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, hrun, hval, hdf⟩
   · intro Q x
     rw [gHop1_sched, gHop1_stock, gHop1_free, hcnt]
     have hdisj : (if isStk h (rowHead G S h) ∧ Q = h ∧ x = rowHead G S h then 1 else 0) +
@@ -220,8 +226,8 @@ theorem gHop2_linv {G : GS k} (hL : LInv s σ0 F0 G) {st : Bool} {h D : Sq k}
     (hb : G.σ.blank = D) (h1 : h.2 = D.2) (h2 : h.1 ≠ D.1)
     (hrole : if st then 1 ≤ G.stock h D else 1 ≤ G.sched h D) (hs : k + 1 ≤ s) :
     LInv s σ0 F0 (gHop2 s G st h D D) := by
-  have hrole' : 1 ≤ G.σ.cnt h D := by
-    have := hL.roles_le h D
+  have hrole' : G.σ.dcnt h D + 1 ≤ G.σ.cnt h D := by
+    have := hL.roles_le h D; have := hL.dfree h D
     cases st <;> simp at hrole <;> omega
   have hpre : G.σ.Pre (.hop2 h D D) := ⟨hb, h1, h2, hrole'⟩
   obtain ⟨hrun, hval⟩ := pre_append hL hpre
@@ -241,7 +247,12 @@ theorem gHop2_linv {G : GS k} (hL : LInv s σ0 F0 G) {st : Bool} {h D : Sq k}
     split_ifs with hc
     · obtain ⟨hst, rfl, rfl⟩ := hc; subst hst; simpa using hrole
     · exact Nat.zero_le _
-  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, hrun, hval⟩
+  have hdf : ∀ Q x, (gHop2 s G st h D D).σ.dcnt Q x ≤ (gHop2 s G st h D D).free Q x := by
+    intro Q x
+    have e : (gHop2 s G st h D D).σ.dcnt Q x = G.σ.dcnt Q x :=
+      congrFun (congrFun (IState.dcnt_step s G.σ (.hop2 h D D)) Q) x
+    rw [e, gHop2_free]; have := hL.dfree Q x; omega
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, hrun, hval, hdf⟩
   · intro Q x
     rw [gHop2_sched, gHop2_stock, gHop2_free, hcnt]
     have hB : (if colHead G h D ≠ D ∧ Q = D ∧ x = colHead G h D then 1 else 0) ≤
@@ -285,7 +296,7 @@ theorem gHop2_cost {G : GS k} (hL : LInv s σ0 F0 G) {st : Bool} {h D : Sq k}
 
 theorem gJump_linv {G : GS k} (hL : LInv s σ0 F0 G) {E Z y : Sq k}
     (hb : G.σ.blank = E) (hEZ : E ≠ Z) (hal : E.1 = Z.1 ∨ E.2 = Z.2)
-    (hfree : 1 ≤ G.free Z y) : LInv s σ0 F0 (gJump s G E Z y) := by
+    (hfree : G.σ.dcnt Z y + 1 ≤ G.free Z y) : LInv s σ0 F0 (gJump s G E Z y) := by
   have hpre : G.σ.Pre (.jump E Z y) :=
     ⟨hb, hEZ, hal, by have := hL.roles_le Z y; omega⟩
   obtain ⟨hrun, hval⟩ := pre_append hL hpre
@@ -295,9 +306,17 @@ theorem gJump_linv {G : GS k} (hL : LInv s σ0 F0 G) {E Z y : Sq k}
   have hA : ∀ Q x, (if Q = Z ∧ x = y then 1 else 0) ≤ G.free Q x := by
     intro Q x
     split_ifs with hA
-    · obtain ⟨rfl, rfl⟩ := hA; exact hfree
+    · obtain ⟨rfl, rfl⟩ := hA; omega
     · exact Nat.zero_le _
-  refine ⟨?_, ?_, hL.stock_supp, hL.ghost_row, hL.out_le, ?_, hrun, hval⟩
+  have hdf : ∀ Q x, (gJump s G E Z y).σ.dcnt Q x ≤ (gJump s G E Z y).free Q x := by
+    intro Q x
+    have e : (gJump s G E Z y).σ.dcnt Q x = G.σ.dcnt Q x :=
+      congrFun (congrFun (IState.dcnt_step s G.σ (.jump E Z y)) Q) x
+    rw [e, gJump_free]; have := hL.dfree Q x; have := hA Q x
+    by_cases h1 : Q = Z ∧ x = y
+    · obtain ⟨rfl, rfl⟩ := h1; simp only [and_self, if_true]; split_ifs <;> omega
+    · simp only [h1, if_false]; omega
+  refine ⟨?_, ?_, hL.stock_supp, hL.ghost_row, hL.out_le, ?_, hrun, hval, hdf⟩
   · intro Q x
     rw [gJump_free, hcnt]
     have := hL.roles_le Q x; have := hA Q x

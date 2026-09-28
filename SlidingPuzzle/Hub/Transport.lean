@@ -26,7 +26,7 @@ theorem exists_hub_solution (hd : HDims n k s) [NeZero n]
   obtain ⟨B1, p1, hb1, hp1⟩ := exists_normalize hd B
   have hR1 := rel_absState hd B1 hb1
   obtain ⟨es, hv, hcost, hoff⟩ := exists_valid_run hd hk500 hP1 (absState hd B1)
-    (absState_regionTotal hd B1 hb1) (absState_classTotal hd B1 hb1)
+    (absState_regionTotal hd B1 hb1) (absState_classTotal hd B1 hb1) (fun _ _ => rfl)
   obtain ⟨B2, p2, hR2, hp2⟩ := simulate_run hd hR1 hv
   have hmis := misplaced_le_of_rel hd hR2
   obtain ⟨B3, p3, hsorted, hlast, hp3⟩ := exists_cleanup hd B2

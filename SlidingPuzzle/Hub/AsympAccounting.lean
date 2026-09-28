@@ -32,7 +32,7 @@ theorem hubBound_le_lin {k s : ℕ} (hk : 500 ≤ k) (hcap : 881 * k ≤ s) :
   generalize Rhub (k * s) = R at *
   generalize sqCorridor k s = C at *
   set Y := 26 * (k * s) * (k ^ 2 * C + (k ^ 2 * (k * s) + k ^ 2 * (R + k ^ 2) +
-      k ^ 2 * (R + 2 * (k * s) + k ^ 2 + 6) + 2 * k ^ 2 * (k * s)) + 2 * (k * s) + 5) +
+      k ^ 2 * (R + 2 * (k * s) + k ^ 2 + 8) + 2 * k ^ 2 * (k * s)) + 2 * (k * s) + 5) +
     (k ^ 2 * (5 * s ^ 3 + 1509 * s ^ 2 + 1505 * s + 4796) + 9354 * k ^ 2 * (k * s)) with hY
   have hdiv : 2 * (Y / 2) ≤ Y := Nat.mul_div_le Y 2
   have hs : 440500 ≤ s := by omega

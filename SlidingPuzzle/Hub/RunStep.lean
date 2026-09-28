@@ -43,7 +43,7 @@ theorem corner_facts {E Z : Sq k} (c : ¬ (E.1 = Z.1 ∨ E.2 = Z.2)) :
     fun e => c2 (by simpa using congrArg Prod.snd e)⟩
 
 theorem hReloc_linv {G : GS k} (hL : LInv s σ0 F0 G) {E Z : Sq k} (hb : G.σ.blank = E)
-    (hEZ : E ≠ Z) (hfree : ∀ Q, 1 ≤ ∑ y, G.free Q y) : LInv s σ0 F0 (hReloc s G E Z) := by
+    (hEZ : E ≠ Z) (hfree : ∀ Q, 3 ≤ ∑ y, G.free Q y) : LInv s σ0 F0 (hReloc s G E Z) := by
   by_cases c : E.1 = Z.1 ∨ E.2 = Z.2
   · rw [hReloc_of_al c]
     exact gJump_linv hL hb hEZ c (pickFree_spec G Z (hfree Z))
@@ -67,7 +67,7 @@ theorem hReloc_free (G : GS k) (E Z Q : Sq k) :
     omega
 
 theorem hReloc_cost {G : GS k} (hL : LInv s σ0 F0 G) {E Z : Sq k} (hb : G.σ.blank = E)
-    (hfree : ∀ Q, 1 ≤ ∑ y, G.free Q y) :
+    (hfree : ∀ Q, 3 ≤ ∑ y, G.free Q y) :
     IState.totalCost s σ0 (hReloc s G E Z).evs + pot s (hReloc s G E Z).σ ≤
       IState.totalCost s σ0 G.evs + pot s G.σ + (s + 3) * (if E.1 = Z.1 ∨ E.2 = Z.2 then 13 + 21 * sqDist E Z else 26 + 21 * sqDist E Z) := by
   by_cases c : E.1 = Z.1 ∨ E.2 = Z.2
@@ -160,7 +160,7 @@ theorem hstep_serve {G : GS k} (hL : LInv s σ0 F0 G) (hH : HInv s σ0 free0 N S
     omega
 
 theorem hstep_reloc {G : GS k} (hL : LInv s σ0 F0 G) (hH : HInv s σ0 free0 N S0 G) (τ : ℕ)
-    {E Z : Sq k} (hb : G.σ.blank = E) (hEZ : E ≠ Z) (hfree : ∀ Q, 1 ≤ ∑ y, G.free Q y) :
+    {E Z : Sq k} (hb : G.σ.blank = E) (hEZ : E ≠ Z) (hfree : ∀ Q, 3 ≤ ∑ y, G.free Q y) :
     LInv s σ0 F0 (hstep s τ G (.reloc E Z)) ∧ HInv s σ0 free0 N S0 (hstep s τ G (.reloc E Z)) := by
   have hL' := hReloc_linv hL hb hEZ hfree
   obtain ⟨r1, r2, r3, r4, r5, r6, r7, r8, r9, r10⟩ := hReloc_same (s := s) G E Z

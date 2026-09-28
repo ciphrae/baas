@@ -13,16 +13,18 @@ open Finset
 
 variable {k : ℕ}
 
-/-- Some class with a free tile in `Z` (if there is one). -/
+/-- Some class with a free tile in `Z` besides the designated ones (if there is one). -/
 noncomputable def pickFree (G : GS k) (Z : Sq k) : Sq k :=
-  if h : ∃ y, 1 ≤ G.free Z y then Classical.choose h else Z
+  if h : ∃ y, G.σ.dcnt Z y + 1 ≤ G.free Z y then Classical.choose h else Z
 
-theorem pickFree_spec (G : GS k) (Z : Sq k) (h : 1 ≤ ∑ y, G.free Z y) :
-    1 ≤ G.free Z (pickFree G Z) := by
-  have hex : ∃ y, 1 ≤ G.free Z y := by
+theorem pickFree_spec (G : GS k) (Z : Sq k) (h : 3 ≤ ∑ y, G.free Z y) :
+    G.σ.dcnt Z (pickFree G Z) + 1 ≤ G.free Z (pickFree G Z) := by
+  have hex : ∃ y, G.σ.dcnt Z y + 1 ≤ G.free Z y := by
     by_contra hne
     push Not at hne
-    have : ∑ y, G.free Z y = 0 := sum_eq_zero fun y _ => by have := hne y; omega
+    have h1 : ∑ y, G.free Z y ≤ ∑ y, G.σ.dcnt Z y := sum_le_sum fun y _ => by
+      have := hne y; omega
+    have := IState.sum_dcnt_le G.σ Z
     omega
   unfold pickFree
   rw [dif_pos hex]
@@ -76,8 +78,8 @@ theorem LInv.congr {G G' : GS k} (h : LInv s σ0 F0 G) (e1 : G'.σ = G.σ) (e2 :
     (e3 : G'.ins = G.ins) (e4 : G'.sched = G.sched) (e5 : G'.stock = G.stock)
     (e6 : G'.free = G.free) (e7 : G'.out = G.out) : LInv s σ0 F0 G' := by
   have e8 : gh s G' = gh s G := by simp only [gh, e3]
-  obtain ⟨a1, a2, a3, a4, a5, a6, a7, a8⟩ := h
-  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;>
+  obtain ⟨a1, a2, a3, a4, a5, a6, a7, a8, a9⟩ := h
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;>
     simp only [e1, e2, e4, e5, e6, e7, e8] <;> assumption
 
 end congr
@@ -168,7 +170,7 @@ structure ServeOK (s : ℕ) (N : Sq k → Sq k → ℕ) (G : GS k) (S D : Sq k) 
   ne : S ≠ D
   sched : 1 ≤ G.sched S D
   newle : ∀ h x, newCnt s (gh s G) h x ≤ N h x
-  free : ∀ Z, 1 ≤ ∑ y, G.free Z y
+  free : ∀ Z, 3 ≤ ∑ y, G.free Z y
   room : k + 1 ≤ s
 
 theorem hServe_linv {G : GS k} (hL : LInv s σ0 F0 G) {N : Sq k → Sq k → ℕ} (τ : ℕ)

@@ -63,6 +63,11 @@ def reservoir (k s : ℕ) (Q : Sq k) (x : Cell n) : Prop :=
 instance (k s : ℕ) (Q : Sq k) (x : Cell n) : Decidable (reservoir k s Q x) := by
   unfold reservoir; infer_instance
 
+/-- The two designated cells of `Q`: the last two cells of its reservoir's last
+row. -/
+def dcell (k s : ℕ) [NeZero n] (Q : Sq k) (b : Bool) : Cell n :=
+  mkCell n (Q.1.val * s + (s - 1)) (Q.2.val * s + (s - 2) + (if b then 1 else 0))
+
 /-- Nonblank tiles of class `y` in the region of `Q`. -/
 noncomputable def regionCount (hd : HDims n k s) (B : Board n) (Q y : Sq k) : ℕ := by
   classical
@@ -78,7 +83,9 @@ def Rel (hd : HDims n k s) [NeZero n] (B : Board n) (σ : IState k) : Prop :=
   (∀ V q, q < colLen k s V →
     (B (colCell k s V q)).val ≠ 0 ∧ classOf hd (B (colCell k s V q)) = σ.col V q) ∧
   (∀ Q y, regionCount hd B Q y = σ.cnt Q y) ∧
-  reservoir k s σ.blank (blank B)
+  reservoir k s σ.blank (blank B) ∧
+  (∀ Q b y, σ.des Q b = some y →
+    (B (dcell k s Q b)).val ≠ 0 ∧ classOf hd (B (dcell k s Q b)) = y)
 
 /-- Nonblank tiles outside the square of their target. -/
 noncomputable def misplaced (hd : HDims n k s) (B : Board n) : ℕ := by
@@ -92,6 +99,7 @@ noncomputable def absState (hd : HDims n k s) [NeZero n] (B : Board n) : IState 
   col V q := classOf hd (B (colCell k s V q))
   cnt := regionCount hd B
   blank := sqOf hd (blank B)
+  des := fun _ _ => none
 
 /-! ## Decoding cells: regions, row positions, column positions -/
 
@@ -667,7 +675,8 @@ open Finset LayoutAux LayoutFacts
 theorem rel_absState (hd : HDims n k s) [NeZero n] (B : Board n)
     (hb : reservoir k s (sqOf hd (blank B)) (blank B)) : Rel hd B (absState hd B) :=
   ⟨fun H _ hq => ⟨rowCell_nonblank hd hb H hq, rfl⟩,
-    fun V _ hq => ⟨colCell_nonblank hd hb V hq, rfl⟩, fun _ _ => rfl, hb⟩
+    fun V _ hq => ⟨colCell_nonblank hd hb V hq, rfl⟩, fun _ _ => rfl, hb,
+    fun _ _ _ h => by simp [absState] at h⟩
 
 theorem LayoutFacts.reservoir_region {Q : Sq k} {x : Cell n} (h : reservoir k s Q x) : region k s Q x :=
   ⟨h.1, h.2.1, Or.inr ⟨h.2.2.1, Or.inl h.2.2.2⟩⟩

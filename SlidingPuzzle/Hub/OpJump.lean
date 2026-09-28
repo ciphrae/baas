@@ -34,9 +34,9 @@ theorem simulate_jump (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
     ∃ C : Board n, ∃ p : Path B C, Rel hd C (σ.step s (.jump E Z y)) ∧
       p.inefficientMoves ≤ σ.cost s (.jump E Z y) := by
   obtain ⟨hbl, hEZ, hal, hcnt⟩ := hpre
-  obtain ⟨hRrow, hRcol, hRcnt, hRbl⟩ := hR
+  obtain ⟨hRrow, hRcol, hRcnt, hRbl, hRd⟩ := hR
   rw [hbl] at hRbl
-  obtain ⟨e0, z, z', he0, hz, hz', hzz', hzrow, hz'row, hzpos, hjump, hback, hjump'⟩ :=
+  obtain ⟨e0, z, z', he0, hz, hz', hzz', hzrow, hz'row, hzpos, he0f, hjump, hback, hjump'⟩ :=
     jump_ends2 hd hal
   have hke0 : keyOf hd e0 = some E := keyOf_reservoir hd he0
   have hkz : keyOf hd z = some Z := keyOf_reservoir hd hz
@@ -45,7 +45,7 @@ theorem simulate_jump (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
   have he0z : e0 ≠ z := ne_of_keyOf (by rw [hke0, hkz]; exact fun e => hEZ (Option.some.inj e))
   have he0z' : e0 ≠ z' := ne_of_keyOf (by rw [hke0, hkz']; exact fun e => hEZ (Option.some.inj e))
   -- walk and jump
-  obtain ⟨B1, p1, hbB1, hl1, hf1⟩ := exists_reservoir_walk hd B hRbl he0
+  obtain ⟨B1, p1, hbB1, hl1, hf1, hdc1⟩ := exists_reservoir_walk hd B hRbl he0
   obtain ⟨p2, hp2⟩ := hjump B1 hbB1
   let B2 := swapCells B1 (blank B1) z
   have hbB2 : blank B2 = z := blank_swapCells B1 _
@@ -70,23 +70,35 @@ theorem simulate_jump (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
     rwa [Finset.image_insert, Finset.image_singleton, ← hbB1, apply_blank,
       hf1 z hzE] at this
   -- the class-y tile of Z
-  obtain ⟨t, htZ, htT, htc⟩ := exists_of_regionCount hd B (by rw [hRcnt]; exact hcnt)
+  obtain ⟨t, htF, htZ, htT, htc⟩ := exists_of_regionCount_avoid hd B
+    (validD (n := n) (s := s) σ Z y) (by
+      have := card_validD_le (n := n) (s := s) σ Z y
+      rw [hRcnt]; exact (Nat.add_le_add_right this 1).trans hcnt)
+  have htd : ∀ b y', σ.des Z b = some y' → t ≠ dcell k s Z b := by
+    intro b y' hb e
+    have h1 := (hRd Z b y' hb).2
+    rw [← e, htc] at h1
+    subst h1
+    exact htF (e ▸ mem_validD hb)
   have hkt : keyOf hd t = some Z := (keyOf_eq_some hd).mpr htZ
   have htE : ¬ reservoir k s E t := fun hr => by
     rw [keyOf_reservoir hd hr] at hkt; exact hEZ (Option.some.inj hkt)
   -- the final board: general facts needed for `Rel`
   suffices H : ∃ C : Board n, ∃ p : Path B2 C, reservoir k s Z (blank C) ∧
-      (∀ x, keyOf hd x = none → C x = B2 x) ∧ KeepKey hd B C {B t} ∧
+      (∀ x, keyOf hd x = none → C x = B2 x) ∧
+      (∀ x, keyOf hd x ≠ some Z → x ≠ e0 → C x = B2 x) ∧
+      (∀ x, keyOf hd x = some Z → x ≠ z → x ≠ z' → x ≠ t → x.1.val ≠ Z.1.val * s + (k + 2) →
+        C x = B2 x) ∧ KeepKey hd B C {B t} ∧
       keyOf hd (position C (B t)) = some E ∧
       p.inefficientMoves ≤ 11 * s + 7 * (sqDist E Z * s + 2) + 7 * (sqDist E Z * s + 6) by
-    obtain ⟨C, p3, hCbl, hCc, K, hkC, hi3⟩ := H
+    obtain ⟨C, p3, hCbl, hCc, hCa, hCb, K, hkC, hi3⟩ := H
     have hcor : ∀ x, keyOf hd x = none → C x = B x := by
       intro x hx
       rw [hCc x hx]
       apply hB2
       · exact fun hr => by rw [keyOf_reservoir hd hr] at hx; cases hx
       · exact ne_of_keyOf (by rw [hx, hkz]; simp)
-    refine ⟨C, (p1.append p2).append p3, ⟨?_, ?_, ?_, ?_⟩, ?_⟩
+    refine ⟨C, (p1.append p2).append p3, ⟨?_, ?_, ?_, ?_, ?_⟩, ?_⟩
     · intro H q hq
       simp only [IState.step]
       rw [hcor _ (keyOf_rowCell hd H q hq)]
@@ -104,6 +116,39 @@ theorem simulate_jump (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
       rw [hc]
     · simp only [IState.step]
       exact hCbl
+    · intro Q b y' hdes
+      simp only [IState.step] at hdes
+      have hB := hRd Q b y' hdes
+      suffices C (dcell k s Q b) = B (dcell k s Q b) by rw [this]; exact hB
+      have hkey : keyOf hd (dcell (n := n) k s Q b) = some Q :=
+        keyOf_reservoir hd (reservoir_dcell hd Q b)
+      have hbl' : dcell (n := n) k s Q b ≠ blank B := fun e => hB.1 (by
+        rw [e]; simp [blank, position])
+      have df := dcell_fst (n := n) hd Q b
+      have hroom := hd.room
+      by_cases hQZ : Q = Z
+      · subst hQZ
+        have hZE' : ¬ reservoir k s E (dcell (n := n) k s Q b) := fun hr => by
+          rw [keyOf_reservoir hd hr] at hkey; exact hEZ (Option.some.inj hkey)
+        have hdz : dcell (n := n) k s Q b ≠ z := fun e => by
+          rw [e] at df; have := hzpos.1; omega
+        rw [hCb _ hkey hdz (fun e => by rw [e] at df; have := hzpos.2.2.1; omega)
+          (htd b y' hdes).symm (by omega), hB2 _ hZE' hdz]
+      · have hdz : dcell (n := n) k s Q b ≠ z := ne_of_keyOf (by
+          rw [hkey, hkz]; exact fun e => hQZ (Option.some.inj e))
+        by_cases hQE : Q = E
+        · subst hQE
+          have hd0 : dcell (n := n) k s Q b ≠ e0 := fun e => by
+            rw [e, he0f] at df; omega
+          rw [hCa _ (by rw [hkey]; exact fun e => hQZ (Option.some.inj e)) hd0]
+          change swapCells B1 (blank B1) z _ = _
+          rw [swapCells_preserves B1 (by rw [hbB1]; exact hd0) hdz]
+          exact hdc1 b hbl' hd0
+        · have hd0 : dcell (n := n) k s Q b ≠ e0 := ne_of_keyOf (by
+            rw [hkey, hke0]; exact fun e => hQE (Option.some.inj e))
+          rw [hCa _ (by rw [hkey]; exact fun e => hQZ (Option.some.inj e)) hd0,
+            hB2 _ (fun hr => by rw [keyOf_reservoir hd hr] at hkey
+                                exact hQE (Option.some.inj hkey).symm) hdz]
     · simp only [IState.cost, Path.inefficientMoves_append]
       have c1 := p1.inefficientMoves_le_length
       have e1 : (s + 3) * (13 + 21 * sqDist E Z) =
@@ -122,7 +167,8 @@ theorem simulate_jump (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
       omega
   by_cases htz : t = z
   · subst htz
-    refine ⟨B2, .nil B2, by rw [hbB2]; exact hz, fun _ _ => rfl, ?_, ?_,
+    refine ⟨B2, .nil B2, by rw [hbB2]; exact hz, fun _ _ => rfl, fun _ _ _ => rfl,
+      fun _ _ _ _ _ _ => rfl, ?_, ?_,
       by simp [Path.inefficientMoves]⟩
     · intro t' h0 ht'
       rw [Finset.mem_singleton] at ht'
@@ -135,13 +181,15 @@ theorem simulate_jump (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
     rw [keyOf_reservoir hd hr] at hkz'; exact hEZ (Option.some.inj hkz')
   have hB2z' : B2 z' = B z' := hB2 z' hz'E (Ne.symm hzz')
   -- a class-y tile at `z'`, by a three-cycle inside `Z`'s box unless it is there
-  obtain ⟨C3, p3, hp3, hbC3, hC3z', hC3out, K3⟩ : ∃ C3 : Board n, ∃ p : Path B2 C3,
+  obtain ⟨C3, p3, hp3, hbC3, hC3z', hC3out, hC3fp, K3⟩ : ∃ C3 : Board n, ∃ p : Path B2 C3,
       p.inefficientMoves ≤ 11 * s ∧ blank C3 = z ∧ C3 z' = B t ∧
-      (∀ x, keyOf hd x ≠ some Z → C3 x = B2 x) ∧ KeepKey hd B2 C3 ∅ := by
+      (∀ x, keyOf hd x ≠ some Z → C3 x = B2 x) ∧
+      (∀ x, x ≠ z' → x ≠ t → x.1.val ≠ Z.1.val * s + (k + 2) → C3 x = B2 x) ∧
+      KeepKey hd B2 C3 ∅ := by
     by_cases htz' : t = z'
     · subst htz'
       exact ⟨B2, .nil B2, by simp [Path.inefficientMoves], hbB2, hB2t, fun _ _ => rfl,
-        KeepKey.refl hd B2 ∅⟩
+        fun _ _ _ _ => rfl, KeepKey.refl hd B2 ∅⟩
     obtain ⟨u, hu, hurow, hucol, hut⟩ := exists_reservoir_other hd Z t
     have hku : keyOf hd u = some Z := keyOf_reservoir hd hu
     have huz : u ≠ z := cell_ne_of_fst (by rw [hurow]; exact fun e => hzrow e.symm)
@@ -170,7 +218,8 @@ theorem simulate_jump (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
       rw [hbB2]
       exact jump_cornerDist hd hz hz' hu hurow hucol hzpos
     have hbig := hd.big
-    refine ⟨C, p, by omega, ?_, by rw [hCa, hB2t], hout, ?_⟩
+    refine ⟨C, p, by omega, ?_, by rw [hCa, hB2t], hout,
+      fun x h1 h2 h3 => hCx x h1 h2 (fun e => h3 (by rw [e]; exact hurow)), ?_⟩
     · apply blank_eq_of_apply
       rw [hCx z hzz' (fun e => htz e.symm) (Ne.symm huz), hB2z]
     · exact keepKey_of_agree hd (fun x => keyOf hd x = some Z)
@@ -216,11 +265,17 @@ theorem simulate_jump (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
         exact swapCells_preserves B4 (by rw [hbB4]; exact hx.1) hx.2)
     rwa [Finset.image_insert, Finset.image_singleton, ← hbB4, apply_blank, hB4z'] at this
   have K := (((K1.trans K2).trans K3).trans K4).trans K5
-  refine ⟨B5, (p3.append p4).append p5, by rw [hbB5]; exact hz', ?_, ?_, ?_, ?_⟩
+  refine ⟨B5, (p3.append p4).append p5, by rw [hbB5]; exact hz', ?_, ?_, ?_, ?_, ?_, ?_⟩
   · intro x hx
     rw [hB5x x (fun e => by rw [e, hke0] at hx; cases hx) (fun e => by rw [e, hkz] at hx; cases hx)
       (fun e => by rw [e, hkz'] at hx; cases hx)]
     exact hC3out x (by rw [hx]; simp)
+  · intro x hx h0
+    rw [hB5x x h0 (fun e => hx (by rw [e]; exact hkz)) (fun e => hx (by rw [e]; exact hkz'))]
+    exact hC3out x hx
+  · intro x hx h1 h2 h3 h4
+    rw [hB5x x (fun e => by rw [e, hke0] at hx; exact hEZ (Option.some.inj hx)) h1 h2]
+    exact hC3fp x h2 h3 h4
   · intro t' h0 ht'
     rw [Finset.mem_singleton] at ht'
     by_cases e1 : t' = B z
