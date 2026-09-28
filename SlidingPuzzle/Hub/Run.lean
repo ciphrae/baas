@@ -36,7 +36,7 @@ def transportBound (n k s : ℕ) : ℕ :=
 /-- Region tiles left outside their squares, before absorbing lower-order terms. -/
 def misplacedBound (n k : ℕ) : ℕ :=
   k ^ 2 * n + k ^ 2 * (Rhub n + k ^ 2) +
-    k ^ 2 * (Rhub n + 8 * n + 10) + 4 * k ^ 2 * n
+    k ^ 2 * (Rhub n + 2 * n + k ^ 2 + 6) + 4 * k ^ 2 * n
 
 variable {k : ℕ}
 
@@ -97,9 +97,9 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
     have := sends_le hF1 S; omega
   have hrecv : ∀ S, recv (demand σ0) S ≤ s ^ 2 := fun S => by have := recv_le hF2 S; omega
   have hΔ0 : Δ0 ≤ s ^ 2 := hc5 _ fun S => ⟨hsends S, hrecv S⟩
-  obtain ⟨Q', hQ'⟩ : ∃ Q', Q' = min Δ0 (Rhub (k * s) + 8 * k * s + 10) := ⟨_, rfl⟩
+  obtain ⟨Q', hQ'⟩ : ∃ Q', Q' = min Δ0 (Rhub (k * s) + 2 * k * s + k ^ 2 + 6) := ⟨_, rfl⟩
   have hQle : Q' ≤ Δ0 := by rw [hQ']; exact min_le_left _ _
-  have hQle2 : Q' ≤ Rhub (k * s) + 8 * k * s + 10 := by rw [hQ']; exact min_le_right _ _
+  have hQle2 : Q' ≤ Rhub (k * s) + 2 * k * s + k ^ 2 + 6 := by rw [hQ']; exact min_le_right _ _
   have hΔ : Δ0 - Q' ≤ s ^ 2 + 1 := by omega
   obtain ⟨σo, hσo⟩ := exists_good_order hd hk500 hP1 hΔ (planRs rs0 Q')
   obtain ⟨rd, hrd⟩ : ∃ rd, rd = ordRd rs0 Q' σo := ⟨_, rfl⟩
@@ -180,16 +180,18 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
   obtain ⟨N, hNsum, hN⟩ := hσo Gf.ins hcons
   -- the context
   let c : Ctx k := ⟨s, σ0, (∑ Q, ∑ y, free0 Q y) + junkCnt s σ0, fun Z => ∑ y, free0 Z y, N,
-    ∑ S, ∑ D, sched0 S D, Gf.ins, rd, Δ0 - Q', fun _ => sqCorridor k s + 1⟩
+    ∑ S, ∑ D, sched0 S D, Gf.ins, rd, Δ0 - Q', fun Z => ∑ τ ∈ range (Δ0 - Q'), dummyAt (rd τ) Z⟩
   have hNk : ∀ Z, ∑ x, (N Z x + 1) = (∑ x, N Z x) + k * k := by
     intro Z; simp [sum_add_distrib, Fintype.card_prod]
   have hcOK : c.OK := by
-    refine ⟨hroom, hN, ?_, hdum_plan⟩
+    refine ⟨hroom, hN, ?_, fun Z => le_rfl⟩
     intro hpos Z
     have hpos' : 0 < Δ0 - Q' := hpos
-    have hQ : Q' = Rhub (k * s) + 8 * k * s + 10 := by
+    have hQ : Q' = Rhub (k * s) + 2 * k * s + k ^ 2 + 6 := by
       rw [hQ']; exact min_eq_right (by omega)
-    show (∑ x, (N Z x + 1)) + (sqCorridor k s + 1) + 3 ≤ ∑ y, free0 Z y
+    show (∑ x, (N Z x + 1)) + (∑ τ ∈ range (Δ0 - Q'), dummyAt (rd τ) Z) + 3 ≤ ∑ y, free0 Z y
+    have hdp := hord (fun r => dummyAt r Z)
+    beta_reduce at hdp
     rw [hNk]
     have hNZ := hNsum Z
     have htri : ∑ j ∈ range Q', ((if (rsN rs0 j).real Z then 1 else 0) +
@@ -211,7 +213,8 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
     rw [hf]
     have hmax := le_max_left (sends (demand σ0) Z) (recv (demand σ0) Z)
     have hkk : k * k ≤ k * s := Nat.mul_le_mul_left _ hks
-    have h8 : 8 * k * s = 8 * (k * s) := by ring
+    have h8 : 2 * k * s = 2 * (k * s) := by ring
+    have hkk2 : k ^ 2 = k * k := sq k
     have h2 : 2 * k * s = 2 * (k * s) := by ring
     have hmin := min_le_left (σ0.cnt Z Z) (Q' - realInit rs0 Q' Z)
     have hmin2 : min (σ0.cnt Z Z) (Q' - realInit rs0 Q' Z) = σ0.cnt Z Z ∨
@@ -314,7 +317,7 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
       simp only [sum_const, card_univ, Fintype.card_prod, Fintype.card_fin, smul_eq_mul]
       unfold Rhub; ring_nf; exact le_refl _
     have hfree : ∑ Q, ∑ y, Gf.free Q y ≤
-        k ^ 2 * (Rhub (k * s) + 8 * (k * s) + 10) +
+        k ^ 2 * (Rhub (k * s) + 2 * (k * s) + k ^ 2 + 6) +
           4 * k ^ 2 * (k * s) := by
       have h1 := hOf.lin.free_junk
       have h2 := junkCnt_le s σ0
@@ -322,9 +325,11 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
         sum_le_sum fun Q _ => sum_freeInit_le σ0 rs0 Q' Q
       simp only [sum_const, card_univ, Fintype.card_prod, Fintype.card_fin, smul_eq_mul] at h3
       have h4 : k * k * Q' ≤ k ^ 2 * (Rhub (k * s) +
-          8 * (k * s) + 10) := by
-        rw [sq]; refine Nat.mul_le_mul_left _ ?_
-        have : 8 * k * s = 8 * (k * s) := by ring
+          2 * (k * s) + k ^ 2 + 6) := by
+        have hkk : k ^ 2 = k * k := sq k
+        rw [hkk]; refine Nat.mul_le_mul_left _ ?_
+        have : 2 * k * s = 2 * (k * s) := by ring
+        rw [hkk] at hQle2
         omega
       have : junkCnt s Gf.σ ≥ 0 := Nat.zero_le _
       show _ ≤ _
