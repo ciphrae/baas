@@ -12,7 +12,6 @@ import SlidingPuzzle
 -- The boardwise bounds
 #print axioms SlidingPuzzle.Hub.uniform_approximation
 #print axioms SlidingPuzzle.Hub.uniform_approximation_explicit
-#print axioms SlidingPuzzle.Hub.uniform_approximation_log_explicit
 #print axioms SlidingPuzzle.Hub.optimalLength_le_linError
 #print axioms SlidingPuzzle.Hub.exists_good_order
 #print axioms SlidingPuzzle.Hub.exists_hub_solution

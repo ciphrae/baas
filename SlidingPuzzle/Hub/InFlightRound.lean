@@ -69,6 +69,34 @@ theorem count_roundIns_le_one (r : Round k) (q : RowH k × ℕ × Sq k) :
     rw [h1, h2]
   exact r.perm.injective this
 
+/-- A round inserts class `x` into `H` at most once, over all distances. -/
+theorem sum_count_roundIns_le_one (r : Round k) (H : RowH k) (x : Sq k) :
+    ∑ d ∈ range k, (roundIns r).countP (fun p => decide (p = (H, d, x))) ≤ 1 := by
+  simp_rw [countP_roundIns]
+  set F := (srcs r).filter fun S => (ent r S).1 = H ∧ (ent r S).2.2 = x
+  have hF : ∑ d ∈ range k, ((srcs r).filter fun S => ent r S = (H, d, x)).card =
+      F.card := by
+    rw [card_eq_sum_card_fiberwise (f := fun S => (ent r S).2.1) (t := range k)
+      (fun S _ => mem_coe.mpr (mem_range.mpr (ent_dist_lt r S)))]
+    refine sum_congr rfl fun d _ => ?_
+    rw [filter_filter]
+    apply congrArg; apply filter_congr
+    intro S _
+    constructor
+    · intro h; rw [h]; exact ⟨⟨rfl, rfl⟩, rfl⟩
+    · rintro ⟨⟨h1, h2⟩, h3⟩
+      exact Prod.ext h1 (Prod.ext h3 h2)
+  rw [hF]
+  apply card_le_one.mpr
+  intro a ha b hb
+  simp only [F, mem_filter] at ha hb
+  have : r.perm a = r.perm b := by
+    have h1 := ha.2.2
+    have h2 := hb.2.2
+    simp only [ent] at h1 h2
+    rw [h1, h2]
+  exact r.perm.injective this
+
 /-- A round inserts at most `k` times into a half. -/
 theorem countP_half_le (r : Round k) (H : RowH k) (Q : RowH k × ℕ × Sq k → Prop)
     [DecidablePred Q] :
@@ -176,12 +204,21 @@ noncomputable def win (H : RowH k) (d : ℕ) : ℕ :=
 /-- The residence window of a tile inserted from distance `d`: `∑_{j ≤ d} w_j`. -/
 noncomputable def wsum (H : RowH k) (d : ℕ) : ℕ := ∑ j ∈ Finset.range (d + 1), win s rs H j
 
-/-- The additive slack `λ = 3 (log₂ n + 1)`. -/
+/-- The additive slack of the upper tail, `λ = 3 (log₂ n + 1)`. -/
 def lamN (n : ℕ) : ℕ := 3 * (Nat.log 2 n + 1)
 
-/-- The bound on present `(H, d, x)` tiles. -/
-noncomputable def Nb (n : ℕ) (H : RowH k) (d : ℕ) (x : Sq k) : ℕ :=
-  if Atot rs H d x = 0 then 0 else 17 * Atot rs H d x * (wsum s rs H d + 1) / (16 * Δ) + 6 * lamN n
+/-- The additive slack of the lower tail, `λ_A = log₂ (k³ s²) + 4`: there are
+fewer lower-tail events than upper-tail ones. -/
+def lamA (k s : ℕ) : ℕ := Nat.log 2 (k ^ 3 * s ^ 2) + 4
+
+/-- `Δ` times the mean number of present class-`x` tiles of `H`:
+`∑_d A_{x,d} (W_d + 1)`. -/
+noncomputable def Mtot (H : RowH k) (x : Sq k) : ℕ :=
+  ∑ d ∈ Finset.range k, Atot rs H d x * (wsum s rs H d + 1)
+
+/-- The bound on present class-`x` tiles of `H`, all distances together. -/
+noncomputable def Nbx (n : ℕ) (H : RowH k) (x : Sq k) : ℕ :=
+  if Mtot s rs H x = 0 then 0 else 41 * Mtot s rs H x / (40 * Δ) + 15 * lamN n
 
 /-- The row insertions at time `τ` of the order `σ` (none after the end). -/
 noncomputable def rnd (σ : Equiv.Perm (Fin Δ)) (τ : ℕ) : List (RowH k × ℕ × Sq k) :=

@@ -11,23 +11,22 @@ is linear in `n` (segmented residence, `Hub/InFlightSegment.lean`). The outer
 Hence the mean optimal solution length is `(2/3)n³ + O(n^(8/3))` and God's
 number is `n³ + O(n^(8/3))`, improving Zhong's `O(n^(11/4))`.
 
-Explicitly, `OPT(B) ≤ M(B) + 1133 n^(8/3)` for every reachable board with
-`n ≥ 4096` (`uniform_approximation_explicit`); in the older scale,
-`OPT(B) ≤ M(B) + 450 n^(8/3) (log n)^(1/3)` (`uniform_approximation_log_explicit`). -/
+Explicitly, `OPT(B) ≤ M(B) + 1084 n^(8/3)` for every reachable board with
+`n ≥ 4096` (`uniform_approximation_explicit`). -/
 open Filter Asymptotics
 
 set_option maxRecDepth 4096
 
 namespace SlidingPuzzle.Hub
 
-/-- The uniform coefficient of `n^(8/3)`: the hub algorithm above `linN = 11·2^20`
+/-- The uniform coefficient of `n^(8/3)`: the hub algorithm above `linN = 10⁷`
 (`optimalLength_le_linError`) and the cubic solver on `4096 ≤ n ≤ linN`
 (`cubic_le_linError`). -/
-def linConstant : ℕ := 1133
+def linConstant : ℕ := 1084
 
-theorem linConstant_eq : linConstant = 1133 := rfl
+theorem linConstant_eq : linConstant = 1084 := rfl
 
-/-- **The boardwise bound**: `OPT(B) ≤ M(B) + 1133 n^(8/3)` for every `n ≥ 4096`. -/
+/-- **The boardwise bound**: `OPT(B) ≤ M(B) + 1084 n^(8/3)` for every `n ≥ 4096`. -/
 theorem uniform_approximation_explicit {n : ℕ} [NeZero n]
     (hn : hubN ≤ n) (B : ReachableBoard n) :
     (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) + linConstant * linError n := by
@@ -86,54 +85,6 @@ theorem gods_number :
       (fun n : ℕ => Real.rpow (n : ℝ) (8 / 3 : ℝ)) := by
   exact gods_number_of_approximation_with sq_le_linError_eventually
     uniform_approximation ⟨3, by norm_num, maximumManhattan_error_eventually⟩
-
-/-! ## The older error scale `n^(8/3) (log n)^(1/3)` -/
-
-/-- Above `linN`, `1133 n^(8/3) ≤ 450 n^(8/3) (log n)^(1/3)`, since
-`log n ≥ log (11·2^20) > (1133/450)³`. -/
-theorem linError_le_hubError {n : ℕ} (hn : linN ≤ n) :
-    1133 * linError n ≤ 450 * hubError n := by
-  rw [hubError_eq_linError_mul]
-  set r := Real.rpow (Real.log n) (1 / 3 : ℝ) with hr
-  have hlog0 : 0 ≤ Real.log n := Real.log_natCast_nonneg n
-  have hr0 : 0 ≤ r := Real.rpow_nonneg hlog0 _
-  have hr3 : r ^ 3 = Real.log n := by
-    rw [hr, Real.rpow_eq_pow, ← Real.rpow_mul_natCast hlog0]
-    norm_num
-  have hnR : ((11 * 2 ^ 20 : ℕ) : ℝ) ≤ n := by exact_mod_cast (show 11 * 2 ^ 20 ≤ n from hn)
-  have hl118 : (3 / 11 : ℝ) ≤ Real.log (11 / 8) := by
-    have := Real.one_sub_inv_le_log_of_pos (show (0 : ℝ) < 11 / 8 by norm_num)
-    norm_num at this ⊢; linarith
-  have hl2 := Real.log_two_gt_d9
-  have hlog : 23 * (6931471803 / 10000000000 : ℝ) + 3 / 11 ≤ Real.log n := by
-    have h := Real.log_le_log (by positivity) hnR
-    have e : ((11 * 2 ^ 20 : ℕ) : ℝ) = 11 / 8 * 2 ^ 23 := by norm_num
-    rw [e, Real.log_mul (by norm_num) (by positivity), Real.log_pow] at h
-    push_cast at h
-    linarith
-  have hr1 : 1133 / 450 ≤ r := by
-    apply le_of_cube_le hr0; rw [hr3]; norm_num at hlog ⊢; linarith
-  have hL := linError_nonneg n
-  nlinarith
-
-/-- The explicit bound in the scale `n^(8/3) (log n)^(1/3)`: coefficient `450`
-for every `n ≥ 4096`. -/
-theorem uniform_approximation_log_explicit {n : ℕ} [NeZero n]
-    (hn : hubN ≤ n) (B : ReachableBoard n) :
-    (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) + 450 * hubError n := by
-  by_cases hlarge : linN ≤ n
-  · have h := optimalLength_le_linError hlarge B
-    have := linError_le_hubError hlarge
-    linarith
-  · obtain ⟨p, hp⟩ := Parberry.exists_solution_cubic B (by unfold hubN at hn; omega)
-    have hopt := optimalLength_le_path_length B p
-    have hnat : optimalLength B ≤ 5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796 := hopt.trans hp
-    have hreal : (optimalLength B : ℝ) ≤ ((5 * n ^ 3 + 1509 * n ^ 2 + 1505 * n + 4796 : ℕ) : ℝ) := by
-      exact_mod_cast hnat
-    have herr := cubic_solver_le_hubError (by unfold hubN at hn; omega)
-      (show n ≤ 11 * 2 ^ 20 by unfold linN at hlarge; omega)
-    have hM : (0 : ℝ) ≤ manhattan B.val := Nat.cast_nonneg _
-    linarith
 
 /-- `n^(8/3) = O(n^α)` for every `α ≥ 8/3`. -/
 theorem rpow_isBigO_rpow {α : ℝ} (hα : 8 / 3 ≤ α) :

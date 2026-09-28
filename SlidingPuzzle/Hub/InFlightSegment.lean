@@ -278,7 +278,7 @@ end list
 section main
 
 variable {L : List (InsRec k)} (r0 : InsRec k) {R : ℕ → List (RowH k × ℕ × Sq k)} {T : ℕ}
-  (w : RowH k → ℕ → ℕ) (Nb : RowH k → ℕ → Sq k → ℕ)
+  (w : RowH k → ℕ → ℕ) (Nb : RowH k → Sq k → ℕ)
 
 /-- Present class-`x` tiles of one half, for a prefix of length `m ≤ |L|`, with
 the segmented residence windows `∑_{j ≤ d} w H j`. -/
@@ -290,13 +290,13 @@ theorem count_tagged_le_seg
     (hzero : ∀ H, insPos k s H 0 < s)
     (hA : ∀ H j, j < k → ∀ τ0, τ0 + w H j < T → s ≤
       ∑ τ ∈ Ioc τ0 (τ0 + w H j), (R τ).countP (fun p => decide (p.1 = H ∧ j ≤ p.2.1)))
-    (hB : ∀ H d, d < k → ∀ x τ0, τ0 < T →
-      ∑ τ ∈ Icc τ0 (τ0 + ∑ j ∈ range (d + 1), w H j),
-        (R τ).countP (fun p => decide (p = (H, d, x))) ≤ Nb H d x)
+    (hB : ∀ H x τl, τl < T → ∑ d ∈ range k,
+      ∑ τ ∈ Icc (τl - ∑ j ∈ range (d + 1), w H j) τl,
+        (R τ).countP (fun p => decide (p = (H, d, x))) ≤ Nb H x)
     {m : ℕ} (hm : m ≤ L.length) (H : RowH k) (x : Sq k) (len : ℕ) :
     ((range len).filter fun q =>
         (irun s (fun i => L.getD i r0) m H q).map (fun i => (L.getD i r0).x) = some x).card ≤
-      ∑ d ∈ range k, Nb H d x := by
+      Nb H x := by
   set e := fun i => L.getD i r0 with he
   have hI := iinv s e m
   -- present tiles inject into their insertions
@@ -326,12 +326,15 @@ theorem count_tagged_le_seg
     simp only [mem_filter, mem_range] at hi
     exact mem_range.mpr (hdk _ _ (proj_mem r0 hperm (i := i) (by omega)))
   rw [card_eq_sum_card_fiberwise hmaps]
-  apply sum_le_sum
-  intro d hd
-  have hdk' := mem_range.mp hd
   set τl := (L.getD (m - 1) r0).τ
+  have hτl : τl < T := by
+    have hmem : L.getD (m - 1) r0 ∈ L := by
+      rw [List.getD_eq_getElem _ _ (by omega)]; exact List.getElem_mem _
+    exact hlt _ hmem
+  refine le_trans (sum_le_sum fun d hd => ?_) (hB H x τl hτl)
+  have hdk' := mem_range.mp hd
   set W := ∑ j ∈ range (d + 1), w H j
-  calc _ ≤ ((range L.length).filter fun i => (L.getD i r0).τ ∈ Icc (τl - W) (τl - W + W) ∧
+  calc _ ≤ ((range L.length).filter fun i => (L.getD i r0).τ ∈ Icc (τl - W) τl ∧
         proj (L.getD i r0) = (H, d, x)).card := by
         apply card_le_card
         intro i hi
@@ -344,17 +347,11 @@ theorem count_tagged_le_seg
         refine ⟨by omega, ⟨by omega, by omega⟩, ?_⟩
         simp only [he] at hH hx hdi
         rw [hH, hdi, hx]
-    _ = ∑ τ ∈ Icc (τl - W) (τl - W + W), ((range L.length).filter fun i =>
+    _ = ∑ τ ∈ Icc (τl - W) τl, ((range L.length).filter fun i =>
           (L.getD i r0).τ = τ ∧ proj (L.getD i r0) = (H, d, x)).card :=
         (sum_card_fiber _ _ _ _).symm
-    _ = ∑ τ ∈ Icc (τl - W) (τl - W + W), (R τ).countP (fun p => decide (p = (H, d, x))) :=
+    _ = ∑ τ ∈ Icc (τl - W) τl, (R τ).countP (fun p => decide (p = (H, d, x))) :=
         sum_congr rfl fun τ _ => card_time_filter r0 hperm τ (fun p => p = (H, d, x))
-    _ ≤ Nb H d x := by
-        apply hB H d hdk' x
-        have hmem : L.getD (m - 1) r0 ∈ L := by
-          rw [List.getD_eq_getElem _ _ (by omega)]; exact List.getElem_mem _
-        have := hlt _ hmem
-        omega
 
 /-- **In-flight counts from the segmented window properties.** -/
 theorem newCnt_le_of_segments (r0 : InsRec k)
@@ -365,12 +362,12 @@ theorem newCnt_le_of_segments (r0 : InsRec k)
     (hzero : ∀ H, insPos k s H 0 < s)
     (hA : ∀ H j, j < k → ∀ τ0, τ0 + w H j < T → s ≤
       ∑ τ ∈ Ioc τ0 (τ0 + w H j), (R τ).countP (fun p => decide (p.1 = H ∧ j ≤ p.2.1)))
-    (hB : ∀ H d, d < k → ∀ x τ0, τ0 < T →
-      ∑ τ ∈ Icc τ0 (τ0 + ∑ j ∈ range (d + 1), w H j),
-        (R τ).countP (fun p => decide (p = (H, d, x))) ≤ Nb H d x)
+    (hB : ∀ H x τl, τl < T → ∑ d ∈ range k,
+      ∑ τ ∈ Icc (τl - ∑ j ∈ range (d + 1), w H j) τl,
+        (R τ).countP (fun p => decide (p = (H, d, x))) ≤ Nb H x)
     (m : ℕ) (h x : Sq k) :
     newCnt s (ghostRun s (fun _ _ => none) (L.take m)) h x ≤
-      ∑ side : Bool, ∑ d ∈ range k, Nb (h.1, h.2, side) d x := by
+      ∑ side : Bool, Nb (h.1, h.2, side) x := by
   have htake : L.take m = L.take (min m L.length) := by
     rcases le_total m L.length with hml | hml
     · rw [min_eq_left hml]

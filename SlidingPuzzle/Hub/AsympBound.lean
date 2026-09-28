@@ -22,7 +22,7 @@ def hubN : ℕ := 4096
 /-- Prefix plus hub on the residual board. -/
 theorem optimalLength_le_hub_residual {n k : ℕ} [NeZero n] (B : ReachableBoard n)
     (hd : HDims (k * (n / k)) k (n / k))
-    (hP1 : 48 * k * (Nat.log 2 (k * (n / k)) + 1) ≤ n / k) (hks2 : 8 * k ^ 2 ≤ n / k) :
+    (hk100 : 100 ≤ k) (hP1 : 76 * k * lamA k (n / k) ≤ 5 * (n / k)) :
     optimalLength B ≤ manhattan B.val + 2 * ((15 * n ^ 2 + 3002 * n + 1) * (n - k * (n / k))) +
       2 * hubBound (k * (n / k)) k (n / k) := by
   have hmn : k * (n / k) ≤ n := Nat.mul_div_le n k
@@ -40,7 +40,7 @@ theorem optimalLength_le_hub_residual {n k : ℕ} [NeZero n] (B : ReachableBoard
     exact ⟨r.append p⟩
   have hreachA : Reachable A :=
     residual_reachable (by omega : 2 ≤ k * (n / k)) (n - k * (n / k)) hdn C hC A hA hreachC
-  obtain ⟨q, hq⟩ := exists_hub_solution hd hP1 hks2 A hreachA
+  obtain ⟨q, hq⟩ := exists_hub_solution hd hk100 hP1 A hreachA
   have hlen := q.solution_length
   have hq' : q.length ≤ manhattan A + 2 * hubBound (k * (n / k)) k (n / k) := by omega
   have h := optimalLength_le_prefix_residual_solution B (n - k * (n / k)) hdn C p hC A hA q hq'
