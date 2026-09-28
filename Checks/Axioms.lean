@@ -16,6 +16,10 @@ import SlidingPuzzle
 #print axioms SlidingPuzzle.Hub.exists_good_order
 #print axioms SlidingPuzzle.Hub.exists_hub_solution
 
+-- Tree lanes: exponent 5/2 + ε
+#print axioms SlidingPuzzle.Tree.tree_exponent
+#print axioms SlidingPuzzle.Tree.tree_uniform_approximation
+
 -- Foundations
 #print axioms SlidingPuzzle.Path.length_add_manhattan
 #print axioms SlidingPuzzle.manhattan_le_optimalLength
