@@ -101,3 +101,7 @@ residence, the abstract run, preload, the algorithm on side `k*s`
 `tree_uniform_approximation`, `tree_exponent`).
 
 Constants are not optimized: `C_h ≈ 2·10^5 (h+1) 2^h` and `N = (320(2h+3))^(2h+2)`.
+
+Statistics (`Stats`): `tree_average_optimal_length` and `tree_gods_number`, the mean
+optimal length `(2/3)n³ + O(n^(5/2+ε))` and God's number `n³ + O(n^(5/2+ε))` for
+every `ε > 0`, via the generic reduction `Hub.AsympStats`.

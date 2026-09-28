@@ -18,6 +18,8 @@ import SlidingPuzzle
 
 -- Tree lanes: exponent 5/2 + ε
 #print axioms SlidingPuzzle.Tree.tree_exponent
+#print axioms SlidingPuzzle.Tree.tree_average_optimal_length
+#print axioms SlidingPuzzle.Tree.tree_gods_number
 #print axioms SlidingPuzzle.Tree.tree_uniform_approximation
 
 -- Foundations

@@ -37,9 +37,15 @@ OPT(B) ≤ Manhattan(B) + C·n^(5/2+ε).
 `Tree.tree_uniform_approximation` gives the exponent `5/2 + 1/(2h+2)` for each
 fixed depth `h ≥ 1` (a `b`-ary hierarchy of lanes, `b ≈ n^(1/(2h+2))`); the
 constants are crude (`C_h ≈ 2·10⁵(h+1)·2^h`, `N = (320(2h+3))^(2h+2)`) and not
-optimized. The average and God's-number corollaries have only been derived for
-the hub bound so far; they follow from the tree bound in the same way. The plan
-and status are in [`research/exponent/TREE_PLAN.md`](research/exponent/TREE_PLAN.md).
+optimized. Consequently, for every `ε > 0`,
+
+```text
+average optimal solution length = (2/3)*n³ + O(n^(5/2+ε))
+God's number                    =       n³ + O(n^(5/2+ε))
+```
+
+(`Tree.tree_average_optimal_length`, `Tree.tree_gods_number` in
+[`Tree/Stats.lean`](SlidingPuzzle/Tree/Stats.lean)). The plan and status are in [`research/exponent/TREE_PLAN.md`](research/exponent/TREE_PLAN.md).
 
 Earlier versions had the error scale `n^(8/3) (ln n)^(1/3)`, with coefficient
 `4,828,800,024,144` originally. The derivation is documented in
@@ -84,7 +90,7 @@ All main results depend only on `propext`, `Classical.choice` and `Quot.sound`.
 | `SlidingPuzzle/Hub/Run*` | The abstract run: roles, stock identity, validity, cost, leftover misplaced tiles |
 | `SlidingPuzzle/Hub/Cleanup`, `FinishGen`, `Transport` | Cleanup by three-cycles and double swaps, Finish, the hub algorithm on side `k*s` |
 | `SlidingPuzzle/Hub/Asymp*`, `Lin*`, `Main` | Accounting, the grid `k ≈ n^(1/3)` (capacity-limited for moderate `n`), general sides, the final theorems |
-| `SlidingPuzzle/Tree/` | Tree lanes: lane systems and the `b`-ary hierarchy, layout, board operations, residence, the abstract run, preload, transport on side `k*s`, accounting, grid choice, `tree_exponent` |
+| `SlidingPuzzle/Tree/` | Tree lanes: lane systems and the `b`-ary hierarchy, layout, board operations, residence, the abstract run, preload, transport on side `k*s`, accounting, grid choice, `tree_exponent`, statistics |
 | `Zhong/` | Word-level puzzle library in the paper's conventions: reachability criterion, orbit statistics, move words |
 | `research/exponent/` | Pen-and-paper proof, Lean blueprint, research log and simulations |
 
