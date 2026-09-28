@@ -229,4 +229,6 @@ The algorithm needs `s ≥ C_h·b·k` (lanes and log slack per square), so
 `b ≈ n^(1/(2h+1))`; the cost is `O(n³/k)`, the Parberry prefix costs `O(n²k)`,
 the exponent is `5/2 + 1/(4h+2)`, and `Tree.tree_exponent` follows. Details, parameters and the file
 map are in [research/exponent/TREE_PLAN.md](research/exponent/TREE_PLAN.md).
-Constants are unoptimized; the `268` of the hub bound does not carry over.
+Explicitly `OPT ≤ M + 120 (h+3) √(8h) n^(5/2+1/(4h+2))` for
+`n ≥ 8h (max(256,16h)+2)^(2h+1)` (`Tree.tree_uniform_approximation_explicit`);
+the hops cost `40h k²s³` and the rest `≈ 150 k²s³` (`FineAccounting`).

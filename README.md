@@ -34,11 +34,22 @@ for every `ε > 0` there are `C, N` such that for every reachable board with `n 
 OPT(B) ≤ Manhattan(B) + C·n^(5/2+ε).
 ```
 
-`Tree.tree_uniform_approximation` gives the exponent `5/2 + 1/(4h+2)` for each
-fixed depth `h ≥ 1` (a `b`-ary hierarchy of lanes, `b ≈ n^(1/(2h+1))`); depth 1
-gives `8/3` again, depth 2 already `13/5`. The constants are crude
-(`C_h ≈ 6.4·10⁷(h+1)(2h+3)·2^h`, `N = B·(2B)^(2h+1)` with `B = 160(2h+3)`) and not
-optimized. Consequently, for every `ε > 0`,
+For each fixed depth `h ≥ 1` (a `b`-ary hierarchy of lanes, `b ≈ (n/8h)^(1/(2h+1))`),
+`Tree.tree_uniform_approximation_explicit` gives, for every reachable board with
+`n ≥ 8h·(max(256, 16h) + 2)^(2h+1)`,
+
+```text
+OPT(B) ≤ Manhattan(B) + 120·(h+3)·√(8h)·n^(5/2 + 1/(4h+2)).
+```
+
+| depth `h` | exponent | coefficient | from `n ≥` |
+| --- | --- | --- | --- |
+| 1 | `8/3` | 1358 | `1.4·10⁸` |
+| 2 | `13/5` | 2400 | `1.8·10¹³` |
+| 3 | `18/7` | 3527 | `1.8·10¹⁸` |
+| 4 | `23/9` | 4752 | `1.6·10²³` |
+
+Depth 2 beats `268·n^(8/3)` from about `n ≈ 2·10¹⁴` on. Consequently, for every `ε > 0`,
 
 ```text
 average optimal solution length = (2/3)*n³ + O(n^(5/2+ε))

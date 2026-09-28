@@ -21,6 +21,7 @@ import SlidingPuzzle
 #print axioms SlidingPuzzle.Tree.tree_average_optimal_length
 #print axioms SlidingPuzzle.Tree.tree_gods_number
 #print axioms SlidingPuzzle.Tree.tree_uniform_approximation
+#print axioms SlidingPuzzle.Tree.tree_uniform_approximation_explicit
 
 -- Foundations
 #print axioms SlidingPuzzle.Path.length_add_manhattan

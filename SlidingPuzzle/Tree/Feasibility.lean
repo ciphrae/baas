@@ -26,22 +26,6 @@ theorem event_bounds {n k s q : ℕ} (td : TDims n k s q) (hwide : 8 * k * q ≤
     nlinarith only [Nat.mul_le_mul_left (8 * k ^ 2 * q * s ^ 2) hk2]
   exact ⟨h3.trans (h1.trans h2.le), h1.trans_lt h2⟩
 
-/-- A coarse logarithm bound using only the upper grid bracket. -/
-theorem log_slack_le {n b D : ℕ} (hb : 1 ≤ b) (hn : n ≤ (2 * b) ^ D) :
-    GroupedOrder.lamN n ≤ 10 * (D + 1) * b := by
-  have hbpow : b ≤ 2 ^ b := (Nat.lt_two_pow_self).le
-  have h2b : 2 * b ≤ 2 ^ (b + 1) := by
-    rw [pow_succ]
-    nlinarith
-  have hn2 : n ≤ 2 ^ ((b + 1) * D) := by
-    calc n ≤ (2 * b) ^ D := hn
-      _ ≤ (2 ^ (b + 1)) ^ D := Nat.pow_le_pow_left h2b D
-      _ = _ := (pow_mul _ _ _).symm
-  have hlog := Nat.log_mono_right (b := 2) hn2
-  rw [Nat.log_pow (by decide : 1 < 2)] at hlog
-  unfold GroupedOrder.lamN
-  nlinarith
-
 /-- The number of offsets is no greater than the number of fine blocks. -/
 theorem offsets_le_grid {b : ℕ} (hb : 2 ≤ b) : ∀ h : ℕ, 0 < h → h * b ≤ b ^ h
   | 0, hh => by omega
@@ -55,5 +39,41 @@ theorem offsets_le_grid {b : ℕ} (hb : 2 ≤ b) : ∀ h : ℕ, 0 < h → h * b 
     calc (h + 2) * b ≤ b * ((h + 1) * b) := ht
       _ ≤ b * b ^ (h + 1) := Nat.mul_le_mul_left b ih
       _ = b ^ (h + 2) := by rw [pow_succ]; ring
+
+end SlidingPuzzle.Tree
+
+namespace SlidingPuzzle.Tree
+
+theorem log_linear_le : ∀ L : ℕ, 8 ≤ L → 24 * L + 54 ≤ 2 ^ L
+  | 8, _ => by norm_num
+  | L + 9, _ => by
+    have ih := log_linear_le (L + 8) (by omega)
+    rw [pow_succ]
+    have : 24 ≤ 2 ^ (L + 8) := le_trans (by norm_num) (Nat.pow_le_pow_right (by norm_num) (show 8 ≤ L + 8 by omega))
+    omega
+
+/-- The logarithmic slack against the lane offsets: `2 λ ≤ h b` for `b ≥ 256`. -/
+theorem log_slack_fine {m b h : ℕ} (hh : 1 ≤ h) (hb : 256 ≤ b) (hm : m ≤ (2 * b) ^ (2 * h + 2)) :
+    2 * GroupedOrder.lamN m ≤ h * b := by
+  set L := Nat.log 2 b with hL
+  have hbL : b < 2 ^ (L + 1) := Nat.lt_pow_succ_log_self (by decide) b
+  have hL8 : 8 ≤ L := by
+    rw [hL]
+    exact Nat.le_log_of_pow_le (by decide) (le_trans (by norm_num) hb)
+  have hLb : 24 * L + 54 ≤ b :=
+    (log_linear_le L hL8).trans (Nat.pow_log_le_self 2 (by omega))
+  have h2b : 2 * b < 2 ^ (L + 2) := by rw [pow_succ]; omega
+  have hm2 : m < 2 ^ ((L + 2) * (2 * h + 2)) := by
+    calc m ≤ (2 * b) ^ (2 * h + 2) := hm
+      _ < (2 ^ (L + 2)) ^ (2 * h + 2) := Nat.pow_lt_pow_left h2b (by omega)
+      _ = _ := (pow_mul _ _ _).symm
+  have hlog : Nat.log 2 m < (L + 2) * (2 * h + 2) := by
+    rcases Nat.eq_zero_or_pos m with rfl | hm0
+    · simp
+    exact Nat.log_lt_of_lt_pow (by omega) hm2
+  unfold GroupedOrder.lamN
+  have h1 : (L + 2) * (2 * h + 2) ≤ 4 * h * (L + 2) := by nlinarith
+  have h2 : h * (24 * L + 54) ≤ h * b := Nat.mul_le_mul_left h hLb
+  nlinarith
 
 end SlidingPuzzle.Tree

@@ -93,16 +93,22 @@ Complete, no `sorry`, axioms `propext`/`Classical.choice`/`Quot.sound` only:
 Pipeline: lane systems and `Hier.sys` (`Hier`), layout and board operations,
 residence, the abstract run, preload, the algorithm on side `k*s`
 (`exists_tree_solution`, bound `treeBound`, `Transport`); then
-`AsympAccounting` (`treeBound ≤ 10^5 (h+1) k² s³`), `ReserveAccounting`
-(per-square `needAt`), `Feasibility` (event and log-slack conditions),
-`AsympBound` (Parberry prefix to side `k*(n/k)`), `GridChoice` (even `b` with
-`b^D ≤ m ≤ (2b)^D`; `n³/b^h ≤ A 2^h n^(5/2+1/(4h+2))` when `n ≤ A(2b)^(2h+1)`), and
-`Final` (`hfit_of_grid`, `optimalLength_le_grid` for `b ≥ B = 160(2h+3)` and
-`B b^(2h+1) ≤ n ≤ (2b)^(2h+2)`, grid chosen on `m = ⌊n/B⌋` with `D = 2h+1`;
-`tree_uniform_approximation` with exponent `5/2 + 1/(4h+2)`, `tree_exponent`).
-(Earlier the grid was `b^(2h+2) ≍ n`, exponent `5/2 + 1/(2h+2)`.) The feasibility conditions only need `s ≥ B·b·k`, so the planned exponent is reached.
+`AsympAccounting` (lane inventories, reserve totals), `FineAccounting`
+(`treeBound ≤ 50 (h+3) k² s³` once `8kq ≤ s`, `16kλ ≤ s`, `2048hk ≤ s`), `ReserveAccounting`
+(per-square `needAt`), `Feasibility` (event conditions; `2λ ≤ hb` for `b ≥ 256` and
+`n ≤ (2b)^(2h+2)`), `AsympBound` (Parberry prefix to side `k*(n/k)`), `GridChoice`
+(depth for a given `ε`), and `Final` (`hfit_of_grid`, `optimalLength_le_grid` for even
+`b ≥ 256` with `8h b^(2h+1) ≤ n ≤ (2b)^(2h+2)`; `tree_uniform_approximation_explicit`
+with `b = 2⌊x/2⌋`, `x^(2h+1) = n/8h`; `tree_uniform_approximation`, `tree_exponent`).
 
-Constants are not optimized: `C_h ≈ 6.4·10^7 (h+1)(2h+3) 2^h` and `N = B (2B)^(2h+1)`.
+Constants: `OPT ≤ M + 120 (h+3) √(8h) n^(5/2+1/(4h+2))` for `n ≥ 8h (max(256,16h)+2)^(2h+1)`.
+The leading terms per `k²s³` are hops `40h`, local three-cycles of the run `45`,
+preload `≈ 51`, cleanup `≈ 29`, Finish `2.5`, stock `1.5h`; with `s = 8h·b·k` the
+lane-proportional terms are about `6h + 73`, and `B0 = 8h` is close to optimal
+for the balance `(A + B'/B0)·B0^(h/(2h+1))`. The factor `√(8h)` bounds
+`(8h)^(h/(2h+1))`, and `1.14 ≥ e^(1/8)` covers the even rounding of `b`.
+(History: `10^5 (h+1)` accounting, grid `b^(2h+2) ≍ n` with exponent `5/2 + 1/(2h+2)`,
+then `160(2h+3) b^(2h+1) ≤ n` with `C_h ≈ 6.4·10^7 (h+1)(2h+3) 2^h`.)
 
 Statistics (`Stats`): `tree_average_optimal_length` and `tree_gods_number`, the mean
 optimal length `(2/3)n³ + O(n^(5/2+ε))` and God's number `n³ + O(n^(5/2+ε))` for
