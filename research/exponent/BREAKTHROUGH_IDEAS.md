@@ -2,7 +2,7 @@
 
 These are research proposals. The first one is now **proved in Lean**: the
 theorem has error scale `n^(8/3)` without the logarithm, with coefficient
-`1133` (`Hub.uniform_approximation_explicit`); see `Hub/InFlightSegment.lean`,
+`1084` (`Hub.uniform_approximation_explicit`); see `Hub/InFlightSegment.lean`,
 `Hub/InFlightSum.lean` and `LEAN_PLAN.md`. The text of §1 is kept as written
 before the proof. The remaining proposals are open.
 
@@ -11,7 +11,7 @@ before the proof. The remaining proposals are open.
 **Status: proved.** The deterministic lemma is `seg_bound` and
 `last_le_of_segments`; the telescoping sum is `sum_mul_sum_inv_le`. The
 formal version counts `s` pushes per band, uses windows `w_j ≈ (4/3)sΔ/B_j`
-and the capacity condition `48kL ≤ s`, and handles moderate `n`, where
+and a capacity condition `cλk ≤ s`, and handles moderate `n`, where
 capacity limits `k`, in the explicit constant.
 
 ### Where the present estimate loses information

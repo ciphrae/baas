@@ -76,15 +76,15 @@ twice the access length (`Path.exists_conjugated_efficient`).
 
 The paper rounds `n` down to a fourth power, leaving up to `4*n^(3/4)` outer
 layers whose Parberry prefix costs `60*n^(11/4)`, which would dominate the new
-bound. Instead, for `n ≥ 11·2^20` take `k = 2m` with `m` the largest integer
-such that `192m²(log₂ n + 1) ≤ n` and `64m³ ≤ n`, and `s = ⌊n/k⌋`
+bound. Instead, for `n ≥ 10⁷` take `k = 2m` with `m` the largest integer
+such that `304m²(log₂(2mn²) + 4) + 10m ≤ 5n` and `64m³ ≤ n`, and `s = ⌊n/k⌋`
 (`Hub/LinBound.lean`). The outer
 `d = n - k*s < k` rows and columns are solved by the Parberry prefix
 (`Parberry/Prefix.lean`, `O(n²·k)`), and the remaining `k*s × k*s` board by the
 hub algorithm. The residual board is reachable and its Manhattan distance
 equals the original board's after the prefix (`Algorithm/Residual*.lean`,
 `Hub/AsympBound.lean`). The existing cubic solver handles
-`4096 ≤ n ≤ 11·2^20`, so the final theorem still starts at `4096`.
+`4096 ≤ n ≤ 10⁷`, so the final theorem still starts at `4096`.
 
 ## Hub transport: departures from the paper's scheme
 
@@ -125,13 +125,17 @@ through the reservoir of a hub square. The pen-and-paper proof is
   the insertions from distances `≥ j`. Weighted by the insertion rates these
   sums telescope, `∑_d G_d ∑_{j≤d} 1/B_j = #{j : B_j > 0}`
   (`sum_mul_sum_inv_le`), so a hub has `O(n)` tiles in flight rather than
-  `O(n log n)`, and the logarithm disappears from the bound.
+  `O(n log n)`, and the logarithm disappears from the bound. The tiles of one
+  class are bounded over all distances together: the windows `[τ - W_d, τ]`
+  end at the same time, so the rounds counted at each position form a chain,
+  and a moment bound for nested sets (`Hub/ChernoffChain.lean`) gives one
+  Chernoff slack per class instead of one per class and distance.
 
-The boardwise bound is now `OPT(B) ≤ M(B) + 1133·n^(8/3)` for `n ≥ 4096`.
-In the older scale `n^(8/3)(log n)^(1/3)` the coefficient is `450`, down from
-`776` and `894` in the last optimization passes, `19,319` at their start,
-`849,303` in an earlier version and `4,828,800,024,144` originally. The
-certified estimates are:
+The boardwise bound is now `OPT(B) ≤ M(B) + 1084·n^(8/3)` for `n ≥ 4096`
+(`1133` before the merged upper tail). In the older scale
+`n^(8/3)(log n)^(1/3)` the coefficient went `4,828,800,024,144` originally,
+`849,303` in an earlier version, then `19,319`, `894` and `776` in the
+optimization passes. The certified estimates are:
 
 - Three-cycles (`Moves/ThreeCycleSharp.lean`): on a board of side `n ≥ 6`, the
   blank is moved below the top-left corner (`≤ 2n`) and the three tiles are
@@ -157,14 +161,17 @@ certified estimates are:
 - Round walk: a cycle relocation serves at least two new squares, and along
   the snake order only row changes need a second jump, so a round weighs at
   most `66k² + 132k + 30 + (78k + 30)·#dummy` (`exists_round_events`).
-- In-flight order: the lower tail uses weights `1 - g/(4K)` with
-  `exp(-(29/25)v) ≤ 1 - v` on `[0, 1/4]`, so windows need `4/3` of the
-  expected pushes, and costs capacity `48kL ≤ s`. The upper tail uses weights
-  `(9/8)^a`: since `(9/8)^17 ≥ e²`, at most `(17/16)μ + 6λ` insertions occur in a
-  window, with `λ = 3L` and `L = log₂ n + 1`; with `8k² ≤ s` the number of
-  window events is below `n³ < 2^λ`.
-- In-flight budget: per hub at most `(17/12)(n + 2k) + (17/8)k(k+1) + 36k²L`
-  tiles in flight; with capacity this is `Rhub n = ⌊21756n/10000⌋ + 1`.
+- In-flight order: the lower tail uses weights `1 - g/(4K) ≥ (3/4)^(g/K)`, so
+  windows need `4/3` of the expected pushes and fail with probability
+  `exp(-0.03423μ/K)` (`1/4 - (3/4)log(4/3) > 0.03423`); with
+  `λ_A = log₂(k³s²) + 4` this costs capacity `76kλ_A ≤ 5s`. The upper tail
+  counts the class-`x` tiles of a half over all distances at once (nested
+  sets, `card_upper_tail_chain`), with weights `(21/20)^a`: since
+  `(21/20)^41 ≥ e²`, at most `(41/40)μ + 15λ` of them are present, with
+  `λ = 3(log₂ n + 1)`; there are fewer than `n³/2 < 2^λ/2` such events.
+- In-flight budget: per hub at most `(41/30)(n + 2k) + (41/20)k(k+1) + 90k(log₂ n + 1)`
+  tiles in flight; with capacity and `k ≥ 100` this is `Rhub n = ⌊14n/10⌋ + 1`
+  (was `2.1756n` with a slack term per class and distance).
 - Free tiles: home tiles pad the set-aside reserve only up to `Q'` tiles per
   square, so at most `k²(Rhub n + 8n + 10)` free tiles remain for cleanup.
 - Cleanup (`Hub/Cleanup.lean`): a misplaced tile goes to its square in exchange
@@ -173,26 +180,24 @@ certified estimates are:
   swap. A three-cycle through a third misplaced tile fixes two tiles, and a
   double swap of two crossing pairs fixes four (`exists_cleanup_step_big`):
   `26n(misplaced + 2n + 2)`.
-- Whole hub algorithm (`AsympAccounting.lean`, `k ≥ 100`, `L ≥ 24`, capacity):
-  `1000·hubBound ≤ 182340X + 776300W`, with `X = n²s`, `W = k²n²`.
-- Grid for `n ≥ 11·2^20` (`LinBound.lean`): `m ≥ 50`, and either
-  `n < 64(m+1)³` or `n < 192(m+1)²L`, where `125(192L)³ ≤ 1061208n`
-  (`lin_log_bounds`). With `x = n^(1/3)` this gives `0.2169x ≤ m ≤ x/4`
+- Whole hub algorithm (`AsympAccounting.lean`, `k ≥ 100`, `729k ≤ s`):
+  `1000·hubBound ≤ 182350X + 705800W`, with `X = n²s`, `W = k²n²`.
+- Grid for `n ≥ 10⁷` (`LinBound.lean`): `m ≥ 50`, and either `n < 64(m+1)³`
+  or the capacity condition fails at `m + 1`, where `log₂(2(m+1)n²) + 4 ≤ 0.266x`
+  (`lin_log_le`). With `x = n^(1/3)` this gives `0.244x ≤ m ≤ x/4`
   (`lin_range`).
 - Real bound (`LinError.lean`): `KX x³/m + 8KW m²` is a concave function of `m`
-  after multiplying by `m`, so on `[0.2169x, x/4]` it is at most its endpoint
-  values, `1132.9x²` (`lin_core`). The prefix adds at most `0.1x⁸`.
-- Initial range: for `4096 ≤ n ≤ 11·2^20`, the Parberry solver's exact bound
-  `5n³ + 1509n² + 1505n + 4796` is at most `1133·n^(8/3)`
-  (`cubic_le_linError`; it reaches about `1129.8` at the top of the range) and
-  at most `450·n^(8/3)(ln n)^(1/3)` (`cubic_solver_le_hubError`).
+  after multiplying by `m`, so on `[0.244x, x/4]` it is at most its endpoint
+  values, `1083.6x²` (`lin_core`). The prefix adds at most `0.1x⁸`.
+- Initial range: for `4096 ≤ n ≤ 10⁷`, the Parberry solver's exact bound
+  `5n³ + 1509n² + 1505n + 4796` is at most `1084·n^(8/3)`
+  (`cubic_le_linError`; about `1077` at the top of the range).
 
-Consequently `OPT(B) ≤ M(B) + 1133·n^(8/3)` for every `n ≥ 4096`
-(`Hub.uniform_approximation_explicit`). Asymptotically the grid ratio
-`k/n^(1/3) = 1/2` gives `2(2A + B/4) ≈ 1118`. Since `ln n ≥ 16.2` above
-`11·2^20`, the same bound gives the coefficient `450` in the older scale
-(`Hub.uniform_approximation_log_explicit`). These are certified upper bounds,
-not claims of optimality.
+Consequently `OPT(B) ≤ M(B) + 1084·n^(8/3)` for every `n ≥ 4096`
+(`Hub.uniform_approximation_explicit`). The coefficient is set just above
+`10⁷`, where capacity limits `k`; asymptotically the grid ratio
+`k/n^(1/3) = 1/2` gives `2(2A + B/4) ≈ 1082`. These are certified upper
+bounds, not claims of optimality.
 
 ## Remaining structural improvements
 
@@ -204,5 +209,5 @@ three placements. A jump or insertion could avoid the three-cycle altogether
 if the wanted tile lay in the reservoir, but region tiles may also sit in the
 landing strip and the own column piece, where corridor heads drop in. [OPTIMIZATION_IDEAS.md](OPTIMIZATION_IDEAS.md) lists this
 and smaller remaining improvements. Without the logarithm, the corridor side
-`W = k²n²` (coefficient `776.3`) is dominated by cleanup: `26n` per misplaced
+`W = k²n²` (coefficient `705.8`) is dominated by cleanup: `26n` per misplaced
 tile, with `O(k²n)` misplaced tiles from the reserve, the stock and the corridors.

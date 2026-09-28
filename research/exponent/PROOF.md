@@ -10,7 +10,7 @@ Cleanup phase (section 7). The division into squares, the local Finish and the s
 reduction follow the paper.
 
 The formalization now certifies the stronger boardwise bound
-`OPT(B) ≤ M(B) + 1133·n^(8/3)` for `n ≥ 4096`, without the logarithm. The only
+`OPT(B) ≤ M(B) + 1084·n^(8/3)` for `n ≥ 4096`, without the logarithm. The only
 change to the argument below is in Lemma 4: instead of giving a tile its whole
 lifetime at the rate of its insertion distance `d`, follow it through the bands
 `d, d-1, ..., 0` of its half. It leaves band `j` after `s` insertions from
