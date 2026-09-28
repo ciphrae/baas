@@ -83,3 +83,18 @@ bound (lanes landing at `v`), which defines `R_v`. Globally, with
 Finish `n³/k`, junk and placeholders `n·(qkn + ΣB)`, preload `n·ΣR_v`,
 cleanup `n·(lane cells + ΣR + ΣB)`. With `b ≈ n^(1/(2h+1))`:
 `n^((5h+3)/(2h+1))`, hence `n^(5/2+ε)`.
+
+## Status (2026-09-28, branch `tree`)
+
+Proved in Lean, no `sorry` (`SlidingPuzzle/Tree/`): lane systems and the
+`b`-ary instance (`Hier.sys`), layout and all board operations (`simulate_run`),
+residence with per-lane step, the whole abstract run with placeholders, stock
+identity and the rank bound (`exists_valid_run`), preload (`exists_preload`),
+and the algorithm on side `k*s` (`exists_tree_solution`, bound `treeBound`).
+
+Remaining: (1) bound `treeBound` for `L = Hier.sys b h`, `q = h*b`, `k = b^h`
+(sums of `laneCells`, `needAt`, `resv`; hypotheses `hfit`, capacity `hcap`,
+`hcA`, `hcB`, and `TDims`: `b` even, `8 k^2 q < n`-type conditions);
+(2) general sides via the Parberry prefix (as `Hub/AsympBound`);
+(3) choose `b ≈ n^(1/(2h+1))` and derive `OPT ≤ M + C_h n^((5h+3)/(2h+1)) log n`,
+then `5/2 + ε`. Files are not yet imported by `SlidingPuzzle.lean`.
