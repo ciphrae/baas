@@ -2,7 +2,7 @@
 
 A Lean 4 / mathlib proof that Manhattan distance approximates the optimal
 solution length of the `n × n` sliding puzzle within `O(n^(8/3))`, and, by a
-second algorithm (tree lanes), within `O(n^(5/2+ε))` for every `ε > 0`.
+second algorithm (tree lanes), within `O(n^(5/2) (ln n)²)`.
 This improves the error `O(n^(11/4))` of Proposition 9 in Zhixian Zhong,
 *Additive Approximation Algorithms for Sliding Puzzle* (2023), §5.2
 (`zhong2023_additive-approximation-sliding-puzzle.pdf`, printed p. 145).
@@ -49,15 +49,25 @@ OPT(B) ≤ Manhattan(B) + 120·(h+3)·√(8h)·n^(5/2 + 1/(4h+2)).
 | 3 | `18/7` | 3527 | `1.8·10¹⁸` |
 | 4 | `23/9` | 4752 | `1.6·10²³` |
 
-Depth 2 beats `268·n^(8/3)` from about `n ≈ 2·10¹⁴` on. Consequently, for every `ε > 0`,
+Depth 2 beats `268·n^(8/3)` from about `n ≈ 2·10¹⁴` on. Taking for each `n` the
+largest admissible depth (`h ≈ ln n / 11`) gives
+(`Tree.tree_log_approximation_explicit`, [`Tree/LogBound.lean`](SlidingPuzzle/Tree/LogBound.lean)),
+for every reachable board with `n ≥ 8·258³ ≈ 1.4·10⁸`,
 
 ```text
-average optimal solution length = (2/3)*n³ + O(n^(5/2+ε))
-God's number                    =       n³ + O(n^(5/2+ε))
+OPT(B) ≤ Manhattan(B) + 8000·n^(5/2)·(ln n)²,
 ```
 
-(`Tree.tree_average_optimal_length`, `Tree.tree_gods_number` in
-[`Tree/Stats.lean`](SlidingPuzzle/Tree/Stats.lean)). The plan and status are in [`research/exponent/TREE_PLAN.md`](research/exponent/TREE_PLAN.md).
+and hence
+
+```text
+average optimal solution length = (2/3)*n³ + O(n^(5/2) (ln n)²)
+God's number                    =       n³ + O(n^(5/2) (ln n)²)
+```
+
+(`Tree.tree_log_average_optimal_length`, `Tree.tree_log_gods_number` in
+[`Tree/Stats.lean`](SlidingPuzzle/Tree/Stats.lean); the `5/2 + ε` versions are
+`Tree.tree_average_optimal_length`, `Tree.tree_gods_number`). The plan and status are in [`research/exponent/TREE_PLAN.md`](research/exponent/TREE_PLAN.md).
 
 Earlier versions had the error scale `n^(8/3) (ln n)^(1/3)`, with coefficient
 `4,828,800,024,144` originally. The derivation is documented in

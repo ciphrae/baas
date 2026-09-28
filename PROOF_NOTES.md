@@ -231,4 +231,6 @@ the exponent is `5/2 + 1/(4h+2)`, and `Tree.tree_exponent` follows. Details, par
 map are in [research/exponent/TREE_PLAN.md](research/exponent/TREE_PLAN.md).
 Explicitly `OPT ≤ M + 120 (h+3) √(8h) n^(5/2+1/(4h+2))` for
 `n ≥ 8h (max(256,16h)+2)^(2h+1)` (`Tree.tree_uniform_approximation_explicit`);
-the hops cost `40h k²s³` and the rest `≈ 150 k²s³` (`FineAccounting`).
+the hops cost `40h k²s³` and the rest `≈ 150 k²s³` (`FineAccounting`). Choosing the
+largest admissible `h` gives `OPT ≤ M + 8000 n^(5/2) (ln n)²` for `n ≥ 8·258³`
+(`Tree.tree_log_approximation_explicit`).

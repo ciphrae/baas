@@ -20,6 +20,9 @@ import SlidingPuzzle
 #print axioms SlidingPuzzle.Tree.tree_exponent
 #print axioms SlidingPuzzle.Tree.tree_average_optimal_length
 #print axioms SlidingPuzzle.Tree.tree_gods_number
+#print axioms SlidingPuzzle.Tree.tree_log_average_optimal_length
+#print axioms SlidingPuzzle.Tree.tree_log_gods_number
+#print axioms SlidingPuzzle.Tree.tree_log_approximation_explicit
 #print axioms SlidingPuzzle.Tree.tree_uniform_approximation
 #print axioms SlidingPuzzle.Tree.tree_uniform_approximation_explicit
 

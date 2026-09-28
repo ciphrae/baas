@@ -110,6 +110,12 @@ for the balance `(A + B'/B0)·B0^(h/(2h+1))`. The factor `√(8h)` bounds
 (History: `10^5 (h+1)` accounting, grid `b^(2h+2) ≍ n` with exponent `5/2 + 1/(2h+2)`,
 then `160(2h+3) b^(2h+1) ≤ n` with `C_h ≈ 6.4·10^7 (h+1)(2h+3) 2^h`.)
 
+Depth choice (`LogBound`): the largest `h` with `treeN h ≤ n` has `n < treeN (h+1) ≤ (290h)^(2h+4)`,
+so `n^(1/(4h+2)) ≤ 580√h`, and `10h ≤ ln n`; hence `OPT ≤ M + 8000 n^(5/2) (ln n)²` for
+`n ≥ 8·258³` (`tree_log_approximation_explicit`). With the rounding condition `b ≥ 16h` the
+true optimum behaves like `≈ 340 (ln n / ln ln n)² n^(5/2)`; per-level branching factors
+would remove `b ≥ 16h` and give `≈ 150 (ln n)^(3/2) n^(5/2)`.
+
 Statistics (`Stats`): `tree_average_optimal_length` and `tree_gods_number`, the mean
 optimal length `(2/3)n³ + O(n^(5/2+ε))` and God's number `n³ + O(n^(5/2+ε))` for
 every `ε > 0`, via the generic reduction `Hub.AsympStats`.
