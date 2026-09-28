@@ -216,3 +216,16 @@ Relocations (`28` of `A = 55.65`) and hops (`25`) make up the transport side;
 cleanup (`13n` per misplaced tile, about `9.75k²n` tiles, `≈ 127` of
 `B = 251.1`) and dummy relocations (`84`) the corridor side.
 [OPTIMIZATION_IDEAS.md](OPTIMIZATION_IDEAS.md) lists the remaining improvements.
+
+## Tree lanes (below 8/3)
+
+`SlidingPuzzle/Tree/` replaces the single hub level by a `b`-ary hierarchy of
+`h` lane levels (`k = b^h` squares per side, `q = h·b` lane offsets per band).
+A tile reaches its class in at most `h` hops along row lanes and then column
+lanes; home tiles are preloaded as reserves by three-cycles, and placeholders
+keep every planned insertion. The reserve and misplaced-tile accounting reuse
+the `Hub` machinery (residence bounds, cleanup, Finish) with per-lane budgets.
+With `b ≈ n^(1/(2h+2))` the cost is `O(n³/k)`, the Parberry prefix costs
+`O(n²k)`, and `Tree.tree_exponent` follows. Details, parameters and the file
+map are in [research/exponent/TREE_PLAN.md](research/exponent/TREE_PLAN.md).
+Constants are unoptimized; the `268` of the hub bound does not carry over.

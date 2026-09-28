@@ -1,7 +1,8 @@
 # BAAS: Better Approximation Algorithms for Sliding puzzles
 
 A Lean 4 / mathlib proof that Manhattan distance approximates the optimal
-solution length of the `n × n` sliding puzzle within `O(n^(8/3))`.
+solution length of the `n × n` sliding puzzle within `O(n^(8/3))`, and, by a
+second algorithm (tree lanes), within `O(n^(5/2+ε))` for every `ε > 0`.
 This improves the error `O(n^(11/4))` of Proposition 9 in Zhixian Zhong,
 *Additive Approximation Algorithms for Sliding Puzzle* (2023), §5.2
 (`zhong2023_additive-approximation-sliding-puzzle.pdf`, printed p. 145).
@@ -23,6 +24,22 @@ for every reachable board and every `n ≥ 1.1·10⁹`,
 ```text
 OPT(B) ≤ Manhattan(B) + 268·n^(8/3).
 ```
+
+### Below 8/3: tree lanes
+
+`SlidingPuzzle.Tree.tree_exponent` ([`Tree/Final.lean`](SlidingPuzzle/Tree/Final.lean)):
+for every `ε > 0` there are `C, N` such that for every reachable board with `n ≥ N`,
+
+```text
+OPT(B) ≤ Manhattan(B) + C·n^(5/2+ε).
+```
+
+`Tree.tree_uniform_approximation` gives the exponent `5/2 + 1/(2h+2)` for each
+fixed depth `h ≥ 1` (a `b`-ary hierarchy of lanes, `b ≈ n^(1/(2h+2))`); the
+constants are crude (`C_h ≈ 2·10⁵(h+1)·2^h`, `N = (320(2h+3))^(2h+2)`) and not
+optimized. The average and God's-number corollaries have only been derived for
+the hub bound so far; they follow from the tree bound in the same way. The plan
+and status are in [`research/exponent/TREE_PLAN.md`](research/exponent/TREE_PLAN.md).
 
 Earlier versions had the error scale `n^(8/3) (ln n)^(1/3)`, with coefficient
 `4,828,800,024,144` originally. The derivation is documented in
@@ -67,6 +84,7 @@ All main results depend only on `propext`, `Classical.choice` and `Quot.sound`.
 | `SlidingPuzzle/Hub/Run*` | The abstract run: roles, stock identity, validity, cost, leftover misplaced tiles |
 | `SlidingPuzzle/Hub/Cleanup`, `FinishGen`, `Transport` | Cleanup by three-cycles and double swaps, Finish, the hub algorithm on side `k*s` |
 | `SlidingPuzzle/Hub/Asymp*`, `Lin*`, `Main` | Accounting, the grid `k ≈ n^(1/3)` (capacity-limited for moderate `n`), general sides, the final theorems |
+| `SlidingPuzzle/Tree/` | Tree lanes: lane systems and the `b`-ary hierarchy, layout, board operations, residence, the abstract run, preload, transport on side `k*s`, accounting, grid choice, `tree_exponent` |
 | `Zhong/` | Word-level puzzle library in the paper's conventions: reachability criterion, orbit statistics, move words |
 | `research/exponent/` | Pen-and-paper proof, Lean blueprint, research log and simulations |
 
