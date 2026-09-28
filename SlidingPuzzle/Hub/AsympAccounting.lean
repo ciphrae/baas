@@ -11,7 +11,7 @@ namespace SlidingPuzzle.Hub
 
 /-- Numerators of the coefficients without the logarithm, with denominator `1000`. -/
 def hubLinKX : ℕ := 100650
-def hubLinKW : ℕ := 283960
+def hubLinKW : ℕ := 255960
 
 set_option maxHeartbeats 1600000 in
 /-- Combined accounting against `X = n²s` and `W = k²n²`: the in-flight budget is
@@ -32,7 +32,7 @@ theorem hubBound_le_lin {k s : ℕ} (hk : 500 ≤ k) (hcap : 881 * k ≤ s) :
   generalize Rhub (k * s) = R at *
   generalize sqCorridor k s = C at *
   set Y := 26 * (k * s) * (k ^ 2 * C + (k ^ 2 * (k * s) + k ^ 2 * (R + k ^ 2) +
-      k ^ 2 * (R + 2 * (k * s) + k ^ 2 + 6) + 4 * k ^ 2 * (k * s)) + 2 * (k * s) + 5) +
+      k ^ 2 * (R + 2 * (k * s) + k ^ 2 + 6) + 2 * k ^ 2 * (k * s)) + 2 * (k * s) + 5) +
     (k ^ 2 * (5 * s ^ 3 + 1509 * s ^ 2 + 1505 * s + 4796) + 9354 * k ^ 2 * (k * s)) with hY
   have hdiv : 2 * (Y / 2) ≤ Y := Nat.mul_div_le Y 2
   have hs : 440500 ≤ s := by omega
@@ -107,11 +107,11 @@ theorem hubBound_le_lin {k s : ℕ} (hk : 500 ≤ k) (hcap : 881 * k ≤ s) :
   have x2 : 500 * s ^ 3 ≤ k * s ^ 3 := by
     have := Nat.mul_le_mul_left (s ^ 3) hk
     linarith
-  have key : 2000 * (2 * (k * s) + (4 * k ^ 2 * (k * s) ^ 2 +
+  have key : 2000 * (2 * (k * s) + (2 * k ^ 2 * (k * s) ^ 2 +
       2 * (31 * s + 7 * k ^ 2 + 35 * k + 42) * (k * s) ^ 2 +
       (s + 3) * (21 * k + 9) * (k ^ 2 * (R + k ^ 2)) +
       (s + 3) * (s ^ 2 * (36 * k ^ 2 + 72 * k + 18) + (42 * k + 18) * (k ^ 2 * (2 * (k * s) + 1))))) +
-      1000 * Y ≤ 2 * (100650 * ((k * s) ^ 2 * s) + 283960 * (k ^ 2 * (k * s) ^ 2)) := by
+      1000 * Y ≤ 2 * (100650 * ((k * s) ^ 2 * s) + 255960 * (k ^ 2 * (k * s) ^ 2)) := by
     rw [hY]
     ring_nf
     ring_nf at hCcost hRcost

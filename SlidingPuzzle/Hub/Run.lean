@@ -29,14 +29,14 @@ open Finset
 
 /-- Transport budget retaining the actual grid dimensions and logarithm. -/
 def transportBound (n k s : ℕ) : ℕ :=
-  4 * k ^ 2 * n ^ 2 + 2 * (31 * s + 7 * k ^ 2 + 35 * k + 42) * n ^ 2 +
+  2 * k ^ 2 * n ^ 2 + 2 * (31 * s + 7 * k ^ 2 + 35 * k + 42) * n ^ 2 +
     (s + 3) * (21 * k + 9) * (k ^ 2 * (Rhub n + k ^ 2)) +
     (s + 3) * (s ^ 2 * (36 * k ^ 2 + 72 * k + 18) + (42 * k + 18) * (k ^ 2 * (2 * n + 1)))
 
 /-- Region tiles left outside their squares, before absorbing lower-order terms. -/
 def misplacedBound (n k : ℕ) : ℕ :=
   k ^ 2 * n + k ^ 2 * (Rhub n + k ^ 2) +
-    k ^ 2 * (Rhub n + 2 * n + k ^ 2 + 6) + 4 * k ^ 2 * n
+    k ^ 2 * (Rhub n + 2 * n + k ^ 2 + 6) + 2 * k ^ 2 * n
 
 variable {k : ℕ}
 
@@ -275,7 +275,7 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
       have h4 : (42 * k + 18) * ∑ S : Sq k, ∑ τ ∈ range (Δ0 - Q'), dummyAt (rd τ) S ≤
           (42 * k + 18) * (k * k * (sqCorridor k s + 1)) := Nat.mul_le_mul_left _ h1
       nlinarith
-    have hpot : pot s σ0 ≤ 4 * k ^ 2 * (k * s) * (k * s) :=
+    have hpot : pot s σ0 ≤ 2 * k ^ 2 * (k * s) * (k * s) :=
       (pot_le s σ0).trans (Nat.mul_le_mul_right _ (junkCnt_le s σ0))
     have ht1 := Nat.mul_le_mul_left (2 * (31 * s + 7 * k ^ 2 + 35 * k + 42)) hserved
     have ht2 := Nat.mul_le_mul_left ((s + 3) * (21 * k + 9)) hbyp
@@ -318,7 +318,7 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
       unfold Rhub; ring_nf; exact le_refl _
     have hfree : ∑ Q, ∑ y, Gf.free Q y ≤
         k ^ 2 * (Rhub (k * s) + 2 * (k * s) + k ^ 2 + 6) +
-          4 * k ^ 2 * (k * s) := by
+          2 * k ^ 2 * (k * s) := by
       have h1 := hOf.lin.free_junk
       have h2 := junkCnt_le s σ0
       have h3 : ∑ Q, ∑ y, free0 Q y ≤ ∑ _Q : Sq k, Q' :=

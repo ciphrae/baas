@@ -7,7 +7,7 @@ The in-flight budget is linear in `n` (`Rhub`), so the hub algorithm on side
 `O(n^(8/3))`. The capacity condition `76kλ_A ≤ 5s` still involves
 `λ_A = log₂(k³s²) + 4 ≤ log₂(kn²) + 4`. Take `k = 2m` with `m` the largest
 integer such that `304 m² Λ(m) + 10 m ≤ 5n`, `Λ(m) = log₂(2m n²) + 4`
-(capacity), and `45 m³ ≤ n` (cube scale). For `n ≥ linN = 10⁹` the cube scale
+(capacity), and `41 m³ ≤ n` (cube scale). For `n ≥ linN = 10⁹` the cube scale
 is the binding one (`Hub/LinError.lean`).
 
 For `n ≥ linN` this grid has `m ≥ 250` (`exists_lin_width`), and
@@ -72,13 +72,13 @@ theorem gridCap_le_of {n M N0 : ℕ} (T : ℕ) (hn : N0 ≤ n) (hM : 1 ≤ M)
 theorem gridCap_250 {n : ℕ} (hn : linN ≤ n) : gridCap n 250 ≤ 5 * n :=
   gridCap_le_of (N0 := 10 ^ 9) 64 hn (by norm_num) (by norm_num) (by norm_num)
 
-/-- The grid: the largest `m` with `gridCap n m ≤ 5n` and `45 m³ ≤ n`. It is at
+/-- The grid: the largest `m` with `gridCap n m ≤ 5n` and `41 m³ ≤ n`. It is at
 least `250`. -/
 theorem exists_lin_width {n : ℕ} (hn : linN ≤ n) :
-    ∃ m : ℕ, 250 ≤ m ∧ gridCap n m ≤ 5 * n ∧ 45 * m ^ 3 ≤ n ∧
-      (5 * n < gridCap n (m + 1) ∨ n < 45 * (m + 1) ^ 3) := by
+    ∃ m : ℕ, 250 ≤ m ∧ gridCap n m ≤ 5 * n ∧ 41 * m ^ 3 ≤ n ∧
+      (5 * n < gridCap n (m + 1) ∨ n < 41 * (m + 1) ^ 3) := by
   classical
-  let P : ℕ → Prop := fun m => gridCap n m ≤ 5 * n ∧ 45 * m ^ 3 ≤ n
+  let P : ℕ → Prop := fun m => gridCap n m ≤ 5 * n ∧ 41 * m ^ 3 ≤ n
   have hP : P 250 := ⟨gridCap_250 hn, by unfold linN at hn; omega⟩
   have h250 : 250 ≤ n := by unfold linN at hn; omega
   set m := Nat.findGreatest P n
@@ -89,15 +89,15 @@ theorem exists_lin_width {n : ℕ} (hn : linN ≤ n) :
   push Not at hc
   have hle : m + 1 ≤ n := by
     calc m + 1 ≤ (m + 1) ^ 3 := Nat.le_self_pow (by norm_num) _
-      _ ≤ 45 * (m + 1) ^ 3 := Nat.le_mul_of_pos_left _ (by norm_num)
+      _ ≤ 41 * (m + 1) ^ 3 := Nat.le_mul_of_pos_left _ (by norm_num)
       _ ≤ n := hc.2
   have := Nat.le_findGreatest (P := P) hle hc
   omega
 
 /-- The hub algorithm on the grid, in natural numbers. -/
 theorem optimalLength_le_lin_nat {n : ℕ} [NeZero n] (hn : linN ≤ n) (B : ReachableBoard n) :
-    ∃ m : ℕ, 250 ≤ m ∧ 45 * m ^ 3 ≤ n ∧
-      (5 * n < gridCap n (m + 1) ∨ n < 45 * (m + 1) ^ 3) ∧
+    ∃ m : ℕ, 250 ≤ m ∧ 41 * m ^ 3 ≤ n ∧
+      (5 * n < gridCap n (m + 1) ∨ n < 41 * (m + 1) ^ 3) ∧
       1000 * optimalLength B ≤ 1000 * manhattan B.val +
         2 * hubLinKX * (n ^ 2 * (n / (2 * m))) + 2 * hubLinKW * ((2 * m) ^ 2 * n ^ 2) +
         2000 * ((15 * n ^ 2 + 3002 * n + 1) * (n - 2 * m * (n / (2 * m)))) := by

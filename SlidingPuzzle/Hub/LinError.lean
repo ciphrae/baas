@@ -3,16 +3,16 @@ import Mathlib
 
 /-! # The error scale `n^(8/3)`
 
-With `x = n^(1/3)`, the grid of `LinBound.lean` satisfies `45 m³ ≤ x³`, so
-`m ≤ 0.2812 x`. The cost `KX x³/m + 8 KW m²` of the hub algorithm, multiplied by
+With `x = n^(1/3)`, the grid of `LinBound.lean` satisfies `41 m³ ≤ x³`, so
+`m ≤ 0.2901 x`. The cost `KX x³/m + 8 KW m²` of the hub algorithm, multiplied by
 `m`, is a concave function of `m`, so on a range `a ≤ m ≤ b` its two endpoint
 values suffice (`lin_core_of`). For `n ≥ linN = 10⁹` the range is
-`0.2801 x ≤ m ≤ 0.2812 x` (`lin_range`): the capacity condition holds with room
+`0.2889 x ≤ m ≤ 0.2901 x` (`lin_range`): the capacity condition holds with room
 to spare at `m + 1` (there `Λ(m+1) ≤ 0.08 x`, `lin_log_le`), so the grid is
-the largest `m` with `45 m³ ≤ n`.
+the largest `m` with `41 m³ ≤ n`.
 
-On this range the cost is at most `537.6 x²`, close to the minimum of
-`KX/c + 8 KW c²` at `c ≈ 0.281`; the prefix adds at most `0.032 x²`. -/
+On this range the cost is at most `519.3 x²`, close to the minimum of
+`KX/c + 8 KW c²` at `c ≈ 0.291`; the prefix adds at most `0.032 x²`. -/
 
 open Filter Asymptotics
 
@@ -85,10 +85,10 @@ theorem lin_core_of {x m a b D : ℝ} (hmb : m ≤ b) (ham : a ≤ m) (ha0 : 0 �
   simp only [hg] at hgm
   linarith
 
-/-- The hub cost on the grid range `0.2801 x ≤ m ≤ 0.2812 x`. -/
-theorem lin_core {x m : ℝ} (hx : 0 ≤ x) (hxm : 2801 / 10000 * x ≤ m)
-    (hmx : m ≤ 2812 / 10000 * x) :
-    (hubLinKX : ℝ) * x ^ 3 + 8 * hubLinKW * m ^ 3 ≤ 1000 * (5376 / 10) * m * x ^ 2 := by
+/-- The hub cost on the grid range `0.2889 x ≤ m ≤ 0.2901 x`. -/
+theorem lin_core {x m : ℝ} (hx : 0 ≤ x) (hxm : 2889 / 10000 * x ≤ m)
+    (hmx : m ≤ 2901 / 10000 * x) :
+    (hubLinKX : ℝ) * x ^ 3 + 8 * hubLinKW * m ^ 3 ≤ 1000 * (5193 / 10) * m * x ^ 2 := by
   have hx3 : 0 ≤ x ^ 3 := by positivity
   refine lin_core_of hmx hxm (by positivity) ?_ ?_
   · norm_num [hubLinKX, hubLinKW]; nlinarith [hx3]
@@ -125,11 +125,11 @@ theorem lin_log_le {x : ℝ} (hx : 1000 ≤ x) {L : ℕ} (hL : (2 : ℝ) ^ L ≤
     exact le_of_pow_le_pow_left₀ (by norm_num) (by positivity) h7
 
 /-- The grid range in terms of `x = n^(1/3)`, for `n ≥ linN = 10⁹`: the cube
-scale bounds `m ≤ 0.2812 x`, and maximality gives `0.2801 x ≤ m`, since the
+scale bounds `m ≤ 0.2901 x`, and maximality gives `0.2889 x ≤ m`, since the
 capacity condition cannot fail at `m + 1`. -/
-theorem lin_range {n m : ℕ} (hn : linN ≤ n) (hcube : 45 * m ^ 3 ≤ n)
-    (hmax : 5 * n < gridCap n (m + 1) ∨ n < 45 * (m + 1) ^ 3) :
-    1000 ≤ cbrtN n ∧ 2801 / 10000 * cbrtN n ≤ m ∧ (m : ℝ) ≤ 2812 / 10000 * cbrtN n := by
+theorem lin_range {n m : ℕ} (hn : linN ≤ n) (hcube : 41 * m ^ 3 ≤ n)
+    (hmax : 5 * n < gridCap n (m + 1) ∨ n < 41 * (m + 1) ^ 3) :
+    1000 ≤ cbrtN n ∧ 2889 / 10000 * cbrtN n ≤ m ∧ (m : ℝ) ≤ 2901 / 10000 * cbrtN n := by
   set x := cbrtN n with hxdef
   have hx0 := cbrtN_nonneg n
   have hx3 := cbrtN_cube n
@@ -138,21 +138,21 @@ theorem lin_range {n m : ℕ} (hn : linN ≤ n) (hcube : 45 * m ^ 3 ≤ n)
   have hx1000 : 1000 ≤ x := by
     apply le_of_cube_le hx0; rw [hx3]; norm_num at hnR ⊢; linarith
   have hm0 : (0 : ℝ) ≤ m := Nat.cast_nonneg m
-  -- `45 t³ ≤ x³` bounds `t ≤ 0.2812 x`
-  have hup : ∀ t : ℝ, 0 ≤ t → 45 * t ^ 3 ≤ x ^ 3 → t ≤ 2812 / 10000 * x := by
+  -- `41 t³ ≤ x³` bounds `t ≤ 0.2901 x`
+  have hup : ∀ t : ℝ, 0 ≤ t → 41 * t ^ 3 ≤ x ^ 3 → t ≤ 2901 / 10000 * x := by
     intro t ht h
     apply le_of_cube_le (by positivity)
     nlinarith [pow_nonneg hx0 3]
-  have hmup : (m : ℝ) ≤ 2812 / 10000 * x := by
+  have hmup : (m : ℝ) ≤ 2901 / 10000 * x := by
     apply hup _ hm0; rw [hx3]; exact_mod_cast hcube
   refine ⟨hx1000, ?_, hmup⟩
-  by_cases hc1 : 45 * (m + 1) ^ 3 ≤ n
+  by_cases hc1 : 41 * (m + 1) ^ 3 ≤ n
   · exfalso
     have hcap : 5 * n < gridCap n (m + 1) := by
       rcases hmax with h | h
       · exact h
       · omega
-    have hm1 : (m : ℝ) + 1 ≤ 2812 / 10000 * x := by
+    have hm1 : (m : ℝ) + 1 ≤ 2901 / 10000 * x := by
       apply hup _ (by positivity); rw [hx3]; exact_mod_cast hc1
     set L := Nat.log 2 (2 * (m + 1) * n ^ 2) with hLdef
     have hpow : 2 ^ L ≤ 2 * (m + 1) * n ^ 2 := by
@@ -171,32 +171,32 @@ theorem lin_range {n m : ℕ} (hn : linN ≤ n) (hcube : 45 * m ^ 3 ≤ n)
       push_cast at this
       linarith
     rw [← hx3] at hcapR
-    have hsq : ((m : ℝ) + 1) ^ 2 ≤ (2812 / 10000 * x) ^ 2 :=
+    have hsq : ((m : ℝ) + 1) ^ 2 ≤ (2901 / 10000 * x) ^ 2 :=
       pow_le_pow_left₀ (by positivity) hm1 2
     have h1 := mul_le_mul hsq hLx (by positivity) (by positivity)
     nlinarith
   · -- the cube scale fails at `m + 1`
-    have hcub : (n : ℝ) < 45 * ((m : ℝ) + 1) ^ 3 := by
-      have : n < 45 * (m + 1) ^ 3 := by omega
+    have hcub : (n : ℝ) < 41 * ((m : ℝ) + 1) ^ 3 := by
+      have : n < 41 * (m + 1) ^ 3 := by omega
       exact_mod_cast this
     by_contra hc
     push Not at hc
-    have h1 : (m : ℝ) + 1 ≤ 2811 / 10000 * x := by linarith
+    have h1 : (m : ℝ) + 1 ≤ 2899 / 10000 * x := by linarith
     have h2 := pow_le_pow_left₀ (by positivity) h1 3
     rw [← hx3] at hcub
     nlinarith
 
 set_option maxHeartbeats 1600000 in
-/-- The hub algorithm, given the core estimate `KX x³ + 8 KW m³ ≤ 537.6 m x²` for
-its grid: `OPT(B) ≤ M(B) + 538 n^(8/3)`. -/
+/-- The hub algorithm, given the core estimate `KX x³ + 8 KW m³ ≤ 519.3 m x²` for
+its grid: `OPT(B) ≤ M(B) + 520 n^(8/3)`. -/
 theorem optimalLength_le_of_core {n m : ℕ} [NeZero n] (B : ReachableBoard n)
     (hm1 : 1 ≤ m) (hx1000 : 1000 ≤ cbrtN n) (hx2 : 2 * (m : ℝ) ≤ cbrtN n)
     (hopt : 1000 * optimalLength B ≤ 1000 * manhattan B.val +
         2 * hubLinKX * (n ^ 2 * (n / (2 * m))) + 2 * hubLinKW * ((2 * m) ^ 2 * n ^ 2) +
         2000 * ((15 * n ^ 2 + 3002 * n + 1) * (n - 2 * m * (n / (2 * m)))))
     (hcore : (hubLinKX : ℝ) * cbrtN n ^ 3 + 8 * hubLinKW * (m : ℝ) ^ 3 ≤
-      1000 * (5376 / 10) * m * cbrtN n ^ 2) :
-    (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) + 538 * linError n := by
+      1000 * (5193 / 10) * m * cbrtN n ^ 2) :
+    (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) + 520 * linError n := by
   rw [linError_eq]
   set x := cbrtN n with hxdef
   have hx3 := cbrtN_cube n
@@ -237,11 +237,11 @@ theorem optimalLength_le_of_core {n m : ℕ} [NeZero n] (B : ReachableBoard n)
   have hmX : 2 * (m : ℝ) * X ≤ x ^ 9 := hX
   have h2 := mul_le_mul_of_nonneg_left hcore (show (0 : ℝ) ≤ x ^ 6 by positivity)
   have hmain : (m : ℝ) * (2 * (hubLinKX : ℝ) * X + 2 * hubLinKW * ((2 * (m : ℝ)) ^ 2 * (x ^ 3) ^ 2)) ≤
-      (m : ℝ) * (1000 * (5376 / 10) * x ^ 8) := by
+      (m : ℝ) * (1000 * (5193 / 10) * x ^ 8) := by
     have e1 : (m : ℝ) * (2 * (hubLinKX : ℝ) * X) = hubLinKX * (2 * m * X) := by ring
     have e2 : (m : ℝ) * (2 * hubLinKW * ((2 * (m : ℝ)) ^ 2 * (x ^ 3) ^ 2)) =
         x ^ 6 * (8 * hubLinKW * m ^ 3) := by ring
-    have e3 : (m : ℝ) * (1000 * (5376 / 10) * x ^ 8) = x ^ 6 * (1000 * (5376 / 10) * m * x ^ 2) := by
+    have e3 : (m : ℝ) * (1000 * (5193 / 10) * x ^ 8) = x ^ 6 * (1000 * (5193 / 10) * m * x ^ 2) := by
       ring
     have e4 : x ^ 6 * ((hubLinKX : ℝ) * x ^ 3) = hubLinKX * x ^ 9 := by ring
     have hk := mul_le_mul_of_nonneg_left hmX hKX
@@ -263,9 +263,9 @@ theorem optimalLength_le_of_core {n m : ℕ} [NeZero n] (B : ReachableBoard n)
   linarith
 
 /-- **The hub algorithm without the logarithm**: for every `n ≥ linN = 10⁹`,
-`OPT(B) ≤ M(B) + 538 n^(8/3)`. -/
+`OPT(B) ≤ M(B) + 520 n^(8/3)`. -/
 theorem optimalLength_le_linError {n : ℕ} [NeZero n] (hn : linN ≤ n) (B : ReachableBoard n) :
-    (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) + 538 * linError n := by
+    (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) + 520 * linError n := by
   obtain ⟨m, hm, hcube, hmax, hopt⟩ := optimalLength_le_lin_nat hn B
   obtain ⟨hx1000, hlo, hhi⟩ := lin_range hn hcube hmax
   have hx0 := cbrtN_nonneg n
