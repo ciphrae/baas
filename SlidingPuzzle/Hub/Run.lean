@@ -76,7 +76,7 @@ theorem sum_freeInit_le (σ0 : IState k) {Δ0 : ℕ} (rs0 : Fin Δ0 → Round k)
 
 /-- The abstract run exists, is valid, and is cheap. -/
 theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
-    (hk50 : 50 ≤ k) (hP1 : 76 * k * lamA k s ≤ 5 * s) (σ0 : IState k)
+    (hk500 : 500 ≤ k) (hP1 : 76 * k * lamA k s ≤ 5 * s) (σ0 : IState k)
     (hF1 : ∀ Q, (∑ y, σ0.cnt Q y) + (if σ0.blank = Q then 1 else 0) = regionSize k s)
     (hF2 : ∀ y, (∑ Q, σ0.cnt Q y) + σ0.corrCount s y = s ^ 2 - (if IsLast y then 1 else 0)) :
     ∃ es : List (REvent k), σ0.Valid s es ∧ σ0.totalCost s es ≤ transportBound n k s ∧
@@ -87,7 +87,7 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
   have hk2 := hd.two_le
   have hroom4 := hd.room
   have hks : k ≤ s := by omega
-  have hsize := capacity_lower_bounds hd hk50 hP1
+  have hsize := capacity_lower_bounds hd hk500 hP1
   have h2ks : 2 * k ≤ s := by omega
   have hroom : k + 1 ≤ s := by omega
   have hsqC := sqCorridor_le (k := k) (s := s)
@@ -101,7 +101,7 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
   have hQle : Q' ≤ Δ0 := by rw [hQ']; exact min_le_left _ _
   have hQle2 : Q' ≤ Rhub (k * s) + 8 * k * s + 10 := by rw [hQ']; exact min_le_right _ _
   have hΔ : Δ0 - Q' ≤ s ^ 2 + 1 := by omega
-  obtain ⟨σo, hσo⟩ := exists_good_order hd hk50 hP1 hΔ (planRs rs0 Q')
+  obtain ⟨σo, hσo⟩ := exists_good_order hd hk500 hP1 hΔ (planRs rs0 Q')
   obtain ⟨rd, hrd⟩ : ∃ rd, rd = ordRd rs0 Q' σo := ⟨_, rfl⟩
   -- counting over all rounds
   have cnt_ind : ∀ S D, ∑ j ∈ range Δ0, ind (rsN rs0 j) S D = demand σ0 S D := by
