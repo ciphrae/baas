@@ -5,8 +5,8 @@
 
 | Theorem | Statement |
 | --- | --- |
-| `Hub.uniform_approximation_explicit` | `OPT(B) ≤ M(B) + 583·n^(8/3)` for every reachable board, `n ≥ 10⁹` |
-| `Hub.uniform_approximation` | `OPT(B) ≤ M(B) + C·n^(8/3)` for every reachable board, `n ≥ 10⁹` |
+| `Hub.uniform_approximation_explicit` | `OPT(B) ≤ M(B) + 348·n^(8/3)` for every reachable board, `n ≥ 1.1·10⁹` |
+| `Hub.uniform_approximation` | `OPT(B) ≤ M(B) + C·n^(8/3)` for every reachable board, `n ≥ 1.1·10⁹` |
 | `Hub.average_optimal_length` | mean optimal length `= (2/3)n³ + O(n^(8/3))` |
 | `Hub.gods_number` | God's number `= n³ + O(n^(8/3))` |
 | `Hub.average_optimal_length_rpow`, `Hub.gods_number_rpow` | the same errors are `O(n^α)` for every `α ≥ 8/3` |
@@ -228,35 +228,38 @@ The certified totals are:
 
 On side `n = k*s`, `hubBound_le_lin` in `AsympAccounting.lean` keeps
 transport, cleanup and Finish in one polynomial: for `k ≥ 500` and
-`881k ≤ s` (implied by capacity), `1000·hubBound ≤ 100650X + 361960W` with
+`881k ≤ s` (implied by capacity), `1000·hubBound ≤ 55650X + 251100W` with
 `X = n²s` and `W = k²n²`. Operation costs are charged by displacement: jumps
-`7(d+1)`, box three-cycles `28s`, hop1 `31s + …`, hop2 `30s + …`, jump
-`(s+3)(30 + 21d)`, and cleanup with Finish at half their length, since they
-end at the target (`PROOF_NOTES.md` lists the estimates; the per-operation
-figures in the sections above predate this and are twice as large for jumps
-and three-cycles). The in-flight budget `Rhub = 1.376n` enters `W` with weight
-`47` (bypass jumps `21`, cleanup of in-flight and reserve tiles `2·13`).
+`7(d+1)`; box three-cycles are staged from the box corner next to the
+insertion cell (`exists_box_three_cycle_near`, `10s + O(k)`); hop1
+`13s + 506k + 1024 + …`, hop2 `12s + 7k² + 527k + 1052 + …`, jump
+`(s+3)(13 + 21d)`; cleanup with Finish at half their length, since they end at
+the target (`PROOF_NOTES.md` lists the estimates; the per-operation figures in
+the sections above predate this and are larger). The reserve is
+`Rhub + 2n + k² + 6` per square and corridor junk at most `2k²n`. The in-flight
+budget `Rhub = 1.376n` enters `W` with weight `47` (bypass jumps `21`, cleanup
+of in-flight and reserve tiles `2·13`).
 
-For `n ≥ linN = 10⁹`, take `k = 2m` with `m` the largest integer such that
-`304m²(log₂(2mn²) + 4) + 10m ≤ 5n` (capacity) and `57m³ ≤ n`
+For `n ≥ linN = 1.1·10⁹`, take `k = 2m` with `m` the largest integer such that
+`304m²(log₂(2mn²) + 4) + 10m ≤ 5n` (capacity) and `70m³ ≤ n`
 (`exists_lin_width`), and `s = ⌊n/k⌋`; then `m ≥ 250`. The outer
 `n - k*s < k` layers go to the Parberry prefix. `optimalLength_le_lin_nat` gives
 
 ```text
-1000·OPT ≤ 1000·M + 2·100650·n²s + 2·361960·k²n² + 2000·Z,
+1000·OPT ≤ 1000·M + 2·55650·n²s + 2·251100·k²n² + 2000·Z,
 ```
 
 with `Z = (15n² + 3002n + 1)(n - k*s)` the prefix cost. With `x = n^(1/3)`,
 multiplied by `m` the cost `KX x³/m + 8KW m²` is concave in `m`, so on a range
 `a ≤ m ≤ b` its endpoint values bound it (`lin_core_of`). The cube scale gives
-`m ≤ 0.2599x`; the capacity condition cannot fail at `m + 1`, since there
-`Λ ≤ 0.08x` (`lin_log_le`), so maximality gives `m ≥ 0.2588x` (`lin_range`).
-On this range `KX x³ + 8KW m³ ≤ 582.9·1000·m x²` (`lin_core`); the ratio
-`m/x ≈ 0.259` is where `KX/c + 8KW c²` is minimal (`≈ 582.85`). The prefix
-adds at most `0.032x⁸`: `OPT ≤ M + 583 n^(8/3)` (`optimalLength_le_linError`),
-so `linConstant = 583` covers every `n ≥ hubN = 10⁹`.
+`m ≤ 0.2427x`; the capacity condition cannot fail at `m + 1`, since there
+`Λ ≤ 0.08x` (`lin_log_le`), so maximality gives `m ≥ 0.2416x` (`lin_range`).
+On this range `KX x³ + 8KW m³ ≤ 347.7·1000·m x²` (`lin_core`); the ratio
+`m/x ≈ 0.242` is where `KX/c + 8KW c²` is minimal (`≈ 347.58`). The prefix
+adds at most `0.032x⁸`: `OPT ≤ M + 348 n^(8/3)` (`optimalLength_le_linError`),
+so `linConstant = 348` covers every `n ≥ hubN = 1.1·10⁹`.
 
 The statistical reduction of the paper (Section 5) is proved for any error
 scale `f ≥ n²` (`AsympStats.lean`). It yields the average and maximum
-asymptotics from the boardwise bound; **583 is the boardwise coefficient**,
+asymptotics from the boardwise bound; **348 is the boardwise coefficient**,
 not an asserted exact coefficient for the two-sided statistical errors.

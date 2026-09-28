@@ -1,13 +1,13 @@
 # Further constant reductions
 
-The certified boardwise bound is **`OPT(B) ≤ M(B) + 583·n^(8/3)`** for
-`n ≥ 10⁹` (`Hub.uniform_approximation_explicit`).
+The certified boardwise bound is **`OPT(B) ≤ M(B) + 348·n^(8/3)`** for
+`n ≥ 1.1·10⁹` (`Hub.uniform_approximation_explicit`).
 
-From `10⁹` on the capacity condition `76kλ_A ≤ 5s` no longer limits `k`, so
-the grid sits at the optimal ratio `k ≈ 0.52·n^(1/3)` and the coefficient is
-the asymptotic value of the accounting (`≈ 582.85`). Further progress has to
+From `1.1·10⁹` on the capacity condition `76kλ_A ≤ 5s` no longer limits `k`, so
+the grid sits at the optimal ratio `k ≈ 0.49·n^(1/3)` and the coefficient is
+the asymptotic value of the accounting (`≈ 347.6`). Further progress has to
 lower `A` or `B` below; the coefficient scales like `A^(2/3)B^(1/3)`, so one
-unit of `A` is worth about `3.9` and one unit of `B` about `0.54`.
+unit of `A` is worth about `4.2` and one unit of `B` about `0.46`.
 
 ## Implemented so far
 
@@ -31,6 +31,10 @@ optimization passes, then the coefficient of `n^(8/3)`.
 | Upper tail per class over all distances (nested sets), base `21/20`: in-flight budget `2.1756n → 1.4n`; lower tail with exponent `1/4 - (3/4)log(4/3)` and its own `λ_A = log₂(k³s²) + 4`; hub regime from `10⁷` | `1084·n^(8/3)` |
 | Local operations charged by displacement (`2·inefficient ≤ length + ΔM`): strip jumps `13(d+1) → 7(d+1)`, box three-cycles `52s → 28s`; cleanup and Finish end at the target, so half their length; `k ≥ 50`, `Rhub = 1.43n`, hub regime from `2·10⁶` | `635·n^(8/3)` |
 | Explicit bound from `10⁹`: no cubic fallback, `k ≥ 500`, `Rhub = 1.376n`, grid `57m³ ≤ n` at the optimal ratio | `583·n^(8/3)` |
+| Reserve `Rhub + 2n + k² + 6` instead of `Rhub + 8n + 10`: dummies and loops of the reserved rounds are bounded together, and the run's dummy budget is the actual planned count | `538·n^(8/3)` |
+| Corridor junk counted by half lengths: `2k²n` instead of `4k²n` (also the initial potential) | `520·n^(8/3)` |
+| Near-corner three-cycles: placements cost `8` per unit of distance, so a three-cycle with two tiles near a (reflected) box corner costs `16s + O(k)`; insertions `28s → 10s + O(k)`, jump weight `30 → 13`; start `1.1·10⁹` | `363·n^(8/3)` |
+| Corner terms charged exactly (`492k`), a served tile charged hop1 plus hop2 instead of twice the larger | `348·n^(8/3)` |
 
 Each step re-tuned the grid, the hub threshold and the certificate constants;
 [PROOF_NOTES.md](PROOF_NOTES.md) lists the final estimates.
@@ -38,64 +42,67 @@ Each step re-tuned the grid, the hub threshold and the certificate constants;
 ## Where the bound now comes from
 
 The hub algorithm costs at most `2(A·n²s + B·k²n²)` inefficient moves, with
-`A = 100.65` and `B = 361.96` (`hubBound_le_lin`, for `k ≥ 500`). With
+`A = 55.65` and `B = 251.1` (`hubBound_le_lin`, for `k ≥ 500`). With
 `t = k/n^(1/3)` this is `2(A/t + Bt²)·n^(8/3)`, minimal at
-`t = (A/2B)^(1/3) ≈ 0.518`, which the grid `57m³ ≤ n` attains.
+`t = (A/2B)^(1/3) ≈ 0.48`, which the grid `70m³ ≤ n` attains.
 
-- `A`: hops `2·31 = 62` (a three-cycle `28s` plus `3s`), relocations `36` (a
-  round weighs at most `36k²` jump units of `s`: `15` per served square, `21`
-  per unit of snake distance), local Finish `2.5`, remainders `≈ 0.15`.
+- `A`: hops `25` (hop1 `13s`: reservoir walk `2s`, strip walk `s`, insertion
+  `10s`; hop2 `12s`: walk `2s`, insertion `10s`), relocations `28` (a round
+  weighs at most `28k²` jump units of `s`: `7` per served square, `21` per unit
+  of snake distance, three strip jumps of `7s` per square of distance), local
+  Finish `2.5`, remainders `≈ 0.15`.
 - `B`: cleanup of the misplaced tiles, `13n` each (half of `26n`), about
-  `17.75k²n` tiles: `≈ 231`; dummy relocations `84`; bypass jumps
-  `21·1.376 ≈ 29`; hop2 quadratic terms `14`; transport potential `4`.
+  `9.75k²n` tiles (corridors `2`, stock `1`, bypassed `1.376`, reserve
+  `3.376`, junk `2`): `≈ 127`; dummy relocations `84`; bypass jumps
+  `21·1.376 ≈ 29`; hop2 crossings `7`; corner terms `≈ 2`; potential `2`.
 
-Each unit of `Rhub/n` costs `47` in `B` (bypass `21`, cleanup `2·13`). The
-jump and three-cycle bounds come from `Path.two_inefficientMoves_le_of_displacement`
-and `two_inefficientMoves_le_of_blank_swap`: a path that moves few tiles a short
-way is at most about half inefficient. The walk inside a reservoir before a
-jump (`2s`) is still charged its full length.
+Each unit of `Rhub/n` costs `47` in `B` (bypass `21`, cleanup `2·13`).
 
-## 1. Cheaper insertions and jumps
+## 1. Reservoir walks
 
-Insertions (`insert_by_cycle`) and jumps cycle three cells of one square's box,
-one of which is a free choice of reservoir cell. Staging from the box's
-reservoir corner, with that tile already at its staging position, would save
-one of the three Parberry placements: roughly `52s → 36s`, and about 10% of the
-constant. This needs a reflected box embedding and a staging variant with a
-pre-positioned tile. A jump or insertion could avoid the three-cycle
-altogether if the wanted tile lay in the reservoir, but region tiles may also
-sit in the landing strip and the own column piece, where corridor heads drop
-in, and the abstract run fixes the moved tile's class before the board is known.
+Every operation starts with a walk of the blank inside a reservoir, charged at
+its full length `2s`: hop1 to the top left corner, hop2 to a left corner, a
+jump to the top left corner. The operations end near various corners (hop1 top
+left or right, hop2 top or bottom left, a jump top left). Starting hop1's
+vertical jump into the landing strip from the blank's own column bounds walk
+and strip walk together by `2s` (`A`: `25 → 24`). Bounding every walk by `O(k)`
+(`A` about `55.65 → 51`, coefficient about `335`) needs operations that end
+where the next one starts.
 
-## 2. Distance-aware staging
+## 2. Relocations by one jump
 
-The three-cycle charges every Parberry placement its worst case `8n`. A
-placement bound proportional to the tile's distance, together with a choice of
-the staging corner nearest to the tiles and the blank, would lower the
-three-cycle constant wherever the three tiles are close, as in insertions.
+A relocation jumps into `Z`, cycles a class-`y` tile next to the landing cell,
+jumps back and jumps the tile across: `21` of the `28` in `A` are these three
+jumps. The tile has to be of a class fixed in advance because the abstract run
+is computed from class counts only. If each square kept a free tile of a
+recorded class on a fixed reservoir cell, one jump would do, and the cell
+would be refilled by a near-corner three-cycle (`10s`): relocations about
+`28 → 12`, coefficient about `280`. This needs the designated tile in the
+abstract state.
 
-## 3. Lower-tail threshold
+## 3. Dummy relocations
+
+A path of a round, cut at a dummy edge, is started by a relocation over up to
+`2k` squares (`42k + 18`). Relocating along the dummy edges themselves, with
+dummy edges paired by a short matching of surplus and deficit squares, would
+lower the average relocation; in the worst case it still grows like `k`.
+
+## 4. Lower-tail threshold
 
 With the merged upper tail the budget is essentially `(41/30)n = (41/40)n/θ`
-for the lower-tail threshold `θ = 3/4` (`1.43n` with slack at `k = 50`). A larger `θ` shortens the windows but
-needs capacity `θ log 2/e(θ)·kλ_A ≤ s`, `e(θ) = 1 - θ + θ log θ`, which binds
-near the threshold. A `θ` depending on `n` (for example `θ → 1` as `n` grows)
-would bring the budget toward `n` for large boards. From `10⁹` on capacity
-has slack (at `n = 10⁹`, `76kλ_A ≈ 0.3·5s`), so a larger fixed `θ` is
-affordable there, or from a higher start.
+for the lower-tail threshold `θ = 3/4`. From `1.1·10⁹` on capacity has slack
+(`76kλ_A` is about `0.1·5s`), so a larger fixed `θ` is affordable: `θ = 0.85`
+needs capacity factor about `50` instead of `15.2` and gives `Rhub ≈ 1.21n`
+(`B` about `−8`, coefficient about `−3.5`).
 
-## 4. Reserve padding
+## 5. Cleanup
 
-`Q' = Rhub + 8n + 10` could be about `Rhub + 7n + 6`, since the corridor bound
-is used twice in the padding argument. Each unit of `n` in the padding costs
-`26` in `B` (about `3.7%` of `B`), so this is worth about `1.2%` of the
-constant; a reserve sized by the actual corridor contents rather than by
-`sqCorridor` could save more.
+Cleanup fixes every misplaced tile by whole-board three-cycles (`52n` for two
+tiles), whatever its distance to its square. The misplaced tiles are those left
+in corridors, the reserve, stock and bypassed tiles and corridor junk.
 
-## 5. Start of the explicit bound
+## 6. Local Finish
 
-The explicit bound starts at `10⁹` (`hubN = linN`); the cubic fallback and the
-capacity-limited grid are gone. From `4096` the same accounting gave `635`
-(set near `2·10⁶`, where capacity held `k` at `50`). Starting higher still only
-helps through the lower-order terms (already below `0.1`) or through a larger
-lower-tail threshold `θ` (§3).
+Finish solves every square by the `5s³` solver, `2.5` in `A`. For boards whose
+squares are themselves above `1.1·10⁹` the explicit bound applies to them
+recursively, and Finish becomes a lower-order term.

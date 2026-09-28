@@ -18,18 +18,18 @@ These are `SlidingPuzzle.Hub.average_optimal_length` and
 [`SlidingPuzzle/Hub/Main.lean`](SlidingPuzzle/Hub/Main.lean); the corollaries
 `…_rpow` give `O(n^α)` for every `α ≥ 8/3`. The boardwise bound behind them is
 `Hub.uniform_approximation`. In explicit form (`Hub.uniform_approximation_explicit`),
-for every reachable board and every `n ≥ 10⁹`,
+for every reachable board and every `n ≥ 1.1·10⁹`,
 
 ```text
-OPT(B) ≤ Manhattan(B) + 583·n^(8/3).
+OPT(B) ≤ Manhattan(B) + 348·n^(8/3).
 ```
 
 Earlier versions had the error scale `n^(8/3) (ln n)^(1/3)`, with coefficient
 `4,828,800,024,144` originally. The derivation is documented in
 [the Lean proof guide](research/exponent/LEAN_PLAN.md#asymptotics).
-The explicit bound starts at `n = 10⁹`, where the grid of the hub algorithm is
-already at its optimal ratio `k ≈ 0.52·n^(1/3)`, so `583` is also the asymptotic
-value of the present accounting. The constants
+The explicit bound starts at `n = 1.1·10⁹`, where the grid of the hub algorithm
+is already at its optimal ratio `k ≈ 0.49·n^(1/3)`, so `348` is also the
+asymptotic value of the present accounting. The constants
 are certified upper bounds, not claims of optimality.
 
 All results are proved outright: no `sorry`, no custom axioms, and no

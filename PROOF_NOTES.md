@@ -76,14 +76,14 @@ twice the access length (`Path.exists_conjugated_efficient`).
 
 The paper rounds `n` down to a fourth power, leaving up to `4*n^(3/4)` outer
 layers whose Parberry prefix costs `60*n^(11/4)`, which would dominate the new
-bound. Instead, for `n ≥ 10⁹` take `k = 2m` with `m` the largest integer
-such that `304m²(log₂(2mn²) + 4) + 10m ≤ 5n` and `57m³ ≤ n`, and `s = ⌊n/k⌋`
+bound. Instead, for `n ≥ 1.1·10⁹` take `k = 2m` with `m` the largest integer
+such that `304m²(log₂(2mn²) + 4) + 10m ≤ 5n` and `70m³ ≤ n`, and `s = ⌊n/k⌋`
 (`Hub/LinBound.lean`). The outer
 `d = n - k*s < k` rows and columns are solved by the Parberry prefix
 (`Parberry/Prefix.lean`, `O(n²·k)`), and the remaining `k*s × k*s` board by the
 hub algorithm. The residual board is reachable and its Manhattan distance
 equals the original board's after the prefix (`Algorithm/Residual*.lean`,
-`Hub/AsympBound.lean`). The explicit bound starts at `10⁹`; the asymptotic
+`Hub/AsympBound.lean`). The explicit bound starts at `1.1·10⁹`; the asymptotic
 statements need only some start.
 
 ## Hub transport: departures from the paper's scheme
@@ -131,9 +131,10 @@ through the reservoir of a hub square. The pen-and-paper proof is
   and a moment bound for nested sets (`Hub/ChernoffChain.lean`) gives one
   Chernoff slack per class instead of one per class and distance.
 
-The boardwise bound is now `OPT(B) ≤ M(B) + 583·n^(8/3)` for `n ≥ 10⁹`
-(`635` from `n ≥ 4096`, `1084` before local operations were charged by
-displacement). In the older scale
+The boardwise bound is now `OPT(B) ≤ M(B) + 348·n^(8/3)` for `n ≥ 1.1·10⁹`
+(`583` before the smaller reserve, the junk count by half lengths and the
+near-corner three-cycles; `635` from `n ≥ 4096`; `1084` before local operations
+were charged by displacement). In the older scale
 `n^(8/3)(log n)^(1/3)` the coefficient went `4,828,800,024,144` originally,
 `849,303` in an earlier version, then `19,319`, `894` and `776` in the
 optimization passes. The certified estimates are:
@@ -142,24 +143,39 @@ optimization passes. The certified estimates are:
   a path that only moves the tiles of a set `U` has
   `2·inefficient ≤ length + Σ displacement` (`Path.two_inefficientMoves_le_of_displacement`),
   and a path ending at the target has `2·inefficient ≤ length`.
+- Placements (`Parberry/PlacementDist.lean`): every Parberry placement word has
+  length `8d + 6v + c` in its offsets, so a placement costs at most
+  `8·dist + 1` moves (`exists_placement_dist`), besides the uniform `8n`.
 - Three-cycles (`Moves/ThreeCycleSharp.lean`): staging by the sharp Parberry
   placements (`≤ 8n` each), a top-row three-cycle and the reversed staging give
-  `≤ 52n` moves (`exists_three_cycle_sharp`). In a box of side `s` the three
-  tiles move at most `4s` in total, so at most `28s` moves are inefficient
-  (`exists_box_three_cycle_ineff`).
+  `≤ 52n` moves (`exists_three_cycle_sharp`); cleanup uses these.
+- Near-corner three-cycles (`Moves/ThreeCycleNear.lean`): when two of the three
+  tiles and the blank are within `δ` of the top-left corner, only the third
+  tile needs the uniform placement, so staging costs `8n + 81δ + 424` and the
+  three-cycle `16n + 162δ + 872` (`exists_three_cycle_near`). In a box of side
+  `s`, reflected so that any of its corners is the local corner
+  (`boxEmbR`), at most `10s + 82δ + 436` moves are inefficient
+  (`exists_box_three_cycle_near`).
+- Insertions (`Hub/OpInsert.lean`): the corridor cell `v`, the blank's landing
+  cell `w` and the spare reservoir cell lie within `δ ≤ 6k + 7` of a corner of
+  the box (top left or right for hop1, top or bottom left for hop2), so an
+  insertion costs `10s + 492k + 1010` after its jump. `HDims.big`
+  (`600k + 2000 ≤ s`) absorbs the corner terms of the jump's cycle
+  (`δ ≤ 6k + 12`, at most `11s`).
 - Jumps: `Zhong.strip_jump` costs at most `12m + 1` moves on a `2 × m` strip,
   so a blank/tile jump over distance `d` has length `≤ 13(d+1)`; it moves one
   tile, so at most `7(d+1)` moves are inefficient (`exists_hjump_step`).
-- Jumps (`Hub/OpJump.lean`): the blank jumps from `E` into `Z`, a three-cycle
-  inside `Z`'s box puts a class-`y` tile on a second landing cell, the blank
-  jumps back, and a third jump carries that tile to `E`:
-  `≤ 30s + 21s·d + 70 ≤ (s+3)(30 + 21d)`, `d = sqDist`.
-- Operations (`IState.cost`): hop1 `31s + 14(k+1) + junkRow`, hop2
-  `30s + 7k² + 35k + 42 + junkCol`, jump `(s+3)(30 + 21·sqDist)`. A relocation
-  weighs `30 + 21d` when aligned and `60 + 21d` through a corner; a bypass costs
-  at most `(s+3)(21k + 9)`.
-- Round walk: a round weighs at most `36k² + 72k + 18 + (42k + 18)·#dummy`
-  (`exists_round_events`).
+- Jumps (`Hub/OpJump.lean`): the blank jumps from `E` into `Z`, a near-corner
+  three-cycle inside `Z`'s box puts a class-`y` tile on a second landing cell,
+  the blank jumps back, and a third jump carries that tile to `E`:
+  `≤ 13s + 21s·d + 70 ≤ (s+3)(13 + 21d)`, `d = sqDist ≥ 1`.
+- Operations (`IState.cost`): hop1 `13s + 506k + 1024 + junkRow`, hop2
+  `12s + 7k² + 527k + 1052 + junkCol`, jump `(s+3)(13 + 21·sqDist)`. A served
+  tile is charged hop1 plus hop2 (`hopC = 25s + 7k² + 1033k + 2076`). A
+  relocation weighs `13 + 21d` when aligned and `26 + 21d` through a corner; a
+  bypass costs at most `(s+3)(21k + 9)`.
+- Round walk: a round weighs at most `28k² + 55k + 18 + (42k + 18)·#dummy`
+  (`exists_round_events`): `7` per served square, `21` per unit of snake distance.
 - In-flight order: the lower tail uses weights `1 - g/(4K) ≥ (3/4)^(g/K)`, with
   exponent `0.03423` and capacity `76kλ_A ≤ 5s`, `λ_A = log₂(k³s²) + 4`; the
   upper tail counts the class-`x` tiles of a half over all distances at once
@@ -167,25 +183,33 @@ optimization passes. The certified estimates are:
 - In-flight budget: per hub at most
   `(41/30)(n + 2k) + (41/20)k(k+1) + 90k(log₂ n + 1)`; with capacity and
   `k ≥ 500` this is `Rhub n = ⌊1376n/1000⌋ + 1`.
+- Reserve (`Hub/Run.lean`): the first `Q' = Rhub + 2n + k² + 6` rounds are set
+  aside. Dummies and loops of these rounds at a square number at most
+  `Δ0 - sends ≤ sqCorridor + cnt(Z, Z) + 1`, and the dummy budget of the run is
+  the actual number of planned dummies, so this padding suffices.
+- Misplaced tiles: corridor junk counted by the half lengths is at most
+  `k²·sqCorridor ≤ 2k²n` (`junkCnt_le`), so at most `k²(Rhub + 2n + k² + 6) +
+  2k²n` free tiles remain for cleanup.
 - Cleanup (`Hub/Cleanup.lean`): a three-cycle fixes two misplaced tiles and a
   double swap four, in length `26n(misplaced + 2n + 5)`. Cleanup and Finish end
   at the target, so together they are charged half their length (`Transport.lean`).
 - Whole hub algorithm (`AsympAccounting.lean`, `k ≥ 500`, `881k ≤ s`):
-  `1000·hubBound ≤ 100650X + 361960W`, with `X = n²s`, `W = k²n²`.
-- Grid for `n ≥ 10⁹` (`LinBound.lean`): `m ≥ 250`, `57m³ ≤ n`; the capacity
+  `1000·hubBound ≤ 55650X + 251100W`, with `X = n²s`, `W = k²n²`.
+- Grid for `n ≥ 1.1·10⁹` (`LinBound.lean`): `m ≥ 250`, `70m³ ≤ n`; the capacity
   condition holds at `m + 1` since `log₂(2(m+1)n²) + 4 ≤ 0.08x` (`lin_log_le`),
-  so `0.2588x ≤ m ≤ 0.2599x` (`lin_range`).
-- Real bound (`LinError.lean`): `KX x³ + 8KW m³ ≤ 582.9·1000·m x²` on this
+  so `0.2416x ≤ m ≤ 0.2427x` (`lin_range`).
+- Real bound (`LinError.lean`): `KX x³ + 8KW m³ ≤ 347.7·1000·m x²` on this
   range, by concavity in `m` (`lin_core_of`, `lin_core`); the prefix adds at
   most `0.032x⁸`.
 
-Consequently `OPT(B) ≤ M(B) + 583·n^(8/3)` for every `n ≥ 10⁹`
-(`Hub.uniform_approximation_explicit`). The grid ratio `m/x ≈ 0.259` minimizes
-`KX/c + 8KW c²` (`≈ 582.85`), so this is also the asymptotic value of the
+Consequently `OPT(B) ≤ M(B) + 348·n^(8/3)` for every `n ≥ 1.1·10⁹`
+(`Hub.uniform_approximation_explicit`). The grid ratio `m/x ≈ 0.242` minimizes
+`KX/c + 8KW c²` (`≈ 347.58`), so this is also the asymptotic value of the
 accounting. These are certified upper bounds, not claims of optimality.
 
 ## Remaining structural improvements
 
-Hops (`62` of `A = 100.65`) and relocations (`36`) dominate the transport side;
-cleanup (`13n` per misplaced tile, `≈ 231` of `B = 361.96`) the corridor side.
+Relocations (`28` of `A = 55.65`) and hops (`25`) make up the transport side;
+cleanup (`13n` per misplaced tile, about `9.75k²n` tiles, `≈ 127` of
+`B = 251.1`) and dummy relocations (`84`) the corridor side.
 [OPTIMIZATION_IDEAS.md](OPTIMIZATION_IDEAS.md) lists the remaining improvements.
