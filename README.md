@@ -21,14 +21,14 @@ These are `SlidingPuzzle.Hub.average_optimal_length` and
 for every reachable board and every `n ≥ 1.1·10⁹`,
 
 ```text
-OPT(B) ≤ Manhattan(B) + 348·n^(8/3).
+OPT(B) ≤ Manhattan(B) + 268·n^(8/3).
 ```
 
 Earlier versions had the error scale `n^(8/3) (ln n)^(1/3)`, with coefficient
 `4,828,800,024,144` originally. The derivation is documented in
 [the Lean proof guide](research/exponent/LEAN_PLAN.md#asymptotics).
 The explicit bound starts at `n = 1.1·10⁹`, where the grid of the hub algorithm
-is already at its optimal ratio `k ≈ 0.49·n^(1/3)`, so `348` is also the
+is already at its optimal ratio `k ≈ 0.49·n^(1/3)`, so `268` is also the
 asymptotic value of the present accounting. The constants
 are certified upper bounds, not claims of optimality.
 

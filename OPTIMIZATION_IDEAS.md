@@ -1,6 +1,6 @@
 # Further constant reductions
 
-The certified boardwise bound is **`OPT(B) ≤ M(B) + 348·n^(8/3)`** for
+The certified boardwise bound is **`OPT(B) ≤ M(B) + 268·n^(8/3)`** for
 `n ≥ 1.1·10⁹` (`Hub.uniform_approximation_explicit`).
 
 From `1.1·10⁹` on the capacity condition `76kλ_A ≤ 5s` no longer limits `k`, so
@@ -35,6 +35,7 @@ optimization passes, then the coefficient of `n^(8/3)`.
 | Corridor junk counted by half lengths: `2k²n` instead of `4k²n` (also the initial potential) | `520·n^(8/3)` |
 | Near-corner three-cycles: placements cost `8` per unit of distance, so a three-cycle with two tiles near a (reflected) box corner costs `16s + O(k)`; insertions `28s → 10s + O(k)`, jump weight `30 → 13`; start `1.1·10⁹` | `363·n^(8/3)` |
 | Corner terms charged exactly (`492k`), a served tile charged hop1 plus hop2 instead of twice the larger | `348·n^(8/3)` |
+| Designated cells (two per reservoir, classes recorded): a relocation leg is one strip jump onto a designated cell and a restore (`16 + 7d` instead of `13 + 21d`); dummy relocations `42k → 14k` | `268·n^(8/3)` |
 
 Each step re-tuned the grid, the hub threshold and the certificate constants;
 [PROOF_NOTES.md](PROOF_NOTES.md) lists the final estimates.

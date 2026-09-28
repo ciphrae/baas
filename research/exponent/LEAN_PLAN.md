@@ -5,7 +5,7 @@
 
 | Theorem | Statement |
 | --- | --- |
-| `Hub.uniform_approximation_explicit` | `OPT(B) ≤ M(B) + 348·n^(8/3)` for every reachable board, `n ≥ 1.1·10⁹` |
+| `Hub.uniform_approximation_explicit` | `OPT(B) ≤ M(B) + 268·n^(8/3)` for every reachable board, `n ≥ 1.1·10⁹` |
 | `Hub.uniform_approximation` | `OPT(B) ≤ M(B) + C·n^(8/3)` for every reachable board, `n ≥ 1.1·10⁹` |
 | `Hub.average_optimal_length` | mean optimal length `= (2/3)n³ + O(n^(8/3))` |
 | `Hub.gods_number` | God's number `= n³ + O(n^(8/3))` |

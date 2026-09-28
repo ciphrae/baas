@@ -131,7 +131,10 @@ through the reservoir of a hub square. The pen-and-paper proof is
   and a moment bound for nested sets (`Hub/ChernoffChain.lean`) gives one
   Chernoff slack per class instead of one per class and distance.
 
-The boardwise bound is now `OPT(B) ≤ M(B) + 348·n^(8/3)` for `n ≥ 1.1·10⁹`
+The boardwise bound is now `OPT(B) ≤ M(B) + 268·n^(8/3)` for `n ≥ 1.1·10⁹`
+(`348` before designated relocations; the estimates below describe the `348`
+version except that relocation legs now cost `(s+3)(16 + 7d)`, `A = 42.65`,
+`B = 195.3`, `D = 267.8`)
 (`583` before the smaller reserve, the junk count by half lengths and the
 near-corner three-cycles; `635` from `n ≥ 4096`; `1084` before local operations
 were charged by displacement). In the older scale
