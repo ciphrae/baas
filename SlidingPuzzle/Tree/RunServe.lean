@@ -38,6 +38,9 @@ def DirtyInv (s : ℕ) (G : GS k q) : Prop :=
 /-- `v` receives tiles tagged `x` from some square. -/
 def LaneSys.Act (v x : Sq k) : Prop := ∃ u, u ≠ x ∧ L.nxt u x = v
 
+open Classical in
+noncomputable instance (v x : Sq k) : Decidable (L.Act v x) := inferInstance
+
 /-- Placeholders of `v` for `x` exceed its dirty arrivals by at most the
 in-flight bound plus one. -/
 def BInv (G : GS k q) (Nv : Sq k → Sq k → ℕ) : Prop :=

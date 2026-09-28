@@ -169,6 +169,17 @@ structure LInv (s : ℕ) (σ0 : IState k q) (F0 : ℕ) (G : GS k q) : Prop where
   free_tot : (∑ Q, ∑ y, G.free Q y) + untagged L s G + (∑ Q, ∑ x, G.B Q x) =
     F0 + ∑ Q, ∑ x, G.dA Q x
 
+/-- `LInv` only depends on the fields it mentions. -/
+theorem LInv.congr {s : ℕ} {σ0 : IState k q} {F0 : ℕ} {G G' : GS k q} (h : LInv L s σ0 F0 G)
+    (e1 : G'.σ = G.σ) (e2 : G'.evs = G.evs) (e3 : G'.ins = G.ins) (e4 : G'.sched = G.sched)
+    (e5 : G'.stock = G.stock) (e6 : G'.free = G.free) (e7 : G'.B = G.B) (e8 : G'.dA = G.dA)
+    (e9 : G'.nh = G.nh) (e10 : G'.jc = G.jc) : LInv L s σ0 F0 G' := by
+  have e11 : gh k s G' = gh k s G := by simp only [gh, e3]
+  have e12 : untagged L s G' = untagged L s G := by unfold untagged lcnt; rw [e11]
+  obtain ⟨a1, a2, a3, a4, a5, a6, a7, a8, a9⟩ := h
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;>
+    simp only [e1, e2, e4, e5, e6, e7, e8, e9, e10, e11, e12] <;> assumption
+
 theorem blen_le (H : LaneI k q) : blen L H ≤ k := by
   have := L.right_lt H.o H.t
   have := L.left_le H.o H.t
