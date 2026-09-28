@@ -21,13 +21,15 @@ These are `SlidingPuzzle.Hub.average_optimal_length` and
 for every reachable board and every `n ≥ 4096`,
 
 ```text
-OPT(B) ≤ Manhattan(B) + 1084·n^(8/3).
+OPT(B) ≤ Manhattan(B) + 635·n^(8/3).
 ```
 
 Earlier versions had the error scale `n^(8/3) (ln n)^(1/3)`, with coefficient
 `4,828,800,024,144` originally. The derivation is documented in
 [the Lean proof guide](research/exponent/LEAN_PLAN.md#asymptotics).
-The constants are certified upper bounds, not claims of optimality.
+The coefficient is set where the hub algorithm takes over from the cubic solver
+(`n = 2·10⁶`); asymptotically the hub algorithm gives about `591`. The constants
+are certified upper bounds, not claims of optimality.
 
 All results are proved outright: no `sorry`, no custom axioms, and no
 hypotheses standing in for mathematical steps.
@@ -107,7 +109,7 @@ against `k²n²` gives `k ≈ n^(1/3)`.
   bands `d, d-1, …, 0` of its half and leaves each one after `s` insertions
   from at least that distance (`Hub/InFlightSegment`); weighted by the
   insertion rates, these residence times telescope (`Hub/InFlightSum`).
-  The capacity condition `48k(log₂ n + 1) ≤ s` of the Chernoff bound limits
+  The capacity condition `76kλ_A ≤ 5s` of the Chernoff bound limits
   `k` for moderate `n`.
 * *Cleanup and Finish* (`Hub/Cleanup`, `FinishGen`). The `O(k²n)` tiles
   left outside their squares are fixed at least two at a time, by a three-cycle

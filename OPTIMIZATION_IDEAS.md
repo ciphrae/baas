@@ -1,12 +1,14 @@
 # Further constant reductions
 
-The certified boardwise bound is **`OPT(B) ≤ M(B) + 1084·n^(8/3)`** for
+The certified boardwise bound is **`OPT(B) ≤ M(B) + 635·n^(8/3)`** for
 `n ≥ 4096` (`Hub.uniform_approximation_explicit`).
 
-The uniform coefficient is set just above `n = 10⁷`, where the hub algorithm
-takes over from the cubic solver (about `1077` there). Just above the
-threshold the capacity condition `76kλ_A ≤ 5s` limits `k` (certified range
-`0.244x ≤ m ≤ x/4`, value `1083.7`); asymptotically the grid gives about `1082`.
+The uniform coefficient is set at `n = 2·10⁶`, where the hub algorithm takes
+over from the cubic solver (`5n^(1/3) ≈ 630` there). Just above the switch the
+capacity condition `76kλ_A ≤ 5s` holds `k` at `50` (grid `m ≥ 25`, value
+`634.3` at `n = 2.1·10⁶`); asymptotically the grid gives about `591`. The
+explicit bound only needs to start somewhere: a larger starting side would let
+the coefficient approach the asymptotic value (see §6).
 
 ## Implemented so far
 
@@ -28,6 +30,7 @@ optimization passes, then the coefficient of `n^(8/3)`.
 | Cleanup: a three-cycle fixes two misplaced tiles, a double swap four (`26n` per tile); lower tail `θ = 5/6` (capacity `169kL`); grid factor `24 → 14`, hub regime from `2^26 + 2^13` | 776 |
 | Segmented residence: the in-flight budget is `O(n)`, and the bound becomes `O(n^(8/3))`; lower tail `θ = 3/4` (capacity `48kL`), slack `λ = 3L`; hub regime from `11·2^20` | `1133·n^(8/3)` |
 | Upper tail per class over all distances (nested sets), base `21/20`: in-flight budget `2.1756n → 1.4n`; lower tail with exponent `1/4 - (3/4)log(4/3)` and its own `λ_A = log₂(k³s²) + 4`; hub regime from `10⁷` | `1084·n^(8/3)` |
+| Local operations charged by displacement (`2·inefficient ≤ length + ΔM`): strip jumps `13(d+1) → 7(d+1)`, box three-cycles `52s → 28s`; cleanup and Finish end at the target, so half their length; `k ≥ 50`, `Rhub = 1.43n`, hub regime from `2·10⁶` | `635·n^(8/3)` |
 
 Each step re-tuned the grid, the hub threshold and the certificate constants;
 [PROOF_NOTES.md](PROOF_NOTES.md) lists the final estimates.
@@ -35,25 +38,23 @@ Each step re-tuned the grid, the hub threshold and the certificate constants;
 ## Where the bound now comes from
 
 The hub algorithm costs at most `2(A·n²s + B·k²n²)` inefficient moves, with
-`A = 182.35` and `B = 705.8` (`hubBound_le_lin`). With `t = k/n^(1/3)` this is
-`2(A/t + Bt²)·n^(8/3)`, minimal near `t = (A/2B)^(1/3) ≈ 0.505`; the grid uses
-`t ≤ 1/2`, which costs almost nothing.
+`A = 101.96` and `B = 367.1` (`hubBound_le_lin`, for `k ≥ 50`). With
+`t = k/n^(1/3)` this is `2(A/t + Bt²)·n^(8/3)`, minimal near
+`t = (A/2B)^(1/3) ≈ 0.52`; the grid uses `t ≤ 1/2`.
 
-- `A`: hops `2·55 = 110`, relocations `66` (a round weighs at most `66k²`
-  jump units of `s`), local Finish `5`, remainders `1.35` (mostly `132/k`).
-- `B`: cleanup of the misplaced tiles, `26n` each: the reserve and home padding
-  (`8k²n`), stock and bookkeeping terms (`5k²n`), in flight and bypassed
-  (`2k²·Rhub = 2.8k²n`) and corridors (`2k²n`), together `≈ 463`;
-  dummy relocations `156`; bypass jumps `39·1.4 ≈ 54.6`; the potential of
-  the initial corridor tiles `30`; remainders `≈ 2.5`.
+- `A`: hops `2·31 = 62` (a three-cycle `28s` plus `3s`), relocations `36` (a
+  round weighs at most `36k²` jump units of `s`: `15` per served square, `21`
+  per unit of snake distance), local Finish `2.5`, remainders `≈ 1.5`
+  (mostly `72/k` at `k = 50`).
+- `B`: cleanup of the misplaced tiles, `13n` each (half of `26n`), about
+  `17.9k²n` tiles: `≈ 232`; dummy relocations `84`; bypass jumps
+  `21·1.43 ≈ 30`; hop2 quadratic terms `14`; remainders `≈ 7`.
 
-Each unit of `Rhub/n` costs `91` in `B`. The budget `1.4n` is
-`(4/3)·(41/40)·n` plus about `0.03n` of Chernoff slack: the factor `4/3` is the
-lower-tail window (`θ = 3/4`), `41/40` the upper-tail factor. The coefficient
-scales like `A^(2/3)B^(1/3)`. The reserve padding `8n` per square is the largest
-single term of `B`: every free tile set aside and not used is cleaned up at
-`26n`. The three-cycle constant `52` still enters hops (`52s` of `55s`), jumps
-(`52s` of `(54 + 39d)s`) and cleanup (`26n` per tile).
+Each unit of `Rhub/n` costs `47` in `B` (bypass `21`, cleanup `2·13`). The
+jump and three-cycle bounds come from `Path.two_inefficientMoves_le_of_displacement`
+and `two_inefficientMoves_le_of_blank_swap`: a path that moves few tiles a short
+way is at most about half inefficient. The walk inside a reservoir before a
+jump (`2s`) is still charged its full length.
 
 ## 1. Cheaper insertions and jumps
 
@@ -77,12 +78,12 @@ three-cycle constant wherever the three tiles are close, as in insertions.
 ## 3. Lower-tail threshold
 
 With the merged upper tail the budget is essentially `(41/30)n = (41/40)n/θ`
-for the lower-tail threshold `θ = 3/4`. A larger `θ` shortens the windows but
+for the lower-tail threshold `θ = 3/4` (`1.43n` with slack at `k = 50`). A larger `θ` shortens the windows but
 needs capacity `θ log 2/e(θ)·kλ_A ≤ s`, `e(θ) = 1 - θ + θ log θ`, which binds
 near the threshold. A `θ` depending on `n` (for example `θ → 1` as `n` grows)
-would bring the budget toward `n` for large boards (about `1064` asymptotically),
-but the uniform coefficient is set near `10⁷`, where a numerical model puts
-the best fixed `θ` at about `0.75`.
+would bring the budget toward `n` for large boards (about `575` asymptotically),
+but the uniform coefficient is set near `2·10⁶`, where a smaller `θ ≈ 0.7` would
+help instead, by relaxing capacity (about `598`, §5).
 
 ## 4. Reserve padding
 
@@ -95,7 +96,16 @@ constant; a reserve sized by the actual corridor contents rather than by
 ## 5. Threshold and initial range
 
 The uniform coefficient is set where the cubic solver (`5n^(1/3)`) meets the
-capacity-limited hub algorithm, near `n = 10⁷`. The hub algorithm is now
-almost flat there (`≈ 1082` to `1084` for `n^(1/3)` between `215` and `300`),
-so moving the switch buys little; the asymptotic coefficient (`≈ 1082`) is
-only slightly below the uniform one.
+capacity-limited hub algorithm, near `n = 2·10⁶`, where `k` is held at `50`
+instead of the optimal `≈ 66`. A larger lower-tail threshold capacity (§3 in
+reverse, `θ ≈ 0.7`) would move the switch down and give about `598`.
+
+## 6. Start the explicit bound higher
+
+Starting the explicit bound at `n = 10⁹` instead of `4096` removes the cubic
+fallback and the capacity limit on `k`. With `k ≥ 500` the in-flight budget
+is `1.376n`, the accounting gives `A = 100.65`, `B = 361.96` (`s ≥ 881k`), and
+a grid `57m³ ≤ n` (ratio `t ≈ 0.52`, the optimum) gives about `583`. Work in
+progress on branch `wip-large-n`: accounting done, grid and final theorem not
+yet. A lower-tail threshold `θ = 7/10` would help the uniform constant from
+`4096` (about `598`) but raises `Rhub` to `1.57n`, so it is worse asymptotically.
