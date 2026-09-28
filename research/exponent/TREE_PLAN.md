@@ -97,25 +97,31 @@ residence, the abstract run, preload, the algorithm on side `k*s`
 (`treeBound ≤ 50 (h+3) k² s³` once `8kq ≤ s`, `16kλ ≤ s`, `2048hk ≤ s`), `ReserveAccounting`
 (per-square `needAt`), `Feasibility` (event conditions; `2λ ≤ hb` for `b ≥ 256` and
 `n ≤ (2b)^(2h+2)`), `AsympBound` (Parberry prefix to side `k*(n/k)`), `GridChoice`
-(depth for a given `ε`), and `Final` (`hfit_of_grid`, `optimalLength_le_grid` for even
-`b ≥ 256` with `8h b^(2h+1) ≤ n ≤ (2b)^(2h+2)`; `tree_uniform_approximation_explicit`
-with `b = 2⌊x/2⌋`, `x^(2h+1) = n/8h`; `tree_uniform_approximation`, `tree_exponent`).
+(depth for a given `ε`), `Final` (`hfit_of_grid`; `optimalLength_le_lanes` for any lane
+system with `8k²q ≤ n`, `256h ≤ q ≤ k`, `2λ ≤ q`), `HierMix` (the hierarchy with
+branching `B ℓ` at level `ℓ`: `k = ∏ B ℓ`, `q = ∑ B ℓ`), `MixGrid` (branching `b + 2` at
+the first `j` levels and `b` below; `b` the largest even with `8h b^(2h+1) ≤ n`, `j` the
+largest with `8qk² ≤ n`, so the next `j` fails and `k` is within `(b+2)/b` of the ideal;
+`tree_uniform_approximation_explicit`, `tree_uniform_approximation`, `tree_exponent`), and
+`MixLog` (depth choice).
 
-Constants: `OPT ≤ M + 120 (h+3) √(8h) n^(5/2+1/(4h+2))` for `n ≥ 8h (max(256,16h)+2)^(2h+1)`.
+Constants: `OPT ≤ M + 102 (h+3) √(8h) n^(5/2+1/(4h+2))` for `n ≥ 8h·256^(2h+1)`.
 The leading terms per `k²s³` are hops `40h`, local three-cycles of the run `45`,
 preload `≈ 51`, cleanup `≈ 29`, Finish `2.5`, stock `1.5h`; with `s = 8h·b·k` the
 lane-proportional terms are about `6h + 73`, and `B0 = 8h` is close to optimal
 for the balance `(A + B'/B0)·B0^(h/(2h+1))`. The factor `√(8h)` bounds
-`(8h)^(h/(2h+1))`, and `1.14 ≥ e^(1/8)` covers the even rounding of `b`.
+`(8h)^(h/(2h+1))`, and `1.012 ≥ (1 + 2/256)^(3/2)` covers the rounding of `k`.
 (History: `10^5 (h+1)` accounting, grid `b^(2h+2) ≍ n` with exponent `5/2 + 1/(2h+2)`,
-then `160(2h+3) b^(2h+1) ≤ n` with `C_h ≈ 6.4·10^7 (h+1)(2h+3) 2^h`.)
+then `160(2h+3) b^(2h+1) ≤ n` with `C_h ≈ 6.4·10^7 (h+1)(2h+3) 2^h`, then a uniform
+even `b ≥ max(256, 16h)` with `120 (h+3) √(8h)`: the rounding loss `(1 + 2/b)^h` of a
+uniform grid forced `b ≥ 16h`, and with it `(ln n / ln ln n)²` in the depth choice.)
 
-Depth choice (`LogBound`): the largest `h` with `treeN h ≤ n` has `n < treeN (h+1) ≤ (290h)^(2h+4)`,
-so `n^(1/(4h+2)) ≤ 580√h`, and `10h ≤ ln n`; hence `OPT ≤ M + 8000 n^(5/2) (ln n)²` for
-`n ≥ 8·258³` (`tree_log_approximation_explicit`). With the rounding condition `b ≥ 16h` the
-true optimum behaves like `≈ 340 (ln n / ln ln n)² n^(5/2)`; per-level branching factors
-would remove `b ≥ 16h` and give `≈ 150 (ln n)^(3/2) n^(5/2)`.
+Depth choice (`MixLog`): the largest `h` with `mixN h = 8h·256^(2h+1) ≤ n` has
+`n < mixN (h+1) ≤ 176^(4h+2)`, so `n^(1/(4h+2)) ≤ 176`, and `ln n ≥ 11h + 5.5`; with
+`(h+3)² h ≤ 5 (h+1/2)³` this gives `OPT ≤ M + 3200 n^(5/2) (ln n)^(3/2)` for `n ≥ 8·256³`
+(`tree_log_approximation_explicit`). Asymptotically the coefficient is about `125`.
 
 Statistics (`Stats`): `tree_average_optimal_length` and `tree_gods_number`, the mean
 optimal length `(2/3)n³ + O(n^(5/2+ε))` and God's number `n³ + O(n^(5/2+ε))` for
-every `ε > 0`, via the generic reduction `Hub.AsympStats`.
+every `ε > 0`, and `tree_log_average_optimal_length`, `tree_log_gods_number` with error
+`O(n^(5/2) (ln n)^(3/2))`, via the generic reduction `Hub.AsympStats`.

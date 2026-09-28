@@ -2,7 +2,7 @@
 
 A Lean 4 / mathlib proof that Manhattan distance approximates the optimal
 solution length of the `n × n` sliding puzzle within `O(n^(8/3))`, and, by a
-second algorithm (tree lanes), within `O(n^(5/2) (ln n)²)`.
+second algorithm (tree lanes), within `O(n^(5/2) (ln n)^(3/2))`.
 This improves the error `O(n^(11/4))` of Proposition 9 in Zhixian Zhong,
 *Additive Approximation Algorithms for Sliding Puzzle* (2023), §5.2
 (`zhong2023_additive-approximation-sliding-puzzle.pdf`, printed p. 145).
@@ -27,42 +27,42 @@ OPT(B) ≤ Manhattan(B) + 268·n^(8/3).
 
 ### Below 8/3: tree lanes
 
-`SlidingPuzzle.Tree.tree_exponent` ([`Tree/Final.lean`](SlidingPuzzle/Tree/Final.lean)):
+`SlidingPuzzle.Tree.tree_exponent` ([`Tree/MixGrid.lean`](SlidingPuzzle/Tree/MixGrid.lean)):
 for every `ε > 0` there are `C, N` such that for every reachable board with `n ≥ N`,
 
 ```text
 OPT(B) ≤ Manhattan(B) + C·n^(5/2+ε).
 ```
 
-For each fixed depth `h ≥ 1` (a `b`-ary hierarchy of lanes, `b ≈ (n/8h)^(1/(2h+1))`),
-`Tree.tree_uniform_approximation_explicit` gives, for every reachable board with
-`n ≥ 8h·(max(256, 16h) + 2)^(2h+1)`,
+For each fixed depth `h ≥ 1` (a hierarchy of `h` lane levels whose branching factors
+are `b` or `b + 2`, `b ≈ (n/8h)^(1/(2h+1))`), `Tree.tree_uniform_approximation_explicit`
+gives, for every reachable board with `n ≥ 8h·256^(2h+1)`,
 
 ```text
-OPT(B) ≤ Manhattan(B) + 120·(h+3)·√(8h)·n^(5/2 + 1/(4h+2)).
+OPT(B) ≤ Manhattan(B) + 102·(h+3)·√(8h)·n^(5/2 + 1/(4h+2)).
 ```
 
 | depth `h` | exponent | coefficient | from `n ≥` |
 | --- | --- | --- | --- |
-| 1 | `8/3` | 1358 | `1.4·10⁸` |
-| 2 | `13/5` | 2400 | `1.8·10¹³` |
-| 3 | `18/7` | 3527 | `1.8·10¹⁸` |
-| 4 | `23/9` | 4752 | `1.6·10²³` |
+| 1 | `8/3` | 1154 | `1.3·10⁸` |
+| 2 | `13/5` | 2040 | `1.8·10¹³` |
+| 3 | `18/7` | 2998 | `1.7·10¹⁸` |
+| 4 | `23/9` | 4039 | `1.5·10²³` |
 
-Depth 2 beats `268·n^(8/3)` from about `n ≈ 2·10¹⁴` on. Taking for each `n` the
+Depth 2 beats `268·n^(8/3)` as soon as it applies (`n ≥ 1.8·10¹³`). Taking for each `n` the
 largest admissible depth (`h ≈ ln n / 11`) gives
-(`Tree.tree_log_approximation_explicit`, [`Tree/LogBound.lean`](SlidingPuzzle/Tree/LogBound.lean)),
-for every reachable board with `n ≥ 8·258³ ≈ 1.4·10⁸`,
+(`Tree.tree_log_approximation_explicit`, [`Tree/MixLog.lean`](SlidingPuzzle/Tree/MixLog.lean)),
+for every reachable board with `n ≥ 8·256³ ≈ 1.3·10⁸`,
 
 ```text
-OPT(B) ≤ Manhattan(B) + 8000·n^(5/2)·(ln n)²,
+OPT(B) ≤ Manhattan(B) + 3200·n^(5/2)·(ln n)^(3/2),
 ```
 
 and hence
 
 ```text
-average optimal solution length = (2/3)*n³ + O(n^(5/2) (ln n)²)
-God's number                    =       n³ + O(n^(5/2) (ln n)²)
+average optimal solution length = (2/3)*n³ + O(n^(5/2) (ln n)^(3/2))
+God's number                    =       n³ + O(n^(5/2) (ln n)^(3/2))
 ```
 
 (`Tree.tree_log_average_optimal_length`, `Tree.tree_log_gods_number` in
@@ -112,7 +112,7 @@ All main results depend only on `propext`, `Classical.choice` and `Quot.sound`.
 | `SlidingPuzzle/Hub/Run*` | The abstract run: roles, stock identity, validity, cost, leftover misplaced tiles |
 | `SlidingPuzzle/Hub/Cleanup`, `FinishGen`, `Transport` | Cleanup by three-cycles and double swaps, Finish, the hub algorithm on side `k*s` |
 | `SlidingPuzzle/Hub/Asymp*`, `Lin*`, `Main` | Accounting, the grid `k ≈ n^(1/3)` (capacity-limited for moderate `n`), general sides, the final theorems |
-| `SlidingPuzzle/Tree/` | Tree lanes: lane systems and the `b`-ary hierarchy, layout, board operations, residence, the abstract run, preload, transport on side `k*s`, accounting, grid choice, `tree_exponent`, statistics |
+| `SlidingPuzzle/Tree/` | Tree lanes: lane systems and the hierarchies (`Hier` uniform, `HierMix` per-level branching), layout, board operations, residence, the abstract run, preload, transport on side `k*s`, accounting, grid choice, `tree_exponent`, statistics |
 | `Zhong/` | Word-level puzzle library in the paper's conventions: reachability criterion, orbit statistics, move words |
 | `research/exponent/` | Pen-and-paper proof, Lean blueprint, research log and simulations |
 

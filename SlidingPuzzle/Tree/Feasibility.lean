@@ -52,28 +52,4 @@ theorem log_linear_le : ∀ L : ℕ, 8 ≤ L → 24 * L + 54 ≤ 2 ^ L
     have : 24 ≤ 2 ^ (L + 8) := le_trans (by norm_num) (Nat.pow_le_pow_right (by norm_num) (show 8 ≤ L + 8 by omega))
     omega
 
-/-- The logarithmic slack against the lane offsets: `2 λ ≤ h b` for `b ≥ 256`. -/
-theorem log_slack_fine {m b h : ℕ} (hh : 1 ≤ h) (hb : 256 ≤ b) (hm : m ≤ (2 * b) ^ (2 * h + 2)) :
-    2 * GroupedOrder.lamN m ≤ h * b := by
-  set L := Nat.log 2 b with hL
-  have hbL : b < 2 ^ (L + 1) := Nat.lt_pow_succ_log_self (by decide) b
-  have hL8 : 8 ≤ L := by
-    rw [hL]
-    exact Nat.le_log_of_pow_le (by decide) (le_trans (by norm_num) hb)
-  have hLb : 24 * L + 54 ≤ b :=
-    (log_linear_le L hL8).trans (Nat.pow_log_le_self 2 (by omega))
-  have h2b : 2 * b < 2 ^ (L + 2) := by rw [pow_succ]; omega
-  have hm2 : m < 2 ^ ((L + 2) * (2 * h + 2)) := by
-    calc m ≤ (2 * b) ^ (2 * h + 2) := hm
-      _ < (2 ^ (L + 2)) ^ (2 * h + 2) := Nat.pow_lt_pow_left h2b (by omega)
-      _ = _ := (pow_mul _ _ _).symm
-  have hlog : Nat.log 2 m < (L + 2) * (2 * h + 2) := by
-    rcases Nat.eq_zero_or_pos m with rfl | hm0
-    · simp
-    exact Nat.log_lt_of_lt_pow (by omega) hm2
-  unfold GroupedOrder.lamN
-  have h1 : (L + 2) * (2 * h + 2) ≤ 4 * h * (L + 2) := by nlinarith
-  have h2 : h * (24 * L + 54) ≤ h * b := Nat.mul_le_mul_left h hLb
-  nlinarith
-
 end SlidingPuzzle.Tree

@@ -114,8 +114,9 @@ recursively, and Finish becomes a lower-order term.
 `SlidingPuzzle/Tree/` and `Tree.tree_exponent` gives `OPT <= M + C n^(5/2+eps)`
 (see `research/exponent/TREE_PLAN.md`). The two-level proposal below is the
 historical starting point; the proved construction uses `b`-ary lanes of any
-fixed depth `h`, with exponent `5/2 + 1/(4h+2)` and coefficient `120 (h+3) √(8h)`
-(`2400` at depth 2, from `n ≥ 1.8·10¹³`).
+fixed depth `h`, with exponent `5/2 + 1/(4h+2)` and coefficient `102 (h+3) √(8h)`
+(`2040` at depth 2, from `n ≥ 1.8·10¹³`); choosing the depth gives
+`O(n^(5/2) (ln n)^(3/2))` (`3200` from `n ≥ 1.3·10⁸`).
 
 Original proposal: **two routing levels could give
 `OPT <= Manhattan + O(n^(13/5))`**. Split the `k` destination blocks into
