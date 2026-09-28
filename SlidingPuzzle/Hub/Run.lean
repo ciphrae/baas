@@ -29,9 +29,9 @@ open Finset
 
 /-- Transport budget retaining the actual grid dimensions and logarithm. -/
 def transportBound (n k s : ℕ) : ℕ :=
-  4 * k ^ 2 * n ^ 2 + 2 * (55 * s + 13 * k ^ 2 + 65 * k + 78) * n ^ 2 +
-    (s + 3) * (39 * k + 15) * (k ^ 2 * (Rhub n + k ^ 2)) +
-    (s + 3) * (s ^ 2 * (66 * k ^ 2 + 132 * k + 30) + (78 * k + 30) * (k ^ 2 * (2 * n + 1)))
+  4 * k ^ 2 * n ^ 2 + 2 * (31 * s + 7 * k ^ 2 + 35 * k + 42) * n ^ 2 +
+    (s + 3) * (21 * k + 9) * (k ^ 2 * (Rhub n + k ^ 2)) +
+    (s + 3) * (s ^ 2 * (36 * k ^ 2 + 72 * k + 18) + (42 * k + 18) * (k ^ 2 * (2 * n + 1)))
 
 /-- Region tiles left outside their squares, before absorbing lower-order terms. -/
 def misplacedBound (n k : ℕ) : ℕ :=
@@ -76,7 +76,7 @@ theorem sum_freeInit_le (σ0 : IState k) {Δ0 : ℕ} (rs0 : Fin Δ0 → Round k)
 
 /-- The abstract run exists, is valid, and is cheap. -/
 theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
-    (hk100 : 100 ≤ k) (hP1 : 76 * k * lamA k s ≤ 5 * s) (σ0 : IState k)
+    (hk50 : 50 ≤ k) (hP1 : 76 * k * lamA k s ≤ 5 * s) (σ0 : IState k)
     (hF1 : ∀ Q, (∑ y, σ0.cnt Q y) + (if σ0.blank = Q then 1 else 0) = regionSize k s)
     (hF2 : ∀ y, (∑ Q, σ0.cnt Q y) + σ0.corrCount s y = s ^ 2 - (if IsLast y then 1 else 0)) :
     ∃ es : List (REvent k), σ0.Valid s es ∧ σ0.totalCost s es ≤ transportBound n k s ∧
@@ -87,7 +87,7 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
   have hk2 := hd.two_le
   have hroom4 := hd.room
   have hks : k ≤ s := by omega
-  have hsize := capacity_lower_bounds hd hk100 hP1
+  have hsize := capacity_lower_bounds hd hk50 hP1
   have h2ks : 2 * k ≤ s := by omega
   have hroom : k + 1 ≤ s := by omega
   have hsqC := sqCorridor_le (k := k) (s := s)
@@ -101,7 +101,7 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
   have hQle : Q' ≤ Δ0 := by rw [hQ']; exact min_le_left _ _
   have hQle2 : Q' ≤ Rhub (k * s) + 8 * k * s + 10 := by rw [hQ']; exact min_le_right _ _
   have hΔ : Δ0 - Q' ≤ s ^ 2 + 1 := by omega
-  obtain ⟨σo, hσo⟩ := exists_good_order hd hk100 hP1 hΔ (planRs rs0 Q')
+  obtain ⟨σo, hσo⟩ := exists_good_order hd hk50 hP1 hΔ (planRs rs0 Q')
   obtain ⟨rd, hrd⟩ : ∃ rd, rd = ordRd rs0 Q' σo := ⟨_, rfl⟩
   -- counting over all rounds
   have cnt_ind : ∀ S D, ∑ j ∈ range Δ0, ind (rsN rs0 j) S D = demand σ0 S D := by
@@ -231,7 +231,7 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
   refine ⟨Gf.evs, hOf.lin.valid, ?_, ?_⟩
   · -- cost
     have hcost : IState.totalCost s σ0 Gf.evs + pot s Gf.σ ≤ pot s σ0 +
-        2 * hopC k s * (∑ Z, Gf.served Z) + (s + 3) * (39 * k + 15) * (∑ h, ∑ x, Gf.byp h x) +
+        2 * hopC k s * (∑ Z, Gf.served Z) + (s + 3) * (21 * k + 9) * (∑ h, ∑ x, Gf.byp h x) +
         (s + 3) * Gf.wt := hOf.hin.cost
     have hss : (∑ Z, Gf.served Z) + (∑ S, ∑ D, Gf.sched S D) = ∑ S, ∑ D, sched0 S D :=
       hOf.hin.sched_sum
@@ -253,8 +253,8 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
       refine (sum_le_sum fun h _ => this h).trans ?_
       simp only [sum_const, card_univ, Fintype.card_prod, Fintype.card_fin, smul_eq_mul]
       unfold Rhub; ring_nf; exact le_refl _
-    have hwt : Gf.wt ≤ s ^ 2 * (66 * k ^ 2 + 132 * k + 30) +
-        (78 * k + 30) * (k ^ 2 * (2 * k * s + 1)) := by
+    have hwt : Gf.wt ≤ s ^ 2 * (36 * k ^ 2 + 72 * k + 18) +
+        (42 * k + 18) * (k ^ 2 * (2 * k * s + 1)) := by
       refine hOf.wt.trans ?_
       have hdc : ∀ r : Round k, (univ.filter fun S => r.isDummy S).card = ∑ S, dummyAt r S := by
         intro r; rw [card_filter]; rfl
@@ -263,19 +263,19 @@ theorem exists_valid_run {n k s : ℕ} (hd : HDims n k s)
       have h1 : ∑ S : Sq k, ∑ τ ∈ range (Δ0 - Q'), dummyAt (rd τ) S ≤
           ∑ _S : Sq k, (sqCorridor k s + 1) := sum_le_sum fun S _ => hdum_plan S
       simp only [sum_const, card_univ, Fintype.card_prod, Fintype.card_fin, smul_eq_mul] at h1
-      have h2 : (Δ0 - Q') * (66 * k ^ 2 + 132 * k + 30) ≤ s ^ 2 * (66 * k ^ 2 + 132 * k + 30) :=
+      have h2 : (Δ0 - Q') * (36 * k ^ 2 + 72 * k + 18) ≤ s ^ 2 * (36 * k ^ 2 + 72 * k + 18) :=
         Nat.mul_le_mul_right _ (by omega)
-      have h3 : (78 * k + 30) * (k * k * (sqCorridor k s + 1)) ≤
-          (78 * k + 30) * (k ^ 2 * (2 * k * s + 1)) := by
+      have h3 : (42 * k + 18) * (k * k * (sqCorridor k s + 1)) ≤
+          (42 * k + 18) * (k ^ 2 * (2 * k * s + 1)) := by
         refine Nat.mul_le_mul_left _ ?_
         rw [sq]; exact Nat.mul_le_mul_left _ (by omega)
-      have h4 : (78 * k + 30) * ∑ S : Sq k, ∑ τ ∈ range (Δ0 - Q'), dummyAt (rd τ) S ≤
-          (78 * k + 30) * (k * k * (sqCorridor k s + 1)) := Nat.mul_le_mul_left _ h1
+      have h4 : (42 * k + 18) * ∑ S : Sq k, ∑ τ ∈ range (Δ0 - Q'), dummyAt (rd τ) S ≤
+          (42 * k + 18) * (k * k * (sqCorridor k s + 1)) := Nat.mul_le_mul_left _ h1
       nlinarith
     have hpot : pot s σ0 ≤ 4 * k ^ 2 * (k * s) * (k * s) :=
       (pot_le s σ0).trans (Nat.mul_le_mul_right _ (junkCnt_le s σ0))
-    have ht1 := Nat.mul_le_mul_left (2 * (55 * s + 13 * k ^ 2 + 65 * k + 78)) hserved
-    have ht2 := Nat.mul_le_mul_left ((s + 3) * (39 * k + 15)) hbyp
+    have ht1 := Nat.mul_le_mul_left (2 * (31 * s + 7 * k ^ 2 + 35 * k + 42)) hserved
+    have ht2 := Nat.mul_le_mul_left ((s + 3) * (21 * k + 9)) hbyp
     have ht3 := Nat.mul_le_mul_left (s + 3) hwt
     unfold transportBound hopC at *
     nlinarith only [hcost, hpot, ht1, ht2, ht3, Nat.zero_le (pot s Gf.σ)]

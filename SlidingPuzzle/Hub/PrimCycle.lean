@@ -1,5 +1,6 @@
 import SlidingPuzzle.Moves.ThreeCycleSharp
 import SlidingPuzzle.Moves.Embedding
+import SlidingPuzzle.Moves.Efficiency
 
 /-! # Three-cycles inside a square box
 
@@ -104,5 +105,33 @@ theorem exists_box_three_cycle (B : Board n) (r0 c0 m : ℕ) (hm : 6 ≤ m)
       rw [hC, hfix x' (fun h => hxa (by rw [h, hι, ha']))
         (fun h => hxb (by rw [h, hι, hb'])) (fun h => hxc (by rw [h, hι, hc''])), hB]
     · exact hout x hx
+
+/-- The local three-cycle moves only three tiles, each by less than twice the
+box side, so at most `28*m` of its moves are inefficient. -/
+theorem exists_box_three_cycle_ineff (B : Board n) (r0 c0 m : ℕ) (hm : 6 ≤ m)
+    (hr : r0 + m ≤ n) (hc : c0 + m ≤ n) (hbl : InBox r0 c0 m (blank B))
+    (a b c : Cell n) (ha : InBox r0 c0 m a) (hb : InBox r0 c0 m b) (hc' : InBox r0 c0 m c)
+    (hab : a ≠ b) (hac : a ≠ c) (hbc : b ≠ c)
+    (ha0 : B a ≠ 0) (hb0 : B b ≠ 0) (hc0 : B c ≠ 0) :
+    ∃ C : Board n, ∃ p : Path B C, p.inefficientMoves ≤ 28 * m ∧
+      C a = B b ∧ C b = B c ∧ C c = B a ∧
+      ∀ x, x ≠ a → x ≠ b → x ≠ c → C x = B x := by
+  obtain ⟨C, p, hp, hCa, hCb, hCc, hCx⟩ :=
+    exists_box_three_cycle B r0 c0 m hm hr hc hbl a b c ha hb hc' hab hac hbc ha0 hb0 hc0
+  refine ⟨C, p, ?_, hCa, hCb, hCc, hCx⟩
+  have h := p.two_inefficientMoves_le_of_displacement {a, b, c} (fun x hx => by
+    simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hx
+    exact hCx x hx.1 hx.2.1 hx.2.2)
+  have hpa : position B (C a) = b := by rw [hCa]; simp [position]
+  have hpb : position B (C b) = c := by rw [hCb]; simp [position]
+  have hpc : position B (C c) = a := by rw [hCc]; simp [position]
+  rw [Finset.sum_insert (by simp [hab, hac]), Finset.sum_insert (by simp [hbc]),
+    Finset.sum_singleton, hpa, hpb, hpc] at h
+  obtain ⟨a1, a2, a3, a4⟩ := ha
+  obtain ⟨b1, b2, b3, b4⟩ := hb
+  obtain ⟨c1, c2, c3, c4⟩ := hc'
+  have hd : gridDistance a b + gridDistance b c + gridDistance c a ≤ 4 * m := by
+    simp only [gridDistance, Nat.dist]; omega
+  omega
 
 end SlidingPuzzle.Hub

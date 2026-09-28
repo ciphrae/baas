@@ -11,7 +11,7 @@ is linear in `n` (segmented residence, `Hub/InFlightSegment.lean`). The outer
 Hence the mean optimal solution length is `(2/3)n³ + O(n^(8/3))` and God's
 number is `n³ + O(n^(8/3))`, improving Zhong's `O(n^(11/4))`.
 
-Explicitly, `OPT(B) ≤ M(B) + 1084 n^(8/3)` for every reachable board with
+Explicitly, `OPT(B) ≤ M(B) + 635 n^(8/3)` for every reachable board with
 `n ≥ 4096` (`uniform_approximation_explicit`). -/
 open Filter Asymptotics
 
@@ -19,14 +19,14 @@ set_option maxRecDepth 4096
 
 namespace SlidingPuzzle.Hub
 
-/-- The uniform coefficient of `n^(8/3)`: the hub algorithm above `linN = 10⁷`
+/-- The uniform coefficient of `n^(8/3)`: the hub algorithm above `linN = 2·10⁶`
 (`optimalLength_le_linError`) and the cubic solver on `4096 ≤ n ≤ linN`
 (`cubic_le_linError`). -/
-def linConstant : ℕ := 1084
+def linConstant : ℕ := 635
 
-theorem linConstant_eq : linConstant = 1084 := rfl
+theorem linConstant_eq : linConstant = 635 := rfl
 
-/-- **The boardwise bound**: `OPT(B) ≤ M(B) + 1084 n^(8/3)` for every `n ≥ 4096`. -/
+/-- **The boardwise bound**: `OPT(B) ≤ M(B) + 635 n^(8/3)` for every `n ≥ 4096`. -/
 theorem uniform_approximation_explicit {n : ℕ} [NeZero n]
     (hn : hubN ≤ n) (B : ReachableBoard n) :
     (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) + linConstant * linError n := by

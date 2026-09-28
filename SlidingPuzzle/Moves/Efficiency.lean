@@ -63,6 +63,15 @@ theorem manhattan_le_of_displacement (B C : Board n) (U : Finset (Cell n))
         congr 1
         exact Equiv.sum_comp (C.trans B.symm) (cellCost B)
 
+/-- A path that only moves the tiles of `U` has at most half of its length,
+plus half their total displacement, in inefficient moves. -/
+theorem Path.two_inefficientMoves_le_of_displacement [NeZero n] {B C : Board n}
+    (p : Path B C) (U : Finset (Cell n)) (h : ∀ x, x ∉ U → C x = B x) :
+    2 * p.inefficientMoves ≤ p.length + ∑ x ∈ U, gridDistance x (position B (C x)) := by
+  have h1 := p.length_add_manhattan
+  have h2 := manhattan_le_of_displacement B C U h
+  omega
+
 /-- Exchanging two tile names changes the potential by at most twice the
 distance between their targets. -/
 theorem manhattan_relabel_swap_le (X : Board n) (a b : Tile n) (ha : a.val ≠ 0)

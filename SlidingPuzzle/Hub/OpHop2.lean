@@ -26,7 +26,7 @@ theorem hop2_phase1 (hd : HDims n k s) (B : Board n) {h D : Sq k}
       (∀ x, keyOf hd x ≠ none → keyOf hd x ≠ some D → C x = B x) ∧
       KeepKey hd B C {B (colCell k s (hop2Half h D) 0)} ∧
       keyOf hd (position C (B (colCell k s (hop2Half h D) 0))) = some D ∧
-      p.inefficientMoves ≤ 2 * s + 26 * (k + 2) + 13 * (k + 2) * k +
+      p.inefficientMoves ≤ 2 * s + 14 * (k + 2) + 7 * (k + 2) * k +
         ((Finset.range (hop2Pos s h D + 1)).filter fun q =>
           classOf hd (B (colCell k s (hop2Half h D) q)) ≠ D).card := by
   set V := hop2Half h D with hV
@@ -104,7 +104,7 @@ theorem hop2_phase1 (hd : HDims n k s) (B : Board n) {h D : Sq k}
   let f : ℕ → Cell n := fun t => colCell k s V t
   have hkf : ∀ t, t ≤ P → keyOf hd (f t) = none := fun t ht => keyOf_colCell hd V t (by omega)
   obtain ⟨B4, p4, hbB4, hC4, hfix4, hi4⟩ := exists_swap_walk P f
-    (fun t T => if (t + 1) % (s - k) = 0 then 13 * (k + 2) else moveCost (f t) (f (t + 1)) T)
+    (fun t T => if (t + 1) % (s - k) = 0 then 7 * (k + 2) else moveCost (f t) (f (t + 1)) T)
     (fun t t' ht ht' e => (colCell_inj hd (by omega) (by omega) e).2)
     (fun t ht B' hB' => by
       obtain ⟨hcol, hcase⟩ := colCell_step (n := n) hd V t (by omega)
@@ -184,13 +184,13 @@ theorem hop2_phase1 (hd : HDims n k s) (B : Board n) {h D : Sq k}
   · -- cost
     simp only [Path.inefficientMoves_append]
     have c1 := p1.inefficientMoves_le_length
-    have c2 : 13 * (Nat.dist (blank B1).2.val x1.2.val + 1) ≤ 13 * (k + 2) := by
+    have c2 : 7 * (Nat.dist (blank B1).2.val x1.2.val + 1) ≤ 7 * (k + 2) := by
       rw [hbB1, e0s, x1s]; simp only [Nat.dist]; omega
-    have c3 : 13 * (Nat.dist (blank B2).1.val y0.1.val + 1) ≤ 13 * (k + 2) := by
+    have c3 : 7 * (Nat.dist (blank B2).1.val y0.1.val + 1) ≤ 7 * (k + 2) := by
       rw [hbB2, x1f]; rw [hoD3]
     have hterm : ∀ t ∈ Finset.range P,
-        (if (t + 1) % (s - k) = 0 then 13 * (k + 2) else moveCost (f t) (f (t + 1)) (B3 (f (t + 1))))
-          ≤ 13 * (k + 2) * (if (s - k) ∣ t + 1 then 1 else 0) +
+        (if (t + 1) % (s - k) = 0 then 7 * (k + 2) else moveCost (f t) (f (t + 1)) (B3 (f (t + 1))))
+          ≤ 7 * (k + 2) * (if (s - k) ∣ t + 1 then 1 else 0) +
             (if classOf hd (B (f (t + 1))) ≠ D then 1 else 0) := by
       intro t ht
       rw [Finset.mem_range] at ht
@@ -217,7 +217,7 @@ theorem hop2_phase1 (hd : HDims n k s) (B : Board n) {h D : Sq k}
         ((Finset.range (P + 1)).filter fun q => classOf hd (B (colCell k s V q)) ≠ D).card := by
       rw [Finset.card_filter, Finset.sum_range_succ']
       exact Nat.le_add_right _ _
-    have hmul : 13 * (k + 2) * (P / (s - k)) ≤ 13 * (k + 2) * k := Nat.mul_le_mul_left _ hdivk
+    have hmul : 7 * (k + 2) * (P / (s - k)) ≤ 7 * (k + 2) * k := Nat.mul_le_mul_left _ hdivk
     omega
 
 /-- hop2 realized on the board. -/
@@ -270,7 +270,7 @@ theorem simulate_hop2 (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
     (by rw [hb4, wf]; simp [Nat.dist]) (by rw [hb4, wf, ws, vs]; omega)
   obtain ⟨C, p6, T, hT0, hTc, hTk, hCv, hCbl, hCx, K2, hi6⟩ :=
     insert_by_cycle hd B4 (Q := h) (y := y) hb4 hkv hw (by rw [wf]; omega) hvbox hT4
-      (13 * (k + 2)) ⟨p5, hp5.trans (by rw [hb4, ws, vs]; simp only [Nat.dist]; omega)⟩
+      (7 * (k + 2)) ⟨p5, hp5.trans (by rw [hb4, ws, vs]; simp only [Nat.dist]; omega)⟩
   have hCc : ∀ x, keyOf hd x = none → x ≠ v → C x = B4 x := fun x hx hxv =>
     hCx x hxv (by rw [hx]; simp)
   set head := B (colCell k s V 0) with hhead
@@ -351,9 +351,9 @@ theorem simulate_hop2 (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
       rw [(hRcol V q (by omega)).2]
       exact Iff.rfl
     rw [hj] at hi4
-    change _ ≤ 54 * s + 13 * k ^ 2 + 65 * k + 78 +
+    change _ ≤ 30 * s + 7 * k ^ 2 + 35 * k + 42 +
       ((Finset.range (P + 1)).filter fun q => σ.col V q ≠ (V.2.1, V.1)).card
-    have e1 : 13 * (k + 2) * k = 13 * (k * k) + 26 * k := by ring
+    have e1 : 7 * (k + 2) * k = 7 * (k * k) + 14 * k := by ring
     have e3 : k ^ 2 = k * k := sq k
     have hk2 := hd.two_le
     have hk4 : 4 ≤ k ^ 2 := by nlinarith

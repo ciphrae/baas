@@ -9,7 +9,8 @@ The in-flight budget is linear in `n` (`Rhub`), so the hub algorithm on side
 `k = 2m` with `m` the largest integer such that `304 m² Λ(m) + 10 m ≤ 5n`,
 `Λ(m) = log₂(2m n²) + 4` (capacity), and `64 m³ ≤ n` (cube scale).
 
-For `n ≥ linN = 10⁷` this grid has `m ≥ 50` (`exists_lin_width`), and
+For `n ≥ linN = 2·10⁶` this grid has `m ≥ 25`, and `m ≥ 26` from `2.1·10⁶` on
+(`exists_lin_width`), and
 `optimalLength_le_lin_nat` bounds the solution length by
 `M + 2 (hubLinKX X + hubLinKW W)/1000 + 2 Z` with `X = n²s`, `W = k²n²` and `Z`
 the prefix cost. -/
@@ -18,69 +19,98 @@ namespace SlidingPuzzle.Hub
 open SlidingPuzzle
 
 /-- The side from which the hub algorithm is used for the bound without the logarithm. -/
-def linN : ℕ := 10 ^ 7
+def linN : ℕ := 2 * 10 ^ 6
 
 /-- The capacity term of the grid. -/
 def gridCap (n m : ℕ) : ℕ := 304 * m ^ 2 * (Nat.log 2 (2 * m * n ^ 2) + 4) + 10 * m
 
-/-- `m = 50` meets the capacity condition above `linN`. -/
-theorem gridCap_fifty {n : ℕ} (hn : linN ≤ n) : gridCap n 50 ≤ 5 * n := by
-  unfold gridCap linN at *
-  set j := Nat.log 2 n with hj
-  have hj23 : 23 ≤ j := Nat.le_log_of_pow_le (by norm_num) (by omega)
-  have hlt := Nat.lt_pow_succ_log_self (by norm_num : 1 < 2) n
-  rw [← hj] at hlt
-  have hpow := Nat.pow_log_le_self 2 (show n ≠ 0 by omega)
-  rw [← hj] at hpow
-  -- `log₂ (100 n²) ≤ 2j + 8`
-  have hlog : Nat.log 2 (2 * 50 * n ^ 2) ≤ 2 * j + 8 := by
-    apply Nat.le_of_lt_succ
-    apply Nat.log_lt_of_lt_pow (by positivity)
-    have h2 : n ^ 2 < (2 ^ (j + 1)) ^ 2 := Nat.pow_lt_pow_left hlt (by norm_num)
-    calc 2 * 50 * n ^ 2 < 128 * (2 ^ (j + 1)) ^ 2 := by omega
-      _ = 2 ^ (2 * j + 8 + 1) := by ring
-  rcases (show j = 23 ∨ 24 ≤ j by omega) with h23 | h24
-  · rw [h23] at hlog; omega
-  · have h1 : ∀ i, 24 ≤ i → 760000 * (2 * i + 12) + 500 ≤ 5 * 2 ^ i := by
+/-- `M` meets the capacity condition from `N0` on, if it does so while the
+logarithm is at most `47` and the square of the capacity term stays below
+`25 · 2^L / (2M)` for larger logarithms `L`. -/
+theorem gridCap_le_of {n M N0 : ℕ} (hn : N0 ≤ n) (hM : 1 ≤ M)
+    (hbase : 304 * M ^ 2 * 51 + 10 * M ≤ 5 * N0)
+    (htail : 2 * M * (304 * M ^ 2 * 52 + 10 * M) ^ 2 ≤ 25 * 2 ^ 48) :
+    gridCap n M ≤ 5 * n := by
+  unfold gridCap
+  set L := Nat.log 2 (2 * M * n ^ 2) with hL
+  rcases (show L ≤ 47 ∨ 48 ≤ L by omega) with h47 | h48
+  · have : 304 * M ^ 2 * (L + 4) ≤ 304 * M ^ 2 * 51 := Nat.mul_le_mul_left _ (by omega)
+    omega
+  · -- `(capacity)² · 2M ≤ 25 · 2^L ≤ 25 · 2M n²`
+    have hstep : ∀ i, 48 ≤ i → 2 * M * (304 * M ^ 2 * (i + 4) + 10 * M) ^ 2 ≤ 25 * 2 ^ i := by
       intro i hi
       induction i, hi using Nat.le_induction with
-      | base => norm_num
-      | succ i hi ih => rw [pow_succ 2 i]; omega
-    have := h1 j h24
-    have : 304 * 50 ^ 2 * (Nat.log 2 (2 * 50 * n ^ 2) + 4) ≤ 760000 * (2 * j + 12) := by
-      norm_num; omega
-    omega
+      | base => simpa using htail
+      | succ i hi ih =>
+        set c := 304 * M ^ 2
+        set A := c * (i + 4) + 10 * M
+        have hA : c * 52 ≤ A := by
+          have := Nat.mul_le_mul_left c (show 52 ≤ i + 4 by omega)
+          omega
+        have hA' : c * (i + 1 + 4) + 10 * M = A + c := by simp only [A]; ring
+        rw [hA', pow_succ]
+        have hsq : (A + c) ^ 2 ≤ 2 * A ^ 2 := by nlinarith
+        calc 2 * M * (A + c) ^ 2 ≤ 2 * M * (2 * A ^ 2) := Nat.mul_le_mul_left _ hsq
+          _ = 2 * (2 * M * A ^ 2) := by ring
+          _ ≤ 2 * (25 * 2 ^ i) := Nat.mul_le_mul_left _ ih
+          _ = 25 * (2 ^ i * 2) := by ring
+    have h1 := hstep L h48
+    have hpow : 2 ^ L ≤ 2 * M * n ^ 2 := Nat.pow_log_le_self 2 (by
+      have : 0 < n := by
+        rcases Nat.eq_zero_or_pos n with h | h
+        · subst h; simp at hL; omega
+        · exact h
+      positivity)
+    have h2 : 2 * M * (304 * M ^ 2 * (L + 4) + 10 * M) ^ 2 ≤ 2 * M * (5 * n) ^ 2 := by
+      calc _ ≤ 25 * 2 ^ L := h1
+        _ ≤ 25 * (2 * M * n ^ 2) := Nat.mul_le_mul_left _ hpow
+        _ = 2 * M * (5 * n) ^ 2 := by ring
+    have h3 := Nat.le_of_mul_le_mul_left h2 (by omega)
+    exact (Nat.pow_le_pow_iff_left (by norm_num)).mp h3
 
-/-- The grid: the largest `m` with `gridCap n m ≤ 5n` and `64 m³ ≤ n`. -/
+/-- `m = 25` meets the capacity condition from `linN = 2·10⁶` on. -/
+theorem gridCap_25 {n : ℕ} (hn : linN ≤ n) : gridCap n 25 ≤ 5 * n :=
+  gridCap_le_of (N0 := 2 * 10 ^ 6) hn (by norm_num) (by norm_num) (by norm_num)
+
+/-- `m = 26` meets the capacity condition from `2.1·10⁶` on. -/
+theorem gridCap_26 {n : ℕ} (hn : 21 * 10 ^ 5 ≤ n) : gridCap n 26 ≤ 5 * n :=
+  gridCap_le_of (N0 := 21 * 10 ^ 5) hn (by norm_num) (by norm_num) (by norm_num)
+
+/-- The grid: the largest `m` with `gridCap n m ≤ 5n` and `64 m³ ≤ n`. It is at
+least `25`, and at least `26` from `2.1·10⁶` on. -/
 theorem exists_lin_width {n : ℕ} (hn : linN ≤ n) :
-    ∃ m : ℕ, 50 ≤ m ∧ gridCap n m ≤ 5 * n ∧ 64 * m ^ 3 ≤ n ∧
-      (5 * n < gridCap n (m + 1) ∨ n < 64 * (m + 1) ^ 3) := by
+    ∃ m : ℕ, 25 ≤ m ∧ gridCap n m ≤ 5 * n ∧ 64 * m ^ 3 ≤ n ∧
+      (5 * n < gridCap n (m + 1) ∨ n < 64 * (m + 1) ^ 3) ∧
+      (21 * 10 ^ 5 ≤ n → 26 ≤ m) := by
   classical
   let P : ℕ → Prop := fun m => gridCap n m ≤ 5 * n ∧ 64 * m ^ 3 ≤ n
-  have hP50 : P 50 := ⟨gridCap_fifty hn, by unfold linN at hn; omega⟩
-  have h50 : 50 ≤ n := by unfold linN at hn; omega
+  have hP25 : P 25 := ⟨gridCap_25 hn, by unfold linN at hn; omega⟩
+  have h25 : 26 ≤ n := by unfold linN at hn; omega
   set m := Nat.findGreatest P n
-  have hm50 : 50 ≤ m := Nat.le_findGreatest h50 hP50
-  have hPm : P m := Nat.findGreatest_spec h50 hP50
-  refine ⟨m, hm50, hPm.1, hPm.2, ?_⟩
-  by_contra hc
-  push Not at hc
-  have hle : m + 1 ≤ n := by
-    calc m + 1 ≤ (m + 1) ^ 3 := Nat.le_self_pow (by norm_num) _
-      _ ≤ 64 * (m + 1) ^ 3 := Nat.le_mul_of_pos_left _ (by norm_num)
-      _ ≤ n := hc.2
-  have := Nat.le_findGreatest (P := P) hle hc
-  omega
+  have hm25 : 25 ≤ m := Nat.le_findGreatest (by omega) hP25
+  have hPm : P m := Nat.findGreatest_spec (m := 25) (by omega) hP25
+  refine ⟨m, hm25, hPm.1, hPm.2, ?_, ?_⟩
+  · by_contra hc
+    push Not at hc
+    have hle : m + 1 ≤ n := by
+      calc m + 1 ≤ (m + 1) ^ 3 := Nat.le_self_pow (by norm_num) _
+        _ ≤ 64 * (m + 1) ^ 3 := Nat.le_mul_of_pos_left _ (by norm_num)
+        _ ≤ n := hc.2
+    have := Nat.le_findGreatest (P := P) hle hc
+    omega
+  · intro h21
+    exact Nat.le_findGreatest (by omega) ⟨gridCap_26 h21, by omega⟩
 
 /-- The hub algorithm on the grid, in natural numbers. -/
 theorem optimalLength_le_lin_nat {n : ℕ} [NeZero n] (hn : linN ≤ n) (B : ReachableBoard n) :
-    ∃ m : ℕ, 50 ≤ m ∧ 64 * m ^ 3 ≤ n ∧
+    ∃ m : ℕ, 25 ≤ m ∧ 64 * m ^ 3 ≤ n ∧
       (5 * n < gridCap n (m + 1) ∨ n < 64 * (m + 1) ^ 3) ∧
+      (21 * 10 ^ 5 ≤ n → 26 ≤ m) ∧
       1000 * optimalLength B ≤ 1000 * manhattan B.val +
         2 * hubLinKX * (n ^ 2 * (n / (2 * m))) + 2 * hubLinKW * ((2 * m) ^ 2 * n ^ 2) +
         2000 * ((15 * n ^ 2 + 3002 * n + 1) * (n - 2 * m * (n / (2 * m)))) := by
-  obtain ⟨m, hm50, hcap, hcube, hmax⟩ := exists_lin_width hn
-  refine ⟨m, hm50, hcube, hmax, ?_⟩
+  obtain ⟨m, hm25, hcap, hcube, hmax, h26⟩ := exists_lin_width hn
+  refine ⟨m, hm25, hcube, hmax, h26, ?_⟩
   set k := 2 * m with hkdef
   set s := n / k with hsdef
   have hkpos : 0 < k := by omega
@@ -118,14 +148,14 @@ theorem optimalLength_le_lin_nat {n : ℕ} [NeZero n] (hn : linN ≤ n) (B : Rea
     have : 76 * k * 4 ≤ 5 * s := le_trans (by gcongr; unfold lamA; omega) hP1
     omega
   have hd : HDims (k * s) k s := ⟨by omega, ⟨m, by omega⟩, hroom, rfl⟩
-  have hk100 : 100 ≤ k := by omega
-  have hres := optimalLength_le_hub_residual B hd hk100 hP1
+  have hk50 : 50 ≤ k := by omega
+  have hres := optimalLength_le_hub_residual B hd hk50 hP1
   simp only [← hsdef] at hres
-  have hcapk : 729 * k ≤ s := by
-    have := (capacity_lower_bounds hd hk100 hP1).2.1
-    have : 76 * k * 48 ≤ 5 * s := le_trans (by gcongr) hP1
+  have hcapk : 668 * k ≤ s := by
+    have := (capacity_lower_bounds hd hk50 hP1).2.1
+    have : 76 * k * 44 ≤ 5 * s := le_trans (by gcongr) hP1
     omega
-  have hbound := hubBound_le_lin hk100 hcapk
+  have hbound := hubBound_le_lin hk50 hcapk
   have hX : (k * s) ^ 2 * s ≤ n ^ 2 * s := by gcongr
   have hW : k ^ 2 * (k * s) ^ 2 ≤ k ^ 2 * n ^ 2 := by gcongr
   have hx := Nat.mul_le_mul_left hubLinKX hX

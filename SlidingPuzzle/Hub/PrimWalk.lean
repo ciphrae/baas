@@ -35,23 +35,31 @@ theorem exists_move_step (B : Board n) (y : Cell n) (hy : gridDistance (blank B)
   unfold moveCost
   split_ifs <;> omega
 
-/-- A vertical jump costs at most its length. -/
+/-- A vertical jump moves one tile, so at most about half its `13(d+1)` moves
+are inefficient. -/
 theorem exists_vjump_step (hn : 2 ≤ n) (B : Board n) (y : Cell n)
     (hcol : Nat.dist (blank B).2.val y.2.val ≤ 1)
     (hcolor : ((blank B).1.val + (blank B).2.val + y.1.val + y.2.val) % 2 = 1) :
     ∃ p : Path B (swapCells B (blank B) y),
-      p.inefficientMoves ≤ 13 * (Nat.dist (blank B).1.val y.1.val + 1) := by
+      p.inefficientMoves ≤ 7 * (Nat.dist (blank B).1.val y.1.val + 1) := by
   obtain ⟨p, hp⟩ := exists_vertical_jump hn B y hcol hcolor
-  exact ⟨p, p.inefficientMoves_le_length.trans hp⟩
+  have h := p.two_inefficientMoves_le_of_blank_swap
+  have hg : gridDistance (blank B) y ≤ Nat.dist (blank B).1.val y.1.val + 1 := by
+    unfold gridDistance; omega
+  exact ⟨p, by omega⟩
 
-/-- A horizontal jump costs at most its length. -/
+/-- A horizontal jump moves one tile, so at most about half its `13(d+1)` moves
+are inefficient. -/
 theorem exists_hjump_step (hn : 2 ≤ n) (B : Board n) (y : Cell n)
     (hrow : Nat.dist (blank B).1.val y.1.val ≤ 1)
     (hcolor : ((blank B).1.val + (blank B).2.val + y.1.val + y.2.val) % 2 = 1) :
     ∃ p : Path B (swapCells B (blank B) y),
-      p.inefficientMoves ≤ 13 * (Nat.dist (blank B).2.val y.2.val + 1) := by
+      p.inefficientMoves ≤ 7 * (Nat.dist (blank B).2.val y.2.val + 1) := by
   obtain ⟨p, hp⟩ := exists_horizontal_jump hn B y hrow hcolor
-  exact ⟨p, p.inefficientMoves_le_length.trans hp⟩
+  have h := p.two_inefficientMoves_le_of_blank_swap
+  have hg : gridDistance (blank B) y ≤ Nat.dist (blank B).2.val y.2.val + 1 := by
+    unfold gridDistance; omega
+  exact ⟨p, by omega⟩
 
 /-- Swap walk along `f 0, …, f d`. -/
 theorem exists_swap_walk (d : ℕ) (f : ℕ → Cell n) (cost : ℕ → Tile n → ℕ)

@@ -52,7 +52,7 @@ theorem exists_finish (hd : HDims n k s) [NeZero n] {cost ineff : ℕ → ℕ}
     (hsolver : SolverBound cost ineff) (B : Board n) (hB : Reachable B)
     (hsorted : ∀ x, (B x).val ≠ 0 → classOf hd (B x) = sqOf hd x)
     (hblank : IsLast (sqOf hd (blank B))) :
-    ∃ p : Path B (target n), p.inefficientMoves ≤ k ^ 2 * ineff s + 9354 * k ^ 2 * n := by
+    ∃ p : Path B (target n), p.length ≤ k ^ 2 * cost s + 9354 * k ^ 2 * n := by
   have hf := toFDims hd
   have hS : Partition.SquaresSorted (k := k) B := by
     intro i c hc hnz
@@ -66,7 +66,7 @@ theorem exists_finish (hd : HDims n k s) [NeZero n] {cost ineff : ℕ → ℕ}
     simp only [Partition.lastGroup, Partition.groupRow, Partition.groupCol,
       Equiv.symm_apply_apply]
     exact Prod.ext (Fin.ext hblank.1) (Fin.ext hblank.2)
-  obtain ⟨p, -, hp⟩ := Partition.exists_finish_path_of hsolver hf B hB hS hL
+  obtain ⟨p, hp, -⟩ := Partition.exists_finish_path_of hsolver hf B hB hS hL
   exact ⟨p, by rwa [side_eq hd] at hp⟩
 
 end SlidingPuzzle.Hub

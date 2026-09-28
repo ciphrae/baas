@@ -61,7 +61,7 @@ theorem simulate_jump (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
   suffices H : ∃ C : Board n, ∃ p : Path B2 C, reservoir k s Z (blank C) ∧
       (∀ x, keyOf hd x = none → C x = B2 x) ∧ KeepKey hd B C {B t} ∧
       keyOf hd (position C (B t)) = some E ∧
-      p.inefficientMoves ≤ 52 * s + 13 * (sqDist E Z * s + 2) + 13 * (sqDist E Z * s + 6) by
+      p.inefficientMoves ≤ 28 * s + 7 * (sqDist E Z * s + 2) + 7 * (sqDist E Z * s + 6) by
     obtain ⟨C, p3, hCbl, hCc, K, hkC, hi3⟩ := H
     have hcor : ∀ x, keyOf hd x = none → C x = B x := by
       intro x hx
@@ -89,10 +89,10 @@ theorem simulate_jump (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
       exact hCbl
     · simp only [IState.cost, Path.inefficientMoves_append]
       have c1 := p1.inefficientMoves_le_length
-      have e1 : (s + 3) * (54 + 39 * sqDist E Z) =
-          54 * s + 39 * (sqDist E Z * s) + 162 + 117 * sqDist E Z := by ring
-      have e2 : 13 * (sqDist E Z * s + 2) = 13 * (sqDist E Z * s) + 26 := by ring
-      have e3 : 13 * (sqDist E Z * s + 6) = 13 * (sqDist E Z * s) + 78 := by ring
+      have e1 : (s + 3) * (30 + 21 * sqDist E Z) =
+          30 * s + 21 * (sqDist E Z * s) + 90 + 63 * sqDist E Z := by ring
+      have e2 : 7 * (sqDist E Z * s + 2) = 7 * (sqDist E Z * s) + 14 := by ring
+      have e3 : 7 * (sqDist E Z * s + 6) = 7 * (sqDist E Z * s) + 42 := by ring
       omega
   by_cases htz : t = z
   · subst htz
@@ -110,7 +110,7 @@ theorem simulate_jump (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
   have hB2z' : B2 z' = B z' := hB2 z' hz'E (Ne.symm hzz')
   -- a class-y tile at `z'`, by a three-cycle inside `Z`'s box unless it is there
   obtain ⟨C3, p3, hp3, hbC3, hC3z', hC3out, K3⟩ : ∃ C3 : Board n, ∃ p : Path B2 C3,
-      p.inefficientMoves ≤ 52 * s ∧ blank C3 = z ∧ C3 z' = B t ∧
+      p.inefficientMoves ≤ 28 * s ∧ blank C3 = z ∧ C3 z' = B t ∧
       (∀ x, keyOf hd x ≠ some Z → C3 x = B2 x) ∧ KeepKey hd B2 C3 ∅ := by
     by_cases htz' : t = z'
     · subst htz'
@@ -125,7 +125,7 @@ theorem simulate_jump (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
     have hB2u : B2 u = B u := hB2 u huE huz
     have hU0 : (B2 u).val ≠ 0 := val_ne_zero_of_ne_blank (by rw [hbB2]; exact huz)
     have hZ'0 : (B2 z').val ≠ 0 := val_ne_zero_of_ne_blank (by rw [hbB2]; exact Ne.symm hzz')
-    obtain ⟨C, p, hp, hCa, hCb, hCc, hCx⟩ := exists_box_three_cycle B2 (Z.1.val * s)
+    obtain ⟨C, p, hp, hCa, hCb, hCc, hCx⟩ := exists_box_three_cycle_ineff B2 (Z.1.val * s)
       (Z.2.val * s) s (by have := hd.room; have := hd.two_le; omega) (hd.band_le Z.1.isLt)
       (hd.band_le Z.2.isLt) (by rw [hbB2]; exact inBox_of_reservoir hd hz) z' t u
       (inBox_of_reservoir hd hz') (inBox_of_region hd htZ) (inBox_of_reservoir hd hu)
@@ -139,7 +139,7 @@ theorem simulate_jump (hd : HDims n k s) {B : Board n} {σ : IState k} (hR : Rel
       · rintro rfl; exact hx hkz'
       · rintro rfl; exact hx hkt
       · rintro rfl; exact hx hku
-    refine ⟨C, p, hp.trans' p.inefficientMoves_le_length, ?_, by rw [hCa, hB2t], hout, ?_⟩
+    refine ⟨C, p, hp, ?_, by rw [hCa, hB2t], hout, ?_⟩
     · apply blank_eq_of_apply
       rw [hCx z hzz' (fun e => htz e.symm) (Ne.symm huz), hB2z]
     · exact keepKey_of_agree hd (fun x => keyOf hd x = some Z)

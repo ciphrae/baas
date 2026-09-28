@@ -548,11 +548,13 @@ end CleanupAux
 
 open CleanupAux LayoutFacts
 
-/-- Sort every tile into its own square. -/
+/-- Sort every tile into its own square. The length is bounded: the cleanup is
+followed by Finish, and the two together end at the target, so only half of
+their moves are inefficient. -/
 theorem exists_cleanup (hd : HDims n k s) [NeZero n] (B : Board n) :
     ∃ C : Board n, ∃ p : Path B C,
       (∀ x, (C x).val ≠ 0 → classOf hd (C x) = sqOf hd x) ∧ IsLast (sqOf hd (blank C)) ∧
-      p.inefficientMoves ≤ 26 * n * (misplaced hd B + 2 * n + 5) := by
+      p.length ≤ 26 * n * (misplaced hd B + 2 * n + 5) := by
   obtain ⟨D, p, hD, hp, -⟩ := exists_blank_access_path_preserving B (blank (target n))
   have hpn : p.length ≤ 2 * n := by
     refine hp.trans ?_
@@ -567,7 +569,6 @@ theorem exists_cleanup (hd : HDims n k s) [NeZero n] (B : Board n) :
   have hmD := misplaced_path hd p
   obtain ⟨C, q, hC, hbC, hq⟩ := exists_cleanup_loop hd _ D rfl hbD
   refine ⟨C, p.append q, hC, hbC, ?_⟩
-  refine (Path.inefficientMoves_le_length _).trans ?_
   rw [Path.length_append]
   set m := misplaced hd B
   have h1 : 26 * n * misplaced hd D ≤ 26 * n * (m + 2 * n) :=
