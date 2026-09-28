@@ -55,9 +55,9 @@ theorem hfit_of_grid [NeZero n] (td : TDims n k s q) (hs : 100 ≤ s)
 
 open SlidingPuzzle in
 /-- The tree bound on a board of side `n` for a grid of `k = b^h` squares per side,
-`b` even and large, `b^(2h+2) ≤ n ≤ (2b)^(2h+2)`. -/
+`b` even and large, `160(2h+3) b^(2h+1) ≤ n ≤ (2b)^(2h+2)`. -/
 theorem optimalLength_le_grid {n b h : ℕ} [NeZero n] (hh : 1 ≤ h) (hbe : Even b)
-    (hb : 160 * (2 * h + 3) ≤ b) (hlo : b ^ (2 * h + 2) ≤ n) (hhi : n ≤ (2 * b) ^ (2 * h + 2))
+    (hb : 160 * (2 * h + 3) ≤ b) (hlo : 160 * (2 * h + 3) * b ^ (2 * h + 1) ≤ n) (hhi : n ≤ (2 * b) ^ (2 * h + 2))
     (B : ReachableBoard n) :
     optimalLength B ≤ manhattan B.val + 2 * ((15 * n ^ 2 + 3002 * n + 1) * b ^ h) +
       2 * (100000 * (h + 1) * (b ^ h) ^ 2 * (n / b ^ h) ^ 3) := by
@@ -68,14 +68,15 @@ theorem optimalLength_le_grid {n b h : ℕ} [NeZero n] (hh : 1 ≤ h) (hbe : Eve
   set q := h * b with hq
   let L := Hier.sys b h hb2 hh0
   have hk1 : 1 ≤ k := Nat.one_le_pow _ _ (by omega)
-  have hsk : b ^ (h + 2) ≤ s := by
-    rw [hs, Nat.le_div_iff_mul_le (by omega), ← pow_add]
-    exact (Nat.pow_le_pow_right (by omega) (by omega)).trans hlo
-  have hsk' : b ^ 2 * k ≤ s := by
-    have : b ^ (h + 2) = b ^ 2 * k := by rw [hk]; ring
+  set b0 := 160 * (2 * h + 3) with hb0
+  have hsb : b0 * b * k ≤ s := by
+    rw [hs, Nat.le_div_iff_mul_le (by omega)]
+    have : b0 * b * k * k = b0 * b ^ (2 * h + 1) := by rw [hk]; ring
     omega
-  have hb2b : 26000 ≤ b * b := by nlinarith
-  have hsb : b * b * k ≤ s := by nlinarith
+  have hb2b : 800 ≤ b0 := by omega
+  have hsb2 : 640000 * k ≤ s := by
+    have : 640000 ≤ b0 * b := by nlinarith
+    nlinarith
   have hk2 : 2 ≤ k := by
     calc 2 ≤ b := hb2
       _ = b ^ 1 := (pow_one b).symm
@@ -84,10 +85,10 @@ theorem optimalLength_le_grid {n b h : ℕ} [NeZero n] (hh : 1 ≤ h) (hbe : Eve
     have := offsets_le_grid hb2 h hh0
     simpa [hq, hk] using this
   have h8 : 8 * k * q ≤ s := by
-    have : 8 * q ≤ b * b := by
-      have : 8 * h ≤ b := by omega
+    have : 8 * q ≤ b0 * b := by
+      have : 8 * h ≤ b0 := by omega
       calc 8 * q = (8 * h) * b := by rw [hq]; ring
-        _ ≤ b * b := Nat.mul_le_mul_right _ this
+        _ ≤ b0 * b := Nat.mul_le_mul_right _ this
     nlinarith
   have hn' : k * s ≤ n := Nat.mul_div_le n k
   have hdim : TDims (k * s) k s q := by
@@ -102,17 +103,16 @@ theorem optimalLength_le_grid {n b h : ℕ} [NeZero n] (hh : 1 ≤ h) (hbe : Eve
   have hlam : GroupedOrder.lamN (k * s) ≤ 10 * ((2 * h + 2) + 1) * b :=
     log_slack_le (by omega) (hn'.trans hhi)
   have h16 : 16 * k * GroupedOrder.lamN (k * s) ≤ s := by
-    have : 16 * GroupedOrder.lamN (k * s) ≤ b * b := by
-      have : 160 * (2 * h + 3) * b ≤ b * b := Nat.mul_le_mul_right _ hb
+    have : 16 * GroupedOrder.lamN (k * s) ≤ b0 * b := by
       nlinarith
     nlinarith
   have hdepth : L.depth = h := rfl
   have h64 : 64 * L.depth * k ≤ s := by
     rw [hdepth]
-    have : 64 * h ≤ b * b := by nlinarith
+    have : 64 * h ≤ b0 * b := by nlinarith
     nlinarith
   have hs100 : 100 ≤ s := by
-    have : 100 * k ≤ b * b * k := Nat.mul_le_mul_right _ (by omega)
+    have : 100 * k ≤ b0 * b * k := Nat.mul_le_mul_right _ (by nlinarith)
     omega
   have : NeZero (k * s) := ⟨Nat.mul_ne_zero (by omega) (by omega)⟩
   have hfit := hfit_of_grid L hdim hs100 h8 h16 h64
@@ -150,26 +150,45 @@ theorem optimalLength_le_grid {n b h : ℕ} [NeZero n] (hh : 1 ≤ h) (hbe : Eve
   omega
 
 open SlidingPuzzle in
-/-- Depth `h`: `OPT(B) ≤ M(B) + C n^(5/2 + 1/(2h+2))` for all large `n`. -/
+/-- Depth `h`: `OPT(B) ≤ M(B) + C n^(5/2 + 1/(4h+2))` for all large `n`. -/
 theorem tree_uniform_approximation (h : ℕ) (hh : 1 ≤ h) :
     ∃ C : ℝ, 0 ≤ C ∧ ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∀ (hn : 2 ≤ n),
       letI : NeZero n := ⟨by omega⟩
       ∀ B : ReachableBoard n,
         (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) +
-          C * (n : ℝ) ^ (5 / 2 + 1 / (2 * (h : ℝ) + 2)) := by
+          C * (n : ℝ) ^ (5 / 2 + 1 / (4 * (h : ℝ) + 2)) := by
   set B0 := 160 * (2 * h + 3) with hB0
-  refine ⟨(6036 + 200000 * ((h : ℝ) + 1)) * 2 ^ h, by positivity,
-    (2 * B0) ^ (2 * h + 2), ?_⟩
+  refine ⟨(6036 + 200000 * ((h : ℝ) + 1)) * (2 * B0 * 2 ^ h), by positivity,
+    B0 * (2 * B0) ^ (2 * h + 1), ?_⟩
   intro n hn hn2
   let : NeZero n := ⟨by omega⟩
   intro B
-  obtain ⟨b, hbB, hbe, hlo, hhi⟩ := exists_even_branching_grid h hh B0 (by omega) n hn
+  set m := n / B0 with hm
+  have hmN : (2 * B0) ^ (2 * h + 1) ≤ m := by
+    rw [hm, Nat.le_div_iff_mul_le (by omega), mul_comm]; exact hn
+  obtain ⟨b, hbB, hbe, hblo, hbhi⟩ := exists_even_branching_grid (2 * h + 1) (by omega) B0
+    (by omega) m hmN
+  have hm1 : 1 ≤ m := le_trans (Nat.one_le_pow _ _ (by omega)) hmN
+  have hmn : B0 * m ≤ n := by rw [hm]; exact Nat.mul_div_le n B0
+  have hnm : n < B0 * (m + 1) := by
+    rw [hm]; have := Nat.lt_mul_div_succ n (show 0 < B0 by omega); linarith
+  have hlo : B0 * b ^ (2 * h + 1) ≤ n := le_trans (Nat.mul_le_mul_left _ hblo) hmn
+  have hn2B : n ≤ 2 * B0 * (2 * b) ^ (2 * h + 1) := by
+    have : B0 * (m + 1) ≤ 2 * B0 * m := by nlinarith
+    have := Nat.mul_le_mul_left (2 * B0) hbhi
+    omega
+  have hhi : n ≤ (2 * b) ^ (2 * h + 2) := by
+    have : 2 * B0 * (2 * b) ^ (2 * h + 1) ≤ (2 * b) * (2 * b) ^ (2 * h + 1) :=
+      Nat.mul_le_mul_right _ (by omega)
+    rw [pow_succ]; linarith
   have hnat := optimalLength_le_grid (n := n) (b := b) (h := h) hh hbe hbB hlo hhi B
   have hb1 : 1 ≤ b := by omega
   have hK : (0 : ℝ) < (b : ℝ) ^ h := by positivity
   set K : ℝ := (b : ℝ) ^ h with hKdef
   have hn1 : (1 : ℝ) ≤ n := by exact_mod_cast (by omega : 1 ≤ n)
-  have hcost := grid_tree_cost h hh n b hlo hhi (by omega)
+  have hcost := grid_tree_cost_odd h n b (2 * B0 : ℕ) (by norm_cast; omega)
+    (by exact_mod_cast hn2B) (by omega) (by omega)
+  push_cast at hcost
   rw [← hKdef] at hcost
   -- k * s ≤ n
   have hks : K * ((n / b ^ h : ℕ) : ℝ) ≤ n := by
@@ -181,8 +200,8 @@ theorem tree_uniform_approximation (h : ℕ) (hh : 1 ≤ h) :
     have := pow_le_pow_left₀ (by positivity) hks 3
     nlinarith [this]
   have hK2 : K ^ 2 ≤ n := by
-    have h1 : b ^ (2 * h) ≤ b ^ (2 * h + 2) := Nat.pow_le_pow_right hb1 (by omega)
-    have h2 : b ^ (2 * h) ≤ n := h1.trans hlo
+    have h1 : b ^ (2 * h) ≤ b ^ (2 * h + 1) := Nat.pow_le_pow_right hb1 (by omega)
+    have h2 : b ^ (2 * h) ≤ n := h1.trans (le_trans (Nat.le_mul_of_pos_left _ (by omega)) hlo)
     have h3 : ((b : ℝ) ^ (2 * h)) ≤ n := by exact_mod_cast h2
     rw [hKdef, ← pow_mul, mul_comm]
     exact h3
@@ -213,7 +232,7 @@ theorem tree_uniform_approximation (h : ℕ) (hh : 1 ≤ h) :
     _ ≤ (manhattan B.val : ℝ) + (6036 + 200000 * ((h : ℝ) + 1)) * ((n : ℝ) ^ 3 / K) := by
         linarith
     _ ≤ (manhattan B.val : ℝ) + (6036 + 200000 * ((h : ℝ) + 1)) *
-          (2 ^ h * (n : ℝ) ^ (5 / 2 + 1 / (2 * (h : ℝ) + 2))) := by
+          (2 * (B0 : ℝ) * 2 ^ h * (n : ℝ) ^ (5 / 2 + 1 / (4 * (h : ℝ) + 2))) := by
         have := mul_le_mul_of_nonneg_left hcost (by positivity : (0 : ℝ) ≤ 6036 + 200000 * ((h : ℝ) + 1))
         linarith
     _ = _ := by ring

@@ -114,7 +114,7 @@ recursively, and Finish becomes a lower-order term.
 `SlidingPuzzle/Tree/` and `Tree.tree_exponent` gives `OPT <= M + C n^(5/2+eps)`
 (see `research/exponent/TREE_PLAN.md`). The two-level proposal below is the
 historical starting point; the proved construction uses `b`-ary lanes of any
-fixed depth `h`, with exponent `5/2 + 1/(2h+2)`. Constants are unoptimized.
+fixed depth `h`, with exponent `5/2 + 1/(4h+2)`. Constants are unoptimized.
 
 Original proposal: **two routing levels could give
 `OPT <= Manhattan + O(n^(13/5))`**. Split the `k` destination blocks into
@@ -148,7 +148,7 @@ out sufficient hypotheses for every fixed depth `h`. The companion
 [Lean file](research/exponent/HierarchyConditional.lean) verifies the resource
 recurrence, integer branching, and the conditional implication to
 `O_h(n^(5/2 + 1/(4h+2)))`, hence `O_epsilon(n^(5/2+epsilon))`.
-Its algorithmic `HierarchyBudget` hypothesis is now discharged by the `Tree` development (with the weaker exponent `5/2 + 1/(2h+2)`).
+Its algorithmic `HierarchyBudget` hypothesis is now discharged by the `Tree` development (with the same exponent `5/2 + 1/(4h+2)`).
 
 All levels should use one original matching plan and one shuffle. Keeping
 the final destination as the tag preserves at most one insertion per class

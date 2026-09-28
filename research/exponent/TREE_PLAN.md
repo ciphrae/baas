@@ -96,11 +96,13 @@ residence, the abstract run, preload, the algorithm on side `k*s`
 `AsympAccounting` (`treeBound ≤ 10^5 (h+1) k² s³`), `ReserveAccounting`
 (per-square `needAt`), `Feasibility` (event and log-slack conditions),
 `AsympBound` (Parberry prefix to side `k*(n/k)`), `GridChoice` (even `b` with
-`b^(2h+2) ≤ n ≤ (2b)^(2h+2)`, `n³/b^h ≤ 2^h n^(5/2+1/(2h+2))`), and `Final`
-(`hfit_of_grid`, `optimalLength_le_grid` for `b ≥ 160(2h+3)`,
-`tree_uniform_approximation`, `tree_exponent`).
+`b^D ≤ m ≤ (2b)^D`; `n³/b^h ≤ A 2^h n^(5/2+1/(4h+2))` when `n ≤ A(2b)^(2h+1)`), and
+`Final` (`hfit_of_grid`, `optimalLength_le_grid` for `b ≥ B = 160(2h+3)` and
+`B b^(2h+1) ≤ n ≤ (2b)^(2h+2)`, grid chosen on `m = ⌊n/B⌋` with `D = 2h+1`;
+`tree_uniform_approximation` with exponent `5/2 + 1/(4h+2)`, `tree_exponent`).
+(Earlier the grid was `b^(2h+2) ≍ n`, exponent `5/2 + 1/(2h+2)`.) The feasibility conditions only need `s ≥ B·b·k`, so the planned exponent is reached.
 
-Constants are not optimized: `C_h ≈ 2·10^5 (h+1) 2^h` and `N = (320(2h+3))^(2h+2)`.
+Constants are not optimized: `C_h ≈ 6.4·10^7 (h+1)(2h+3) 2^h` and `N = B (2B)^(2h+1)`.
 
 Statistics (`Stats`): `tree_average_optimal_length` and `tree_gods_number`, the mean
 optimal length `(2/3)n³ + O(n^(5/2+ε))` and God's number `n³ + O(n^(5/2+ε))` for

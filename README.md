@@ -34,9 +34,10 @@ for every `ε > 0` there are `C, N` such that for every reachable board with `n 
 OPT(B) ≤ Manhattan(B) + C·n^(5/2+ε).
 ```
 
-`Tree.tree_uniform_approximation` gives the exponent `5/2 + 1/(2h+2)` for each
-fixed depth `h ≥ 1` (a `b`-ary hierarchy of lanes, `b ≈ n^(1/(2h+2))`); the
-constants are crude (`C_h ≈ 2·10⁵(h+1)·2^h`, `N = (320(2h+3))^(2h+2)`) and not
+`Tree.tree_uniform_approximation` gives the exponent `5/2 + 1/(4h+2)` for each
+fixed depth `h ≥ 1` (a `b`-ary hierarchy of lanes, `b ≈ n^(1/(2h+1))`); depth 1
+gives `8/3` again, depth 2 already `13/5`. The constants are crude
+(`C_h ≈ 6.4·10⁷(h+1)(2h+3)·2^h`, `N = B·(2B)^(2h+1)` with `B = 160(2h+3)`) and not
 optimized. Consequently, for every `ε > 0`,
 
 ```text

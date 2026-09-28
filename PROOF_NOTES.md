@@ -225,7 +225,8 @@ A tile reaches its class in at most `h` hops along row lanes and then column
 lanes; home tiles are preloaded as reserves by three-cycles, and placeholders
 keep every planned insertion. The reserve and misplaced-tile accounting reuse
 the `Hub` machinery (residence bounds, cleanup, Finish) with per-lane budgets.
-With `b ≈ n^(1/(2h+2))` the cost is `O(n³/k)`, the Parberry prefix costs
-`O(n²k)`, and `Tree.tree_exponent` follows. Details, parameters and the file
+The algorithm needs `s ≥ C_h·b·k` (lanes and log slack per square), so
+`b ≈ n^(1/(2h+1))`; the cost is `O(n³/k)`, the Parberry prefix costs `O(n²k)`,
+the exponent is `5/2 + 1/(4h+2)`, and `Tree.tree_exponent` follows. Details, parameters and the file
 map are in [research/exponent/TREE_PLAN.md](research/exponent/TREE_PLAN.md).
 Constants are unoptimized; the `268` of the hub bound does not carry over.
