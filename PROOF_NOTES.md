@@ -76,15 +76,15 @@ twice the access length (`Path.exists_conjugated_efficient`).
 
 The paper rounds `n` down to a fourth power, leaving up to `4*n^(3/4)` outer
 layers whose Parberry prefix costs `60*n^(11/4)`, which would dominate the new
-bound. Instead, for `n ≥ 2·10⁶` take `k = 2m` with `m` the largest integer
-such that `304m²(log₂(2mn²) + 4) + 10m ≤ 5n` and `64m³ ≤ n`, and `s = ⌊n/k⌋`
+bound. Instead, for `n ≥ 10⁹` take `k = 2m` with `m` the largest integer
+such that `304m²(log₂(2mn²) + 4) + 10m ≤ 5n` and `57m³ ≤ n`, and `s = ⌊n/k⌋`
 (`Hub/LinBound.lean`). The outer
 `d = n - k*s < k` rows and columns are solved by the Parberry prefix
 (`Parberry/Prefix.lean`, `O(n²·k)`), and the remaining `k*s × k*s` board by the
 hub algorithm. The residual board is reachable and its Manhattan distance
 equals the original board's after the prefix (`Algorithm/Residual*.lean`,
-`Hub/AsympBound.lean`). The existing cubic solver handles
-`4096 ≤ n ≤ 2·10⁶`, so the final theorem still starts at `4096`.
+`Hub/AsympBound.lean`). The explicit bound starts at `10⁹`; the asymptotic
+statements need only some start.
 
 ## Hub transport: departures from the paper's scheme
 
@@ -131,8 +131,9 @@ through the reservoir of a hub square. The pen-and-paper proof is
   and a moment bound for nested sets (`Hub/ChernoffChain.lean`) gives one
   Chernoff slack per class instead of one per class and distance.
 
-The boardwise bound is now `OPT(B) ≤ M(B) + 635·n^(8/3)` for `n ≥ 4096`
-(`1084` before local operations were charged by displacement). In the older scale
+The boardwise bound is now `OPT(B) ≤ M(B) + 583·n^(8/3)` for `n ≥ 10⁹`
+(`635` from `n ≥ 4096`, `1084` before local operations were charged by
+displacement). In the older scale
 `n^(8/3)(log n)^(1/3)` the coefficient went `4,828,800,024,144` originally,
 `849,303` in an earlier version, then `19,319`, `894` and `776` in the
 optimization passes. The certified estimates are:
@@ -165,30 +166,26 @@ optimization passes. The certified estimates are:
   (nested sets, `card_upper_tail_chain`), at most `(41/40)μ + 15λ`.
 - In-flight budget: per hub at most
   `(41/30)(n + 2k) + (41/20)k(k+1) + 90k(log₂ n + 1)`; with capacity and
-  `k ≥ 50` this is `Rhub n = ⌊143n/100⌋ + 1`.
+  `k ≥ 500` this is `Rhub n = ⌊1376n/1000⌋ + 1`.
 - Cleanup (`Hub/Cleanup.lean`): a three-cycle fixes two misplaced tiles and a
   double swap four, in length `26n(misplaced + 2n + 5)`. Cleanup and Finish end
   at the target, so together they are charged half their length (`Transport.lean`).
-- Whole hub algorithm (`AsympAccounting.lean`, `k ≥ 50`, `668k ≤ s`):
-  `1000·hubBound ≤ 101960X + 367100W`, with `X = n²s`, `W = k²n²`.
-- Grid for `n ≥ 2·10⁶` (`LinBound.lean`): `m ≥ 25`, and `m ≥ 26` from
-  `2.1·10⁶`; for `n ≥ 2.3·10⁶` either `n < 64(m+1)³` or capacity fails at
-  `m + 1`, where `log₂(2(m+1)n²) + 4 ≤ 0.395x` (`lin_log_le`), so
-  `0.1964x ≤ m ≤ x/4` (`lin_range`).
-- Real bound (`LinError.lean`): `KX x³ + 8KW m³ ≤ 634.8·1000·m x²` on each range,
-  by concavity in `m` (`lin_core_of`, `lin_core_25`, `lin_core_26`, `lin_core`);
-  the prefix adds at most `0.128x⁸`.
-- Initial range: for `4096 ≤ n ≤ 2·10⁶`, the Parberry solver's exact bound
-  `5n³ + 1509n² + 1505n + 4796` is at most `635·n^(8/3)` (`cubic_le_linError`).
+- Whole hub algorithm (`AsympAccounting.lean`, `k ≥ 500`, `881k ≤ s`):
+  `1000·hubBound ≤ 100650X + 361960W`, with `X = n²s`, `W = k²n²`.
+- Grid for `n ≥ 10⁹` (`LinBound.lean`): `m ≥ 250`, `57m³ ≤ n`; the capacity
+  condition holds at `m + 1` since `log₂(2(m+1)n²) + 4 ≤ 0.08x` (`lin_log_le`),
+  so `0.2588x ≤ m ≤ 0.2599x` (`lin_range`).
+- Real bound (`LinError.lean`): `KX x³ + 8KW m³ ≤ 582.9·1000·m x²` on this
+  range, by concavity in `m` (`lin_core_of`, `lin_core`); the prefix adds at
+  most `0.032x⁸`.
 
-Consequently `OPT(B) ≤ M(B) + 635·n^(8/3)` for every `n ≥ 4096`
-(`Hub.uniform_approximation_explicit`). The coefficient is set near `2·10⁶`,
-where capacity limits `k`; asymptotically the grid ratio `k/n^(1/3) = 1/2`
-gives `2(2A + B/4) ≈ 591`. These are certified upper bounds, not claims of
-optimality.
+Consequently `OPT(B) ≤ M(B) + 583·n^(8/3)` for every `n ≥ 10⁹`
+(`Hub.uniform_approximation_explicit`). The grid ratio `m/x ≈ 0.259` minimizes
+`KX/c + 8KW c²` (`≈ 582.85`), so this is also the asymptotic value of the
+accounting. These are certified upper bounds, not claims of optimality.
 
 ## Remaining structural improvements
 
-Hops (`62` of `A = 101.96`) and relocations (`36`) dominate the transport side;
-cleanup (`13n` per misplaced tile, `≈ 232` of `B = 367.1`) the corridor side.
+Hops (`62` of `A = 100.65`) and relocations (`36`) dominate the transport side;
+cleanup (`13n` per misplaced tile, `≈ 231` of `B = 361.96`) the corridor side.
 [OPTIMIZATION_IDEAS.md](OPTIMIZATION_IDEAS.md) lists the remaining improvements.

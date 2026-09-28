@@ -5,8 +5,8 @@
 
 | Theorem | Statement |
 | --- | --- |
-| `Hub.uniform_approximation_explicit` | `OPT(B) ≤ M(B) + 635·n^(8/3)` for every reachable board, `n ≥ 4096` |
-| `Hub.uniform_approximation` | `OPT(B) ≤ M(B) + C·n^(8/3)` for every reachable board, `n ≥ 4096` |
+| `Hub.uniform_approximation_explicit` | `OPT(B) ≤ M(B) + 583·n^(8/3)` for every reachable board, `n ≥ 10⁹` |
+| `Hub.uniform_approximation` | `OPT(B) ≤ M(B) + C·n^(8/3)` for every reachable board, `n ≥ 10⁹` |
 | `Hub.average_optimal_length` | mean optimal length `= (2/3)n³ + O(n^(8/3))` |
 | `Hub.gods_number` | God's number `= n³ + O(n^(8/3))` |
 | `Hub.average_optimal_length_rpow`, `Hub.gods_number_rpow` | the same errors are `O(n^α)` for every `α ≥ 8/3` |
@@ -227,37 +227,36 @@ The certified totals are:
 ## Asymptotics
 
 On side `n = k*s`, `hubBound_le_lin` in `AsympAccounting.lean` keeps
-transport, cleanup and Finish in one polynomial: for `k ≥ 50` and
-`668k ≤ s` (implied by capacity), `1000·hubBound ≤ 101960X + 367100W` with
+transport, cleanup and Finish in one polynomial: for `k ≥ 500` and
+`881k ≤ s` (implied by capacity), `1000·hubBound ≤ 100650X + 361960W` with
 `X = n²s` and `W = k²n²`. Operation costs are charged by displacement: jumps
 `7(d+1)`, box three-cycles `28s`, hop1 `31s + …`, hop2 `30s + …`, jump
 `(s+3)(30 + 21d)`, and cleanup with Finish at half their length, since they
 end at the target (`PROOF_NOTES.md` lists the estimates; the per-operation
 figures in the sections above predate this and are twice as large for jumps
-and three-cycles). The in-flight budget `Rhub = 1.43n` enters `W` with weight
+and three-cycles). The in-flight budget `Rhub = 1.376n` enters `W` with weight
 `47` (bypass jumps `21`, cleanup of in-flight and reserve tiles `2·13`).
 
-For `n ≥ linN = 2·10⁶`, take `k = 2m` with `m` the largest integer such that
-`304m²(log₂(2mn²) + 4) + 10m ≤ 5n` (capacity) and `64m³ ≤ n`
-(`exists_lin_width`), and `s = ⌊n/k⌋`; then `m ≥ 25`, and `m ≥ 26` from
-`2.1·10⁶`. The outer `n - k*s < k` layers go to the Parberry prefix.
-`optimalLength_le_lin_nat` gives
+For `n ≥ linN = 10⁹`, take `k = 2m` with `m` the largest integer such that
+`304m²(log₂(2mn²) + 4) + 10m ≤ 5n` (capacity) and `57m³ ≤ n`
+(`exists_lin_width`), and `s = ⌊n/k⌋`; then `m ≥ 250`. The outer
+`n - k*s < k` layers go to the Parberry prefix. `optimalLength_le_lin_nat` gives
 
 ```text
-1000·OPT ≤ 1000·M + 2·101960·n²s + 2·367100·k²n² + 2000·Z,
+1000·OPT ≤ 1000·M + 2·100650·n²s + 2·361960·k²n² + 2000·Z,
 ```
 
 with `Z = (15n² + 3002n + 1)(n - k*s)` the prefix cost. With `x = n^(1/3)`,
 multiplied by `m` the cost `KX x³/m + 8KW m²` is concave in `m`, so on a range
-`a ≤ m ≤ x/4` its endpoint values bound it (`lin_core_of`). The lower ends are
-`m ≥ 25` below `2.1·10⁶`, `m ≥ 26` below `2.3·10⁶`, and `0.1964x` beyond
-(`lin_range`, from `Λ ≤ 0.395x`); each gives `KX x³ + 8KW m³ ≤ 634.8·1000·m x²`.
-The prefix adds at most `0.128x⁸`: `OPT ≤ M + 635 n^(8/3)`
-(`optimalLength_le_linError`). For `4096 ≤ n ≤ linN` the cubic solver is at
-most `635·n^(8/3)` (`cubic_le_linError`), so `linConstant = 635` covers every
-`n ≥ 4096`. Asymptotically the grid gives `2(2·101.96 + 367.1/4) ≈ 591`.
+`a ≤ m ≤ b` its endpoint values bound it (`lin_core_of`). The cube scale gives
+`m ≤ 0.2599x`; the capacity condition cannot fail at `m + 1`, since there
+`Λ ≤ 0.08x` (`lin_log_le`), so maximality gives `m ≥ 0.2588x` (`lin_range`).
+On this range `KX x³ + 8KW m³ ≤ 582.9·1000·m x²` (`lin_core`); the ratio
+`m/x ≈ 0.259` is where `KX/c + 8KW c²` is minimal (`≈ 582.85`). The prefix
+adds at most `0.032x⁸`: `OPT ≤ M + 583 n^(8/3)` (`optimalLength_le_linError`),
+so `linConstant = 583` covers every `n ≥ hubN = 10⁹`.
 
 The statistical reduction of the paper (Section 5) is proved for any error
 scale `f ≥ n²` (`AsympStats.lean`). It yields the average and maximum
-asymptotics from the boardwise bound; **635 is the boardwise coefficient**,
+asymptotics from the boardwise bound; **583 is the boardwise coefficient**,
 not an asserted exact coefficient for the two-sided statistical errors.
