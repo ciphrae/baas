@@ -41,6 +41,7 @@ structure LaneSys (k q : ℕ) where
   lvl_hop : ∀ J c : Fin k, J ≠ c → (hop J c).2 ≠ c → lvl J c < lvl (hop J c).2 c
   sum_len : ∀ t, ∑ o, ∑ side, len o t side ≤ 2 * depth * k
   sum_X : ∀ t, ∑ o, ∑ side, (X o t side).card ≤ 2 * depth * k
+  X_le : ∀ o t side, (X o t side).card ≤ len o t side
 
 namespace LaneSys
 
@@ -170,6 +171,57 @@ theorem rank_le (J c : Fin k) : L.rank J c ≤ L.depth := by
   by_cases h : J = c
   · rw [h, rank_self]; exact Nat.zero_le _
   · have := L.rank_le_aux J c h; omega
+
+/-- The blocks of a piece. -/
+def piece (o : Fin q) (t : Fin k) (side : Bool) : Finset (Fin k) :=
+  Finset.univ.filter fun J => InPiece (L.len o t side) t side J.val
+
+theorem card_filter_fin (P : ℕ → Prop) [DecidablePred P] :
+    (Finset.univ.filter fun J : Fin k => P J.val).card = ((Finset.range k).filter P).card := by
+  apply Finset.card_bij (fun J _ => J.val)
+  · intro J hJ; simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hJ
+    simp [J.isLt, hJ]
+  · intro a _ b _ h; exact Fin.ext h
+  · intro j hj; simp only [Finset.mem_filter, Finset.mem_range] at hj
+    exact ⟨⟨j, hj.1⟩, by simp [hj.2], rfl⟩
+
+theorem card_piece (o : Fin q) (t : Fin k) (side : Bool) :
+    (L.piece o t side).card = L.len o t side := by
+  unfold piece
+  rw [card_filter_fin]
+  cases side
+  · have hl := L.left_le o t
+    have : (Finset.range k).filter (fun J => InPiece (L.len o t false) t.val false J) =
+        Finset.Ico (t.val - L.len o t false) t.val := by
+      ext j; simp only [InPiece, Finset.mem_filter, Finset.mem_range, Finset.mem_Ico,
+        Bool.false_eq_true, if_false]
+      have := t.isLt; omega
+    rw [this, Nat.card_Ico]; omega
+  · have hr := L.right_lt o t
+    have : (Finset.range k).filter (fun J => InPiece (L.len o t true) t.val true J) =
+        Finset.Ioc t.val (t.val + L.len o t true) := by
+      ext j; simp only [InPiece, Finset.mem_filter, Finset.mem_range, Finset.mem_Ioc, if_true]
+      omega
+    rw [this, Nat.card_Ioc]; omega
+
+/-- The pieces of one offset have at most `k` blocks in all. -/
+theorem sum_len_offset (o : Fin q) : ∑ t, ∑ side, L.len o t side ≤ k := by
+  classical
+  have hdisj : (Set.univ : Set (Fin k × Bool)).PairwiseDisjoint (fun p => L.piece o p.1 p.2) := by
+    rintro ⟨t, side⟩ - ⟨t', side'⟩ - hne
+    rw [Function.onFun, Finset.disjoint_left]
+    intro J h1 h2
+    simp only [piece, Finset.mem_filter, Finset.mem_univ, true_and] at h1 h2
+    obtain ⟨rfl, rfl⟩ := L.disj o t t' side side' J.val h1 h2
+    exact hne rfl
+  have h := Finset.card_biUnion (s := (Finset.univ : Finset (Fin k × Bool)))
+    (t := fun p => L.piece o p.1 p.2) (fun a _ b _ hab => hdisj (Set.mem_univ a) (Set.mem_univ b) hab)
+  have hle := Finset.card_le_univ ((Finset.univ : Finset (Fin k × Bool)).biUnion
+    fun p => L.piece o p.1 p.2)
+  rw [Fintype.card_fin, h] at hle
+  rw [← Fintype.sum_prod_type'] 
+  simp only [← card_piece]
+  exact hle
 
 end LaneSys
 

@@ -501,6 +501,45 @@ theorem sum_X (hb : 2 ≤ b) (t : Fin (b ^ h)) :
 
 end sums
 
+theorem X_le (hb : 2 ≤ b) (o : Fin (h * b)) (t : Fin (b ^ h)) (side : Bool) :
+    (X b h o t side).card ≤ len b h o t side := by
+  unfold X
+  split_ifs with h0
+  · simp
+  · have hm := csz_pos hb o
+    have hcard : (univ.filter fun c : Fin (b ^ h) => c.val / csz b h o = t.val / csz b h o).card
+        ≤ csz b h o := by
+      refine (card_le_card_of_injOn (fun c => c.val % csz b h o) (t := range (csz b h o))
+        ?_ ?_).trans (card_range _).le
+      · intro c _; simp only [coe_range, Set.mem_Iio]; exact Nat.mod_lt _ hm
+      · intro c hc c' hc' he
+        simp only [coe_filter, mem_univ, true_and, Set.mem_ofPred_eq] at hc hc'
+        apply Fin.ext
+        rw [← Nat.div_add_mod c.val (csz b h o), ← Nat.div_add_mod c'.val (csz b h o), hc, hc']
+        simp only at he; rw [he]
+    refine hcard.trans ?_
+    have hi := chi_lt b h o
+    unfold len at h0 ⊢
+    cases side
+    · simp only [Bool.false_eq_true, if_false] at h0 ⊢
+      split_ifs at h0 ⊢ with ht
+      · have : 1 ≤ chi b h o := by
+          by_contra hc; push Not at hc
+          have : chi b h o = 0 := by omega
+          rw [this, zero_mul] at h0; exact h0 rfl
+        calc csz b h o = 1 * csz b h o := (one_mul _).symm
+          _ ≤ chi b h o * csz b h o := Nat.mul_le_mul_right _ this
+      · exact absurd rfl h0
+    · simp only [if_true] at h0 ⊢
+      split_ifs at h0 ⊢ with ht
+      · have : 1 ≤ b - 1 - chi b h o := by
+          by_contra hc; push Not at hc
+          have : b - 1 - chi b h o = 0 := by omega
+          rw [this, zero_mul] at h0; exact h0 rfl
+        calc csz b h o = 1 * csz b h o := (one_mul _).symm
+          _ ≤ (b - 1 - chi b h o) * csz b h o := Nat.mul_le_mul_right _ this
+      · exact absurd rfl h0
+
 /-- The `b`-ary hierarchy as a lane system of depth `h`. -/
 noncomputable def sys (hb : 2 ≤ b) (hh : 0 < h) : LaneSys (b ^ h) (h * b) where
   len := len b h
@@ -520,6 +559,7 @@ noncomputable def sys (hb : 2 ≤ b) (hh : 0 < h) : LaneSys (b ^ h) (h * b) wher
   lvl_hop := lvl_hop hb hh
   sum_len := sum_len hb
   sum_X := sum_X hb
+  X_le := X_le b h hb
 
 end Hier
 
