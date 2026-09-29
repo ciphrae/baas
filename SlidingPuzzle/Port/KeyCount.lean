@@ -192,3 +192,75 @@ theorem kcount_comp [Fintype β] [DecidableEq β] {γ : Type*} [DecidableEq γ] 
     exact hab (h1.2.1.symm.trans h2.2.1)
 
 end SlidingPuzzle.Port
+
+namespace SlidingPuzzle.Port
+open Classical
+open SlidingPuzzle.Hub (Sq HDims classOf)
+
+variable {n k s : ℕ} {β : Type*} (κ : Cell n → β)
+
+/-- Counts through a move of two tiles. -/
+theorem kcount_move2 (hd : HDims n k s) {B C : Board n} {t1 t2 : Tile n}
+    (h : KeepK κ B C {t1, t2}) (h12 : t1 ≠ t2) (h1 : t1.val ≠ 0) (h2 : t2.val ≠ 0)
+    (a : β) (y : Sq k) :
+    kcount κ hd C a y + ((if κ (position B t1) = a ∧ classOf hd t1 = y then 1 else 0) +
+      (if κ (position B t2) = a ∧ classOf hd t2 = y then 1 else 0)) =
+    kcount κ hd B a y + ((if κ (position C t1) = a ∧ classOf hd t1 = y then 1 else 0) +
+      (if κ (position C t2) = a ∧ classOf hd t2 = y then 1 else 0)) := by
+  have e := kcount_keepK κ hd h a y
+  rw [Finset.card_filter, Finset.card_filter, Finset.sum_pair h12, Finset.sum_pair h12] at e
+  simp only [KTileIn, h1, h2, ne_eq, not_false_eq_true, true_and] at e
+  have c : ∀ (P Q : Prop) [Decidable P] [Decidable Q], (if P ∧ Q then 1 else 0) =
+      (if Q ∧ P then 1 else 0) := fun P Q _ _ => by
+    by_cases hP : P <;> by_cases hQ : Q <;> simp [hP, hQ]
+  rw [c (κ (position B t1) = a), c (κ (position B t2) = a), c (κ (position C t1) = a),
+    c (κ (position C t2) = a)]
+  exact e
+
+/-- Counts through a move of three tiles. -/
+theorem kcount_move3 (hd : HDims n k s) {B C : Board n} {t1 t2 t3 : Tile n}
+    (h : KeepK κ B C {t1, t2, t3}) (h12 : t1 ≠ t2) (h13 : t1 ≠ t3) (h23 : t2 ≠ t3)
+    (h1 : t1.val ≠ 0) (h2 : t2.val ≠ 0) (h3 : t3.val ≠ 0) (a : β) (y : Sq k) :
+    kcount κ hd C a y + ((if κ (position B t1) = a ∧ classOf hd t1 = y then 1 else 0) +
+      (if κ (position B t2) = a ∧ classOf hd t2 = y then 1 else 0) +
+      (if κ (position B t3) = a ∧ classOf hd t3 = y then 1 else 0)) =
+    kcount κ hd B a y + ((if κ (position C t1) = a ∧ classOf hd t1 = y then 1 else 0) +
+      (if κ (position C t2) = a ∧ classOf hd t2 = y then 1 else 0) +
+      (if κ (position C t3) = a ∧ classOf hd t3 = y then 1 else 0)) := by
+  have e := kcount_keepK κ hd h a y
+  have hm : t1 ∉ ({t2, t3} : Finset (Tile n)) := by simp [h12, h13]
+  have hm' : t2 ∉ ({t3} : Finset (Tile n)) := by simp [h23]
+  rw [Finset.card_filter, Finset.card_filter, Finset.sum_insert hm, Finset.sum_insert hm,
+    Finset.sum_insert hm', Finset.sum_insert hm', Finset.sum_singleton,
+    Finset.sum_singleton] at e
+  simp only [KTileIn, h1, h2, h3, ne_eq, not_false_eq_true, true_and] at e
+  have c : ∀ (P Q : Prop) [Decidable P] [Decidable Q], (if P ∧ Q then 1 else 0) =
+      (if Q ∧ P then 1 else 0) := fun P Q _ _ => by
+    by_cases hP : P <;> by_cases hQ : Q <;> simp [hP, hQ]
+  rw [c (κ (position B t1) = a), c (κ (position B t2) = a), c (κ (position B t3) = a),
+    c (κ (position C t1) = a), c (κ (position C t2) = a), c (κ (position C t3) = a)]
+  omega
+
+end SlidingPuzzle.Port
+
+namespace SlidingPuzzle.Port
+open Classical
+open SlidingPuzzle.Hub (Sq HDims classOf)
+
+variable {n k s : ℕ} {β : Type*} (κ : Cell n → β)
+
+/-- Counts through a move of one tile. -/
+theorem kcount_move1 (hd : HDims n k s) {B C : Board n} {t : Tile n}
+    (h : KeepK κ B C {t}) (h1 : t.val ≠ 0) (a : β) (y : Sq k) :
+    kcount κ hd C a y + (if κ (position B t) = a ∧ classOf hd t = y then 1 else 0) =
+    kcount κ hd B a y + (if κ (position C t) = a ∧ classOf hd t = y then 1 else 0) := by
+  have e := kcount_keepK κ hd h a y
+  rw [Finset.card_filter, Finset.card_filter, Finset.sum_singleton, Finset.sum_singleton] at e
+  simp only [KTileIn, h1, ne_eq, not_false_eq_true, true_and] at e
+  have c : ∀ (P Q : Prop) [Decidable P] [Decidable Q], (if P ∧ Q then 1 else 0) =
+      (if Q ∧ P then 1 else 0) := fun P Q _ _ => by
+    by_cases hP : P <;> by_cases hQ : Q <;> simp [hP, hQ]
+  rw [c (κ (position B t) = a), c (κ (position C t) = a)]
+  exact e
+
+end SlidingPuzzle.Port
