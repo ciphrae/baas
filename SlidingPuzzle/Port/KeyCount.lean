@@ -264,3 +264,49 @@ theorem kcount_move1 (hd : HDims n k s) {B C : Board n} {t : Tile n}
   exact e
 
 end SlidingPuzzle.Port
+
+namespace SlidingPuzzle.Port
+
+variable {n : ℕ} {β : Type*}
+
+/-- Changes inside a block of cells of one key, besides two designated cells whose new
+tiles are `Ta` and `Tc`, only move `Ta` and `Tc` to other keys. -/
+theorem keepK_of_block (κ : Cell n → β) {B C : Board n} (W : Cell n → Prop) (R : β)
+    {a c : Cell n} {Ta Tc : Tile n}
+    (hout : ∀ x, ¬ W x → C x = B x) (hW : ∀ x, W x → x ≠ a → x ≠ c → κ x = R)
+    (hCa : C a = Ta) (hCc : C c = Tc)
+    (hBa : (B a).val = 0 ∨ B a = Ta ∨ B a = Tc) (hBc : (B c).val = 0 ∨ B c = Ta ∨ B c = Tc) :
+    KeepK κ B C {Ta, Tc} := by
+  intro T hT0 hT
+  simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hT
+  set x := position B T with hx
+  have hBx : B x = T := B.apply_symm_apply T
+  set x' := position C T with hx'
+  have hCx : C x' = T := C.apply_symm_apply T
+  by_cases hW' : W x
+  · have hxa : x ≠ a := fun e => by
+      rw [← e, hBx] at hBa
+      rcases hBa with h | h | h
+      · exact hT0 h
+      · exact hT.1 h
+      · exact hT.2 h
+    have hxc : x ≠ c := fun e => by
+      rw [← e, hBx] at hBc
+      rcases hBc with h | h | h
+      · exact hT0 h
+      · exact hT.1 h
+      · exact hT.2 h
+    have hW'' : W x' := by
+      by_contra h
+      have := hout x' h
+      rw [hCx] at this
+      have e : x' = x := by rw [hx]; exact (SlidingPuzzle.Tree.position_eq_of_apply this.symm).symm
+      exact h (e ▸ hW')
+    have hx'a : x' ≠ a := fun e => hT.1 (by rw [← hCx, e, hCa])
+    have hx'c : x' ≠ c := fun e => hT.2 (by rw [← hCx, e, hCc])
+    rw [hW x' hW'' hx'a hx'c, hW x hW' hxa hxc]
+  · have : C x = T := by rw [hout x hW', hBx]
+    have e : x' = x := by rw [hx']; exact SlidingPuzzle.Tree.position_eq_of_apply this
+    rw [e]
+
+end SlidingPuzzle.Port
