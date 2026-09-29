@@ -1,11 +1,11 @@
-import SlidingPuzzle.Tree.MixLog
+import SlidingPuzzle.Tree.LamLog
 import SlidingPuzzle.Hub.AsympStats
 import SlidingPuzzle.Bridge.Statistics
 
 /-! # Orbit statistics with error `O(n^(5/2) (ln n)^(3/2))`
 
 The statistical reduction (`Hub/AsympStats.lean`) applied to `tree_exponent` and to
-`tree_log_approximation_explicit`: the mean optimal solution length is
+`tree_lam_approximation_uniform`: the mean optimal solution length is
 `(2/3)n³ + O(n^(5/2) (ln n)^(3/2))` and God's number is `n³ + O(n^(5/2) (ln n)^(3/2))`;
 in particular both errors are `O(n^(5/2+ε))` for every `ε > 0`. -/
 
@@ -59,10 +59,10 @@ theorem sq_le_logError_eventually : ∀ᶠ n : ℕ in atTop, (n : ℝ) ^ 2 ≤ l
   nlinarith [Real.rpow_nonneg (show (0 : ℝ) ≤ n by positivity) ((5 : ℝ) / 2)]
 
 theorem tree_log_uniform_approximation_with : UniformApproximationWith logError :=
-  ⟨3200, by norm_num, mixN 1, fun n hn hn2 =>
+  ⟨375, by norm_num, 2 ^ 23, fun n hn hn2 =>
     letI : NeZero n := ⟨by omega⟩
     fun B => by
-      have := tree_log_approximation_explicit hn B
+      have := tree_lam_approximation_uniform hn B
       unfold logError; linarith⟩
 
 /-- The average optimal solution length is `(2/3)n³ + O(n^(5/2) (ln n)^(3/2))`. -/

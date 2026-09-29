@@ -4,7 +4,8 @@ import SlidingPuzzle
 `Classical.choice` and `Quot.sound`. Run with `lake env lean Checks/Axioms.lean`. -/
 
 -- Main results: error n^(5/2) (ln n)^(3/2)
-#print axioms SlidingPuzzle.Tree.tree_log_approximation_explicit
+#print axioms SlidingPuzzle.Tree.tree_lam_approximation
+#print axioms SlidingPuzzle.Tree.tree_lam_approximation_uniform
 #print axioms SlidingPuzzle.Tree.tree_log_average_optimal_length
 #print axioms SlidingPuzzle.Tree.tree_log_gods_number
 
@@ -16,6 +17,8 @@ import SlidingPuzzle
 #print axioms SlidingPuzzle.Tree.tree_gods_number
 
 -- Ingredients
+#print axioms SlidingPuzzle.Tree.optimalLength_le_lanes_log
+#print axioms SlidingPuzzle.Tree.treeBound_le_log
 #print axioms SlidingPuzzle.Tree.optimalLength_le_lanes
 #print axioms SlidingPuzzle.Tree.treeBound_le_fine
 #print axioms SlidingPuzzle.Hub.exists_good_order
