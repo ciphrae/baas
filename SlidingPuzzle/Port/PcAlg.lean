@@ -68,3 +68,59 @@ theorem sumZ_decP (f : Sq k → Pt → Sq k → ℕ) (Q : Sq k) (pt : Pt) (z Q' 
   · rfl
 
 end SlidingPuzzle.Port
+
+namespace SlidingPuzzle.Port
+open Finset
+open SlidingPuzzle.Hub (Sq)
+
+variable {k q : ℕ}
+
+/-- The class leaving the ports of the source through the insertion. -/
+def Mode.out (y : Sq k) : Mode k → Sq k
+  | .cheap => y
+  | .imp none z => z
+  | .imp (some _) _ => y
+
+/-- The conditions under which `srcPc` removes tiles that are there. -/
+def SrcOK (f : Sq k → Pt → Sq k → ℕ) (S : Sq k) (P : Pt) (y : Sq k) : Mode k → Prop
+  | .cheap => 1 ≤ f S P y
+  | .imp none z => 1 ≤ f S P z
+  | .imp (some p) z => p ≠ P ∧ 1 ≤ f S p y ∧ 1 ≤ f S P z
+
+theorem srcPc_ne (f : Sq k → Pt → Sq k → ℕ) (S : Sq k) (P : Pt) (y : Sq k) (m : Mode k)
+    {Q : Sq k} (hQ : Q ≠ S) (pt : Pt) (z : Sq k) : PState.srcPc f S P y m Q pt z = f Q pt z := by
+  rcases m with _ | ⟨_ | p, z0⟩ <;> simp [PState.srcPc, decP, incP, hQ]
+
+theorem srcPc_sumPt (f : Sq k → Pt → Sq k → ℕ) (S : Sq k) (P : Pt) (y : Sq k) (m : Mode k)
+    (h : SrcOK f S P y m) (Q z : Sq k) :
+    (∑ pt, PState.srcPc f S P y m Q pt z) + (if Q = S ∧ z = m.out y then 1 else 0) =
+      ∑ pt, f Q pt z := by
+  rcases m with _ | ⟨_ | p, z0⟩
+  · exact sumPt_decP f S P y Q z h
+  · exact sumPt_decP f S P z0 Q z h
+  · obtain ⟨hp, h1, h2⟩ := h
+    show (∑ pt, decP (incP (decP f S p y) S p z0) S P z0 Q pt z) + _ = _
+    have g2 : 1 ≤ incP (decP f S p y) S p z0 S P z0 := by
+      rw [incP_apply, decP_apply, if_neg (fun h' => hp h'.2.1.symm)]; omega
+    have e1 := sumPt_decP (incP (decP f S p y) S p z0) S P z0 Q z g2
+    have e2 := sumPt_incP (decP f S p y) S p z0 Q z
+    have e3 := sumPt_decP f S p y Q z h1
+    rw [show Mode.out y (Mode.imp (some p) z0) = y from rfl]
+    omega
+
+theorem srcPc_sumZ (f : Sq k → Pt → Sq k → ℕ) (S : Sq k) (P : Pt) (y : Sq k) (m : Mode k)
+    (h : SrcOK f S P y m) (Q : Sq k) (pt : Pt) :
+    (∑ z, PState.srcPc f S P y m Q pt z) + (if Q = S ∧ pt = P then 1 else 0) = ∑ z, f Q pt z := by
+  rcases m with _ | ⟨_ | p, z0⟩
+  · exact sumZ_decP f S P y Q pt h
+  · exact sumZ_decP f S P z0 Q pt h
+  · obtain ⟨hp, h1, h2⟩ := h
+    show (∑ z, decP (incP (decP f S p y) S p z0) S P z0 Q pt z) + _ = _
+    have g2 : 1 ≤ incP (decP f S p y) S p z0 S P z0 := by
+      rw [incP_apply, decP_apply, if_neg (fun h' => hp h'.2.1.symm)]; omega
+    have e1 := sumZ_decP (incP (decP f S p y) S p z0) S P z0 Q pt g2
+    have e2 := sumZ_incP (decP f S p y) S p z0 Q pt
+    have e3 := sumZ_decP f S p y Q pt h1
+    omega
+
+end SlidingPuzzle.Port

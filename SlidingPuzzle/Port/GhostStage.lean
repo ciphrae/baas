@@ -66,6 +66,19 @@ theorem pStage_linv {G : PG k q} (hL : PLInv L s σ' σ0 F0 G) {u x : Sq k} (hux
       (if gcl (pgh k s G (L.stage u x).1 0) = none ∧ Q = L.nxt u x ∧
         z = G.σ.lane (L.stage u x).1 0 then 1 else 0) := fun _ _ => rfl
   have hcnt := pStage_cnt L s τ G hux kd y m sp
+  have hsok : SrcOK (incP G.σ.pc (L.nxt u x) (dport L u x) (G.σ.lane (L.stage u x).1 0)) u
+      (dport L u x) y m := by
+    have hf : ∀ pt0 z0, incP G.σ.pc (L.nxt u x) (dport L u x) (G.σ.lane (L.stage u x).1 0) u pt0 z0 =
+        G.σ.pc u pt0 z0 := fun pt0 z0 => by
+      rw [incP_apply, if_neg (fun h => hvu h.1.symm)]; rfl
+    rcases m with _ | ⟨_ | p', z0⟩
+    · show 1 ≤ _; rw [hf]; exact hm.1
+    · obtain ⟨-, -, h3⟩ := hm
+      show 1 ≤ _; rw [hf]; omega
+    · obtain ⟨h1, h2, h3⟩ := hm
+      refine ⟨fun e => h1 (by rw [e]), ?_, ?_⟩
+      · rw [hf]; simp only [dem, PState.partCnt] at h2; omega
+      · rw [hf]; omega
   have hpc := pStage_pc L s τ G hux kd y m sp
   have hdec : ∀ Q z, (if kd = Kind.sch ∧ Q = u ∧ z = y then 1 else 0) +
       (if kd = Kind.stk ∧ Q = u ∧ z = y then 1 else 0) +
@@ -155,11 +168,142 @@ theorem pStage_linv {G : PG k q} (hL : PLInv L s σ' σ0 F0 G) {u x : Sq k} (hux
     · rw [Function.update_of_ne hl'] at h'
       exact hL.ghost_len _ _ h'
   · -- port counts within region counts
-    sorry
+    intro Q z
+    rw [hpc, hcnt]
+    have hS := srcPc_sumPt (incP G.σ.pc (L.nxt u x) (dport L u x) (G.σ.lane (L.stage u x).1 0)) u
+      (dport L u x) y m hsok Q z
+    have hI := sumPt_incP G.σ.pc (L.nxt u x) (dport L u x) (G.σ.lane (L.stage u x).1 0) Q z
+    have hle := hL.pc_le Q z
+    have hsum1 : ∀ pt0, 1 ≤ G.σ.pc u pt0 y → 1 ≤ ∑ pt, G.σ.pc u pt y := fun pt0 h =>
+      le_trans h (Finset.single_le_sum (f := fun pt => G.σ.pc u pt y) (fun _ _ => Nat.zero_le _)
+        (mem_univ pt0))
+    rcases m with _ | ⟨_ | p', z0⟩
+    · have := hsum1 _ hm.1
+      rw [show Mode.out y (Mode.cheap : Mode k) = y from rfl] at hS
+      by_cases h : Q = u ∧ z = y
+      · obtain ⟨rfl, rfl⟩ := h; simp only [and_self, if_true] at hS ⊢; omega
+      · rw [if_neg h] at hS ⊢; omega
+    · obtain ⟨-, h2, -⟩ := hm
+      have hmc : (∑ pt, G.σ.pc u pt y) + 1 ≤ G.σ.cnt u y := by
+        simp only [dem, PState.partCnt, PState.mcnt] at h2; omega
+      rw [show Mode.out y (Mode.imp none z0) = z0 from rfl] at hS
+      by_cases h : Q = u ∧ z = y
+      · obtain ⟨rfl, rfl⟩ := h
+        simp only [and_self, if_true] at ⊢
+        split_ifs at hS <;> omega
+      · rw [if_neg h]; split_ifs at hS <;> omega
+    · obtain ⟨-, h2, -⟩ := hm
+      have := hsum1 p' (by simp only [dem, PState.partCnt] at h2; omega)
+      rw [show Mode.out y (Mode.imp (some p') z0) = y from rfl] at hS
+      by_cases h : Q = u ∧ z = y
+      · obtain ⟨rfl, rfl⟩ := h; simp only [and_self, if_true] at hS ⊢; omega
+      · rw [if_neg h] at hS ⊢; omega
   · -- port sizes
-    sorry
+    intro Q pt'
+    rw [hpc]
+    have hS := srcPc_sumZ (incP G.σ.pc (L.nxt u x) (dport L u x) (G.σ.lane (L.stage u x).1 0)) u
+      (dport L u x) y m hsok Q pt'
+    have hI := sumZ_incP G.σ.pc (L.nxt u x) (dport L u x) (G.σ.lane (L.stage u x).1 0) Q pt'
+    have h0 := hL.psum Q pt'
+    rw [hb, hbp] at h0
+    show _ + (if src (L.stage u x).1 (L.stage u x).2 = Q ∧ lport (L.stage u x).1 = pt' then 1 else 0) = _
+    rw [hsrc]
+    have e1 : (if u = Q ∧ lport (L.stage u x).1 = pt' then 1 else 0) =
+        (if Q = u ∧ pt' = dport L u x then 1 else 0) := by
+      by_cases h : Q = u ∧ pt' = dport L u x
+      · rw [if_pos h, if_pos ⟨h.1.symm, h.2.symm⟩]
+      · rw [if_neg h, if_neg (fun h' => h ⟨h'.1.symm, h'.2.symm⟩)]
+    have e2 : (if L.nxt u x = Q ∧ dport L u x = pt' then 1 else 0) =
+        (if Q = L.nxt u x ∧ pt' = dport L u x then 1 else 0) := by
+      by_cases h : Q = L.nxt u x ∧ pt' = dport L u x
+      · rw [if_pos h, if_pos ⟨h.1.symm, h.2.symm⟩]
+      · rw [if_neg h, if_neg (fun h' => h ⟨h'.1.symm, h'.2.symm⟩)]
+    rw [e1]; rw [e2] at h0
+    omega
   · -- stock of the next hop's port stays in that port
-    sorry
+    intro u' x' hux'
+    have hs0 := hL.stockIn u' x' hux'
+    show (pStage L s τ G u x kd y m sp).stock u' (dport L u' x') x' ≤
+      (pStage L s τ G u x kd y m sp).σ.pc u' (dport L u' x') x'
+    rw [hpc]
+    have hst : (pStage L s τ G u x kd y m sp).stock u' (dport L u' x') x' =
+        G.stock u' (dport L u' x') x' -
+          (if kd = .stk ∧ u' = u ∧ dport L u' x' = sp ∧ x' = y then 1 else 0) +
+          (if gcl (pgh k s G (L.stage u x).1 0) = some x' ∧ u' = L.nxt u x ∧ L.nxt u x ≠ x' ∧
+            dport L u' x' = dport L u x then 1 else 0) := rfl
+    rw [hst]
+    by_cases hQv : u' = L.nxt u x
+    · subst hQv
+      rw [srcPc_ne _ u _ y m hvu, incP_apply]
+      have hne : ¬ (kd = .stk ∧ L.nxt u x = u ∧ dport L (L.nxt u x) x' = sp ∧ x' = y) :=
+        fun h => hvu h.2.1
+      rw [if_neg hne]
+      by_cases h : gcl (pgh k s G (L.stage u x).1 0) = some x' ∧ L.nxt u x = L.nxt u x ∧
+          L.nxt u x ≠ x' ∧ dport L (L.nxt u x) x' = dport L u x
+      · rw [if_pos h, if_pos ⟨rfl, h.2.2.2, (hclean x' h.1).symm⟩]; omega
+      · rw [if_neg h]; omega
+    by_cases hQu : u' = u
+    · subst hQu
+      have hne : ¬ (gcl (pgh k s G (L.stage u' x).1 0) = some x' ∧ u' = L.nxt u' x ∧
+          L.nxt u' x ≠ x' ∧ dport L u' x' = dport L u' x) := fun h => hQv h.2.1
+      rw [if_neg hne, add_zero]
+      have hf : ∀ pt0 z0, incP G.σ.pc (L.nxt u' x) (dport L u' x) (G.σ.lane (L.stage u' x).1 0) u' pt0 z0 =
+          G.σ.pc u' pt0 z0 := fun pt0 z0 => by
+        rw [incP_apply, if_neg (fun h => hQv h.1)]; rfl
+      have hdem : ∀ pt0, dport L u' x' = pt0 →
+          dem L G u' (some pt0) x' = G.stock u' pt0 x' := fun pt0 h => by
+        show (if x' ≠ u' ∧ dport L u' x' = pt0 then G.stock u' pt0 x' else 0) = G.stock u' pt0 x'
+        rw [if_pos ⟨Ne.symm hux', h⟩]
+      rcases m with _ | ⟨_ | p', z0⟩
+      · show _ ≤ decP _ u' (dport L u' x) y u' (dport L u' x') x'
+        rw [decP_apply, hf]
+        by_cases h : u' = u' ∧ dport L u' x' = dport L u' x ∧ x' = y
+        · rw [if_pos h]
+          obtain ⟨-, h2, rfl⟩ := h
+          rcases hm.2 with ⟨hk, hsp⟩ | hlt
+          · rw [if_pos ⟨hk, rfl, by rw [h2, hsp], rfl⟩]; omega
+          · rw [← h2, hdem _ rfl] at hlt; omega
+        · rw [if_neg h]; omega
+      · show _ ≤ decP _ u' (dport L u' x) z0 u' (dport L u' x') x'
+        rw [decP_apply, hf]
+        by_cases h : u' = u' ∧ dport L u' x' = dport L u' x ∧ x' = z0
+        · rw [if_pos h]
+          obtain ⟨-, h2, rfl⟩ := h
+          have hlt := hm.2.2
+          rw [← h2, hdem _ rfl] at hlt; omega
+        · rw [if_neg h]; omega
+      · show _ ≤ decP (incP (decP _ u' p' y) u' p' z0) u' (dport L u' x) z0 u' (dport L u' x') x'
+        rw [decP_apply, incP_apply, decP_apply, hf]
+        obtain ⟨hp', hlt1, hlt2⟩ := hm
+        have hp'' : p' ≠ dport L u' x := fun e => hp' (by rw [e])
+        by_cases h1 : u' = u' ∧ dport L u' x' = p' ∧ x' = y
+        · obtain ⟨-, h2, h3⟩ := h1
+          have hc3 : ¬ (u' = u' ∧ dport L u' x' = dport L u' x ∧ x' = z0) :=
+            fun h => hp'' (h2.symm.trans h.2.1)
+          rw [if_pos (show u' = u' ∧ dport L u' x' = p' ∧ x' = y from ⟨rfl, h2, h3⟩), if_neg hc3]
+          have hd := hdem p' h2
+          simp only [PState.partCnt] at hlt1
+          rw [← h3, hd] at hlt1
+          have : G.σ.pc u' p' x' = G.σ.pc u' (dport L u' x') x' := by rw [h2]
+          rw [h2] at hs0 ⊢
+          split_ifs <;> omega
+        · rw [if_neg h1]
+          by_cases h3 : u' = u' ∧ dport L u' x' = dport L u' x ∧ x' = z0
+          · obtain ⟨-, h2, h4⟩ := h3
+            have hc2 : ¬ (u' = u' ∧ dport L u' x' = p' ∧ x' = z0) :=
+              fun h => hp'' (h.2.1.symm.trans h2)
+            rw [if_pos (show u' = u' ∧ dport L u' x' = dport L u' x ∧ x' = z0 from ⟨rfl, h2, h4⟩),
+              if_neg hc2]
+            rw [← h4, ← h2, hdem _ rfl] at hlt2
+            split_ifs <;> omega
+          · rw [if_neg h3]; split_ifs <;> omega
+    · rw [srcPc_ne _ u _ y m hQu, incP_apply,
+        if_neg (show ¬ (u' = L.nxt u x ∧ dport L u' x' = dport L u x ∧
+          x' = G.σ.lane (L.stage u x).1 0) from fun h => hQv h.1)]
+      rw [if_neg (show ¬ (kd = .stk ∧ u' = u ∧ dport L u' x' = sp ∧ x' = y) from fun h => hQu h.2.1),
+        if_neg (show ¬ (gcl (pgh k s G (L.stage u x).1 0) = some x' ∧ u' = L.nxt u x ∧
+          L.nxt u x ≠ x' ∧ dport L u' x' = dport L u x) from fun h => hQv h.2.1)]
+      omega
   · -- cost
     have hc := pcost_append L hL (.hop (L.stage u x).1 (L.stage u x).2 y m)
     have hpot := pot_hop L td G.σ (L.stage u x).1 (L.stage u x).2 hin y m
