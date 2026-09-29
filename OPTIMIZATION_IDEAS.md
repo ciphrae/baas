@@ -46,7 +46,8 @@ These are the `≈ 125` that do not grow with `h`.
   already on the landing cell, by a three-cycle in a box covering both squares
   (`Tree/OpJump.lean`), charged `3(s+3)` per unit of weight. A designated tile of
   a recorded class on the landing cell of every square would save the
-  three-cycle, as designated cells did for the hub algorithm.
+  three-cycle, as designated cells did for the hub algorithm (`Hub/OpRJump.lean`
+  and `IState.des` in `Hub/Run.lean`, last present in commit `37a39f3`).
 - *Preload* (`≈ 51`): the sharp `52n` three-cycle per reserve tile, and reserves
   sized by the full lane budgets.
 - *Cleanup* (`≈ 29`): `26n` per misplaced tile, whatever its distance to its square.

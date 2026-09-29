@@ -16,10 +16,9 @@ holds the blank. Resolved events (`REvent`) are the three board operations:
 * `jump E Z y`: the blank goes from `E` to `Z` (same band or block column), and
   a class-`y` tile of `Z` moves to the region of `E`.
 
-`cost` bounds the inefficient moves of each operation. The board side proves
-that a valid event list is realized by a path of at most `totalCost`
-inefficient moves (`Hub/Simulate.lean`); the abstract side constructs a valid
-list with small total cost (`Hub/Run.lean`). -/
+`cost` bounds the inefficient moves of each operation. These definitions come
+from the hub algorithm (now in git history); the tree algorithm reuses the
+squares, classes and counts, with its own operations (`Tree/RunDefs.lean`). -/
 namespace SlidingPuzzle.Hub
 
 /-- The abstraction of a board used by the operations. `des Q b` is the class
