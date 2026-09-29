@@ -21,6 +21,11 @@ open SlidingPuzzle.Tree
 
 variable {k q : ℕ}
 
+/-- One for importing modes. -/
+def Mode.ind : Mode k → ℕ
+  | .cheap => 0
+  | .imp _ _ => 1
+
 structure PG (k q : ℕ) where
   σ : PState k q
   evs : List (PEvent k q)
@@ -76,7 +81,7 @@ def pStage (s τ : ℕ) (G : PG k q) (u x : Sq k) (kd : Kind) (y : Sq k) (m : Mo
     served := G.served
     sent := G.sent
     nh := G.nh + 1
-    ni := G.ni + (match m with | .cheap => 0 | .imp _ _ => 1)
+    ni := G.ni + m.ind
     nx := G.nx
     jc := G.jc
     wt := G.wt }
