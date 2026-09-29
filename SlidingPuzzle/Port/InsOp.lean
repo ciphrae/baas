@@ -50,28 +50,30 @@ theorem jump_line_rest (pd : PDims n k s q σ) (l : Ln k q) (Q : Sq k) {o : ℕ}
   have hqk := pd.td.q_le
   obtain ⟨hl1, hl2⟩ := line_lt pd l ho
   obtain ⟨hr1, hr2⟩ := rest_lt pd l o
-  have a1 := lc_fst (n := n) pd.hd Q (lineRC k s l o).2 hl1
-  have a2 := lc_snd (n := n) pd.hd Q (lineRC k s l o).1 hl2
-  have b1 := lc_fst (n := n) pd.hd Q (restRC k s l o).2 hr1
-  have b2 := lc_snd (n := n) pd.hd Q (restRC k s l o).1 hr2
+  set v : Cell n := lc s Q (lineRC k s l o).1 (lineRC k s l o).2 with hv
+  set w : Cell n := lc s Q (restRC k s l o).1 (restRC k s l o).2 with hw
+  have a1 : v.1.val = Q.1.val * s + (lineRC k s l o).1 := lc_fst pd.hd Q _ hl1
+  have a2 : v.2.val = Q.2.val * s + (lineRC k s l o).2 := lc_snd pd.hd Q _ hl2
+  have b1 : w.1.val = Q.1.val * s + (restRC k s l o).1 := lc_fst pd.hd Q _ hr1
+  have b2 : w.2.val = Q.2.val * s + (restRC k s l o).2 := lc_snd pd.hd Q _ hr2
   generalize Q.1.val * s = R at *
   generalize Q.2.val * s = C at *
   have h2 : (k + o + 1) % 2 ≤ 1 := by omega
   rcases lport_cases l with ⟨e1, e2, -⟩ | ⟨e1, e2, -⟩ | ⟨e1, e2, -⟩ | ⟨e1, e2, -⟩ <;>
-    simp only [lineRC, restRC, e1, e2, if_true, if_false, Bool.false_eq_true] at a1 a2 b1 b2 ⊢
-  · obtain ⟨p, hp⟩ := exists_hjump_step pd.hd.two_le_n B' _
+    simp only [lineRC, restRC, e1, e2, if_true, if_false, Bool.false_eq_true] at a1 a2 b1 b2
+  · obtain ⟨p, hp⟩ := exists_hjump_step pd.hd.two_le_n B' w
       (by rw [hB', a1, b1]; simp only [Nat.dist]; omega)
       (by rw [hB', a1, a2, b1, b2]; omega)
     exact ⟨p, hp.trans (by rw [hB', a2, b2]; simp only [Nat.dist]; omega)⟩
-  · obtain ⟨p, hp⟩ := exists_hjump_step pd.hd.two_le_n B' _
+  · obtain ⟨p, hp⟩ := exists_hjump_step pd.hd.two_le_n B' w
       (by rw [hB', a1, b1]; simp only [Nat.dist]; omega)
       (by rw [hB', a1, a2, b1, b2]; omega)
     exact ⟨p, hp.trans (by rw [hB', a2, b2]; simp only [Nat.dist]; omega)⟩
-  · obtain ⟨p, hp⟩ := exists_vjump_step pd.hd.two_le_n B' _
+  · obtain ⟨p, hp⟩ := exists_vjump_step pd.hd.two_le_n B' w
       (by rw [hB', a2, b2]; simp only [Nat.dist]; omega)
       (by rw [hB', a1, a2, b1, b2]; omega)
     exact ⟨p, hp.trans (by rw [hB', a1, b1]; simp only [Nat.dist]; omega)⟩
-  · obtain ⟨p, hp⟩ := exists_vjump_step pd.hd.two_le_n B' _
+  · obtain ⟨p, hp⟩ := exists_vjump_step pd.hd.two_le_n B' w
       (by rw [hB', a2, b2]; simp only [Nat.dist]; omega)
       (by rw [hB', a1, a2, b1, b2]; omega)
     exact ⟨p, hp.trans (by rw [hB', a1, b1]; simp only [Nat.dist]; omega)⟩
@@ -132,14 +134,15 @@ theorem ins_cheap (pd : PDims n k s q σ) (h4 : 4 ≤ σ) (B : Board n) (l : Ln 
   have hwk : rkey L s σ pd.hd w = some (S, some pt) := rkey_box L pd S hwbox
   have hvw : v ≠ w := ne_of_rkey L (by rw [hvk, hwk]; simp)
   have hvt : v ≠ t := ne_of_rkey L (by rw [hvk, ht]; simp)
-  obtain ⟨pj, hpj⟩ := jump_line_rest pd l S ho B hv
   set B4 := swapCells B v w with hB4
+  obtain ⟨pj, hpj⟩ : ∃ p : Path B B4, p.inefficientMoves ≤ 7 * (k + 3) :=
+    jump_line_rest pd l S ho B hv
   have hB4v : B4 v = B w := by rw [hB4, hvdef, swapCells_at_left]
   have hB4w : B4 w = 0 := by rw [hB4, swapCells_at_right, hvdef, apply_blank]
   have hB4x : ∀ x, x ≠ v → x ≠ w → B4 x = B x := fun x h1 h2 =>
-    swapCells_preserves B (by rw [← hvdef]; exact h1) h2
+    swapCells_preserves B h1 h2
   have hbl4 : blank B4 = w := blank_eq_of_apply hB4w
-  have hW0 : (B w).val ≠ 0 := val_ne_zero_of_ne_blank (by rw [← hvdef]; exact hvw.symm)
+  have hW0 : (B w).val ≠ 0 := val_ne_zero_of_ne_blank hvw.symm
   have K1 : KeepK (rkey L s σ pd.hd) B B4 {0, B w} := by
     have := keepK_of_agree_outside (rkey L s σ pd.hd) (B := B) (C := B4) {v, w}
       (fun x hx => by
@@ -178,8 +181,8 @@ theorem ins_cheap (pd : PDims n k s q σ) (h4 : 4 ≤ σ) (B : Board n) (l : Ln 
   have hvu : v ≠ u := ne_of_rkey L (by rw [hvk, huk]; simp)
   have hB4t : B4 t = B t := hB4x t (Ne.symm hvt) htw
   have hB4u : B4 u = B u := hB4x u (Ne.symm hvu) huw
-  have hT0 : (B t).val ≠ 0 := val_ne_zero_of_ne_blank (by rw [← hvdef]; exact Ne.symm hvt)
-  have hU0 : (B u).val ≠ 0 := val_ne_zero_of_ne_blank (by rw [← hvdef]; exact Ne.symm hvu)
+  have hT0 : (B t).val ≠ 0 := val_ne_zero_of_ne_blank (Ne.symm hvt)
+  have hU0 : (B u).val ≠ 0 := val_ne_zero_of_ne_blank (Ne.symm hvu)
   obtain ⟨hl1, hl2⟩ := line_lt pd l ho
   obtain ⟨hr1, hr2⟩ := rest_lt pd l o
   obtain ⟨hs1, hs2⟩ := spare_lt pd pt i
@@ -200,9 +203,11 @@ theorem ins_cheap (pd : PDims n k s q σ) (h4 : 4 ≤ σ) (B : Board n) (l : Ln 
       (cfr pt) (cfc pt) (blank B4) v u ≤ 5 * k + q + 12 := by
     rw [hbl4, hv, cr0_eq, cc0_eq]
     refine (cornerDist_le pd S pt (by omega) (by omega) hr1 hr2 hl1 hl2 hs1 hs2).trans ?_
-    have := cdist_rest (σ := σ) hf l o
-    have := cdist_line (σ := σ) hf hqk l ho
-    have := cdist_spare (σ := σ) hf pt i
+    have h1 : cdist k s σ pt (restRC k s l o).1 (restRC k s l o).2 ≤ 2 * k + 3 :=
+      cdist_rest (σ := σ) hf l o
+    have h2 : cdist k s σ pt (lineRC k s l o).1 (lineRC k s l o).2 ≤ k + q :=
+      cdist_line (σ := σ) hf hqk l ho
+    have h3 := cdist_spare (σ := σ) hf pt i
     omega
   refine ⟨C, pj.append p2, by rw [hCv, hB4t], ?_, ?_, ?_, ?_⟩
   · rw [blank_eq_of_apply (show C w = 0 by rw [hCx w hvw.symm (fun e => htw e.symm) huw.symm, hB4w])]
