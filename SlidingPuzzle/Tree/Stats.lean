@@ -59,7 +59,7 @@ theorem sq_le_logError_eventually : ∀ᶠ n : ℕ in atTop, (n : ℝ) ^ 2 ≤ l
   nlinarith [Real.rpow_nonneg (show (0 : ℝ) ≤ n by positivity) ((5 : ℝ) / 2)]
 
 theorem tree_log_uniform_approximation_with : UniformApproximationWith logError :=
-  ⟨375, by norm_num, 2 ^ 23, fun n hn hn2 =>
+  ⟨245, by norm_num, 2 ^ 23, fun n hn hn2 =>
     letI : NeZero n := ⟨by omega⟩
     fun B => by
       have := tree_lam_approximation_uniform hn B
