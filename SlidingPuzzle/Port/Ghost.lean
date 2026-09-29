@@ -46,6 +46,10 @@ structure PG (k q : ℕ) where
   jc : ℕ
   wt : ℕ
 
+/-- The weight of a placeholder of `u` for `x`: the blocks of its hop, plus one. -/
+def pw (L : LaneSys k q) (u x : Sq k) : ℕ :=
+  if u = x then 0 else LaneSys.pdist (L.stage u x).1.2.t.val (L.stage u x).2.val + 1
+
 /-- Stock of `Q` for class `x`, over all ports. -/
 def PG.stk (G : PG k q) (Q x : Sq k) : ℕ := ∑ pt, G.stock Q pt x
 
@@ -184,7 +188,7 @@ structure PLInv (s σ' : ℕ) (σ0 : PState k q) (F0 : ℕ) (G : PG k q) : Prop 
   cost : σ0.totalCost s σ' G.evs + G.σ.pot L s ≤
     σ0.pot L s + hopKc k σ' * G.nh + 7 * (q + 2) * G.ncr + hopKi k s σ' * G.ni +
       xferK k s σ' * G.nx +
-      (k * s) * (∑ Q, ∑ x, G.B Q x) + G.jc
+      s * (∑ Q, ∑ x, G.B Q x * pw L Q x) + G.jc
   free_tot : (∑ Q, ∑ y, G.free Q y) + puntagged L s G + (∑ Q, ∑ x, G.B Q x) =
     F0 + ∑ Q, ∑ x, G.dA Q x
   turn : (∑ x, plcnt L s G (fun l => turning L l x) (fun g => gcl g = some x)) + NS L G + G.nis ≤

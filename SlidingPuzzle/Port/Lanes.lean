@@ -8,7 +8,7 @@ import SlidingPuzzle.Tree.FinalLog
 
 Parberry's prefix reduces the side `n` to `k·(n/k)`, where the port algorithm runs. For a
 tight lane system of depth `h`, the cost is `1040 k² (n/k)³` once `n` exceeds `k²` times
-`8q`, `16λ`, `14(q+2)`, `8(2h+1)q` and `2h·hopKc`, and `σ²` exceeds the reserve of a square. -/
+`8q`, `16λ`, `14(q+2)`, and `(n/k)` exceeds `128(2h+1)q` and `2h·hopKc`, and `σ²` exceeds the reserve of a square. -/
 set_option maxRecDepth 4096
 
 namespace SlidingPuzzle.Port
@@ -58,7 +58,7 @@ theorem optimalLength_le_port_lanes {n k q h σ : ℕ} [NeZero n] (L : LaneSys k
     (hd : L.depth = h) (hh : 1 ≤ h) (hke : Even k) (hqe : Even q) (hq4 : 4 ≤ q) (hqk : q ≤ k)
     (hk : 64 ≤ k) (hl : 64 ≤ GroupedOrder.lamN n)
     (hlo : 8 * k * q * k ≤ n) (hlo2 : 16 * k * GroupedOrder.lamN n * k ≤ n)
-    (hph : 8 * (2 * h + 1) * k * q * k ≤ n) (hhop : 2 * h * hopKc k σ * k ≤ n)
+    (hph : 128 * (2 * h + 1) * q * k ≤ n) (hhop : 2 * h * hopKc k σ * k ≤ n)
     (hcr : 14 * (q + 2) * k * k ≤ n)
     (h8 : 8 ≤ σ)
     (hσ : 2 * ((2 * (n / k) + 2 * k + (15 * GroupedOrder.lamN n + 1) * k) * (2 * k) + 4 * k * q)
@@ -72,7 +72,7 @@ theorem optimalLength_le_port_lanes {n k q h σ : ℕ} [NeZero n] (L : LaneSys k
     rw [hs, Nat.le_div_iff_mul_le hk0]; exact h
   have hsq : 8 * k * q ≤ s := hdiv hlo
   have hsl : 16 * k * GroupedOrder.lamN n ≤ s := hdiv hlo2
-  have hsph : 8 * (2 * h + 1) * k * q ≤ s := hdiv hph
+  have hsph : 128 * (2 * h + 1) * q ≤ s := hdiv hph
   have hshop : 2 * h * hopKc k σ ≤ s := hdiv hhop
   have hscr : 14 * (q + 2) * k ≤ s := hdiv hcr
   have hn' : k * s ≤ n := Nat.mul_div_le n k
@@ -100,8 +100,9 @@ theorem optimalLength_le_port_lanes {n k q h σ : ℕ} [NeZero n] (L : LaneSys k
     le_trans (Nat.mul_le_mul_left _ hlam_le) hsl
   have h64 : 64 * L.depth * k ≤ s := by
     rw [hd]
-    have : 64 * h * k ≤ 8 * (2 * h + 1) * k * q := by
-      have := Nat.mul_le_mul_left (8 * (2 * h + 1) * k) hq4
+    have : 64 * h * k ≤ 2 * h * hopKc k σ := by
+      unfold hopKc
+      have := Nat.mul_le_mul_left (2 * h) (show 32 * k ≤ 30 * σ + 1200 * k + 3000 by omega)
       nlinarith
     omega
   have hs100 : 100 ≤ s := by omega

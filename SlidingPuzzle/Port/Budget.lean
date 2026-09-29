@@ -5,7 +5,8 @@ import SlidingPuzzle.Tree.FineLog
 
 Besides the tree constraints `8kq ≤ s` and `16kλ ≤ s`, and `14(q+2)k ≤ s` for the lane
 crossings (charged by distance, `2k` per tile), the depth enters only through
-`2d·hopKc ≤ s` (the cheap hops of a tile) and `8(2d+1)kq ≤ s` (the placeholders). -/
+`2d·hopKc ≤ s` (the cheap hops of a tile) and `128(2d+1)q ≤ s` (imports at placeholders;
+the placeholders' junk is charged by the distance of their hops, `s·(2k+2d)` per unit of need). -/
 namespace SlidingPuzzle.Port
 open Finset
 open SlidingPuzzle.Tree
@@ -37,21 +38,17 @@ theorem needs_le (hk : 64 ≤ k) (hkl : 16 * k * lam ≤ s) (hks : 1024 * k ≤ 
   have e2 : 6 * k ^ 2 * q * s = 6 * (k ^ 2 * q * s) := by ring
   constructor <;> omega
 
-/-- The placeholder product `(2d+1) nd`. -/
-theorem ph_le (hk : 1 ≤ k) (hph : 8 * (2 * d + 1) * k * q ≤ s) (hnd6 : nd ≤ 6 * (k ^ 2 * q * s)) :
-    4 * ((2 * d + 1) * nd) ≤ 3 * (k * s ^ 2) := by
+/-- The placeholder product `(2d+1) nd`, which pays for the imports of placeholders. -/
+theorem ph_le (hph : 128 * (2 * d + 1) * q ≤ s) (hnd6 : nd ≤ 6 * (k ^ 2 * q * s)) :
+    16 * (s * ((2 * d + 1) * nd)) ≤ k ^ 2 * s ^ 3 := by
   have h1 : (2 * d + 1) * nd ≤ (2 * d + 1) * (6 * (k ^ 2 * q * s)) := Nat.mul_le_mul_left _ hnd6
-  have h2 : 2 * k * (4 * ((2 * d + 1) * nd)) ≤ 2 * k * (3 * (k * s ^ 2)) := by
-    have e : 2 * k * (4 * ((2 * d + 1) * (6 * (k ^ 2 * q * s)))) =
-        6 * (k ^ 2 * s) * (8 * (2 * d + 1) * k * q) := by ring
-    have h3 := Nat.mul_le_mul_left (6 * (k ^ 2 * s)) hph
-    have h4 : 2 * k * (4 * ((2 * d + 1) * nd)) ≤ 2 * k * (4 * ((2 * d + 1) * (6 * (k ^ 2 * q * s)))) :=
-      Nat.mul_le_mul_left _ (Nat.mul_le_mul_left _ h1)
-    calc 2 * k * (4 * ((2 * d + 1) * nd)) ≤ _ := h4
-      _ = _ := e
-      _ ≤ 6 * (k ^ 2 * s) * s := h3
-      _ = 2 * k * (3 * (k * s ^ 2)) := by ring
-  exact Nat.le_of_mul_le_mul_left h2 (by omega)
+  have h3 := Nat.mul_le_mul_left (k ^ 2 * s ^ 2) hph
+  have h4 : 16 * (s * ((2 * d + 1) * nd)) ≤ 16 * (s * ((2 * d + 1) * (6 * (k ^ 2 * q * s)))) :=
+    Nat.mul_le_mul_left _ (Nat.mul_le_mul_left _ h1)
+  have e : 16 * (s * ((2 * d + 1) * (6 * (k ^ 2 * q * s)))) * 4 =
+      3 * (k ^ 2 * s ^ 2 * (128 * (2 * d + 1) * q)) := by ring
+  have e2 : k ^ 2 * s ^ 2 * s = k ^ 2 * s ^ 3 := by ring
+  omega
 
 /-- The relocation weight. -/
 theorem relocW_le (hk : 64 ≤ k) (hkq : 8 * k * q ≤ s) (hks : 1024 * k ≤ s) (hs : 65536 ≤ s)
@@ -90,7 +87,7 @@ end budget
 theorem port_budget (k q s d lam σ lc nd rv : ℕ)
     (hk : 64 ≤ k) (hlam : 64 ≤ lam) (hkq : 8 * k * q ≤ s) (hkl : 16 * k * lam ≤ s)
     (hq : 1 ≤ q) (hd : 1 ≤ d) (hhop : 2 * d * hopKc k σ ≤ s) (hcr : 14 * (q + 2) * k ≤ s)
-    (hph : 8 * (2 * d + 1) * k * q ≤ s)
+    (hph : 128 * (2 * d + 1) * q ≤ s)
     (hlc : lc ≤ 2 * k ^ 2 * q * s)
     (hnd : nd ≤ 4 * k ^ 2 * q * s + (14 + 30 * lam) * k ^ 3 * q)
     (hrv : rv ≤ 6 * k ^ 2 * q * s + (14 + 30 * lam) * k ^ 3 * q + 6 * k ^ 2) :
@@ -108,7 +105,7 @@ theorem port_budget (k q s d lam σ lc nd rv : ℕ)
     omega
   have hs : 65536 ≤ s := by omega
   obtain ⟨hnd6, hrv9⟩ := needs_le hk hkl hks hq hs hnd hrv
-  have hZ4 := ph_le (d := d) (by omega) hph hnd6
+  have hZ := ph_le (k := k) (d := d) hph hnd6
   have hW := relocW_le hk hkq hks hs hlc
   -- monomials against `U = k² s³`
   have hY8 : 8 * (k * s * (k ^ 2 * q * s)) ≤ k ^ 2 * s ^ 3 := by
@@ -149,20 +146,17 @@ theorem port_budget (k q s d lam σ lc nd rv : ℕ)
     have h1 := Nat.mul_le_mul_right (2 * (k * s) ^ 2 + (2 * d + 1) * nd) hKi
     have e : 13 * s * (2 * (k * s) ^ 2 + (2 * d + 1) * nd) =
         26 * (k ^ 2 * s ^ 3) + 13 * (s * ((2 * d + 1) * nd)) := by ring
-    have f : 4 * (s * ((2 * d + 1) * nd)) ≤ 3 * (k * s ^ 3) := by
-      have := Nat.mul_le_mul_left s hZ4
-      calc 4 * (s * ((2 * d + 1) * nd)) = s * (4 * ((2 * d + 1) * nd)) := by ring
-        _ ≤ s * (3 * (k * s ^ 2)) := this
-        _ = _ := by ring
     omega
   have t3 : xferK k s σ * (4 * (k * s) ^ 2) ≤ 132 * (k ^ 2 * s ^ 3) := by
     have := Nat.mul_le_mul_right (4 * (k * s) ^ 2) hKx
     have e : 33 * s * (4 * (k * s) ^ 2) = 132 * (k ^ 2 * s ^ 3) := by ring
     omega
-  have t4 : k * s * ((2 * d + 1) * nd) ≤ k ^ 2 * s ^ 3 := by
-    have := Nat.mul_le_mul_left (k * s) hZ4
-    have e : k * s * (3 * (k * s ^ 2)) = 3 * (k ^ 2 * s ^ 3) := by ring
-    have e2 : k * s * (4 * ((2 * d + 1) * nd)) = 4 * (k * s * ((2 * d + 1) * nd)) := by ring
+  have t4 : s * ((2 * k + 2 * d) * nd) ≤ 2 * (k ^ 2 * s ^ 3) := by
+    have a1 : k * s * nd ≤ k * s * (6 * (k ^ 2 * q * s)) := Nat.mul_le_mul_left _ hnd6
+    have a2 : 2 * d * nd ≤ (2 * d + 1) * nd := Nat.mul_le_mul_right _ (by omega)
+    have a3 := Nat.mul_le_mul_left s a2
+    have e : s * ((2 * k + 2 * d) * nd) = 2 * (k * s * nd) + s * (2 * d * nd) := by ring
+    have e2 : k * s * (6 * (k ^ 2 * q * s)) = 6 * (k * s * (k ^ 2 * q * s)) := by ring
     omega
   have t5 : 3 * legA k s σ * relocW k s lc ≤ 252 * (k ^ 2 * s ^ 3) := by
     have := Nat.mul_le_mul (Nat.mul_le_mul_left 3 hA) hW

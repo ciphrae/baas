@@ -308,23 +308,40 @@ theorem pStage_linv {G : PG k q} (hL : PLInv L s σ' σ0 F0 G) {u x : Sq k} (hux
   · -- cost
     have hc := pcost_append L hL (.hop (L.stage u x).1 (L.stage u x).2 y m)
     have hpot := pot_hop L td G.σ (L.stage u x).1 (L.stage u x).2 hin y m
-    have hB : (∑ Q, ∑ z, (pStage L s τ G u x kd y m sp).B Q z) =
-        (∑ Q, ∑ z, G.B Q z) + (if kd = Kind.plh then 1 else 0) := by
-      simp only [pStage]
-      exact sum_sum_add_ind G.B _ u x
+    have hpw : pw L u x = LaneSys.pdist (L.stage u x).1.2.t.val (L.stage u x).2.val + 1 := by
+      unfold pw; rw [if_neg hux]
+    have hB : (∑ Q, ∑ z, (pStage L s τ G u x kd y m sp).B Q z * pw L Q z) =
+        (∑ Q, ∑ z, G.B Q z * pw L Q z) + (if kd = Kind.plh then 1 else 0) * pw L u x := by
+      simp only [pStage, add_mul, sum_add_distrib]
+      congr 1
+      rw [Finset.sum_eq_single u]
+      · rw [Finset.sum_eq_single x]
+        · simp
+        · intro b _ hb; simp [hb]
+        · simp
+      · intro b _ hb; apply Finset.sum_eq_zero; intro z _; simp [hb]
+      · simp
     have hjunk : (if ¬ lgood (L.stage u x).1 y then lposP k s (L.stage u x).1 (L.stage u x).2 + 1 else 0) ≤
-        (k * s) * (if kd = Kind.plh then 1 else 0) := by
+        s * ((if kd = Kind.plh then 1 else 0) * pw L u x) := by
+      have hle : lposP k s (L.stage u x).1 (L.stage u x).2 + 1 ≤ s * pw L u x := by
+        rw [hpw, lposP_eq]
+        have h1 : lstep s (L.stage u x).1 ≤ s := by unfold lstep; split_ifs <;> omega
+        have h2 : loffP k s (L.stage u x).1 + 1 ≤ s := by
+          have := td.k_lt_s; unfold loffP; split_ifs <;> omega
+        have := Nat.mul_le_mul_left (LaneSys.pdist (L.stage u x).1.2.t.val (L.stage u x).2.val) h1
+        nlinarith
       cases kd
       · rw [hr.1, if_neg (not_not.mpr hgood)]; simp
       · rw [hr.1, if_neg (not_not.mpr hgood)]; simp
-      · simp only [if_true, mul_one]; split_ifs <;> omega
+      · simp only [if_true, one_mul]; split_ifs <;> omega
     have hL' := hL.cost
     show σ0.totalCost s σ' (G.evs ++ [.hop (L.stage u x).1 (L.stage u x).2 y m]) +
         (G.σ.step s (.hop (L.stage u x).1 (L.stage u x).2 y m)).pot L s ≤
       σ0.pot L s + hopKc k σ' * (G.nh + 1) +
         7 * (q + 2) * (G.ncr + LaneSys.pdist (L.stage u x).1.2.t.val (L.stage u x).2.val) +
         hopKi k s σ' * (G.ni + m.ind) +
-        xferK k s σ' * G.nx + (k * s) * (∑ Q, ∑ z, (pStage L s τ G u x kd y m sp).B Q z) + G.jc
+        xferK k s σ' * G.nx + s * (∑ Q, ∑ z, (pStage L s τ G u x kd y m sp).B Q z * pw L Q z) +
+        G.jc
     rw [hc, hB]
     have hcost : G.σ.cost s σ' (.hop (L.stage u x).1 (L.stage u x).2 y m) = hopKc k σ' +
         7 * (q + 2) * LaneSys.pdist (L.stage u x).1.2.t.val (L.stage u x).2.val +
@@ -337,8 +354,9 @@ theorem pStage_linv {G : PG k q} (hL : PLInv L s σ' σ0 F0 G) {u x : Sq k} (hux
         7 * (q + 2) * G.ncr + 7 * (q + 2) * LaneSys.pdist (L.stage u x).1.2.t.val (L.stage u x).2.val := by
       ring
     have e2 : hopKi k s σ' * (G.ni + m.ind) = hopKi k s σ' * G.ni + hopKi k s σ' * m.ind := by ring
-    have e3 : (k * s) * ((∑ Q, ∑ z, G.B Q z) + (if kd = Kind.plh then 1 else 0)) =
-        (k * s) * (∑ Q, ∑ z, G.B Q z) + (k * s) * (if kd = Kind.plh then 1 else 0) := by ring
+    have e3 : s * ((∑ Q, ∑ z, G.B Q z * pw L Q z) + (if kd = Kind.plh then 1 else 0) * pw L u x) =
+        s * (∑ Q, ∑ z, G.B Q z * pw L Q z) + s * ((if kd = Kind.plh then 1 else 0) * pw L u x) := by
+      ring
     rw [e1, e2, e3, e0]
     omega
   · -- free tiles, untagged positions and placeholders

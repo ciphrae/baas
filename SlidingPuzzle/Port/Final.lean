@@ -98,11 +98,57 @@ theorem ppot_le' (s : ℕ) (σ : PState k q) : σ.pot L s ≤ laneCells L s * (k
   rw [Fintype.sum_prod_type, Fintype.sum_bool]
   simp [llen, add_comm]
 
+/-- The remaining cost of a route: blocks and hops. -/
+def rrem (u x : Sq k) : ℕ := rcross L u x + L.srank u x
+
+theorem rrem_step {u x : Sq k} (h : u ≠ x) : rrem L u x = pw L u x + rrem L (L.nxt u x) x := by
+  unfold rrem pw
+  rw [if_neg h, rcross_cons L h, srank_nxt (L := L) h]; ring
+
+theorem rrem_self (x : Sq k) : rrem L x x = 0 := by
+  unfold rrem; rw [rcross_self, srank_self]
+
+theorem rrem_le (u x : Sq k) : rrem L u x ≤ 2 * k + 2 * L.depth := by
+  unfold rrem
+  have := rcross_le_k L x u
+  have := srank_le (L := L) u x
+  omega
+
+/-- Placeholders weighted by their hops: each chain of dirty arrivals follows a route, so the
+weights telescope to the remaining cost of the route where it started. -/
+theorem sum_Bw_le (B dA c : Sq k → Sq k → ℕ) (x : Sq k)
+    (h1 : ∀ v, B v x ≤ dA v x + c v x)
+    (h2 : ∀ v, dA v x ≤ ∑ u ∈ univ.filter (fun u => u ≠ x ∧ L.nxt u x = v), B u x) :
+    ∑ v, B v x * pw L v x ≤ ∑ v, c v x * rrem L v x := by
+  classical
+  have hA : ∑ v, B v x * rrem L v x ≤ ∑ v, dA v x * rrem L v x + ∑ v, c v x * rrem L v x := by
+    rw [← sum_add_distrib]
+    exact sum_le_sum fun v _ => by rw [← add_mul]; exact Nat.mul_le_mul_right _ (h1 v)
+  have hB : ∑ v, dA v x * rrem L v x ≤
+      ∑ u ∈ univ.filter (fun u => u ≠ x), B u x * rrem L (L.nxt u x) x := by
+    calc ∑ v, dA v x * rrem L v x
+        ≤ ∑ v, ∑ u ∈ univ.filter (fun u => u ≠ x ∧ L.nxt u x = v), B u x * rrem L v x :=
+          sum_le_sum fun v _ => by rw [← sum_mul]; exact Nat.mul_le_mul_right _ (h2 v)
+      _ = ∑ u ∈ univ.filter (fun u => u ≠ x), ∑ v ∈ ({L.nxt u x} : Finset (Sq k)),
+            B u x * rrem L v x := by
+          rw [Finset.sum_comm' (t' := univ.filter (fun u => u ≠ x))
+            (s' := fun u => ({L.nxt u x} : Finset (Sq k)))]
+          intro v u; simp only [mem_filter, mem_univ, true_and, mem_singleton]; aesop
+      _ = _ := by simp
+  have hC : ∑ v, B v x * rrem L v x = ∑ v, B v x * pw L v x +
+      ∑ u ∈ univ.filter (fun u => u ≠ x), B u x * rrem L (L.nxt u x) x := by
+    rw [sum_filter, ← sum_add_distrib]
+    refine sum_congr rfl fun v _ => ?_
+    by_cases hv : v = x
+    · subst hv; simp [rrem_self, pw]
+    · rw [if_pos hv, rrem_step L hv]; ring
+  omega
+
 /-- Transport budget of the port run: `W` bounds the relocation weight, `nd` the needs. -/
 def prunCost (n k q s σ' depth lc nd W : ℕ) : ℕ :=
   lc * (k * s) + hopKc k σ' * (2 * depth * n ^ 2) + 7 * (q + 2) * (2 * k * n ^ 2) +
     hopKi k s σ' * (2 * n ^ 2 + (2 * depth + 1) * nd) + xferK k s σ' * (4 * n ^ 2) +
-    (k * s) * ((2 * depth + 1) * nd) + 3 * legA k s σ' * W
+    s * ((2 * k + 2 * depth) * nd) + 3 * legA k s σ' * W
 
 /-- The bounds at the end of the run. -/
 theorem pouter_final {n : ℕ} (c : PCtx k q) (Gf : PG k q)
@@ -115,7 +161,7 @@ theorem pouter_final {n : ℕ} (c : PCtx k q) (Gf : PG k q)
         7 * (q + 2) * (2 * k * n ^ 2) +
         hopKi k c.s c.σ' * (2 * n ^ 2 + (2 * L.depth + 1) * ∑ v, need v) +
         xferK k c.s c.σ' * (4 * n ^ 2) +
-        (k * c.s) * ((2 * L.depth + 1) * ∑ v, need v) + 3 * legA k c.s c.σ' * W ∧
+        c.s * ((2 * k + 2 * L.depth) * ∑ v, need v) + 3 * legA k c.s c.σ' * W ∧
       (c.σ0.run c.s Gf.evs).offCount ≤ (∑ v, need v) + c.F0 := by
   have hsch0 : ∀ S D, Gf.sched S D = 0 := by
     intro S D; rw [hOf.sched]; simp
@@ -156,7 +202,21 @@ theorem pouter_final {n : ℕ} (c : PCtx k q) (Gf : PG k q)
     have h4 := Nat.mul_le_mul_left (hopKi k c.s c.σ') hni
     have h5 : xferK k c.s c.σ' * Gf.nx ≤ xferK k c.s c.σ' * (4 * n ^ 2) :=
       Nat.mul_le_mul_left _ (hOf.hin.nx.trans (by omega))
-    have h6 := Nat.mul_le_mul_left (k * c.s) hBtot
+    have hBw : ∑ v, ∑ x, Gf.B v x * pw L v x ≤ (2 * k + 2 * L.depth) * ∑ v, need v := by
+      rw [Finset.sum_comm]
+      calc ∑ x, ∑ v, Gf.B v x * pw L v x ≤ ∑ x, ∑ v,
+            (c.Nv v x + if L.Act v x then 1 else 0) * rrem L v x :=
+            sum_le_sum fun x _ => sum_Bw_le L Gf.B Gf.dA
+              (fun v x => c.Nv v x + if L.Act v x then 1 else 0) x (fun v => hBc v x)
+              (fun v => hdA v x)
+        _ ≤ ∑ x, ∑ v, (c.Nv v x + if L.Act v x then 1 else 0) * (2 * k + 2 * L.depth) :=
+            sum_le_sum fun x _ => sum_le_sum fun v _ => Nat.mul_le_mul_left _ (rrem_le L v x)
+        _ = (2 * k + 2 * L.depth) * ∑ v, ∑ x, (c.Nv v x + if L.Act v x then 1 else 0) := by
+            rw [Finset.sum_comm, mul_sum]
+            refine sum_congr rfl fun v _ => ?_
+            rw [mul_sum]; exact sum_congr rfl fun x _ => by ring
+        _ ≤ _ := Nat.mul_le_mul_left _ (sum_le_sum fun v _ => hNv v)
+    have h6 := Nat.mul_le_mul_left c.s hBw
     have h7 : Gf.jc ≤ 3 * legA k c.s c.σ' * W :=
       hOf.hin.jc.trans (Nat.mul_le_mul_left _ (hOf.wt.trans hW))
     have := Nat.zero_le (Gf.σ.pot L c.s)

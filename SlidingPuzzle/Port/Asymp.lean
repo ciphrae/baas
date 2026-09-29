@@ -131,9 +131,15 @@ theorem optimalLength_le_hier4 {n h : ℕ} [NeZero n] (hh : 3 ≤ h)
   have hcr : 14 * (q + 2) * k * k ≤ n := by
     have e : 14 * (q + 2) * k * k = (56 * h + 28) * 16 ^ h := by rw [mul_assoc, hkk, hq]; ring
     rw [e]; exact hc _ (by omega)
-  have hph : 8 * (2 * h + 1) * k * q * k ≤ n := by
-    have e : 8 * (2 * h + 1) * k * q * k = (64 * h ^ 2 + 32 * h) * 16 ^ h := by rw [← hkk, hq]; ring
-    rw [e]; exact hc _ (by omega)
+  have hph : 128 * (2 * h + 1) * q * k ≤ n := by
+    have e : 128 * (2 * h + 1) * q * k ≤ (1024 * h ^ 2 + 512 * h) * 16 ^ h := by
+      have b : 128 * (2 * h + 1) * q * k ≤ 128 * (2 * h + 1) * q * (k * k) :=
+        Nat.mul_le_mul_left _ (Nat.le_mul_self k)
+      rw [hkk] at b
+      have e2 : 128 * (2 * h + 1) * q * 16 ^ h = (1024 * h ^ 2 + 512 * h) * 16 ^ h := by
+        rw [hq]; ring
+      omega
+    exact le_trans e (hc _ (by omega))
   have hlo : 8 * k * q * k ≤ n := by
     have e : 8 * k * q * k = (32 * h) * 16 ^ h := by rw [← hkk, hq]; ring
     rw [e]; exact hc _ (by omega)
