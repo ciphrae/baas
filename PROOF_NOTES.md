@@ -182,13 +182,16 @@ differences from the paper's scheme:
   `4h ≤ λ` (`optimalLength_le_lanes_log`).
 - Depth and grid (`Tree/LamGrid.lean`): the smallest `h` with `h(b_h + 2) ≤ 2λ`,
   `b_h` the largest even `b` with `16λ·b^(2h) ≤ n`, then the largest `j` with
-  `16λk² ≤ n`. Then `q ≤ 2λ`, `n < 25λk²`, and minimality gives a branching
+  `16λk² ≤ n`. Then `q ≤ 2λ`, and minimality gives a branching
   `b ≥ 73` at depth `h - 1` (`b^12 < 2^(b+2)`, `branch_large`), so
-  `73^(2(h-1)) ≤ n` and `b_h ≥ 8`.
+  `16λ·73^(2(h-1)) ≤ n` and `b_h ≥ 8`. If `b_h < 64` the grid is replaced by a
+  mixed grid of branching `c ≤ 62` on `h - 1` levels and a last level `d ≥ 64`
+  (`Bfree`, `optimalLength_le_fine`); either way `64n < 1089λk²`.
 - Constants (`Tree/LamLog.lean`): the error is at most
-  `(1 + 10(48h+142)√λ)·n^(5/2) ≤ (117 ln n + 4100)·√(ln n)·n^(5/2)` for
-  `n ≥ 2²³`, using `ln 73 ≥ 4.28` and `λ ≤ 4.3281·ln n + 3`; hence
-  `375·n^(5/2)·(ln n)^(3/2)`.
+  `(1 + (33/4)(48h+142)√λ)·n^(5/2) ≤ (97 ln n + 2670)·√(ln n)·n^(5/2)` for
+  `n ≥ 2²³`, using `ln 73 ≥ 4.28`, `ln 1152 ≥ 7.04` and
+  `λ ≤ 4.3281·ln n + 3`; with the depths `1` and `2` bounded apart,
+  `245·n^(5/2)·(ln n)^(3/2)`.
 
 These are certified upper bounds, not claims of optimality.
 [OPTIMIZATION_IDEAS.md](OPTIMIZATION_IDEAS.md) lists the remaining improvements.

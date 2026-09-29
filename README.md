@@ -11,8 +11,8 @@ For every reachable board `B` of side `n ≥ 2²³ ≈ 8.4·10⁶`
 [`Tree/LamLog.lean`](SlidingPuzzle/Tree/LamLog.lean)),
 
 ```text
-OPT(B) ≤ Manhattan(B) + (117·ln n + 4100)·√(ln n)·n^(5/2)
-       ≤ Manhattan(B) + 375·n^(5/2)·(ln n)^(3/2)
+OPT(B) ≤ Manhattan(B) + (97·ln n + 2670)·√(ln n)·n^(5/2)
+       ≤ Manhattan(B) + 245·n^(5/2)·(ln n)^(3/2)
 ```
 
 (the second line is `Tree.tree_lam_approximation_uniform`).
@@ -26,7 +26,7 @@ God's number                    =       n³ + O(n^(5/2) (ln n)^(3/2))
 
 (`Tree.tree_log_average_optimal_length`, `Tree.tree_log_gods_number` in
 [`Tree/Stats.lean`](SlidingPuzzle/Tree/Stats.lean)). The leading constant is
-`117`; the constant `375` holds uniformly from `2²³` on.
+`97`; the constant `245` holds uniformly from `2²³` on.
 
 The algorithm routes tiles through a hierarchy of `h` lane levels. At a fixed
 depth `h ≥ 1` (`Tree.tree_uniform_approximation_explicit`,
@@ -152,14 +152,20 @@ sides are reduced to `k*⌊n/k⌋` by a Parberry prefix (`O(n²k)`).
 *Grid* (`LamGrid`). The first `j` levels branch `b + 2` and the rest `b`. The
 depth `h` is the smallest one such that `h(b_h + 2) ≤ 2λ`, where `b_h` is the
 largest even `b` with `16λ·b^(2h) ≤ n`; then `j` is the largest with
-`16λk² ≤ n`. So `q ≤ 2λ`, the lane width costs nothing beyond the residence
-windows, and `n < 25λk²`. Minimality of `h` gives, at depth `h - 1`, a branching
+`16λk² ≤ n`. So `q ≤ 2λ` and the lane width costs nothing beyond the residence
+windows. Minimality of `h` gives, at depth `h - 1`, a branching
 `b` with `(h-1)(b+2) > 2λ` and `b^(2(h-1)) ≤ n < 2^(λ/3)`, hence
-`b^12 < 2^(b+2)` and `b ≥ 73`. So `73^(2(h-1)) ≤ n` and `b_h ≥ 8`.
+`b^12 < 2^(b+2)` and `b ≥ 73`. So `16λ·73^(2(h-1)) ≤ n`, `b_h ≥ 8` and
+`λ ≥ 33 + 36(h-1)`. If `b_h ≥ 64` the mixed grid rounds `k` by `(b+2)/b ≤ 33/32`.
+Otherwise (just after a change of depth) the upper `h - 1` levels are a mixed grid
+of branching `c ≤ 62` sized for `k/64`, and the last level branches `d ≥ 64`
+(`Bfree`); `d·c < 64(c+2)` keeps `q ≤ 2λ`. Either way `64n < 1089λk²`.
 
-*Constants* (`LamLog`). The cost is at most `(1 + 10(48h+142)√λ)·n^(5/2)`, and
-with `48h ≤ 48 + 5.6075·ln n`, `λ ≤ 4.3281·ln n + 3` this is at most
-`(117 ln n + 4100)·√(ln n)·n^(5/2)` for `ln n ≥ 15.94`.
+*Constants* (`LamLog`). The cost is at most `(1 + (33/4)(48h+142)√λ)·n^(5/2)`, and
+with `48h + 142 ≤ 5.6075·ln n + 150.6`, `λ ≤ 4.3281·ln n + 3` this is at most
+`(97 ln n + 2670)·√(ln n)·n^(5/2)` for `ln n ≥ 15.94`. For the uniform constant
+`245` the depths `1` and `2` are bounded directly (depth `2` needs
+`n ≥ 16λ(2λ-1)² ≥ 26641200`).
 
 *Fixed depth* (`MixGrid`). With `s ≈ 8h·b·k`, `b` the largest even number such
 that `8h·b^(2h+1) ≤ n` and `j` the largest such that `8qk² ≤ n`,

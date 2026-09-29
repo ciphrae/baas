@@ -1,12 +1,12 @@
 # Open improvements
 
-The certified bound is **`OPT(B) ≤ M(B) + (117·ln n + 4100)·√(ln n)·n^(5/2)`**, hence
-`375·n^(5/2)·(ln n)^(3/2)`, for `n ≥ 2²³` (`Tree.tree_lam_approximation`,
+The certified bound is **`OPT(B) ≤ M(B) + (97·ln n + 2670)·√(ln n)·n^(5/2)`**, hence
+`245·n^(5/2)·(ln n)^(3/2)`, for `n ≥ 2²³` (`Tree.tree_lam_approximation`,
 `Tree.tree_lam_approximation_uniform`). At a fixed depth `h` the bound is
 `102(h+3)√(8h)·n^(5/2+1/(4h+2))` for `n ≥ 8h·256^(2h+1)`
-(`Tree.tree_uniform_approximation_explicit`). The history of the constants, the
-earlier `3200·n^(5/2)(ln n)^(3/2)` (`Tree/MixLog.lean`, last present in `4d9b041`) and
-the `O(n^(8/3))` hub bound are in git.
+(`Tree.tree_uniform_approximation_explicit`). The history of the constants (`117`,
+`4100`, `375` with the rounding `5/4`, last in `98d0947`; `3200·n^(5/2)(ln n)^(3/2)`
+in `Tree/MixLog.lean`, last in `4d9b041`) and the `O(n^(8/3))` hub bound are in git.
 
 ## Where the bound comes from
 
@@ -21,26 +21,30 @@ the `O(n^(8/3))` hub bound are in git.
 | Relocations | `≈ 57.2` | `3(s+3)` per unit of weight: `45` for the rounds, `10.7` for lane cells, `1.4` from `k ≥ 64` |
 | Cleanup, Finish | `≈ 32` | `26n` per misplaced tile and `5s³` per square, halved |
 
-The grid (`Tree/LamGrid.lean`) has `n < 25λk²`, so `n³/k ≤ 5√λ·n^(5/2)`, and the
-error is at most `(1 + 10(48h + 142)√λ)·n^(5/2)`. With `h ≤ 1 + ln n/8.56` and
-`√λ ≈ 2.08√(ln n)` the leading constant is `10 · 48/8.56 · 2.08 ≈ 117`, and the
-constant part `142 + 48` gives the `4100·√(ln n)`, which dominates up to
-`n ≈ e^35`.
+The grid (`Tree/LamGrid.lean`, `optimalLength_le_fine`) has `64n < 1089λk²`, so
+`n³/k ≤ (33/8)√λ·n^(5/2)`, and the error is at most `(1 + (33/4)(48h + 142)√λ)·n^(5/2)`.
+With `h ≤ 1 + (ln n - 7.04)/8.56` and `√λ ≈ 2.08√(ln n)` the leading constant is
+`8.25 · 48/8.56 · 2.08 ≈ 96.3`, and the constant part `142 + 8.5` gives the
+`2670·√(ln n)`, which dominates up to `n ≈ e^27`.
 
 ## 1. The rounding factor
 
-`n < 25λk²` uses `(b+2)/b ≤ 5/4` for the mixed grid, which holds since `b_h ≥ 8`.
-Minimality of the depth gives `(b_h + 2)^h > 73^(h-1)`, so `b_h` tends to about `72` as
-`h` grows and the factor to `1.03`. An estimate by ranges of `h` would bring the
-leading constant from `117` towards `96`.
+`33/32` comes from a last level of branching at least `64`. A model of the best
+branching vectors (one free level over a mixed grid) rounds by at most `1.003` in the
+bulk; `d ≥ 128` where the budget allows would give `65/64`, about `1.5%`.
 
-## 2. The depth bound
+## 2. The depth and the uniform constant
 
-`h - 1 ≤ ln n / (2 ln 73)` uses only `b ≥ 73` at depth `h - 1`. For small `n` the
-actual depth is lower (the model gives `h = 2` at `10⁸`, where the bound allows `3`),
-and a table of `h` for ranges of `n` would sharpen the uniform constant `375`.
-A numerical model of `treeBound` with the best parameters gives a coefficient of
-about `145` at `n = 10⁸`, `117` at `10²⁰` and `96` at `10¹⁰⁰`.
+`245` is attained just after the change to depth `2` (`n ≈ 2.7·10⁷`, `λ = 75`), and
+uses `λ ≤ 4.3281 ln n + 3`; the exact `λ` there gives `241`. A numerical model of the
+proved inequality `(1 + (33/4)(48h+142)√λ)/(ln n)^(3/2)` gives `209` at `2²³` (depth
+`1`) and about `206` at the change to depth `3`.
+
+The actual cost of the construction is lower: the model gives at most `≈ 228` for
+`n ≥ 2²³`, and `≈ 213` if depth `1` is kept past the budget, with `q = k > 2λ` and
+`k` limited by `8k³ ≤ n` instead of `16λk² ≤ n` (`optimalLength_le_lanes_log` already
+takes the two constraints separately). Such a rule, choosing between depth `h` within
+the budget and depth `h - 1` over it, would flatten the peaks at the changes of depth.
 
 ## 3. Hops
 
@@ -50,7 +54,7 @@ hop where the previous one ended, and inserting by near-corner three-cycles
 
 ## 4. Preload, relocations, cleanup
 
-These are the `≈ 142` that do not grow with `h`, and through `4100·√(ln n)` they
+These are the `≈ 142` that do not grow with `h`, and through `2670·√(ln n)` they
 dominate for all practical `n`.
 
 - *Relocations* (`≈ 57`): a leg is a jump followed, unless the right tile is

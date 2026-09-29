@@ -2,7 +2,7 @@
 
 The design of the algorithm in `SlidingPuzzle/Tree/` and how its proof is
 organized. The final bounds are `OPT ≤ M + 102(h+3)√(8h)·n^(5/2 + 1/(4h+2))` at
-depth `h` and `OPT ≤ M + (117 ln n + 4100)√(ln n)·n^(5/2) ≤ M + 375·n^(5/2)(ln n)^(3/2)`
+depth `h` and `OPT ≤ M + (97 ln n + 2670)√(ln n)·n^(5/2) ≤ M + 245·n^(5/2)(ln n)^(3/2)`
 for `n ≥ 2²³`; the sections below describe
 the construction with uniform branching `b` for readability, and the last
 section how per-level branching is used.
@@ -107,7 +107,7 @@ largest with `8qk² ≤ n`, so the next `j` fails and `k` is within `(b+2)/b` of
 bound: `FineLog` (`treeBound ≤ (48h+142)k²s³` from `8kq ≤ s`, `16kλ ≤ s`, `λ, k ≥ 64`),
 `FinalLog` (`optimalLength_le_lanes_log`: `8k²q ≤ n`, `16k²λ ≤ n`, `4h ≤ λ`), `LamGrid`
 (the depth: smallest `h` with `h(b_h+2) ≤ 2λ`; `exists_lam_grid`, `branch_large`,
-`optimalLength_le_lam`) and `LamLog` (`tree_lam_approximation`,
+`Bfree`, `optimalLength_le_fine`) and `LamLog` (`tree_lam_approximation`,
 `tree_lam_approximation_uniform`).
 
 Constants: `OPT ≤ M + 102 (h+3) √(8h) n^(5/2+1/(4h+2))` for `n ≥ 8h·256^(2h+1)`.
@@ -125,8 +125,13 @@ width grow with `h`; but the run only needs `q ≤ 2λ` once `16kλ ≤ s`. So `
 `16λk² ≤ n` alone, and `h` is the smallest depth whose largest even branching `b_h`
 (with `16λ b_h^(2h) ≤ n`) has `h(b_h + 2) ≤ 2λ`. At depth `h - 1` some branching `b`
 has `(h-1)(b+2) > 2λ` and `b^(2(h-1)) ≤ n < 2^(λ/3)`, so `b^12 < 2^(b+2)` and `b ≥ 73`:
-`73^(2(h-1)) ≤ n` and `b_h ≥ 8`. The mixed grid then has `n < 25λk²`, and the error is
-at most `(1 + 10(48h+142)√λ)n^(5/2) ≤ (117 ln n + 4100)√(ln n) n^(5/2)`. This replaced
+`16λ·73^(2(h-1)) ≤ n` and `b_h ≥ 8`. The mixed grid rounds by `(b_h+2)/b_h`, up to `5/4`
+just after a change of depth; there the last level is freed instead (`Bfree`: a mixed
+grid of branching `c ≤ 62` on `h - 1` levels, sized for `k/64`, over a level `d ≥ 64`),
+which fits `q ≤ 2λ` because `λ ≥ 33 + 36(h-1)`. So `64n < 1089λk²`, and the error is
+at most `(1 + (33/4)(48h+142)√λ)n^(5/2) ≤ (97 ln n + 2670)√(ln n) n^(5/2)`, and
+`245 n^(5/2)(ln n)^(3/2)` from `2²³` (the rounding `5/4` gave `117`, `4100` and `375`,
+last in `98d0947`). This replaced
 the earlier depth rule (largest `h` with `8h·256^(2h+1) ≤ n`, `3200 n^(5/2)(ln n)^(3/2)`
 from `1.3·10⁸`, `MixLog`, removed after `4d9b041`).
 
