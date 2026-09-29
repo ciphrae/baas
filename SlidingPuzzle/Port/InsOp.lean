@@ -245,3 +245,218 @@ theorem ins_cheap (pd : PDims n k s q σ) (h4 : 4 ≤ σ) (B : Board n) (l : Ln 
     omega
 
 end SlidingPuzzle.Port
+
+namespace SlidingPuzzle.Port
+open Classical
+open SlidingPuzzle.Hub (Sq HDims sqOf classOf mkCell mkCell_fst mkCell_snd cell_ext InBox
+  div_eq_iff_bounds exists_vjump_step exists_hjump_step exists_box_three_cycle_near cornerDist
+  reflC apply_blank blank_eq_of_apply val_ne_zero_of_ne_blank)
+open SlidingPuzzle.Tree
+
+variable {n k s q σ : ℕ} [NeZero n] (L : LaneSys k q)
+
+/-- Region cells of a square lie in its box. -/
+theorem inSquare_of_rkey (pd : PDims n k s q σ) {Q : Sq k} {p : Part} {x : Cell n}
+    (h : rkey L s σ pd.hd x = some (Q, p)) : InBox (Q.1.val * s) (Q.2.val * s) s x :=
+  SlidingPuzzle.Tree.inBox_of_region L pd.hd ((rkey_eq_some L pd.hd).1 h).1
+
+theorem inSquare_lc (pd : PDims n k s q σ) (Q : Sq k) {r c : ℕ} (hr : r < s) (hc : c < s) :
+    InBox (Q.1.val * s) (Q.2.val * s) s (lc (n := n) s Q r c) := by
+  unfold InBox; rw [lc_fst pd.hd Q _ hr, lc_snd pd.hd Q _ hc]; omega
+
+/-- A three-cycle inside a corner box keeps the blank. -/
+theorem blank_of_cycle {B C : Board n} {a b c : Cell n} (ha : a ≠ blank B) (hb : b ≠ blank B)
+    (hc : c ≠ blank B) (hC : ∀ x, x ≠ a → x ≠ b → x ≠ c → C x = B x) : blank C = blank B :=
+  blank_eq_of_apply (by rw [hC _ (Ne.symm ha) (Ne.symm hb) (Ne.symm hc), apply_blank])
+
+/-- An importing insertion: a class tile from another part of the square goes to the
+insertion cell, and a tile of the port takes its place. -/
+theorem ins_imp (pd : PDims n k s q σ) (h4 : 4 ≤ σ) (B : Board n) (l : Ln k q) (S : Sq k)
+    {o : ℕ} (ho : o < q)
+    (hv : blank B = lc s S (lineRC k s l o).1 (lineRC k s l o).2)
+    (hvk : rkey L s σ pd.hd (blank B) = none)
+    {p : Part} (hp : p ≠ some (lport l)) {ty tz : Cell n}
+    (hty : rkey L s σ pd.hd ty = some (S, p))
+    (htz : rkey L s σ pd.hd tz = some (S, some (lport l))) :
+    ∃ C : Board n, ∃ p' : Path B C,
+      C (blank B) = B ty ∧ C ty = B tz ∧ InBoxOf s σ S (lport l) (blank C) ∧
+      (∀ x, x ≠ blank B → x ≠ ty → rkey L s σ pd.hd x ≠ some (S, some (lport l)) → C x = B x) ∧
+      KeepK (rkey L s σ pd.hd) B C {B ty, B tz} ∧
+      p'.inefficientMoves ≤ insKc k q σ + insKi k q s σ := by
+  have hf := pd.fit
+  have hqk := pd.td.q_le
+  have hs6 : 6 ≤ s := by omega
+  set pt := lport l with hpt
+  set v := blank B with hvdef
+  have hvty : v ≠ ty := ne_of_rkey L (by rw [hvk, hty]; simp)
+  have hvtz : v ≠ tz := ne_of_rkey L (by rw [hvk, htz]; simp)
+  have htyz : ty ≠ tz := ne_of_rkey L (by
+    rw [hty, htz]; intro e; simp only [Option.some.injEq, Prod.mk.injEq, true_and] at e; exact hp e)
+  obtain ⟨hl1, hl2⟩ := line_lt pd l ho
+  obtain ⟨hr1, hr2⟩ := rest_lt pd l o
+  obtain ⟨fit1, fit2⟩ := corner_fits pd S pt
+  have lcorner := line_corner (σ := σ) hf hqk l ho
+  have hvin : InBox (S.1.val * s + cr0 k s σ pt) (S.2.val * s + cc0 k s σ pt) (k + 2 + σ) v := by
+    rw [hv]; exact inCorner_lc pd S pt lcorner.1 lcorner.2.1 lcorner.2.2.1 lcorner.2.2.2 hl1 hl2
+  -- the cell `g` near the corner receives the class-`z` tile
+  set g : Cell n := lc s S (spare k s pt 0).1 (spare k s pt 0).2 with hg
+  have hgbox := spare_box h4 hf pt 0
+  have hgk : rkey L s σ pd.hd g = some (S, some pt) := rkey_box L pd S hgbox
+  obtain ⟨hg1, hg2⟩ := spare_lt pd pt 0
+  obtain ⟨g1, g2, g3, g4⟩ := box_corner pd hgbox
+  have hvg : v ≠ g := ne_of_rkey L (by rw [hvk, hgk]; simp)
+  have htyg : ty ≠ g := ne_of_rkey L (by
+    rw [hty, hgk]; intro e; simp only [Option.some.injEq, Prod.mk.injEq, true_and] at e; exact hp e)
+  obtain ⟨B1, p1, hp1, hB1g, hB1x, hbl1, K1⟩ : ∃ B1 : Board n, ∃ p1 : Path B B1,
+      p1.inefficientMoves ≤ 10 * σ + 420 * k + 82 * q + 1850 ∧ B1 g = B tz ∧
+      (∀ x, rkey L s σ pd.hd x ≠ some (S, some pt) → B1 x = B x) ∧ blank B1 = v ∧
+      KeepK (rkey L s σ pd.hd) B B1 ∅ := by
+    by_cases htg : tz = g
+    · exact ⟨B, .nil B, by simp [Path.inefficientMoves], by rw [htg], fun _ _ => rfl, rfl,
+        KeepK.refl B ∅⟩
+    obtain ⟨i, hi1, hi2, hut⟩ : ∃ i : Fin 3, 1 ≤ i.val ∧ i.val ≤ 2 ∧
+        lc (n := n) s S (spare k s pt i).1 (spare k s pt i).2 ≠ tz := by
+      by_cases h0 : lc (n := n) s S (spare k s pt 1).1 (spare k s pt 1).2 = tz
+      · refine ⟨2, by simp, by simp, fun h1 => ?_⟩
+        have := spare_lt pd pt 1
+        have := spare_lt pd pt 2
+        have e := lc_inj pd.hd S (by omega) (by omega) (by omega) (by omega) (h0.trans h1.symm)
+        exact absurd (spare_inj hf pt (Prod.ext e.1 e.2)) (by decide)
+      · exact ⟨1, by simp, by simp, h0⟩
+    set u : Cell n := lc s S (spare k s pt i).1 (spare k s pt i).2 with hu
+    have hubox := spare_box h4 hf pt i
+    have huk : rkey L s σ pd.hd u = some (S, some pt) := rkey_box L pd S hubox
+    obtain ⟨hs1, hs2⟩ := spare_lt pd pt i
+    obtain ⟨u1, u2, u3, u4⟩ := box_corner pd hubox
+    have hgu : g ≠ u := by
+      intro e
+      have e' := lc_inj pd.hd S hg1 hg2 hs1 hs2 e
+      have := spare_inj hf pt (Prod.ext e'.1 e'.2)
+      rw [Fin.ext_iff] at this; simp at this; omega
+    have hvu : v ≠ u := ne_of_rkey L (by rw [hvk, huk]; simp)
+    have h0 : ∀ x : Cell n, x ≠ v → B x ≠ 0 := fun x hx e => hx (blank_eq_of_apply e).symm
+    obtain ⟨C, pc, hpc, hCa, hCb, hCc, hCx⟩ := exists_box_three_cycle_near B
+      (S.1.val * s + cr0 k s σ pt) (S.2.val * s + cc0 k s σ pt) (k + 2 + σ) (cfr pt) (cfc pt)
+      (by omega) fit1 fit2 hvin g tz u (inCorner_lc pd S pt g1 g2 g3 g4 hg1 hg2)
+      (inCorner_of_rkey L pd htz) (inCorner_lc pd S pt u1 u2 u3 u4 hs1 hs2)
+      (Ne.symm htg) hgu (Ne.symm hut) (h0 g (Ne.symm hvg)) (h0 tz (Ne.symm hvtz))
+      (h0 u (Ne.symm hvu))
+    have hcd : cornerDist (S.1.val * s + cr0 k s σ pt) (S.2.val * s + cc0 k s σ pt) (k + 2 + σ)
+        (cfr pt) (cfc pt) (blank B) g u ≤ 5 * k + q + 17 := by
+      rw [← hvdef, hv, cr0_eq, cc0_eq]
+      refine (cornerDist_le pd S pt (by omega) (by omega) hl1 hl2 hg1 hg2 hs1 hs2).trans ?_
+      have h2 : cdist k s σ pt (lineRC k s l o).1 (lineRC k s l o).2 ≤ k + q :=
+        cdist_line (σ := σ) hf hqk l ho
+      have h3 := cdist_spare (σ := σ) hf pt 0
+      have h5 := cdist_spare (σ := σ) hf pt i
+      omega
+    refine ⟨C, pc, ?_, hCa, ?_, blank_of_cycle (Ne.symm hvg) (Ne.symm hvtz) (Ne.symm hvu) hCx, ?_⟩
+    · have : 82 * cornerDist (S.1.val * s + cr0 k s σ pt) (S.2.val * s + cc0 k s σ pt)
+        (k + 2 + σ) (cfr pt) (cfc pt) (blank B) g u ≤ 82 * (5 * k + q + 17) :=
+        Nat.mul_le_mul_left _ hcd
+      omega
+    · intro x hx
+      exact hCx x (fun e => hx (by rw [e]; exact hgk)) (fun e => hx (by rw [e]; exact htz))
+        (fun e => hx (by rw [e]; exact huk))
+    · exact keepK_of_agree (rkey L s σ pd.hd) (fun x => rkey L s σ pd.hd x = some (S, some pt))
+        (fun x y hx hy => by rw [hx, hy])
+        (fun x hx => hCx x (fun e => hx (by rw [e]; exact hgk)) (fun e => hx (by rw [e]; exact htz))
+          (fun e => hx (by rw [e]; exact huk)))
+  have htyk : rkey L s σ pd.hd ty ≠ some (S, some pt) := by
+    rw [hty]; intro e; simp only [Option.some.injEq, Prod.mk.injEq, true_and] at e; exact hp e
+  have hB1ty : B1 ty = B ty := hB1x ty htyk
+  -- the jump to the rest cell
+  set w : Cell n := lc s S (restRC k s l o).1 (restRC k s l o).2 with hw
+  have hwbox : inBox k s σ pt (restRC k s l o).1 (restRC k s l o).2 :=
+    rest_box (by omega) hf l o
+  have hwk : rkey L s σ pd.hd w = some (S, some pt) := rkey_box L pd S hwbox
+  have hvw : v ≠ w := ne_of_rkey L (by rw [hvk, hwk]; simp)
+  have htyw : ty ≠ w := ne_of_rkey L (by
+    rw [hty, hwk]; intro e; simp only [Option.some.injEq, Prod.mk.injEq, true_and] at e; exact hp e)
+  have hgw : g ≠ w := by
+    intro e
+    have e' := lc_inj pd.hd S hg1 hg2 hr1 hr2 e
+    exact spare_ne_rest hf l o 0 (Prod.ext e'.1 e'.2)
+  set B2 := swapCells B1 v w with hB2
+  obtain ⟨pj, hpj⟩ : ∃ p : Path B1 B2, p.inefficientMoves ≤ 7 * (k + 3) := by
+    have := jump_line_rest pd l S ho B1 (by rw [hbl1, hv])
+    rwa [hbl1] at this
+  have hB2v : B2 v = B1 w := by rw [hB2, swapCells_at_left]
+  have hB2w : B2 w = 0 := by
+    rw [hB2, swapCells_at_right, ← hbl1, apply_blank]
+  have hB2x : ∀ x, x ≠ v → x ≠ w → B2 x = B1 x := fun x h1 h2 =>
+    swapCells_preserves B1 h1 h2
+  have hbl2 : blank B2 = w := blank_eq_of_apply hB2w
+  have K2 : KeepK (rkey L s σ pd.hd) B1 B2 {0, B1 w} := by
+    have := keepK_of_agree_outside (rkey L s σ pd.hd) (B := B1) (C := B2) {v, w}
+      (fun x hx => by
+        simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hx
+        exact hB2x x hx.1 hx.2)
+    rwa [Finset.image_insert, Finset.image_singleton, ← hbl1, apply_blank] at this
+  -- the three-cycle in the square's box
+  have h0 : ∀ x : Cell n, x ≠ w → B2 x ≠ 0 := fun x hx e => hx (hbl2 ▸ (blank_eq_of_apply e).symm)
+  have hs0 : S.1.val * s + (if cfr pt then s - s else 0) + s ≤ n := by
+    have := pd.hd.band_le S.1.isLt; split_ifs <;> omega
+  have hs0' : S.2.val * s + (if cfc pt then s - s else 0) + s ≤ n := by
+    have := pd.hd.band_le S.2.isLt; split_ifs <;> omega
+  have sq : ∀ {x : Cell n}, InBox (S.1.val * s) (S.2.val * s) s x →
+      InBox (S.1.val * s + (if cfr pt then s - s else 0))
+        (S.2.val * s + (if cfc pt then s - s else 0)) s x := fun h => by
+    simp only [Nat.sub_self, ite_self, add_zero]; exact h
+  obtain ⟨C, p3, hp3, hCv, hCty, hCg, hCx⟩ := exists_box_three_cycle_near B2
+    (S.1.val * s + (if cfr pt then s - s else 0)) (S.2.val * s + (if cfc pt then s - s else 0)) s
+    (cfr pt) (cfc pt) hs6 hs0 hs0'
+    (by rw [hbl2]; exact sq (inSquare_lc pd S hr1 hr2)) v ty g
+    (sq (by rw [hv]; exact inSquare_lc pd S hl1 hl2)) (sq (inSquare_of_rkey L pd hty))
+    (sq (inSquare_lc pd S hg1 hg2)) hvty hvg htyg (h0 v hvw) (h0 ty htyw) (h0 g hgw)
+  have hcd : cornerDist (S.1.val * s + (if cfr pt then s - s else 0))
+      (S.2.val * s + (if cfc pt then s - s else 0)) s (cfr pt) (cfc pt) (blank B2) v g ≤
+      5 * k + q + 12 := by
+    rw [hbl2, hv]
+    refine (cornerDist_le pd S pt (by omega) le_rfl hr1 hr2 hl1 hl2 hg1 hg2).trans ?_
+    have h1 : cdist k s σ pt (restRC k s l o).1 (restRC k s l o).2 ≤ 2 * k + 3 :=
+      cdist_rest (σ := σ) hf l o
+    have h2 : cdist k s σ pt (lineRC k s l o).1 (lineRC k s l o).2 ≤ k + q :=
+      cdist_line (σ := σ) hf hqk l ho
+    have h3 := cdist_spare (σ := σ) hf pt 0
+    omega
+  have hCw : C w = 0 := by
+    rw [hCx w hvw.symm htyw.symm hgw.symm, hB2w]
+  have hB2ty : B2 ty = B ty := by rw [hB2x ty (Ne.symm hvty) htyw, hB1ty]
+  have hB2g : B2 g = B tz := by rw [hB2x g (Ne.symm hvg) hgw, hB1g]
+  refine ⟨C, (p1.append pj).append p3, by rw [hCv, hB2ty], by rw [hCty, hB2g], ?_, ?_, ?_, ?_⟩
+  · rw [blank_eq_of_apply hCw]; exact inBoxOf_lc pd S hwbox
+  · intro x h1 h2 h3
+    have hxg : x ≠ g := fun e => h3 (by rw [e]; exact hgk)
+    have hxw : x ≠ w := fun e => h3 (by rw [e]; exact hwk)
+    rw [hCx x h1 h2 hxg, hB2x x h1 hxw, hB1x x h3]
+  · have K3 : KeepK (rkey L s σ pd.hd) B2 C {B1 w, B ty, B tz} := by
+      have := keepK_of_agree_outside (rkey L s σ pd.hd) (B := B2) (C := C) {v, ty, g}
+        (fun x hx => by
+          simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hx
+          exact hCx x hx.1 hx.2.1 hx.2.2)
+      rwa [Finset.image_insert, Finset.image_insert, Finset.image_singleton, hB2v, hB2ty,
+        hB2g] at this
+    have K := (K1.trans K2).trans K3
+    have hW0 : (B1 w).val ≠ 0 := val_ne_zero_of_ne_blank (by rw [hbl1]; exact hvw.symm)
+    intro t' h0 ht'
+    simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at ht'
+    by_cases e1 : t' = B1 w
+    · subst e1
+      have hpC : position C (B1 w) = g := position_eq_of_apply (by rw [hCg, hB2v])
+      have hpB1 : position B1 (B1 w) = w := by simp [position]
+      have := K1 (B1 w) hW0 (by simp)
+      rw [hpB1] at this
+      rw [hpC, ← this, hgk, hwk]
+    apply K t' h0
+    simp only [Finset.empty_union, Finset.mem_union, Finset.mem_insert, Finset.mem_singleton,
+      not_or]
+    exact ⟨⟨fun e => h0 (by rw [e]; rfl), e1⟩, e1, ht'.1, ht'.2⟩
+  · simp only [Path.inefficientMoves_append]
+    unfold insKc insKi
+    have : 82 * cornerDist (S.1.val * s + (if cfr pt then s - s else 0))
+      (S.2.val * s + (if cfc pt then s - s else 0)) s (cfr pt) (cfc pt) (blank B2) v g ≤
+        82 * (5 * k + q + 12) := Nat.mul_le_mul_left _ hcd
+    omega
+
+end SlidingPuzzle.Port
