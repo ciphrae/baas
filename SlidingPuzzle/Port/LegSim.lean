@@ -387,3 +387,123 @@ theorem leg_other (pd : PDims n k s q σ) (h8 : 8 ≤ σ) (B0 : Board n) {E Z : 
       (by rw [hCa, hMz1, hM1ty]) hCty (Or.inl (by rw [hB0a0]; rfl)) (Or.inr (Or.inl rfl))
 
 end SlidingPuzzle.Port
+
+namespace SlidingPuzzle.Port
+open Classical
+open SlidingPuzzle.Hub (Sq HDims sqOf classOf sqDist apply_blank blank_eq_of_apply
+  val_ne_zero_of_ne_blank)
+open SlidingPuzzle.Tree
+
+variable {n k s q σ : ℕ} [NeZero n] (L : LaneSys k q)
+
+/-- A leg realized on the board. -/
+theorem simulate_leg (pd : PDims n k s q σ) (h8 : 8 ≤ σ) {B : Board n} {ρ : PState k q}
+    (hR : PRel L pd B ρ) {Z y : Sq k} {p : Part} {z : Sq k} (hpre : ρ.Pre L (.leg Z y p z)) :
+    ∃ C : Board n, ∃ p' : Path B C, PRel L pd C (ρ.step s (.leg Z y p z)) ∧
+      p'.inefficientMoves ≤ ρ.cost s σ (.leg Z y p z) := by
+  obtain ⟨hEZ, hal, hy, hz⟩ := hpre
+  have hf := pd.fit
+  set E := ρ.blank with hE
+  set b := ρ.bp with hb
+  have ga : inBox k s σ b (ncell k s b).1 (ncell k s b).2 := by
+    cases hb' : b <;> simp only [ncell, inBox] <;> omega
+  set a0 : Cell n := lc s E (ncell k s b).1 (ncell k s b).2 with ha0
+  have ka0 : rkey L s σ pd.hd a0 = some (E, some b) := rkey_box L pd E ga
+  obtain ⟨B0, p0, hb0, hi0, hf0, K0⟩ := exists_box_walk L pd (by omega) B hR.2.2.2.2
+    (inBoxOf_lc pd E ga)
+  have hpc0 : ∀ (pp : Part) (c : Sq k), pcount L s σ pd.hd B0 Z pp c = ρ.partCnt Z pp c :=
+    fun pp c => by rw [pcount_keep L pd K0, partCnt_of_rel L pd hR]
+  obtain ⟨ty, htyk, hty0, htyc⟩ := exists_of_kcount (rkey L s σ pd.hd) pd.hd B0
+    (show 1 ≤ kcount (rkey L s σ pd.hd) pd.hd B0 (some (Z, p)) y by
+      rw [show kcount (rkey L s σ pd.hd) pd.hd B0 (some (Z, p)) y =
+        pcount L s σ pd.hd B0 Z p y from rfl, hpc0]; exact hy)
+  have hB0ty : B0 ty = B ty := hf0 ty (fun h => by
+    have := rkey_inBoxOf L pd h; rw [htyk] at this
+    simp only [Option.some.injEq, Prod.mk.injEq] at this; exact hEZ this.1.symm)
+  have hposB : position B (B0 ty) = ty := by rw [hB0ty]; simp [position]
+  have hpcB : pcOf L pd B = ρ.pc :=
+    funext fun Q => funext fun pt => funext fun c => hR.2.2.2.1 Q pt c
+  have hcB : regionCount L pd.hd B = ρ.cnt :=
+    funext fun Q => funext fun c => hR.2.2.1 Q c
+  have ha0E : a0 = blank B0 := hb0.symm
+  have hlane0 : ∀ x, rkey L s σ pd.hd x = none → x ≠ blank B0 := fun x hx e => by
+    rw [e, ← ha0E, ka0] at hx; cases hx
+  -- the leg proper
+  obtain ⟨C, p1, hCa, hbC, hCx, KK, hpc, hi1⟩ : ∃ C : Board n, ∃ p1 : Path B0 C,
+      C a0 = B0 ty ∧ InBoxOf s σ Z b (blank C) ∧
+      (∀ x, rkey L s σ pd.hd x = none → C x = B0 x) ∧
+      KeepKey L pd.hd B0 C {B0 ty} ∧
+      pcOf L pd C = PState.legPc (incP (pcOf L pd B) E b y) Z b y p z ∧
+      p1.inefficientMoves ≤ 21 * (sqDist E Z * s + 5) + 10 * s + 10 * σ + 1200 * k + 6000 := by
+    have hposC : ∀ C : Board n, C a0 = B0 ty → position C (B0 ty) = a0 :=
+      fun C h => position_eq_of_apply h
+    by_cases hp : p = some b
+    · subst hp
+      obtain ⟨C, p1, hCa, hbC, hCx, K, hi⟩ := leg_same L pd h8 B0 hEZ hal b hb0 htyk
+      rw [← ha0E] at hCa
+      have K' : KeepK (rkey L s σ pd.hd) B C {B0 ty} := by simpa using K0.trans K
+      refine ⟨C, p1, hCa, hbC, fun x hx => hCx x (by rw [hx]; simp) (hlane0 x hx),
+        keepKey_of_keepK L pd.hd K, ?_, by omega⟩
+      rw [pc_legA L pd hEZ K' hty0 (by rw [hposB]; exact htyk) (by rw [hposC C hCa]; exact ka0),
+        htyc]
+      simp [PState.legPc]
+    · have hzc : 1 ≤ kcount (rkey L s σ pd.hd) pd.hd B0 (some (Z, some b)) z := by
+        rw [show kcount (rkey L s σ pd.hd) pd.hd B0 (some (Z, some b)) z =
+          pcount L s σ pd.hd B0 Z (some b) z from rfl, pcount_keep L pd K0, hR.2.2.2.1]
+        exact hz hp
+      obtain ⟨tz, htzk, htz0, htzc⟩ := exists_of_kcount (rkey L s σ pd.hd) pd.hd B0 hzc
+      obtain ⟨C, p1, hCa, hCty, hbC, hCx, K, hi⟩ := leg_other L pd h8 B0 hEZ hal b hb0 hp htyk htzk
+      rw [← ha0E] at hCa
+      have htytz : ty ≠ tz := ne_of_rkey L (by
+        rw [htyk, htzk]; intro e; simp only [Option.some.injEq, Prod.mk.injEq, true_and] at e
+        exact hp e)
+      have hB0tz : B0 tz = B tz := hf0 tz (fun h => by
+        have := rkey_inBoxOf L pd h; rw [htzk] at this
+        simp only [Option.some.injEq, Prod.mk.injEq] at this; exact hEZ this.1.symm)
+      have hYT : B0 ty ≠ B0 tz := fun e => htytz (B0.injective e)
+      have K' : KeepK (rkey L s σ pd.hd) B C {B0 ty, B0 tz} := by simpa using K0.trans K
+      have hposT : position C (B0 tz) = ty := position_eq_of_apply hCty
+      have hposTB : position B (B0 tz) = tz := by rw [hB0tz]; simp [position]
+      refine ⟨C, p1, hCa, hbC, fun x hx => hCx x (by rw [hx]; simp) (hlane0 x hx)
+        (fun e => by rw [e, htyk] at hx; cases hx), ?_, ?_, by omega⟩
+      · have K2 := keepKey_of_keepK L pd.hd K
+        intro T hT0 hT
+        by_cases e : T = B0 tz
+        · subst e
+          rw [hposT, show position B0 (B0 tz) = tz by simp [position],
+            key_of_rkey L pd.hd htyk, key_of_rkey L pd.hd htzk]
+        · have hT' : T ∉ ({B0 ty, B0 tz} : Finset (Tile n)) := by
+            simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hT ⊢
+            exact ⟨hT, e⟩
+          exact K2 T hT0 hT'
+      · rw [pc_legB L pd hp hEZ K' hYT hty0 htz0 (by rw [hposB]; exact htyk)
+          (by rw [hposC C hCa]; exact ka0) (by rw [hposTB]; exact htzk) (by rw [hposT]; exact htyk)
+          (fun p' hp' => by
+            unfold pcOf; rw [hR.2.2.2.1, htyc]
+            have := hy; rw [hp'] at this; exact this), htyc, htzc]
+  -- the relation after the leg
+  have K : KeepKey L pd.hd B C {B0 ty} := by
+    have K0' : KeepKey L pd.hd B B0 ∅ := keepKey_of_keepK L pd.hd K0
+    simpa using K0'.trans KK
+  have hposC : position C (B0 ty) = a0 := position_eq_of_apply hCa
+  refine ⟨C, p0.append p1, prel_of_lanes L pd ?_ ?_ ?_ hbC, ?_⟩
+  · intro l r hr
+    have hk := rkey_lcell L pd l hr
+    rw [hCx _ hk, hf0 _ (fun h => by have := rkey_inBoxOf L pd h; rw [hk] at this; cases this)]
+    exact prel_lane L pd hR l hr
+  · intro Q c
+    rw [regionCount_move1 L pd.hd K hty0 (Ne.symm hEZ)
+      (by rw [hposB]; exact key_of_rkey L pd.hd htyk)
+      (by rw [hposC]; exact key_of_rkey L pd.hd ka0) Q c, htyc, hcB]
+    rfl
+  · intro Q pt c
+    show pcOf L pd C Q pt c = _
+    rw [hpc, hpcB]
+    rfl
+  · rw [Path.inefficientMoves_append]
+    show _ ≤ legK k s σ (sqDist E Z)
+    unfold legK
+    have hs := pd.hd.big
+    nlinarith
+
+end SlidingPuzzle.Port
