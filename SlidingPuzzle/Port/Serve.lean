@@ -113,9 +113,8 @@ noncomputable def pStep (s τ : ℕ) (G : PG k q) (u x : Sq k) (kd : Kind) (y : 
 
 /-- One gateway: a stock tile if there is one, else a placeholder. -/
 noncomputable def pGate (s τ : ℕ) (G : PG k q) (u D : Sq k) : PG k q :=
-  let G1 := pAlign L s G (dport L u D)
-  if 1 ≤ G1.stk u D then pStep L s τ G u D .stk D (pickSp L G1 u D)
-  else pStep L s τ G u D .plh (pickFreeP G1 u) .tl
+  if 1 ≤ G.stk u D then pStep L s τ G u D .stk D (pickSp L G u D)
+  else pStep L s τ G u D .plh (pickFreeP G u) .tl
 
 /-- The gateways of the route from `w` to `D`, the last one first. -/
 noncomputable def pGates (s τ : ℕ) (G : PG k q) (w D : Sq k) : PG k q :=
@@ -154,18 +153,19 @@ structure XSame (G G' : PG k q) : Prop where
   jc : G'.jc = G.jc
   wt : G'.wt = G.wt
   blank : G'.σ.blank = G.σ.blank
+  lane : G'.σ.lane = G.σ.lane
 
 theorem XSame.refl (G : PG k q) : XSame G G :=
-  ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+  ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
 theorem XSame.pX (G : PG k q) (pt : Pt) : XSame G (pX L s G pt) :=
-  ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+  ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
 theorem XSame.trans {G G' G'' : PG k q} (h : XSame G G') (h' : XSame G' G'') : XSame G G'' :=
   ⟨h'.ins.trans h.ins, h'.sched.trans h.sched, h'.stock.trans h.stock, h'.free.trans h.free,
     h'.B.trans h.B, h'.dA.trans h.dA, h'.served.trans h.served, h'.sent.trans h.sent,
     h'.nh.trans h.nh, h'.ni.trans h.ni, h'.nt.trans h.nt, h'.nis.trans h.nis, h'.jc.trans h.jc,
-    h'.wt.trans h.wt, h'.blank.trans h.blank⟩
+    h'.wt.trans h.wt, h'.blank.trans h.blank, h'.lane.trans h.lane⟩
 
 theorem XSame.stk {G G' : PG k q} (h : XSame G G') : G'.stk = G.stk := by
   funext Q z; unfold PG.stk; rw [h.stock]
