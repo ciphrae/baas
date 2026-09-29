@@ -1,4 +1,4 @@
-import SlidingPuzzle.Port.GhostLocal
+import SlidingPuzzle.Port.GhostTurn
 
 /-! # The local invariant through a hop stage -/
 namespace SlidingPuzzle.Port
@@ -15,7 +15,8 @@ variable {n s σ' : ℕ} [NeZero n] (td : TDims n k s q) {σ0 : PState k q} {F0 
 include td in
 theorem pStage_linv {G : PG k q} (hL : PLInv L s σ' σ0 F0 G) {u x : Sq k} (hux : u ≠ x)
     (hb : G.σ.blank = L.nxt u x) (hbp : G.σ.bp = dport L u x) {kd : Kind} {y : Sq k} {m : Mode k}
-    {sp : Pt} (hr : PRoleOK G u x sp kd y) (hm : GoodMode L G u x kd y sp m) :
+    {sp : Pt} (hr : PRoleOK G u x sp kd y) (hm : GoodMode L G u x kd y sp m)
+    (hsp : kd = .stk → m.ind = 1 → sp ≠ dport L u x) :
     PLInv L s σ' σ0 F0 (pStage L s τ G u x kd y m sp) := by
   have hin : LIn L (L.stage u x).1.2 (L.stage u x).2 := stage_in hux
   have hsrc : src (L.stage u x).1 (L.stage u x).2 = u := stage_src hux
@@ -100,7 +101,7 @@ theorem pStage_linv {G : PG k q} (hL : PLInv L s σ' σ0 F0 G) {u x : Sq k} (hux
     intro Q z; split_ifs with h
     · obtain ⟨h1, rfl, rfl⟩ := h; subst h1; exact hr
     · exact Nat.zero_le _
-  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, hrun, hval, ?_, ?_⟩
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, hrun, hval, ?_, ?_, ?_⟩
   · -- roles bounded by counts
     intro Q z
     rw [hcnt]
@@ -368,6 +369,25 @@ theorem pStage_linv {G : PG k q} (hL : PLInv L s σ' σ0 F0 G) {u x : Sq k} (hux
         then 1 else 0) = puntagged L s G := hu
     have ht := hL.free_tot
     unfold puntagged at hut ht ⊢
+    omega
+  · -- turn counting
+    have h1 := turnCnt_pStage L td τ G hux kd y m sp
+    have h2 := NS_pStage L s τ G u x kd y m sp hstk_role
+    have h3 := hL.turn
+    have hnt : (pStage L s τ G u x kd y m sp).nt =
+      G.nt + (if kd ≠ .plh ∧ turning L (L.stage u x).1 x then 1 else 0) := rfl
+    have hnis : (pStage L s τ G u x kd y m sp).nis =
+      G.nis + (if kd = .stk then m.ind else 0) := rfl
+    have h4 : (if kd = .stk then m.ind else 0) ≤ (if kd = .stk ∧ sp ≠ dport L u y then 1 else 0) := by
+      by_cases hk : kd = .stk
+      · have hy : y = x := by subst hk; exact hr.1
+        subst hy
+        rw [if_pos hk]
+        rcases hmi : m with _ | ⟨_, _⟩
+        · exact Nat.zero_le _
+        · rw [if_pos ⟨hk, hsp hk (by rw [hmi]; rfl)⟩]; rfl
+      · rw [if_neg hk]; exact Nat.zero_le _
+    rw [hnt, hnis]
     omega
 
 end stage

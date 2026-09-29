@@ -124,3 +124,40 @@ theorem srcPc_sumZ (f : Sq k → Pt → Sq k → ℕ) (S : Sq k) (P : Pt) (y : S
     omega
 
 end SlidingPuzzle.Port
+
+namespace SlidingPuzzle.Port
+open Finset
+open SlidingPuzzle.Hub (Sq)
+
+variable {k q : ℕ}
+
+theorem sum3_single {α β γ : Type*} [Fintype α] [Fintype β] [Fintype γ] [DecidableEq α]
+    [DecidableEq β] [DecidableEq γ] (w : α → β → γ → ℕ) (a0 : α) (b0 : β) (c0 : γ) (P : Prop)
+    [Decidable P] :
+    (∑ a, ∑ b, ∑ c, (if P ∧ a = a0 ∧ c = c0 ∧ b = b0 then w a b c else 0)) =
+      if P then w a0 b0 c0 else 0 := by
+  by_cases hP : P
+  · rw [if_pos hP, Finset.sum_eq_single a0, Finset.sum_eq_single b0, Finset.sum_eq_single c0]
+    · simp [hP]
+    · intro c _ hc; simp [hc]
+    · simp
+    · intro b _ hb; apply Finset.sum_eq_zero; intro c _; simp [hb]
+    · simp
+    · intro a _ ha; apply Finset.sum_eq_zero; intro b _; apply Finset.sum_eq_zero; intro c _
+      simp [ha]
+    · simp
+  · rw [if_neg hP]
+    apply Finset.sum_eq_zero; intro a _; apply Finset.sum_eq_zero; intro b _
+    apply Finset.sum_eq_zero; intro c _
+    rw [if_neg (fun h => hP h.1)]
+
+theorem sum3_sub_add {α β γ : Type*} [Fintype α] [Fintype β] [Fintype γ]
+    (f a b : α → β → γ → ℕ) (h : ∀ i j l, a i j l ≤ f i j l) :
+    (∑ i, ∑ j, ∑ l, (f i j l - a i j l + b i j l)) + (∑ i, ∑ j, ∑ l, a i j l) =
+      (∑ i, ∑ j, ∑ l, f i j l) + ∑ i, ∑ j, ∑ l, b i j l := by
+  simp only [← sum_add_distrib]
+  refine Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ =>
+    Finset.sum_congr rfl fun l _ => ?_
+  have := h i j l; omega
+
+end SlidingPuzzle.Port

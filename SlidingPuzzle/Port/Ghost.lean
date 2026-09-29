@@ -40,6 +40,8 @@ structure PG (k q : ℕ) where
   nh : ℕ
   ni : ℕ
   nx : ℕ
+  nt : ℕ
+  nis : ℕ
   jc : ℕ
   wt : ℕ
 
@@ -54,6 +56,16 @@ variable (L : LaneSys k q)
 
 /-- The port of the next hop of `x` from `u`. -/
 def dport (u x : Sq k) : Pt := lport (L.stage u x).1
+
+/-- A clean tile tagged `x` on lane `l` lands at a turn: its next hop leaves by another port. -/
+def turning (l : Ln k q) (x : Sq k) : Prop := land l ≠ x ∧ lport l ≠ dport L (land l) x
+
+instance (l : Ln k q) (x : Sq k) : Decidable (turning L l x) := by
+  unfold turning; infer_instance
+
+/-- Stock held outside the port of its next hop. -/
+def NS (G : PG k q) : ℕ :=
+  ∑ u, ∑ x, ∑ pt, if pt = dport L u x then 0 else G.stock u pt x
 
 /-- Stock of part `p` of `Q` that must stay there. -/
 def dem (G : PG k q) (Q : Sq k) : Part → Sq k → ℕ
@@ -83,6 +95,8 @@ def pStage (s τ : ℕ) (G : PG k q) (u x : Sq k) (kd : Kind) (y : Sq k) (m : Mo
     nh := G.nh + 1
     ni := G.ni + m.ind
     nx := G.nx
+    nt := G.nt + (if kd ≠ .plh ∧ turning L (L.stage u x).1 x then 1 else 0)
+    nis := G.nis + (if kd = .stk then m.ind else 0)
     jc := G.jc
     wt := G.wt }
 
@@ -170,5 +184,7 @@ structure PLInv (s σ' : ℕ) (σ0 : PState k q) (F0 : ℕ) (G : PG k q) : Prop 
       (k * s) * (∑ Q, ∑ x, G.B Q x) + G.jc
   free_tot : (∑ Q, ∑ y, G.free Q y) + puntagged L s G + (∑ Q, ∑ x, G.B Q x) =
     F0 + ∑ Q, ∑ x, G.dA Q x
+  turn : (∑ x, plcnt L s G (fun l => turning L l x) (fun g => gcl g = some x)) + NS L G + G.nis ≤
+    G.nt
 
 end SlidingPuzzle.Port

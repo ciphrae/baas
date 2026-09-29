@@ -33,7 +33,7 @@ theorem pXfer_linv {G : PG k q} (hL : PLInv L s σ' σ0 F0 G) {pt : Pt} {c : Sq 
   have hpc : (pXfer s G pt c).σ.pc = incP (decP G.σ.pc Q0 pt c) Q0 b c := rfl
   have h1 : 1 ≤ G.σ.pc Q0 pt c := by omega
   refine ⟨hL.roles_le, hL.roles_ge, hL.stock_diag, hL.ghost_clean, hL.ghost_len, ?_, ?_, ?_,
-    hrun, hval, ?_, hL.free_tot⟩
+    hrun, hval, ?_, hL.free_tot, hL.turn⟩
   · intro Q y
     show ∑ pt', incP (decP G.σ.pc Q0 pt c) Q0 b c Q pt' y ≤ G.σ.cnt Q y
     rw [sumPt_incP]
@@ -138,7 +138,7 @@ theorem pLeg_linv {G : PG k q} (hL : PLInv L s σ' σ0 F0 G) {Z y : Sq k} {p : P
     · by_cases h : p' = b
       · subst h; simp [legMode, Mode.out]
       · simp [legMode, Mode.out, h]
-  refine ⟨?_, ?_, hL.stock_diag, ?_, ?_, ?_, ?_, ?_, hrun, hval, ?_, ?_⟩
+  refine ⟨?_, ?_, hL.stock_diag, ?_, ?_, ?_, ?_, ?_, hrun, hval, ?_, ?_, hL.turn⟩
   · intro Q x
     rw [hcnt, hfree]
     have := hL.roles_le Q x; have := hZ Q x
