@@ -3,8 +3,8 @@ import SlidingPuzzle.Tree.AsympAccounting
 /-! # Sharper accounting for the tree algorithm
 
 Once `8kq ≤ s`, `16kλ ≤ s` and `2048·depth·k ≤ s`, the certified bound is at most
-`50 (depth + 3) k² s³`. The main terms are the hops (`40·depth`), the local
-three-cycles of the run (`≈ 45`), the preload (`≈ 51`) and the cleanup (`≈ 29`). -/
+`50 (depth + 3) k² s³`. The main terms are the hops (`40·depth`), the relocations
+(`≈ 45`), the preload (`≈ 51`) and the cleanup (`≈ 29`). -/
 namespace SlidingPuzzle.Tree
 open Finset
 

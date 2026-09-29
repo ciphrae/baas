@@ -17,7 +17,7 @@ resolve every high-level event into operations:
 * `reloc E Z`: `jump E Z y`, or two jumps through the corner `(Z.1, E.2)`.
 
 Roles (scheduled, stock, free, home) are ghost counts; the stock identity
-bounds the bypasses by the in-flight maxima. See `PROOF.md` §§3-7.
+bounds the bypasses by the in-flight maxima.
 
 The proof is spread over `Hub/Run*.lean`: `RunShift` (generic lemmas),
 `RunArith` (layout and plan arithmetic), `RunGhost`/`RunLocal` (ghost state,

@@ -5,7 +5,7 @@ import SlidingPuzzle.Hub.InFlightSegment
 /-!
 Generic pipe residence, extracted from Hub/InFlight{Push,Window,Segment}.
 The lane and class types and insertion offsets are independent of the board
-layout. This is research code, not wired into the certified puzzle solver.
+layout; `Tree/RunRes.lean` applies it to the lanes of the run.
 -/
 set_option autoImplicit false
 set_option linter.unusedSectionVars false

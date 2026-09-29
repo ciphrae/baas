@@ -1,14 +1,16 @@
-# Tree lanes: OPT ≤ M + O_h(n^(5/2 + 1/(4h+2)))
+# Tree lanes: design and proof map
 
-Plan for the Lean development in `SlidingPuzzle/Tree/`: the grouped-corridor
-idea of `BELOW_EIGHT_THIRDS.md` / `HIERARCHY_CONDITIONAL.md`, made concrete
-enough to formalize. Constants and logarithms are irrelevant here; only the
-exponent matters, so every estimate may be crude.
+The design of the algorithm in `SlidingPuzzle/Tree/` and how its proof is
+organized. The final bounds are `OPT ≤ M + 102(h+3)√(8h)·n^(5/2 + 1/(4h+2))` at
+depth `h` and `OPT ≤ M + 3200·n^(5/2)(ln n)^(3/2)`; the sections below describe
+the construction with uniform branching `b` for readability, and the last
+section how per-level branching is used.
 
 ## Parameters
 
 `b` even, `h ≥ 1`, `k = b^h` (even), `s = n/k`, `q = h·b` lane offsets per
-band (even). Squares, classes, `sqOf`, `classOf`, reservoirs (offsets `≥ k`),
+band (even). With per-level branching `B ℓ` (`HierMix`), `k = ∏ B ℓ` and
+`q = Σ B ℓ`. Squares, classes, `sqOf`, `classOf`, reservoirs (offsets `≥ k`),
 `HDims n k s` and Cleanup/Finish are reused from `Hub`. Lanes use only the
 offsets `< q ≤ k`; offsets in `[q, k)` are ordinary region cells.
 
@@ -84,37 +86,34 @@ Finish `n³/k`, junk and placeholders `n·(qkn + ΣB)`, preload `n·ΣR_v`,
 cleanup `n·(lane cells + ΣR + ΣB)`. With `b ≈ n^(1/(2h+1))`:
 `n^((5h+3)/(2h+1))`, hence `n^(5/2+ε)`.
 
-## Status (2026-09-29, branch `tree`)
+## Status and proof map
 
-Complete, no `sorry`, axioms `propext`/`Classical.choice`/`Quot.sound` only:
-`SlidingPuzzle.Tree.tree_exponent`: for every `ε > 0` there are `C, N` with
-`OPT(B) ≤ M(B) + C n^(5/2+ε)` for all reachable boards with `n ≥ N`.
+Complete, no `sorry`, axioms `propext`/`Classical.choice`/`Quot.sound` only.
 
 Pipeline: lane systems and `Hier.sys` (`Hier`), layout and board operations,
 residence, the abstract run, preload, the algorithm on side `k*s`
 (`exists_tree_solution`, bound `treeBound`, `Transport`); then
 `AsympAccounting` (lane inventories, reserve totals), `FineAccounting`
 (`treeBound ≤ 50 (h+3) k² s³` once `8kq ≤ s`, `16kλ ≤ s`, `2048hk ≤ s`), `ReserveAccounting`
-(per-square `needAt`), `Feasibility` (event conditions; `2λ ≤ hb` for `b ≥ 256` and
-`n ≤ (2b)^(2h+2)`), `AsympBound` (Parberry prefix to side `k*(n/k)`), `GridChoice`
+(per-square `needAt`), `Feasibility` (event conditions), `AsympBound` (Parberry prefix to side `k*(n/k)`), `GridChoice`
 (depth for a given `ε`), `Final` (`hfit_of_grid`; `optimalLength_le_lanes` for any lane
 system with `8k²q ≤ n`, `256h ≤ q ≤ k`, `2λ ≤ q`), `HierMix` (the hierarchy with
 branching `B ℓ` at level `ℓ`: `k = ∏ B ℓ`, `q = ∑ B ℓ`), `MixGrid` (branching `b + 2` at
 the first `j` levels and `b` below; `b` the largest even with `8h b^(2h+1) ≤ n`, `j` the
 largest with `8qk² ≤ n`, so the next `j` fails and `k` is within `(b+2)/b` of the ideal;
 `tree_uniform_approximation_explicit`, `tree_uniform_approximation`, `tree_exponent`), and
-`MixLog` (depth choice).
+`MixLog` (depth choice). `log_slack_mix` gives `2λ ≤ hb` for `b ≥ 256` and
+`n ≤ 8h(2b)^(2h+1)`.
 
 Constants: `OPT ≤ M + 102 (h+3) √(8h) n^(5/2+1/(4h+2))` for `n ≥ 8h·256^(2h+1)`.
-The leading terms per `k²s³` are hops `40h`, local three-cycles of the run `45`,
+The leading terms per `k²s³` are hops `40h`, relocations `≈ 45`,
 preload `≈ 51`, cleanup `≈ 29`, Finish `2.5`, stock `1.5h`; with `s = 8h·b·k` the
 lane-proportional terms are about `6h + 73`, and `B0 = 8h` is close to optimal
 for the balance `(A + B'/B0)·B0^(h/(2h+1))`. The factor `√(8h)` bounds
 `(8h)^(h/(2h+1))`, and `1.012 ≥ (1 + 2/256)^(3/2)` covers the rounding of `k`.
-(History: `10^5 (h+1)` accounting, grid `b^(2h+2) ≍ n` with exponent `5/2 + 1/(2h+2)`,
-then `160(2h+3) b^(2h+1) ≤ n` with `C_h ≈ 6.4·10^7 (h+1)(2h+3) 2^h`, then a uniform
-even `b ≥ max(256, 16h)` with `120 (h+3) √(8h)`: the rounding loss `(1 + 2/b)^h` of a
-uniform grid forced `b ≥ 16h`, and with it `(ln n / ln ln n)²` in the depth choice.)
+A uniform grid `k = b^h` loses up to `(1 + 2/b)^h` to rounding, which forces
+`b ≳ h` and gives only `(ln n / ln ln n)²` in the depth choice; mixing the
+branchings `b` and `b + 2` avoids this.
 
 Depth choice (`MixLog`): the largest `h` with `mixN h = 8h·256^(2h+1) ≤ n` has
 `n < mixN (h+1) ≤ 176^(4h+2)`, so `n^(1/(4h+2)) ≤ 176`, and `ln n ≥ 11h + 5.5`; with

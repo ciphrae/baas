@@ -19,7 +19,7 @@ next to band `a`. Everything else (row offsets `≥ k` and column offsets `≥ k
 the landing strip and the own column piece) is the *region* of the square.
 
 Everything in this file is plain arithmetic on indices; cells and boards come
-in `Hub/Layout.lean`. See `research/exponent/PROOF.md` and `LEAN_PLAN.md`. -/
+in `Hub/Layout.lean`. -/
 namespace SlidingPuzzle.Hub
 
 /-- Squares and tile classes: `(band, block column)`. -/

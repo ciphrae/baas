@@ -3,10 +3,10 @@ import SlidingPuzzle.Tree.AsympBound
 import SlidingPuzzle.Tree.Feasibility
 import SlidingPuzzle.Tree.ReserveAccounting
 
-/-! # The exponent `5/2 + ε`
+/-! # The tree bound for a lane system
 
-Grid choice, feasibility of every hypothesis of the tree algorithm and the final
-boardwise bound. -/
+Feasibility of every hypothesis of the tree algorithm from `8k²q ≤ n`,
+`256h ≤ q ≤ k` and `2λ ≤ q` (`optimalLength_le_lanes`). -/
 set_option maxRecDepth 4096
 
 namespace SlidingPuzzle.Tree

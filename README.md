@@ -1,42 +1,35 @@
 # BAAS: Better Approximation Algorithms for Sliding puzzles
 
 A Lean 4 / mathlib proof that Manhattan distance approximates the optimal
-solution length of the `n × n` sliding puzzle within `O(n^(8/3))`, and, by a
-second algorithm (tree lanes), within `O(n^(5/2) (ln n)^(3/2))`.
+solution length of the `n × n` sliding puzzle within `O(n^(5/2) (ln n)^(3/2))`.
 This improves the error `O(n^(11/4))` of Proposition 9 in Zhixian Zhong,
 *Additive Approximation Algorithms for Sliding Puzzle* (2023), §5.2
 (`zhong2023_additive-approximation-sliding-puzzle.pdf`, printed p. 145).
 
-Over the reachable orbit of the standard `n × n` target,
+For every reachable board `B` of side `n ≥ 8·256³ ≈ 1.3·10⁸`
+(`SlidingPuzzle.Tree.tree_log_approximation_explicit`,
+[`Tree/MixLog.lean`](SlidingPuzzle/Tree/MixLog.lean)),
 
 ```text
-average optimal solution length = (2/3)*n³ + O(n^(8/3))
-God's number                    =       n³ + O(n^(8/3))
+OPT(B) ≤ Manhattan(B) + 3200·n^(5/2)·(ln n)^(3/2).
 ```
 
-These are `SlidingPuzzle.Hub.average_optimal_length` and
-`SlidingPuzzle.Hub.gods_number` in
-[`SlidingPuzzle/Hub/Main.lean`](SlidingPuzzle/Hub/Main.lean); the corollaries
-`…_rpow` give `O(n^α)` for every `α ≥ 8/3`. The boardwise bound behind them is
-`Hub.uniform_approximation`. In explicit form (`Hub.uniform_approximation_explicit`),
-for every reachable board and every `n ≥ 1.1·10⁹`,
+Hence, over the reachable orbit of the standard `n × n` target,
 
 ```text
-OPT(B) ≤ Manhattan(B) + 268·n^(8/3).
+average optimal solution length = (2/3)*n³ + O(n^(5/2) (ln n)^(3/2))
+God's number                    =       n³ + O(n^(5/2) (ln n)^(3/2))
 ```
 
-### Below 8/3: tree lanes
+(`Tree.tree_log_average_optimal_length`, `Tree.tree_log_gods_number` in
+[`Tree/Stats.lean`](SlidingPuzzle/Tree/Stats.lean)). The constant `3200` holds
+uniformly from `1.3·10⁸` on; the bound it is derived from tends to about
+`125·n^(5/2)·(ln n)^(3/2)` as `n` grows.
 
-`SlidingPuzzle.Tree.tree_exponent` ([`Tree/MixGrid.lean`](SlidingPuzzle/Tree/MixGrid.lean)):
-for every `ε > 0` there are `C, N` such that for every reachable board with `n ≥ N`,
-
-```text
-OPT(B) ≤ Manhattan(B) + C·n^(5/2+ε).
-```
-
-For each fixed depth `h ≥ 1` (a hierarchy of `h` lane levels whose branching factors
-are `b` or `b + 2`, `b ≈ (n/8h)^(1/(2h+1))`), `Tree.tree_uniform_approximation_explicit`
-gives, for every reachable board with `n ≥ 8h·256^(2h+1)`,
+The algorithm routes tiles through a hierarchy of `h` lane levels. At a fixed
+depth `h ≥ 1` (`Tree.tree_uniform_approximation_explicit`,
+[`Tree/MixGrid.lean`](SlidingPuzzle/Tree/MixGrid.lean)), for every reachable
+board with `n ≥ 8h·256^(2h+1)`,
 
 ```text
 OPT(B) ≤ Manhattan(B) + 102·(h+3)·√(8h)·n^(5/2 + 1/(4h+2)).
@@ -49,33 +42,11 @@ OPT(B) ≤ Manhattan(B) + 102·(h+3)·√(8h)·n^(5/2 + 1/(4h+2)).
 | 3 | `18/7` | 2998 | `1.7·10¹⁸` |
 | 4 | `23/9` | 4039 | `1.5·10²³` |
 
-Depth 2 beats `268·n^(8/3)` as soon as it applies (`n ≥ 1.8·10¹³`). Taking for each `n` the
-largest admissible depth (`h ≈ ln n / 11`) gives
-(`Tree.tree_log_approximation_explicit`, [`Tree/MixLog.lean`](SlidingPuzzle/Tree/MixLog.lean)),
-for every reachable board with `n ≥ 8·256³ ≈ 1.3·10⁸`,
-
-```text
-OPT(B) ≤ Manhattan(B) + 3200·n^(5/2)·(ln n)^(3/2),
-```
-
-and hence
-
-```text
-average optimal solution length = (2/3)*n³ + O(n^(5/2) (ln n)^(3/2))
-God's number                    =       n³ + O(n^(5/2) (ln n)^(3/2))
-```
-
-(`Tree.tree_log_average_optimal_length`, `Tree.tree_log_gods_number` in
-[`Tree/Stats.lean`](SlidingPuzzle/Tree/Stats.lean); the `5/2 + ε` versions are
-`Tree.tree_average_optimal_length`, `Tree.tree_gods_number`). The plan and status are in [`research/exponent/TREE_PLAN.md`](research/exponent/TREE_PLAN.md).
-
-Earlier versions had the error scale `n^(8/3) (ln n)^(1/3)`, with coefficient
-`4,828,800,024,144` originally. The derivation is documented in
-[the Lean proof guide](research/exponent/LEAN_PLAN.md#asymptotics).
-The explicit bound starts at `n = 1.1·10⁹`, where the grid of the hub algorithm
-is already at its optimal ratio `k ≈ 0.49·n^(1/3)`, so `268` is also the
-asymptotic value of the present accounting. The constants
-are certified upper bounds, not claims of optimality.
+The main theorem uses the largest depth whose threshold is at most `n`, so
+`h ≈ ln n / 11`. `Tree.tree_exponent` states `OPT(B) ≤ Manhattan(B) + C·n^(5/2+ε)`
+for every `ε > 0`, with the statistics `Tree.tree_average_optimal_length` and
+`Tree.tree_gods_number`. The constants are certified upper bounds, not claims of
+optimality.
 
 All results are proved outright: no `sorry`, no custom axioms, and no
 hypotheses standing in for mathematical steps.
@@ -102,77 +73,91 @@ All main results depend only on `propext`, `Classical.choice` and `Quot.sound`.
 | `SlidingPuzzle/Bridge/` | Transfer of reachability and orbit statistics from the `Zhong` word library |
 | `SlidingPuzzle/Moves/` | Generic legal-move constructions: jumps, three-cycles, exchanges, embeddings, local solving |
 | `SlidingPuzzle/Parberry/` | A Parberry-style solver (`5*n³ + O(n²)`), row/column/layer prefixes |
-| `SlidingPuzzle/Algorithm/Partition`, … | Division of a board of side `k*s` into `k × k` squares; region counts |
-| `SlidingPuzzle/Algorithm/Finish/`, `Finish` | Solving every square locally once it holds its own tiles (`Partition.FDims`: `8 ≤ s`) |
-| `SlidingPuzzle/Algorithm/Residual*` | The board left after solving the outer layers by a prefix |
-| `SlidingPuzzle/Hub/Basic`, `Interface`, `Layout` | Hub layout, the abstract state `IState` and its operations, `Rel` to boards |
-| `SlidingPuzzle/Hub/Prim*`, `Geom*`, `Op*`, `Simulate` | The operations hop1, hop2, jump on boards, with inefficiency budgets |
-| `SlidingPuzzle/Hub/Plan*`, `WalkSnake`, `RoundWalk` | König decomposition of the demand multigraph; the walk of one round |
-| `SlidingPuzzle/Hub/Chernoff*`, `InFlight*` | Maclaurin's inequality, subset Chernoff, a good order of the rounds, tiles in flight (segmented residence) |
-| `SlidingPuzzle/Hub/Run*` | The abstract run: roles, stock identity, validity, cost, leftover misplaced tiles |
-| `SlidingPuzzle/Hub/Cleanup`, `FinishGen`, `Transport` | Cleanup by three-cycles and double swaps, Finish, the hub algorithm on side `k*s` |
-| `SlidingPuzzle/Hub/Asymp*`, `Lin*`, `Main` | Accounting, the grid `k ≈ n^(1/3)` (capacity-limited for moderate `n`), general sides, the final theorems |
-| `SlidingPuzzle/Tree/` | Tree lanes: lane systems and the hierarchies (`Hier` uniform, `HierMix` per-level branching), layout, board operations, residence, the abstract run, preload, transport on side `k*s`, accounting, grid choice, `tree_exponent`, statistics |
+| `SlidingPuzzle/Algorithm/` | Squares of a board of side `k*s`, region counts, local Finish, the residual board after a prefix |
+| `SlidingPuzzle/Hub/` | Shared machinery: squares with reservoirs, the abstract state and its relation to boards, the König plan and round walks, the Chernoff order and residence bounds, cleanup, Finish, the statistical reduction (`AsympStats`) |
+| `SlidingPuzzle/Tree/LaneSys`, `Hier`, `HierMix`, `Route*` | Lane systems; hierarchies with uniform or per-level branching; routes of tiles |
+| `SlidingPuzzle/Tree/Layout*`, `Geom*`, `Op*`, `Simulate` | Lanes on the board; the operations hopR, hopC, jump and insertions |
+| `SlidingPuzzle/Tree/Run*`, `Residence` | The abstract run: plan, serves along routes, placeholders, relocations, invariants, residence |
+| `SlidingPuzzle/Tree/Preload`, `Transport`, `AsympBound` | Preloading home tiles, the algorithm on side `k*s`, arbitrary sides |
+| `SlidingPuzzle/Tree/*Accounting`, `Feasibility`, `Final` | The cost bound `50(h+3)k²s³` and the conditions on `k`, `q`, `s` |
+| `SlidingPuzzle/Tree/MixGrid`, `MixLog`, `GridChoice`, `Stats` | Grid choice, the final theorems, statistics |
 | `Zhong/` | Word-level puzzle library in the paper's conventions: reachability criterion, orbit statistics, move words |
-| `research/exponent/` | Pen-and-paper proof, Lean blueprint, research log and simulations |
+| `research/exponent/TREE_PLAN.md` | Design of the tree algorithm and map of its proof |
 
 ## Proof outline
 
 *Statistics* (`Hub/AsympStats`, `Bridge/Statistics`). As in the paper,
 Manhattan distance `M` is a lower bound for `OPT`, its orbit mean is
 `(2/3)*n³ + O(n²)`, and its maximum over reachable boards is `n³ + O(n²)`. So
-it suffices to show `OPT(B) ≤ M(B) + C*n^(8/3)` for every
-reachable board, i.e. a solution with that many inefficient moves.
+it suffices to show `OPT(B) ≤ M(B) + C·f(n)` for every reachable board, where
+`f ≥ n²`: a solution with that many inefficient moves.
 
-*Why `11/4` is not optimal.* Zhong divides the board into `k²` squares with
-reservoirs and corridors. Transport costs `O(n³/k)`, and the `k³n` corridor
-tiles, each placed at cost `O(n)`, cost `O(k³n²)`; balancing gives
-`k = n^(1/4)` and `n^(11/4)`. Corridors pure in the full class need `k³n`
-cells, since each of `k²` classes must reach `k²` squares. The hub scheme uses
-`O(k²n)` corridor cells, homogeneous in one coordinate only: row corridor
-`R(b,c)` carries tiles by target block column `c`, column corridor `C(c,a)`
-carries class `(a,c)`. A tile travels `(b,J) → (b,c) → (a,c)`; at the corner
-it drops into the reservoir of the *hub* square `(b,c)`, which serves
-column-`c` classes to the column corridors from its stock. Balancing `n³/k`
-against `k²n²` gives `k ≈ n^(1/3)`.
+*Squares and lanes* (`Tree/Layout`). A board of side `n = k*s` is cut into
+`k × k` squares of side `s`, one per target class; tiles of class `x = (a, c)`
+belong in square `x`. Zhong's scheme carries tiles in corridors pure in the full
+class, `k³n` cells, each tile placed at cost `O(n)`; balancing `n³/k` against
+`k³n²` gives `n^(11/4)`. Here the first `q` rows and columns of every square
+hold *lane* cells. A tile in band `b` travels along row lanes of its band until
+it is in block column `c`, then along column lanes of block column `c` until it
+is in band `a`, and drops into the region of the square it lands in.
 
-* *Plan* (`Hub/Plan`, `RoundWalk`). The demand multigraph of the reservoirs,
-  padded with dummy edges and loops, is regular and splits into perfect
-  matchings (Hall/König). In each round every square sends one tile and
-  receives one; the blank follows the tiles backwards along the cycles, and
-  cycles are started in snake order so that relocations telescope.
-* *Operations* (`Hub/Simulate`). hop1 (row, into a hub), hop2 (column, out of
-  a hub) and a straight jump (relocation or bypass), built from reservoir
-  walks, corridor walks, jumps and three-cycles in local boxes, each within
-  `O(s + k²)` inefficient moves plus one per junk corridor tile it moves.
-* *Stock* (`Hub/Run`). A hub's stock of a class equals the tiles that dropped
-  in, minus those of that class inserted and still in flight, plus bypasses. A
-  bypass (an `O(n)` jump from a reserve) happens only at stock zero, so
-  bypasses are bounded by the in-flight maxima.
-* *In flight* (`Hub/InFlight`). Row halves are delay lines. Executing the
-  rounds in a good order, which exists by a Chernoff bound for sampling
-  without replacement (Maclaurin's inequality), keeps the tiles in flight at
-  `O(n)` per hub. A tile inserted from block distance `d` passes through the
-  bands `d, d-1, …, 0` of its half and leaves each one after `s` insertions
-  from at least that distance (`Hub/InFlightSegment`); weighted by the
-  insertion rates, these residence times telescope (`Hub/InFlightSum`).
-  The capacity condition `76kλ_A ≤ 5s` of the Chernoff bound limits
-  `k` for moderate `n`.
-* *Cleanup and Finish* (`Hub/Cleanup`, `FinishGen`). The `O(k²n)` tiles
-  left outside their squares are fixed at least two at a time, by a three-cycle
-  or a double swap at `O(n)` each; each square is then solved locally,
-  `k²·O(s³) = O(n³/k)`.
-* *Arbitrary sides* (`Hub/AsympBound`). With `s = ⌊n/k⌋`, the outer
-  `n - k*s < k` layers are solved by a Parberry prefix, which is lower order.
+*The hierarchy* (`HierMix`, `Route`). The `k` blocks of an axis form a tree of
+depth `h` with branching `B ℓ` at level `ℓ`, so `k = ∏ B ℓ`. Offset `(ℓ, i)`
+carries, inside every level-`ℓ` node, the blocks left of child `i` to its first
+block and the blocks right of it to its last block. A hop goes to the near end
+of the child containing the target, at the first level where the two blocks
+differ, so a tile reaches its class in at most `h` hops per axis. There are
+`q = Σ B ℓ` offsets, about `h·b` for branching `b`, and each lane serves a known
+set of target classes.
 
-There is no Preparation phase: corridors start with arbitrary tiles, which
-cost `O(n)` each until they drop out.
+*Plan and serves* (`Tree/RunPlan`, `RunServe`, `Hub/Plan`, `RoundWalk`). The
+demand multigraph of the squares, padded with dummy edges, splits into perfect
+matchings (Hall/König). In each round every square sends one tile. The edge
+`S → D` is served along its route backwards: the last gateway first, the source
+last. A gateway inserts a clean stock tile of class `D` if it has one, and
+otherwise a free tile as a *placeholder* tagged `D`. So every planned insertion
+happens, and the traffic of a round is a fixed function of the round.
+Relocations of the blank between cycles are jumps in snake order (`RunReloc`).
 
-[`PROOF_NOTES.md`](PROOF_NOTES.md) relates the shared parts to the paper and
-records where the formalization departs from it. The pen-and-paper proof of
-the bound is [`research/exponent/PROOF.md`](research/exponent/PROOF.md), and
-[`research/exponent/LEAN_PLAN.md`](research/exponent/LEAN_PLAN.md) records how
-its Lean proof is organized and where it departs from the paper proof.
+*Stock and placeholders* (`RunInv`, `RunRank`). At a gateway, the stock of
+`D`-tiles plus those in flight plus the dirty arrivals equals the placeholders
+emitted, and a placeholder happens only at stock zero. Summing over the number
+of hops left, the placeholders are at most `2h + 1` times the in-flight maxima.
+
+*In flight* (`Tree/Residence`, `RunRes`, `Hub/Chernoff*`, `Hub/InFlight*`).
+Lanes are delay lines. The rounds are run in a good order, which exists by a
+Chernoff bound for sampling without replacement (Maclaurin's inequality), so
+the tiles of each tag in a lane stay within the lane's budget. The residence
+time of a tile telescopes over the distance bands it crosses.
+
+*Preload* (`Preload`). Before the plan, three-cycles put into every square the
+home tiles it needs as reserve for placeholders and dummies, `52n` moves each.
+Initial lane contents are junk and cost `O(n)` each until they drop out.
+
+*Cleanup and Finish* (`Hub/Cleanup`, `FinishGen`). The tiles left outside
+their squares are fixed at least two at a time by three-cycles and double swaps,
+and every square is solved locally, `k²·O(s³) = O(n³/k)`.
+
+*Cost* (`FineAccounting`). Once `8kq ≤ s`, `16kλ ≤ s` and `2048hk ≤ s`, the
+algorithm makes at most `50(h+3)k²s³ ≤ 50(h+3)n³/k` inefficient moves; per
+`k²s³`, hops cost `40h`, relocations `≈ 45`, the preload `≈ 51`, cleanup `≈ 29`
+and Finish `2.5`. Arbitrary sides are reduced to `k*⌊n/k⌋` by a Parberry prefix
+(`O(n²k)`).
+
+*Grid* (`MixGrid`). The conditions ask for `s ≈ 8h·b·k`, i.e. `8h·b·k² ≈ n`.
+The first `j` levels branch `b + 2` and the rest `b`, with `b` the largest even
+number such that `8h·b^(2h+1) ≤ n` and `j` the largest such that `8qk² ≤ n`.
+Then `k` is within a factor `(b+2)/b` of the ideal, and
+`n³/k ≤ 1.012·√(8h)·n^(5/2+1/(4h+2))`.
+
+*Depth* (`MixLog`). With the largest `h` such that `8h·256^(2h+1) ≤ n`,
+`n^(1/(4h+2)) ≤ 176` and `ln n ≥ 11h + 5.5`, which turns `(h+3)√(8h)` into
+`(ln n)^(3/2)`.
+
+[`PROOF_NOTES.md`](PROOF_NOTES.md) relates the construction to the paper and
+lists the certified estimates. [`research/exponent/TREE_PLAN.md`](research/exponent/TREE_PLAN.md)
+describes the design in more detail and maps it to the Lean files.
+[`OPTIMIZATION_IDEAS.md`](OPTIMIZATION_IDEAS.md) lists open improvements.
 
 ## Prior work
 
@@ -180,5 +165,5 @@ Zhixian Zhong, *Additive Approximation Algorithms for Sliding Puzzle* (2023),
 included as `zhong2023_additive-approximation-sliding-puzzle.pdf`. Its
 Proposition 9 gives the same statements with error `O(n^(11/4))`. This project
 follows its conventions, its reduction to a boardwise bound, and its division
-of the board into squares with reservoirs and corridors and a local Finish;
-the transport through hub squares is new.
+of the board into squares with reservoirs and a local Finish; the hierarchical
+lane transport is new.

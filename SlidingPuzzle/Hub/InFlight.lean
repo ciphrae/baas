@@ -10,7 +10,7 @@ from block distance `d` go to `insPos d`, which increases with `d`. With the
 plan's rounds in a suitable order (a uniformly random one works, by a Chernoff
 bound for sampling without replacement), the number of inserted tiles of each
 class present in a half stays small, summed over the classes
-(`exists_good_order`; `PROOF.md`, Lemmas 2-4).
+(`exists_good_order`).
 
 The definitions (`InsRec`, `Ghost`, `ghostRun`, `newCnt`, `roundIns`,
 `Consistent`) are in `Hub/InFlightDefs.lean`. The proof:
