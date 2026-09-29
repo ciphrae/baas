@@ -1,4 +1,5 @@
 import SlidingPuzzle.Port.Lanes
+import SlidingPuzzle.Tree.LamGrid
 
 /-! # The port algorithm in `O(n^(5/2) ln n)`
 
@@ -145,5 +146,193 @@ theorem optimalLength_le_hier4 {n h : ℕ} [NeZero n] (hh : 3 ≤ h)
   have := optimalLength_le_port_lanes (h := h) (Hier.sys 4 h (by norm_num) (by omega)) hsys rfl
     (by omega) hke hqe (by omega) hqk hk64 hl hlo hlo2 hph hhop h8 hσX B
   exact this
+
+end SlidingPuzzle.Port
+
+namespace SlidingPuzzle.Port
+open Finset
+open SlidingPuzzle
+open SlidingPuzzle.Tree
+
+/-- The depth: the largest `h` with `(2²⁴ h² + 16λ) 16^h ≤ n`. -/
+def portDepth (n : ℕ) : ℕ :=
+  Nat.findGreatest (fun h => (2 ^ 24 * h ^ 2 + 16 * GroupedOrder.lamN n) * 16 ^ h ≤ n) n
+
+theorem portDepth_spec {n : ℕ} (hn : 2 ^ 41 ≤ n) :
+    3 ≤ portDepth n ∧
+      (2 ^ 24 * portDepth n ^ 2 + 16 * GroupedOrder.lamN n) * 16 ^ portDepth n ≤ n ∧
+      n < (2 ^ 24 * (portDepth n + 1) ^ 2 + 16 * GroupedOrder.lamN n) * 16 ^ (portDepth n + 1) := by
+  have hl := lam_small (le_trans (by norm_num) hn)
+  have hP3 : (2 ^ 24 * 3 ^ 2 + 16 * GroupedOrder.lamN n) * 16 ^ 3 ≤ n := by
+    norm_num at hn ⊢; omega
+  have h3 : 3 ≤ portDepth n := Nat.le_findGreatest (by omega) hP3
+  have hP : (2 ^ 24 * portDepth n ^ 2 + 16 * GroupedOrder.lamN n) * 16 ^ portDepth n ≤ n :=
+    Nat.findGreatest_spec (P := fun h => (2 ^ 24 * h ^ 2 + 16 * GroupedOrder.lamN n) * 16 ^ h ≤ n)
+      (m := 3) (by omega) hP3
+  refine ⟨h3, hP, ?_⟩
+  by_contra hc
+  push Not at hc
+  have hlt : portDepth n < portDepth n + 1 := by omega
+  have hle : portDepth n + 1 ≤ n := by
+    have a : portDepth n < 16 ^ portDepth n := Nat.lt_pow_self (by norm_num)
+    have b : 16 ^ portDepth n ≤ n := by
+      have : 1 ≤ 2 ^ 24 * portDepth n ^ 2 + 16 * GroupedOrder.lamN n := by
+        have : 1 ≤ portDepth n ^ 2 := Nat.one_le_pow _ _ (by omega)
+        omega
+      nlinarith
+    omega
+  exact Nat.findGreatest_is_greatest hlt hle hc
+
+end SlidingPuzzle.Port
+
+namespace SlidingPuzzle.Port
+open Finset
+open SlidingPuzzle
+open SlidingPuzzle.Tree
+
+theorem log_coef {n h : ℕ} (hn : 2 ^ 41 ≤ n) (h16 : 16 ^ h ≤ n) (hpl : 2 ^ Nat.log 2 n ≤ n) :
+    4160 * (4096 * ((h : ℝ) + 1) + 12 * ((Nat.log 2 n : ℝ) + 1)) + 32 ≤ 2 ^ 24 * Real.log n := by
+  have hlog2 := Real.log_two_gt_d9
+  have hn0 : (0 : ℝ) < n := by exact_mod_cast (show 0 < n by omega)
+  have hL41 : 41 * Real.log 2 ≤ Real.log n := by
+    have c : ((2 ^ 41 : ℕ) : ℝ) ≤ (n : ℝ) := Nat.cast_le.2 hn
+    rw [Nat.cast_pow, Nat.cast_ofNat] at c
+    have := Real.log_le_log (by positivity) c
+    rw [Real.log_pow] at this; push_cast at this; linarith
+  have hLh : (h : ℝ) * (4 * Real.log 2) ≤ Real.log n := by
+    have c : ((16 ^ h : ℕ) : ℝ) ≤ (n : ℝ) := Nat.cast_le.2 h16
+    push_cast at c
+    have := Real.log_le_log (by positivity) c
+    rw [Real.log_pow, show (16 : ℝ) = 2 ^ 4 by norm_num, Real.log_pow] at this
+    push_cast at this; linarith
+  have hLl : (Nat.log 2 n : ℝ) * Real.log 2 ≤ Real.log n := by
+    have c : ((2 ^ Nat.log 2 n : ℕ) : ℝ) ≤ (n : ℝ) := Nat.cast_le.2 hpl
+    push_cast at c
+    have := Real.log_le_log (by positivity) c
+    rw [Real.log_pow] at this; linarith
+  have hh0 : (0 : ℝ) ≤ h := Nat.cast_nonneg _
+  have hl0 : (0 : ℝ) ≤ (Nat.log 2 n : ℝ) := Nat.cast_nonneg _
+  have a1 : (h : ℝ) * 2.7724 ≤ Real.log n := by
+    have := mul_le_mul_of_nonneg_left (show (2.7724 : ℝ) ≤ 4 * Real.log 2 by linarith) hh0
+    linarith
+  have a2 : (Nat.log 2 n : ℝ) * 0.6931 ≤ Real.log n := by
+    have := mul_le_mul_of_nonneg_left (show (0.6931 : ℝ) ≤ Real.log 2 by linarith) hl0
+    linarith
+  have a3 : (28.41 : ℝ) ≤ Real.log n := by linarith
+  linarith
+
+/-- **The port algorithm is within `2²⁴ n^(5/2) ln n` of the Manhattan bound.** -/
+theorem port_optimalLength_le {n : ℕ} [NeZero n] (hn : 2 ^ 41 ≤ n) (B : ReachableBoard n) :
+    (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) +
+      2 ^ 24 * (n : ℝ) ^ ((5 : ℝ) / 2) * Real.log n := by
+  have hpl : 2 ^ Nat.log 2 n ≤ n := Nat.pow_log_le_self 2 (by omega)
+  have h3003 : 3003 ≤ n := by omega
+  have hn3003' : ((3003 : ℕ) : ℝ) ≤ (n : ℝ) := Nat.cast_le.2 h3003
+  obtain ⟨h3, hP, hnot⟩ := portDepth_spec hn
+  have F4' : 16 ^ portDepth n ≤ n := by
+    have : 1 ≤ 2 ^ 24 * portDepth n ^ 2 + 16 * GroupedOrder.lamN n := by
+      have : 1 ≤ portDepth n ^ 2 := Nat.one_le_pow _ _ (by omega)
+      omega
+    nlinarith
+  have hcoef0 := log_coef hn F4' hpl
+  set h := portDepth n with hhdef
+  set lam := GroupedOrder.lamN n with hlam
+  have hl : 64 ≤ lam := by have := lam_ge (le_trans (by norm_num) hn); omega
+  have hnat := optimalLength_le_hier4 h3 hl hP B
+  set k := 4 ^ h with hk
+  have hk2 : k * k = 16 ^ h := by rw [hk, ← pow_add, ← two_mul, pow_mul]; norm_num
+  have hk0 : 0 < k := by positivity
+  -- natural facts
+  have F1 : n / k * k ≤ n := Nat.div_mul_le_self n k
+  have F4 : 16 ^ h ≤ n := by
+    have : 1 ≤ 2 ^ 24 * h ^ 2 + 16 * lam := by
+      have : 1 ≤ h ^ 2 := Nat.one_le_pow _ _ (by omega)
+      omega
+    nlinarith
+  have F2 : k * k ≤ n := by rw [hk2]; exact F4
+  set A := 4096 * (h + 1) + 4 * lam with hA
+  have F3 : n ≤ 16 * (A * A) * (k * k) := by
+    have e : (2 ^ 24 * (h + 1) ^ 2 + 16 * lam) * 16 ^ (h + 1) =
+        16 * (2 ^ 24 * (h + 1) ^ 2 + 16 * lam) * 16 ^ h := by ring
+    have hM : 2 ^ 24 * (h + 1) ^ 2 + 16 * lam ≤ A * A := by
+      rw [hA]
+      have : 16 * lam ≤ 16 * lam * lam := by nlinarith
+      nlinarith
+    rw [hk2]
+    have := Nat.mul_le_mul_right (16 ^ h) (Nat.mul_le_mul_left 16 hM)
+    omega
+  -- reals
+  have hn0 : (0 : ℝ) < n := by exact_mod_cast (show 0 < n by omega)
+  set nr : ℝ := (n : ℝ) with hnr
+  set K : ℝ := (k : ℝ) with hK
+  have hK0 : 0 < K := by rw [hK]; exact_mod_cast hk0
+  set Ar : ℝ := (A : ℝ) with hAr
+  have hA0 : 0 ≤ Ar := by positivity
+  set P : ℝ := nr ^ ((5 : ℝ) / 2) with hP
+  have hsn : 0 ≤ Real.sqrt nr := Real.sqrt_nonneg _
+  have hPe : P = nr ^ 2 * Real.sqrt nr := by
+    rw [hP, Real.sqrt_eq_rpow, ← Real.rpow_natCast, ← Real.rpow_add hn0]; norm_num
+  have hsq_n : Real.sqrt nr ^ 2 = nr := Real.sq_sqrt hn0.le
+  -- `√n ≤ 4 A K` and `K ≤ √n`
+  have hup : Real.sqrt nr ≤ 4 * Ar * K := by
+    have h1 : nr ≤ (4 * Ar * K) ^ 2 := by
+      have : (n : ℝ) ≤ 16 * ((A : ℝ) * A) * ((k : ℝ) * k) := by exact_mod_cast F3
+      rw [hnr, hAr, hK]; nlinarith
+    calc Real.sqrt nr ≤ Real.sqrt ((4 * Ar * K) ^ 2) := Real.sqrt_le_sqrt h1
+      _ = 4 * Ar * K := Real.sqrt_sq (by positivity)
+  have hdown : K ≤ Real.sqrt nr := by
+    have h1 : K ^ 2 ≤ nr := by
+      have : ((k : ℝ) * k) ≤ n := by exact_mod_cast F2
+      rw [hK, hnr]; nlinarith
+    calc K = Real.sqrt (K ^ 2) := (Real.sqrt_sq hK0.le).symm
+      _ ≤ Real.sqrt nr := Real.sqrt_le_sqrt h1
+  -- the main term
+  set m : ℝ := ((n / k : ℕ) : ℝ) with hm
+  have hm0 : 0 ≤ m := by positivity
+  have hmK : m * K ≤ nr := by
+    have : ((n / k : ℕ) : ℝ) * (k : ℝ) ≤ n := by exact_mod_cast F1
+    rw [hm, hK, hnr]; exact this
+  have hmain : K ^ 2 * m ^ 3 ≤ 4 * Ar * P := by
+    have h1 : K ^ 2 * m ^ 3 * K ≤ nr ^ 3 := by
+      have := pow_le_pow_left₀ (by positivity) hmK 3
+      calc K ^ 2 * m ^ 3 * K = (m * K) ^ 3 := by ring
+        _ ≤ _ := this
+    have h2 : nr ^ 3 ≤ 4 * Ar * P * K := by
+      rw [hPe]
+      have e3 : nr ^ 3 = nr ^ 2 * Real.sqrt nr * Real.sqrt nr := by
+        rw [mul_assoc, ← sq, hsq_n]; ring
+      rw [e3]
+      have := mul_le_mul_of_nonneg_left hup (by positivity : (0 : ℝ) ≤ nr ^ 2 * Real.sqrt nr)
+      calc nr ^ 2 * Real.sqrt nr * Real.sqrt nr ≤ _ := this
+        _ = _ := by ring
+    exact le_of_mul_le_mul_right (le_trans h1 h2) hK0
+  have hfirst : 2 * ((15 * nr ^ 2 + 3002 * nr + 1) * K) ≤ 32 * P := by
+    have hn3003 : (3003 : ℝ) ≤ nr := by
+      have c := hn3003'
+      push_cast at c
+      exact c
+    have ha : 15 * nr ^ 2 + 3002 * nr + 1 ≤ 16 * nr ^ 2 := by nlinarith
+    have h1 := mul_le_mul_of_nonneg_right ha hK0.le
+    have h2 := mul_le_mul_of_nonneg_left hdown (by positivity : (0 : ℝ) ≤ nr ^ 2)
+    rw [hPe]; linarith
+  have hcast : (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) +
+      2 * ((15 * nr ^ 2 + 3002 * nr + 1) * K) + 2 * (520 * (K ^ 2 * m ^ 3)) := by
+    have := (Nat.cast_le (α := ℝ)).2 hnat
+    push_cast at this
+    rw [hnr, hK, hm]
+    exact this
+  -- logarithms
+  have hAe : Ar = 4096 * ((h : ℝ) + 1) + 12 * ((Nat.log 2 n : ℝ) + 1) := by
+    rw [hAr, hA, hlam]; unfold GroupedOrder.lamN; push_cast; ring
+  have hcoef : 4160 * Ar + 32 ≤ 2 ^ 24 * Real.log nr := by
+    rw [hAe]; linarith
+  have hP0 : 0 ≤ P := by rw [hPe]; positivity
+  calc (optimalLength B : ℝ) ≤ _ := hcast
+    _ ≤ (manhattan B.val : ℝ) + 32 * P + 4160 * Ar * P := by linarith
+    _ = (manhattan B.val : ℝ) + (4160 * Ar + 32) * P := by ring
+    _ ≤ (manhattan B.val : ℝ) + 2 ^ 24 * Real.log nr * P := by
+        have := mul_le_mul_of_nonneg_right hcoef hP0
+        linarith
+    _ = _ := by rw [hP, hnr]; ring
 
 end SlidingPuzzle.Port
