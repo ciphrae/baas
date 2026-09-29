@@ -78,3 +78,59 @@ theorem leg_jump (pd : PDims n k s q σ) (h8 : 8 ≤ σ) {E Z : Sq k} (hal : E.1
   rwa [sqDist_comm] at this
 
 end SlidingPuzzle.Port
+
+namespace SlidingPuzzle.Port
+open Classical
+open SlidingPuzzle.Hub (Sq HDims sqOf classOf sqDist apply_blank blank_eq_of_apply
+  val_ne_zero_of_ne_blank exists_box_three_cycle_near cornerDist InBox)
+open SlidingPuzzle.Tree
+
+variable {n k s q σ : ℕ} [NeZero n] (L : LaneSys k q)
+
+theorem lz_ne {b : Pt} {hor : Bool} {j m m' : ℕ} (hm : m ≤ 4) (hm' : m' ≤ 4) (h : m ≠ m')
+    (hs : 16 ≤ s) : lz k s b hor j m ≠ lz k s b hor j m' := by
+  cases b <;> cases hor <;> simp only [lz, ne_eq, Prod.mk.injEq] <;> omega
+
+/-- A three-cycle in the corner box of port `b` of `Z`, with the blank on a box cell. -/
+theorem port_cycle (pd : PDims n k s q σ) (h8 : 8 ≤ σ) (B1 : Board n) (Z : Sq k) (b : Pt)
+    {rb cb ra ca rc cc : ℕ} (hbx : inBox k s σ b rb cb) (hax : inBox k s σ b ra ca)
+    (hcx : inBox k s σ b rc cc) (hbl : blank B1 = lc s Z rb cb) {t : Cell n}
+    (ht : rkey L s σ pd.hd t = some (Z, some b))
+    (hb : cdist k s σ b rb cb ≤ 2 * k + 8) (ha : cdist k s σ b ra ca ≤ 2 * k + 8)
+    (hc : cdist k s σ b rc cc ≤ 2 * k + 8)
+    (h1 : lc (n := n) s Z ra ca ≠ t) (h2 : lc (n := n) s Z ra ca ≠ lc s Z rc cc)
+    (h3 : t ≠ lc s Z rc cc)
+    (h1' : lc (n := n) s Z ra ca ≠ blank B1) (h2' : t ≠ blank B1) (h3' : lc (n := n) s Z rc cc ≠ blank B1) :
+    ∃ M : Board n, ∃ p : Path B1 M, p.inefficientMoves ≤ 10 * σ + 600 * k + 3000 ∧
+      M (lc s Z ra ca) = B1 t ∧ M t = B1 (lc s Z rc cc) ∧ M (lc s Z rc cc) = B1 (lc s Z ra ca) ∧
+      blank M = blank B1 ∧
+      ∀ x, x ≠ lc s Z ra ca → x ≠ t → x ≠ lc s Z rc cc → M x = B1 x := by
+  have hf := pd.fit
+  obtain ⟨fit1, fit2⟩ := corner_fits pd Z b
+  have bb : ∀ {r c : ℕ}, inBox k s σ b r c → r < s ∧ c < s := fun h => by
+    have := box_corner pd h; have := box_bounds pd b; rw [inBox_iff (by omega)] at h; omega
+  obtain ⟨b1, b2⟩ := bb hbx
+  obtain ⟨a1, a2⟩ := bb hax
+  obtain ⟨c1, c2⟩ := bb hcx
+  obtain ⟨x1, x2, x3, x4⟩ := box_corner pd hbx
+  obtain ⟨y1, y2, y3, y4⟩ := box_corner pd hax
+  obtain ⟨z1, z2, z3, z4⟩ := box_corner pd hcx
+  have h0 : ∀ x : Cell n, x ≠ blank B1 → B1 x ≠ 0 := fun x hx e => hx (blank_eq_of_apply e).symm
+  obtain ⟨M, pm, hpm, hMa, hMb, hMc, hMx⟩ := exists_box_three_cycle_near B1
+    (Z.1.val * s + cr0 k s σ b) (Z.2.val * s + cc0 k s σ b) (k + 2 + σ) (cfr b) (cfc b)
+    (by omega) fit1 fit2 (by rw [hbl]; exact inCorner_lc pd Z b x1 x2 x3 x4 b1 b2)
+    (lc s Z ra ca) t (lc s Z rc cc) (inCorner_lc pd Z b y1 y2 y3 y4 a1 a2)
+    (inCorner_of_rkey L pd ht) (inCorner_lc pd Z b z1 z2 z3 z4 c1 c2) h1 h2 h3
+    (h0 _ h1') (h0 _ h2') (h0 _ h3')
+  have hcd : cornerDist (Z.1.val * s + cr0 k s σ b) (Z.2.val * s + cc0 k s σ b) (k + 2 + σ)
+      (cfr b) (cfc b) (blank B1) (lc s Z ra ca) (lc s Z rc cc) ≤ 6 * k + 25 := by
+    rw [hbl, cr0_eq, cc0_eq]
+    refine (cornerDist_le pd Z b (by omega) (by omega) b1 b2 a1 a2 c1 c2).trans ?_
+    omega
+  refine ⟨M, pm, ?_, hMa, hMb, hMc, blank_of_cycle h1' h2' h3' hMx, hMx⟩
+  have : 82 * cornerDist (Z.1.val * s + cr0 k s σ b) (Z.2.val * s + cc0 k s σ b) (k + 2 + σ)
+    (cfr b) (cfc b) (blank B1) (lc s Z ra ca) (lc s Z rc cc) ≤ 82 * (6 * k + 25) :=
+    Nat.mul_le_mul_left _ hcd
+  omega
+
+end SlidingPuzzle.Port
