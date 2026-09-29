@@ -220,3 +220,170 @@ theorem leg_same (pd : PDims n k s q σ) (h8 : 8 ≤ σ) (B0 : Board n) {E Z : S
     simpa using K
 
 end SlidingPuzzle.Port
+
+namespace SlidingPuzzle.Port
+open Classical
+open SlidingPuzzle.Hub (Sq HDims sqOf classOf sqDist apply_blank blank_eq_of_apply
+  val_ne_zero_of_ne_blank)
+open SlidingPuzzle.Tree
+
+variable {n k s q σ : ℕ} [NeZero n] (L : LaneSys k q)
+
+/-- A leg carrying a tile from part `p ≠ b` of `Z` to `E`'s port `b`; a tile of `Z`'s port `b`
+takes its place. -/
+theorem leg_other (pd : PDims n k s q σ) (h8 : 8 ≤ σ) (B0 : Board n) {E Z : Sq k} (hEZ : E ≠ Z)
+    (hal : E.1 = Z.1 ∨ E.2 = Z.2) (b : Pt)
+    (hb0 : blank B0 = lc s E (ncell k s b).1 (ncell k s b).2)
+    {p : Part} (hp : p ≠ some b) {ty tz : Cell n} (hty : rkey L s σ pd.hd ty = some (Z, p))
+    (htz : rkey L s σ pd.hd tz = some (Z, some b)) :
+    ∃ C : Board n, ∃ p' : Path B0 C, C (blank B0) = B0 ty ∧ C ty = B0 tz ∧
+      InBoxOf s σ Z b (blank C) ∧
+      (∀ x, rkey L s σ pd.hd x ≠ some (Z, some b) → x ≠ blank B0 → x ≠ ty → C x = B0 x) ∧
+      KeepK (rkey L s σ pd.hd) B0 C {B0 ty, B0 tz} ∧
+      p'.inefficientMoves ≤ 21 * (sqDist E Z * s + 5) + 10 * s + 10 * σ + 1200 * k + 6000 := by
+  have hf := pd.fit
+  have bb : ∀ {r c : ℕ}, inBox k s σ b r c → r < s ∧ c < s := fun h => by
+    have := box_bounds pd b; rw [inBox_iff (by omega)] at h; omega
+  -- the first jump avoids the class-`z` tile
+  set m0 : ℕ := if lc (n := n) s Z (lz k s b (legHor E Z) (legJ s E Z) 0).1
+      (lz k s b (legHor E Z) (legJ s E Z) 0).2 = tz then 2 else 0 with hm0
+  have hm0' : m0 ≤ 2 := by rw [hm0]; split_ifs <;> omega
+  obtain ⟨ga, gz, gz', gsp, gcz, gcz', gne⟩ := legCells pd h8 E Z b (m := m0) hm0'
+  set a := ncell k s b
+  set w0 := lz k s b (legHor E Z) (legJ s E Z) m0
+  set w1 := lz k s b (legHor E Z) (legJ s E Z) (m0 + 2)
+  set a0 : Cell n := lc s E a.1 a.2
+  set z0 : Cell n := lc s Z w0.1 w0.2
+  set z1 : Cell n := lc s Z w1.1 w1.2
+  have hz0tz : z0 ≠ tz := by
+    intro e
+    by_cases h : lc (n := n) s Z (lz k s b (legHor E Z) (legJ s E Z) 0).1
+      (lz k s b (legHor E Z) (legJ s E Z) 0).2 = tz
+    · have hm : m0 = 2 := by rw [hm0, if_pos h]
+      have hj : legJ s E Z ≤ 1 := by unfold legJ; split_ifs <;> omega
+      obtain ⟨-, g0, -⟩ := lgeom (k := k) h8 hf b (legHor E Z) hj (m := 0) (by omega)
+      obtain ⟨-, g2, -⟩ := lgeom (k := k) h8 hf b (legHor E Z) hj (m := 2) (by omega)
+      have e' := h.trans e.symm
+      simp only [z0, w0, hm] at e'
+      have := lc_inj pd.hd Z (bb g0).1 (bb g0).2 (bb g2).1 (bb g2).2 e'
+      exact lz_ne (k := k) (s := s) (b := b) (hor := legHor E Z) (j := legJ s E Z) (m := 0) (m' := 2)
+        (by omega) (by omega) (by omega) (by omega) (Prod.ext this.1 this.2)
+    · have hm : m0 = 0 := by rw [hm0, if_neg h]
+      apply h
+      simp only [z0, w0, hm] at e
+      exact e
+  have ka0 : rkey L s σ pd.hd a0 = some (E, some b) := rkey_box L pd E ga
+  have kz0 : rkey L s σ pd.hd z0 = some (Z, some b) := rkey_box L pd Z gz
+  have kz1 : rkey L s σ pd.hd z1 = some (Z, some b) := rkey_box L pd Z gz'
+  have hEb : ∀ pp : Part, (some (E, some b) : Option (Sq k × Part)) ≠ some (Z, pp) := by
+    intro pp; simp [hEZ]
+  have hpb : (some (Z, p) : Option (Sq k × Part)) ≠ some (Z, some b) := by simp [hp]
+  have ha0z0 : a0 ≠ z0 := ne_of_rkey L (by rw [ka0, kz0]; exact hEb _)
+  have ha0z1 : a0 ≠ z1 := ne_of_rkey L (by rw [ka0, kz1]; exact hEb _)
+  have hz0z1 : z0 ≠ z1 := fun e => gne (Prod.ext (lc_inj pd.hd Z (bb gz).1 (bb gz).2 (bb gz').1
+    (bb gz').2 e).1 (lc_inj pd.hd Z (bb gz).1 (bb gz).2 (bb gz').1 (bb gz').2 e).2)
+  obtain ⟨j0f, j0b⟩ := (leg_jump pd h8 hal b (m := m0) (by omega)).resolve_right
+    (by rw [hm0]; split_ifs <;> norm_num)
+  obtain ⟨j2f, -⟩ := (leg_jump pd h8 hal b (m := m0 + 2) (by omega)).resolve_right
+    (by rw [hm0]; split_ifs <;> norm_num)
+  replace hb0 : blank B0 = a0 := hb0
+  have hB0a0 : B0 a0 = 0 := by rw [← hb0]; exact apply_blank B0
+  have htya0 : ty ≠ a0 := ne_of_rkey L (by rw [hty, ka0]; exact (hEb _).symm)
+  have htza0 : tz ≠ a0 := ne_of_rkey L (by rw [htz, ka0]; exact (hEb _).symm)
+  have htyz0 : ty ≠ z0 := ne_of_rkey L (by rw [hty, kz0]; exact hpb)
+  have htyz1 : ty ≠ z1 := ne_of_rkey L (by rw [hty, kz1]; exact hpb)
+  have htytz : ty ≠ tz := ne_of_rkey L (by rw [hty, htz]; exact hpb)
+  -- the cells `g` (receiving the class-`z` tile) and `u1`
+  set g : Cell n := lc s Z (spare k s b 0).1 (spare k s b 0).2 with hg
+  have gg := spare_box (by omega) hf b 0
+  have kg : rkey L s σ pd.hd g = some (Z, some b) := rkey_box L pd Z gg
+  have hsg := spare_lt pd b 0
+  have hgz0 : g ≠ z0 := fun e => (gsp 0).1 (Prod.ext (lc_inj pd.hd Z hsg.1 hsg.2 (bb gz).1
+    (bb gz).2 e).1 (lc_inj pd.hd Z hsg.1 hsg.2 (bb gz).1 (bb gz).2 e).2)
+  have hgz1 : g ≠ z1 := fun e => (gsp 0).2 (Prod.ext (lc_inj pd.hd Z hsg.1 hsg.2 (bb gz').1
+    (bb gz').2 e).1 (lc_inj pd.hd Z hsg.1 hsg.2 (bb gz').1 (bb gz').2 e).2)
+  have hga0 : g ≠ a0 := ne_of_rkey L (by rw [kg, ka0]; exact (hEb _).symm)
+  have htyg : ty ≠ g := ne_of_rkey L (by rw [hty, kg]; exact hpb)
+  set B1 := swapCells B0 (blank B0) z0 with hB1
+  have hbB1 : blank B1 = z0 := blank_swapCells B0 _
+  have hB1x : ∀ x, x ≠ a0 → x ≠ z0 → B1 x = B0 x := fun x h1 h2 =>
+    swapCells_preserves B0 (by rw [hb0]; exact h1) h2
+  set U : Cell n → Prop := fun x => rkey L s σ pd.hd x = some (Z, some b) ∨ x = ty with hU
+  have hUa : ¬ U a0 := by
+    rintro (e | e)
+    · rw [ka0] at e; exact hEb _ e
+    · exact htya0 e.symm
+  -- the middle: put the class-`z` tile on `g`, then the three-cycle in the square
+  obtain ⟨M1, pm1, hbM1, hpm1, hM1g, hM1x⟩ : ∃ M1 : Board n, ∃ p : Path B1 M1, blank M1 = z0 ∧
+      p.inefficientMoves ≤ 10 * σ + 600 * k + 3000 ∧ M1 g = B0 tz ∧
+      ∀ x, rkey L s σ pd.hd x ≠ some (Z, some b) → M1 x = B1 x := by
+    by_cases htg : tz = g
+    · exact ⟨B1, .nil B1, hbB1, by simp [Path.inefficientMoves],
+        by rw [← htg, hB1x tz htza0 (Ne.symm hz0tz)], fun _ _ => rfl⟩
+    obtain ⟨i, hi1, hi2, hut⟩ : ∃ i : Fin 3, 1 ≤ i.val ∧ i.val ≤ 2 ∧
+        lc (n := n) s Z (spare k s b i).1 (spare k s b i).2 ≠ tz := by
+      by_cases h0 : lc (n := n) s Z (spare k s b 1).1 (spare k s b 1).2 = tz
+      · refine ⟨2, by simp, by simp, fun h1 => ?_⟩
+        have := spare_lt pd b 1
+        have := spare_lt pd b 2
+        have e := lc_inj pd.hd Z (by omega) (by omega) (by omega) (by omega) (h0.trans h1.symm)
+        exact absurd (spare_inj hf b (Prod.ext e.1 e.2)) (by decide)
+      · exact ⟨1, by simp, by simp, h0⟩
+    set u : Cell n := lc s Z (spare k s b i).1 (spare k s b i).2 with hu
+    have gu := spare_box (by omega) hf b i
+    have hsu := spare_lt pd b i
+    have hgu : g ≠ u := by
+      intro e
+      have e' := lc_inj pd.hd Z hsg.1 hsg.2 hsu.1 hsu.2 e
+      have := spare_inj hf b (Prod.ext e'.1 e'.2)
+      rw [Fin.ext_iff] at this; simp at this; omega
+    have huz0 : u ≠ z0 := fun e => (gsp i).1 (Prod.ext (lc_inj pd.hd Z hsu.1 hsu.2 (bb gz).1
+      (bb gz).2 e).1 (lc_inj pd.hd Z hsu.1 hsu.2 (bb gz).1 (bb gz).2 e).2)
+    obtain ⟨M1, pm1, hpm1, hMa, -, -, hbM1, hMx⟩ := port_cycle L pd h8 B1 Z b gz gg gu hbB1 htz
+      gcz (cdist_spare hf b 0) (cdist_spare hf b i) (Ne.symm htg) hgu (Ne.symm hut)
+      (by rw [hbB1]; exact hgz0) (by rw [hbB1]; exact Ne.symm hz0tz) (by rw [hbB1]; exact huz0)
+    refine ⟨M1, pm1, hbM1.trans hbB1, hpm1, by rw [hMa, hB1x tz htza0 (Ne.symm hz0tz)], ?_⟩
+    intro x hx
+    exact hMx x (fun e => hx (by rw [e]; exact kg)) (fun e => hx (by rw [e]; exact htz))
+      (fun e => hx (by rw [e]; exact rkey_box L pd Z gu))
+  obtain ⟨M, pm2, hpm2, hMz1, hMty, -, hbM, hMx⟩ := square_cycle L pd h8 M1 Z b gz gz' gg
+    (by rw [hbM1]) hty gcz gcz' (cdist_spare hf b 0) (Ne.symm htyz1) (Ne.symm hgz1) htyg
+    (by rw [hbM1]; exact Ne.symm hz0z1) (by rw [hbM1]; exact htyz0) (by rw [hbM1]; exact hgz0)
+  have hM1ty : M1 ty = B0 ty := by
+    rw [hM1x ty (by rw [hty]; exact hpb), hB1x ty htya0 htyz0]
+  obtain ⟨C, pc, hCa, hbC, hCz0, hCx, hic⟩ := dance B0 hb0 ha0z0 hz0z1 ha0z1 U hUa
+    (7 * (sqDist E Z * s + 5)) (10 * σ + 600 * k + 3000 + (10 * s + 600 * k + 3000))
+    (j0f B0 hb0) j0b j2f M (pm1.append pm2) (hbM.trans hbM1)
+    (by rw [Path.inefficientMoves_append]; omega)
+    (fun x hx => by
+      simp only [hU, not_or] at hx
+      rw [hMx x (fun e => hx.1 (by rw [e]; exact kz1)) hx.2 (fun e => hx.1 (by rw [e]; exact kg)),
+        hM1x x hx.1])
+  have hW : ∀ x, ¬ (x = a0 ∨ x = ty ∨ rkey L s σ pd.hd x = some (Z, some b)) → C x = B0 x := by
+    intro x hx
+    simp only [not_or] at hx
+    have hxz0 : x ≠ z0 := fun e => hx.2.2 (by rw [e]; exact kz0)
+    have hxz1 : x ≠ z1 := fun e => hx.2.2 (by rw [e]; exact kz1)
+    rw [hCx x hx.1 hxz0 hxz1, hMx x (fun e => hx.2.2 (by rw [e]; exact kz1)) hx.2.1
+      (fun e => hx.2.2 (by rw [e]; exact kg)), hM1x x hx.2.2, hB1x x hx.1 hxz0]
+  have hCty : C ty = B0 tz := by
+    rw [hCx ty htya0 htyz0 htyz1, hMty, hM1g]
+  refine ⟨C, pc, by rw [hb0, hCa, hMz1, hM1ty], hCty, by rw [hbC]; exact inBoxOf_lc pd Z gz', ?_, ?_,
+    le_of_le_of_eq hic (by ring)⟩
+  · intro x h1 h2 h3
+    exact hW x (by
+      rintro (e | e | e)
+      · exact h2 (e.trans hb0.symm)
+      · exact h3 e
+      · exact h1 e)
+  · exact keepK_of_block (rkey L s σ pd.hd) (B := B0) (C := C)
+      (fun x => x = a0 ∨ x = ty ∨ rkey L s σ pd.hd x = some (Z, some b)) (some (Z, some b))
+      (a := a0) (c := ty) (Ta := B0 ty) (Tc := B0 tz) hW
+      (fun x hx h1 h2 => by
+        rcases hx with e | e | e
+        · exact absurd e h1
+        · exact absurd e h2
+        · exact e)
+      (by rw [hCa, hMz1, hM1ty]) hCty (Or.inl (by rw [hB0a0]; rfl)) (Or.inr (Or.inl rfl))
+
+end SlidingPuzzle.Port
