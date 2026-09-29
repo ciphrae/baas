@@ -2,7 +2,8 @@
 
 The design of the algorithm in `SlidingPuzzle/Tree/` and how its proof is
 organized. The final bounds are `OPT ≤ M + 102(h+3)√(8h)·n^(5/2 + 1/(4h+2))` at
-depth `h` and `OPT ≤ M + 3200·n^(5/2)(ln n)^(3/2)`; the sections below describe
+depth `h` and `OPT ≤ M + (117 ln n + 4100)√(ln n)·n^(5/2) ≤ M + 375·n^(5/2)(ln n)^(3/2)`
+for `n ≥ 2²³`; the sections below describe
 the construction with uniform branching `b` for readability, and the last
 section how per-level branching is used.
 
@@ -101,9 +102,13 @@ system with `8k²q ≤ n`, `256h ≤ q ≤ k`, `2λ ≤ q`), `HierMix` (the hier
 branching `B ℓ` at level `ℓ`: `k = ∏ B ℓ`, `q = ∑ B ℓ`), `MixGrid` (branching `b + 2` at
 the first `j` levels and `b` below; `b` the largest even with `8h b^(2h+1) ≤ n`, `j` the
 largest with `8qk² ≤ n`, so the next `j` fails and `k` is within `(b+2)/b` of the ideal;
-`tree_uniform_approximation_explicit`, `tree_uniform_approximation`, `tree_exponent`), and
-`MixLog` (depth choice). `log_slack_mix` gives `2λ ≤ hb` for `b ≥ 256` and
-`n ≤ 8h(2b)^(2h+1)`.
+`tree_uniform_approximation_explicit`, `tree_uniform_approximation`, `tree_exponent`);
+`log_slack_mix` gives `2λ ≤ hb` for `b ≥ 256` and `n ≤ 8h(2b)^(2h+1)`. For the log
+bound: `FineLog` (`treeBound ≤ (48h+142)k²s³` from `8kq ≤ s`, `16kλ ≤ s`, `λ, k ≥ 64`),
+`FinalLog` (`optimalLength_le_lanes_log`: `8k²q ≤ n`, `16k²λ ≤ n`, `4h ≤ λ`), `LamGrid`
+(the depth: smallest `h` with `h(b_h+2) ≤ 2λ`; `exists_lam_grid`, `branch_large`,
+`optimalLength_le_lam`) and `LamLog` (`tree_lam_approximation`,
+`tree_lam_approximation_uniform`).
 
 Constants: `OPT ≤ M + 102 (h+3) √(8h) n^(5/2+1/(4h+2))` for `n ≥ 8h·256^(2h+1)`.
 The leading terms per `k²s³` are hops `40h`, relocations `≈ 45`,
@@ -115,10 +120,15 @@ A uniform grid `k = b^h` loses up to `(1 + 2/b)^h` to rounding, which forces
 `b ≳ h` and gives only `(ln n / ln ln n)²` in the depth choice; mixing the
 branchings `b` and `b + 2` avoids this.
 
-Depth choice (`MixLog`): the largest `h` with `mixN h = 8h·256^(2h+1) ≤ n` has
-`n < mixN (h+1) ≤ 176^(4h+2)`, so `n^(1/(4h+2)) ≤ 176`, and `ln n ≥ 11h + 5.5`; with
-`(h+3)² h ≤ 5 (h+1/2)³` this gives `OPT ≤ M + 3200 n^(5/2) (ln n)^(3/2)` for `n ≥ 8·256³`
-(`tree_log_approximation_explicit`). Asymptotically the coefficient is about `125`.
+Depth choice (`LamGrid`, `LamLog`). The fixed-depth rule `8kq ≈ s` makes the lane
+width grow with `h`; but the run only needs `q ≤ 2λ` once `16kλ ≤ s`. So `k` is set by
+`16λk² ≤ n` alone, and `h` is the smallest depth whose largest even branching `b_h`
+(with `16λ b_h^(2h) ≤ n`) has `h(b_h + 2) ≤ 2λ`. At depth `h - 1` some branching `b`
+has `(h-1)(b+2) > 2λ` and `b^(2(h-1)) ≤ n < 2^(λ/3)`, so `b^12 < 2^(b+2)` and `b ≥ 73`:
+`73^(2(h-1)) ≤ n` and `b_h ≥ 8`. The mixed grid then has `n < 25λk²`, and the error is
+at most `(1 + 10(48h+142)√λ)n^(5/2) ≤ (117 ln n + 4100)√(ln n) n^(5/2)`. This replaced
+the earlier depth rule (largest `h` with `8h·256^(2h+1) ≤ n`, `3200 n^(5/2)(ln n)^(3/2)`
+from `1.3·10⁸`, `MixLog`, removed after `4d9b041`).
 
 Statistics (`Stats`): `tree_average_optimal_length` and `tree_gods_number`, the mean
 optimal length `(2/3)n³ + O(n^(5/2+ε))` and God's number `n³ + O(n^(5/2+ε))` for

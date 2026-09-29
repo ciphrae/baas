@@ -175,10 +175,20 @@ differences from the paper's scheme:
   the largest such that `8qk² ≤ n`, the next `j` fails, so
   `n·b² ≤ 8h(b+2)³k²` and `n³/k ≤ 1.012·√(8h)·n^(5/2+1/(4h+2))`. With the
   prefix this gives `102(h+3)√(8h)·n^(5/2+1/(4h+2))` for `n ≥ 8h·256^(2h+1)`.
-- Depth (`Tree/MixLog.lean`): the largest `h` with `8h·256^(2h+1) ≤ n` has
-  `n < 8(h+1)·256^(2h+3) ≤ 176^(4h+2)`, so `n^(1/(4h+2)) ≤ 176`, and
-  `ln n ≥ 11h + 5.5`. With `(h+3)²h ≤ 5(h+1/2)³` the bound becomes
-  `3200·n^(5/2)·(ln n)^(3/2)` for `n ≥ 8·256³`.
+- Accounting against the slack (`Tree/FineLog.lean`, `Tree/FinalLog.lean`):
+  with only `8kq ≤ s`, `16kλ ≤ s`, `λ ≥ 64` and `k ≥ 64`,
+  `treeBound ≤ (48h + 142)·k²s³` (hops and stock `≈ 47.8h`, preload `≈ 51.3`,
+  relocations `≈ 57.2`, cleanup and Finish `≈ 32`); the reserve fits once
+  `4h ≤ λ` (`optimalLength_le_lanes_log`).
+- Depth and grid (`Tree/LamGrid.lean`): the smallest `h` with `h(b_h + 2) ≤ 2λ`,
+  `b_h` the largest even `b` with `16λ·b^(2h) ≤ n`, then the largest `j` with
+  `16λk² ≤ n`. Then `q ≤ 2λ`, `n < 25λk²`, and minimality gives a branching
+  `b ≥ 73` at depth `h - 1` (`b^12 < 2^(b+2)`, `branch_large`), so
+  `73^(2(h-1)) ≤ n` and `b_h ≥ 8`.
+- Constants (`Tree/LamLog.lean`): the error is at most
+  `(1 + 10(48h+142)√λ)·n^(5/2) ≤ (117 ln n + 4100)·√(ln n)·n^(5/2)` for
+  `n ≥ 2²³`, using `ln 73 ≥ 4.28` and `λ ≤ 4.3281·ln n + 3`; hence
+  `375·n^(5/2)·(ln n)^(3/2)`.
 
 These are certified upper bounds, not claims of optimality.
 [OPTIMIZATION_IDEAS.md](OPTIMIZATION_IDEAS.md) lists the remaining improvements.
