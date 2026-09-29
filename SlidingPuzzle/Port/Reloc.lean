@@ -45,14 +45,16 @@ structure LSame (G G' : PG k q) : Prop where
   nt : G'.nt = G.nt
   nis : G'.nis = G.nis
   wt : G'.wt = G.wt
+  ncr : G'.ncr = G.ncr
 
 theorem LSame.refl (G : PG k q) : LSame G G :=
-  ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+  ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
 theorem LSame.trans {G G' G'' : PG k q} (h : LSame G G') (h' : LSame G' G'') : LSame G G'' :=
   ⟨h'.ins.trans h.ins, h'.sched.trans h.sched, h'.stock.trans h.stock, h'.B.trans h.B,
     h'.dA.trans h.dA, h'.served.trans h.served, h'.sent.trans h.sent, h'.nh.trans h.nh,
-    h'.ni.trans h.ni, h'.nx.trans h.nx, h'.nt.trans h.nt, h'.nis.trans h.nis, h'.wt.trans h.wt⟩
+    h'.ni.trans h.ni, h'.nx.trans h.nx, h'.nt.trans h.nt, h'.nis.trans h.nis, h'.wt.trans h.wt,
+    h'.ncr.trans h.ncr⟩
 
 theorem LSame.stk {G G' : PG k q} (h : LSame G G') : G'.stk = G.stk := by
   funext Q z; unfold PG.stk; rw [h.stock]
@@ -87,7 +89,7 @@ section legs
 variable {s σ' : ℕ} {σ0 : PState k q} {F0 : ℕ}
 
 theorem pLegF_same (G : PG k q) (Z : Sq k) : LSame G (pLegF L s σ' G Z) :=
-  ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+  ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
 theorem pLegF_blank (G : PG k q) (Z : Sq k) : (pLegF L s σ' G Z).σ.blank = Z ∧
     (pLegF L s σ' G Z).σ.bp = G.σ.bp := ⟨rfl, rfl⟩

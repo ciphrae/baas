@@ -138,6 +138,7 @@ structure StepOut (G G' : PG k q) (u x : Sq k) (kd : Kind) : Prop where
   nx : G'.nx ≤ G.nx + (if G.σ.bp = dport L u x then 0 else 2)
   ni : G'.ni + G.nis ≤ G.ni + G'.nis + (if kd = .stk then 0 else 1)
   nt : G'.nt ≤ G.nt + (if turning L (L.stage u x).1 x then 1 else 0)
+  ncr : G'.ncr = G.ncr + LaneSys.pdist (L.stage u x).1.2.t.val (L.stage u x).2.val
 
 include td in
 theorem pStep_out {G : PG k q} (hL : PLInv L s σ' σ0 F0 G) {u x : Sq k} (hux : u ≠ x)
@@ -162,7 +163,7 @@ theorem pStep_out {G : PG k q} (hL : PLInv L s σ' σ0 F0 G) {u x : Sq k} (hux :
   have hb1 : G1.σ.blank = L.nxt u x := by rw [hs.blank]; exact hb
   have hI1 : PIdent L s G1 x (L.pendB u x) := hs.ident L hI
   refine ⟨pStage_linv L td τ l1 hux hb1 bp1 hr1 hm hsp, ?_, rfl, pStage_ident L td τ hux hr1 hI1,
-    ?_, ?_, ?_⟩
+    ?_, ?_, ?_, ?_⟩
   · show (G1.σ.step s _).blank = u
     rw [(step_hop_blank _ _ _ _ _ _).1, stage_src hux]
   · show G1.nx ≤ _; exact nx1
@@ -174,6 +175,8 @@ theorem pStep_out {G : PG k q} (hL : PLInv L s σ' σ0 F0 G) {u x : Sq k} (hux :
   · show G1.nt + _ ≤ _
     rw [hs.nt]
     split_ifs <;> simp_all
+  · show G1.ncr + _ = _
+    rw [hs.ncr]
 
 end step
 

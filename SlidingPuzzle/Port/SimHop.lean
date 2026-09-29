@@ -215,16 +215,16 @@ theorem simulate_hop (pd : PDims n k s q σ) (h4 : 4 ≤ σ) {B : Board n} {ρ :
     have hqk := pd.td.q_le
     cases m with
     | cheap =>
-      show _ ≤ hopKc k q σ + ρ.ljunk l P + 0
+      show _ ≤ hopKc k σ + crossK q l J + ρ.ljunk l P + 0
       unfold PState.ljunk
       unfold insK insKc at hi2
-      unfold hopKc
+      unfold hopKc crossK
       nlinarith
     | imp p z =>
-      show _ ≤ hopKc k q σ + ρ.ljunk l P + hopKi k s σ
+      show _ ≤ hopKc k σ + crossK q l J + ρ.ljunk l P + hopKi k s σ
       unfold PState.ljunk
       unfold insK insKc insKi at hi2
-      unfold hopKc hopKi
+      unfold hopKc hopKi crossK
       nlinarith
 
 end SlidingPuzzle.Port

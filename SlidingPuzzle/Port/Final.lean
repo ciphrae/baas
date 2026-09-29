@@ -64,6 +64,7 @@ def PG0 (σ0 : PState k q) (R : Sq k → ℕ) : PG k q where
   nx := 0
   nt := 0
   nis := 0
+  ncr := 0
   jc := 0
   wt := 0
 
@@ -99,7 +100,7 @@ theorem ppot_le' (s : ℕ) (σ : PState k q) : σ.pot L s ≤ laneCells L s * (k
 
 /-- Transport budget of the port run: `W` bounds the relocation weight, `nd` the needs. -/
 def prunCost (n k q s σ' depth lc nd W : ℕ) : ℕ :=
-  lc * (k * s) + hopKc k q σ' * (2 * depth * n ^ 2) +
+  lc * (k * s) + hopKc k σ' * (2 * depth * n ^ 2) + 7 * (q + 2) * (2 * k * n ^ 2) +
     hopKi k s σ' * (2 * n ^ 2 + (2 * depth + 1) * nd) + xferK k s σ' * (4 * n ^ 2) +
     (k * s) * ((2 * depth + 1) * nd) + 3 * legA k s σ' * W
 
@@ -110,7 +111,8 @@ theorem pouter_final {n : ℕ} (c : PCtx k q) (Gf : PG k q)
     (hS0 : c.S0 ≤ n ^ 2) {W P : ℕ} (hW : ∑ τ ∈ range c.Δ, roundW (c.rd τ) ≤ W)
     (hpot : c.σ0.pot L c.s ≤ P) :
     c.σ0.Valid L c.s Gf.evs ∧
-      c.σ0.totalCost c.s c.σ' Gf.evs ≤ P + hopKc k q c.σ' * (2 * L.depth * n ^ 2) +
+      c.σ0.totalCost c.s c.σ' Gf.evs ≤ P + hopKc k c.σ' * (2 * L.depth * n ^ 2) +
+        7 * (q + 2) * (2 * k * n ^ 2) +
         hopKi k c.s c.σ' * (2 * n ^ 2 + (2 * L.depth + 1) * ∑ v, need v) +
         xferK k c.s c.σ' * (4 * n ^ 2) +
         (k * c.s) * ((2 * L.depth + 1) * ∑ v, need v) + 3 * legA k c.s c.σ' * W ∧
@@ -141,8 +143,10 @@ theorem pouter_final {n : ℕ} (c : PCtx k q) (Gf : PG k q)
   refine ⟨hOf.lin.valid, ?_, ?_⟩
   · have hcost := hOf.lin.cost
     have hturn := hOf.lin.turn
-    have h3 : hopKc k q c.σ' * Gf.nh ≤ hopKc k q c.σ' * (2 * L.depth * n ^ 2) :=
+    have h3 : hopKc k c.σ' * Gf.nh ≤ hopKc k c.σ' * (2 * L.depth * n ^ 2) :=
       Nat.mul_le_mul_left _ (hOf.hin.nh.trans (Nat.mul_le_mul_left _ hserved))
+    have h3' : 7 * (q + 2) * Gf.ncr ≤ 7 * (q + 2) * (2 * k * n ^ 2) :=
+      Nat.mul_le_mul_left _ (hOf.hin.ncr.trans (Nat.mul_le_mul_left _ hserved))
     have hni : Gf.ni ≤ 2 * n ^ 2 + (2 * L.depth + 1) * ∑ v, need v := by
       have := hOf.hin.ni; have := hOf.hin.nt
       unfold sBt at this

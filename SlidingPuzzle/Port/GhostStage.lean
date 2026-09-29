@@ -321,19 +321,25 @@ theorem pStage_linv {G : PG k q} (hL : PLInv L s σ' σ0 F0 G) {u x : Sq k} (hux
     have hL' := hL.cost
     show σ0.totalCost s σ' (G.evs ++ [.hop (L.stage u x).1 (L.stage u x).2 y m]) +
         (G.σ.step s (.hop (L.stage u x).1 (L.stage u x).2 y m)).pot L s ≤
-      σ0.pot L s + hopKc k q σ' * (G.nh + 1) +
+      σ0.pot L s + hopKc k σ' * (G.nh + 1) +
+        7 * (q + 2) * (G.ncr + LaneSys.pdist (L.stage u x).1.2.t.val (L.stage u x).2.val) +
         hopKi k s σ' * (G.ni + m.ind) +
         xferK k s σ' * G.nx + (k * s) * (∑ Q, ∑ z, (pStage L s τ G u x kd y m sp).B Q z) + G.jc
     rw [hc, hB]
-    have hcost : G.σ.cost s σ' (.hop (L.stage u x).1 (L.stage u x).2 y m) = hopKc k q σ' + G.σ.ljunk (L.stage u x).1 (lposP k s (L.stage u x).1 (L.stage u x).2) +
+    have hcost : G.σ.cost s σ' (.hop (L.stage u x).1 (L.stage u x).2 y m) = hopKc k σ' +
+        7 * (q + 2) * LaneSys.pdist (L.stage u x).1.2.t.val (L.stage u x).2.val +
+        G.σ.ljunk (L.stage u x).1 (lposP k s (L.stage u x).1 (L.stage u x).2) +
         hopKi k s σ' * m.ind := by
-      cases m <;> simp [PState.cost, Mode.ind]
+      cases m <;> simp [PState.cost, Mode.ind, crossK]
     rw [hcost]
-    have e1 : hopKc k q σ' * (G.nh + 1) = hopKc k q σ' * G.nh + hopKc k q σ' := by ring
+    have e1 : hopKc k σ' * (G.nh + 1) = hopKc k σ' * G.nh + hopKc k σ' := by ring
+    have e0 : 7 * (q + 2) * (G.ncr + LaneSys.pdist (L.stage u x).1.2.t.val (L.stage u x).2.val) =
+        7 * (q + 2) * G.ncr + 7 * (q + 2) * LaneSys.pdist (L.stage u x).1.2.t.val (L.stage u x).2.val := by
+      ring
     have e2 : hopKi k s σ' * (G.ni + m.ind) = hopKi k s σ' * G.ni + hopKi k s σ' * m.ind := by ring
     have e3 : (k * s) * ((∑ Q, ∑ z, G.B Q z) + (if kd = Kind.plh then 1 else 0)) =
         (k * s) * (∑ Q, ∑ z, G.B Q z) + (k * s) * (if kd = Kind.plh then 1 else 0) := by ring
-    rw [e1, e2, e3]
+    rw [e1, e2, e3, e0]
     omega
   · -- free tiles, untagged positions and placeholders
     have hu := plcnt_pStage L s τ td G hux kd y m sp (fun _ => True) (fun g => g = none)

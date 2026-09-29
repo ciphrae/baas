@@ -47,6 +47,7 @@ structure PHInv (c : PCtx k q) (G : PG k q) : Prop where
   nx : G.nx ≤ 4 * (∑ Z, G.served Z)
   nt : G.nt ≤ ∑ Z, G.served Z
   ni : G.ni ≤ G.nis + sBt G + ∑ Z, G.served Z
+  ncr : G.ncr ≤ 2 * k * ∑ Z, G.served Z
 
 theorem PHInv.identD {c : PCtx k q} {G : PG k q} (h : PHInv L c G) (D : Sq k) :
     PIdent L c.s G D none := by
@@ -109,7 +110,7 @@ theorem phstep_serve {G : PG k q} (hL : PLInv L c.s c.σ' c.σ0 c.F0 G) (hH : PH
   refine ⟨fun v x hvx => by
     have := I.ident v x hvx
     simp only [reduceCtorEq, false_and, if_false, add_zero] at this
-    exact this, I.dirty, I.binv, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    exact this, I.dirty, I.binv, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · intro Z
     have h1 := hH.free_lo Z
     have h2 := I.mono Z
@@ -160,6 +161,11 @@ theorem phstep_serve {G : PG k q} (hL : PLInv L c.s c.σ' c.σ0 c.F0 G) (hH : PH
   · rw [hsum]
     show (pServe L c.s τ G S D).ni ≤ (pServe L c.s τ G S D).nis + sBt (pServe L c.s τ G S D) + _
     have := I.ni; have := hH.ni; omega
+  · rw [hsum]
+    show (pServe L c.s τ G S D).ncr ≤ _
+    rw [I.ncr]
+    have := hH.ncr; have := rcross_le_k L D S
+    rw [mul_add]; omega
 
 theorem phstep_reloc {G : PG k q} (hL : PLInv L c.s c.σ' c.σ0 c.F0 G) (hH : PHInv L c G) (τ : ℕ)
     {E Z : Sq k} (hb : G.σ.blank = E) (hEZ : E ≠ Z)
@@ -169,7 +175,8 @@ theorem phstep_reloc {G : PG k q} (hL : PLInv L c.s c.σ' c.σ0 c.F0 G) (hH : PH
   obtain ⟨hL', hfr, hjc⟩ := pReloc_linv L hL hb hEZ (fun Q hQ => hfree Q (by rw [hb]; exact hQ))
     (hH.cap L hc hL)
   obtain ⟨r, rb, -⟩ := pReloc_same L (s := c.s) (σ' := c.σ') G E Z
-  refine ⟨hL'.congr L _ _ _, ?_, r.dirty L hH.dirty, r.binv L hH.binv, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨hL'.congr L _ _ _, ?_, r.dirty L hH.dirty, r.binv L hH.binv, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
+    ?_⟩
   · intro v x hvx
     have := (r.ident L (hH.identD L v)) v x hvx
     simp only [reduceCtorEq, false_and, if_false, add_zero] at this
@@ -203,6 +210,8 @@ theorem phstep_reloc {G : PG k q} (hL : PLInv L c.s c.σ' c.σ0 c.F0 G) (hH : PH
       sBt (pReloc L c.s c.σ' G E Z) + ∑ Q, (pReloc L c.s c.σ' G E Z).served Q
     have hsBt : sBt (pReloc L c.s c.σ' G E Z) = sBt G := by unfold sBt; rw [r.B]
     rw [r.ni, r.nis, hsBt, r.served]; exact hH.ni
+  · show (pReloc L c.s c.σ' G E Z).ncr ≤ 2 * k * ∑ Q, (pReloc L c.s c.σ' G E Z).served Q
+    rw [r.ncr, r.served]; exact hH.ncr
 
 end step
 

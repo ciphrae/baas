@@ -42,6 +42,7 @@ structure PG (k q : ℕ) where
   nx : ℕ
   nt : ℕ
   nis : ℕ
+  ncr : ℕ
   jc : ℕ
   wt : ℕ
 
@@ -97,6 +98,7 @@ def pStage (s τ : ℕ) (G : PG k q) (u x : Sq k) (kd : Kind) (y : Sq k) (m : Mo
     nx := G.nx
     nt := G.nt + (if kd ≠ .plh ∧ turning L (L.stage u x).1 x then 1 else 0)
     nis := G.nis + (if kd = .stk then m.ind else 0)
+    ncr := G.ncr + LaneSys.pdist (L.stage u x).1.2.t.val (L.stage u x).2.val
     jc := G.jc
     wt := G.wt }
 
@@ -180,7 +182,8 @@ structure PLInv (s σ' : ℕ) (σ0 : PState k q) (F0 : ℕ) (G : PG k q) : Prop 
   run_eq : G.σ = σ0.run s G.evs
   valid : σ0.Valid L s G.evs
   cost : σ0.totalCost s σ' G.evs + G.σ.pot L s ≤
-    σ0.pot L s + hopKc k q σ' * G.nh + hopKi k s σ' * G.ni + xferK k s σ' * G.nx +
+    σ0.pot L s + hopKc k σ' * G.nh + 7 * (q + 2) * G.ncr + hopKi k s σ' * G.ni +
+      xferK k s σ' * G.nx +
       (k * s) * (∑ Q, ∑ x, G.B Q x) + G.jc
   free_tot : (∑ Q, ∑ y, G.free Q y) + puntagged L s G + (∑ Q, ∑ x, G.B Q x) =
     F0 + ∑ Q, ∑ x, G.dA Q x

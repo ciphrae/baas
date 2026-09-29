@@ -181,7 +181,8 @@ theorem exists_valid_prun {n s : ℕ} [NeZero n] (td : TDims n k s q) (σ' : ℕ
       simp [NS, hG00, PG0]
   have hH0 : PHInv L c G00 := by
     refine ⟨?_, ?_, ?_, ?_, le_of_eq (by simp [hG00, PG0]), by simp [hG00, PG0],
-      by simp [hG00, PG0]; rfl, by simp [hG00, PG0], by simp [hG00, PG0], by simp [hG00, PG0]⟩
+      by simp [hG00, PG0]; rfl, by simp [hG00, PG0], by simp [hG00, PG0], by simp [hG00, PG0],
+      by simp [hG00, PG0]⟩
     · intro v x _
       have := plcnt_none L s G00 hgh0 (fun l => land l = v) (fun g => gtg g = some x) (by simp [gtg])
       rw [hstk0]

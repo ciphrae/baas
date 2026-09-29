@@ -91,4 +91,44 @@ theorem tcnt_le_one (D : Sq k) : ∀ w : Sq k, tcnt L w D ≤ 1 := by
         simp only
         rw [side_hop L w.2 D.2 h1 ht]
 
+/-- A route travels at most its row and column distances. -/
+theorem rcross_le (D : Sq k) :
+    ∀ w : Sq k, rcross L w D ≤ Nat.dist w.2.val D.2.val + Nat.dist w.1.val D.1.val := by
+  intro w
+  induction hr : L.srank w D generalizing w with
+  | zero => rw [srank_eq_zero hr, rcross_self]; omega
+  | succ r ih =>
+    have hwD : w ≠ D := fun e => by rw [e, srank_self] at hr; omega
+    have hrn := srank_nxt (L := L) hwD
+    have hI := ih (L.nxt w D) (by omega)
+    rw [rcross_cons L hwD]
+    by_cases hw : w.2 = D.2
+    · have h1 : w.1 ≠ D.1 := fun e => hwD (Prod.ext e hw)
+      have hn1 : (L.nxt w D).1 = (L.hop w.1 D.1).2 := by rw [nxt_col L hw]
+      have hn2 : (L.nxt w D).2 = w.2 := by rw [nxt_col L hw]
+      rw [hn1, hn2, hw, Nat.dist_self] at hI
+      rw [stage_col L hw, hw, Nat.dist_self]
+      have hd := L.hop_dist_add w.1 D.1 h1
+      simp only [LaneSys.pdist]
+      have : Nat.dist w.1.val (L.hop w.1 D.1).2.val - 1 ≤ Nat.dist w.1.val (L.hop w.1 D.1).2.val :=
+        Nat.sub_le _ _
+      omega
+    · have hn1 : (L.nxt w D).1 = w.1 := by rw [nxt_row L hw]
+      have hn2 : (L.nxt w D).2 = (L.hop w.2 D.2).2 := by rw [nxt_row L hw]
+      rw [hn1, hn2] at hI
+      rw [stage_row L hw]
+      have hd := L.hop_dist_add w.2 D.2 hw
+      simp only [LaneSys.pdist]
+      have : Nat.dist w.2.val (L.hop w.2 D.2).2.val - 1 ≤ Nat.dist w.2.val (L.hop w.2 D.2).2.val :=
+        Nat.sub_le _ _
+      omega
+
+theorem rcross_le_k (D w : Sq k) : rcross L w D ≤ 2 * k := by
+  have := rcross_le L D w
+  have h1 : Nat.dist w.2.val D.2.val < k := by
+    unfold Nat.dist; have := w.2.isLt; have := D.2.isLt; omega
+  have h2 : Nat.dist w.1.val D.1.val < k := by
+    unfold Nat.dist; have := w.1.isLt; have := D.1.isLt; omega
+  omega
+
 end SlidingPuzzle.Port

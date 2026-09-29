@@ -99,7 +99,7 @@ theorem landC (pd : PDims n k s q σ) (h3 : 3 ≤ σ) (B : Board n) {V : LaneI k
       (∀ x, ¬ InBoxOf s σ (colLand V) (lport ((true, V) : Ln k q)) x → x ≠ dropC k s V →
         (∀ r, r ≤ colPosP k s q V I → x ≠ colCell s V r) → C x = B x) ∧
       KeepK (rkey L s σ pd.hd) B C {B (colCell s V 0)} ∧
-      p.inefficientMoves ≤ 2 * σ + 14 * k + 35 + 7 * (q + 2) * k +
+      p.inefficientMoves ≤ 2 * σ + 14 * k + 35 + 7 * (q + 2) * LaneSys.pdist V.t.val I.val +
         ((Finset.range (colPosP k s q V I + 1)).filter fun r =>
           ¬ colGood V (classOf pd.hd (B (colCell s V r)))).card := by
   set P := colPosP k s q V I with hP
@@ -214,22 +214,17 @@ theorem landC (pd : PDims n k s q σ) (h3 : 3 ≤ σ) (B : Board n) {V : LaneI k
   have hsum := Finset.sum_le_sum hterm
   rw [Finset.sum_add_distrib, ← Finset.mul_sum, ← Finset.card_filter,
     Nat.card_multiples] at hsum
-  have hdivk : P / (s - q) ≤ k := by
-    apply Nat.div_le_of_le_mul
-    have : colLen L s V ≤ k * (s - q) := by
-      unfold colLen
-      apply Nat.mul_le_mul_right
-      have := V.t.isLt
-      cases e : V.side
-      · have := hbs.2 e; omega
-      · have := hbs.1 e; omega
-    rw [mul_comm]; omega
+  have hdivk : P / (s - q) = LaneSys.pdist V.t.val I.val := by
+    rw [hP]
+    unfold colPosP
+    rw [Nat.add_comm, Nat.add_mul_div_right _ _ hm, Nat.div_eq_of_lt (by split_ifs <;> omega),
+      zero_add]
   have hj : ∑ t ∈ Finset.range P, (if ¬ colGood V (classOf pd.hd (B (f (t + 1)))) then 1 else 0)
       ≤ ((Finset.range (P + 1)).filter fun r =>
         ¬ colGood V (classOf pd.hd (B (colCell s V r)))).card := by
     rw [Finset.card_filter, Finset.sum_range_succ']
     exact Nat.le_add_right _ _
-  have hmul : 7 * (q + 2) * (P / (s - q)) ≤ 7 * (q + 2) * k := Nat.mul_le_mul_left _ hdivk
+  rw [hdivk] at hsum
   omega
 
 end SlidingPuzzle.Port

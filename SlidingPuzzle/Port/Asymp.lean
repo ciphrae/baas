@@ -112,15 +112,14 @@ theorem optimalLength_le_hier4 {n h : ℕ} [NeZero n] (hh : 3 ≤ h)
     have e2 : 240 * h * k * r = 2 * (120 * h * k * r) := by ring
     have e3 : 240 * h * k = 2 * (120 * h * k) := by ring
     omega
-  have hhop : 2 * h * hopKc k q σ * k ≤ n := by
+  have hhop : 2 * h * hopKc k σ * k ≤ n := by
     unfold hopKc
-    have e : 2 * h * (30 * σ + 20 * k * (q + 2) + 1200 * k + 3000) * k =
-        60 * h * σ * k + (160 * h ^ 2 + 2480 * h) * 16 ^ h + 6000 * h * k := by
-      rw [← hkk, hq]; ring
-    have b1 : 2 * (2 * ((160 * h ^ 2 + 2480 * h) * 16 ^ h)) ≤ n := by
-      have := hc (4 * (160 * h ^ 2 + 2480 * h)) (by omega)
-      have e : 2 * (2 * ((160 * h ^ 2 + 2480 * h) * 16 ^ h)) = 4 * (160 * h ^ 2 + 2480 * h) * 16 ^ h := by
-        ring
+    have e : 2 * h * (30 * σ + 1200 * k + 3000) * k =
+        60 * h * σ * k + 2400 * h * 16 ^ h + 6000 * h * k := by
+      rw [← hkk]; ring
+    have b1 : 2 * (2 * (2400 * h * 16 ^ h)) ≤ n := by
+      have := hc (9600 * h) (by omega)
+      have e : 2 * (2 * (2400 * h * 16 ^ h)) = 9600 * h * 16 ^ h := by ring
       omega
     have b2 : 4 * (6000 * h * k) ≤ n := by
       have := hc (24000 * h) (by omega)
@@ -129,6 +128,9 @@ theorem optimalLength_le_hier4 {n h : ℕ} [NeZero n] (hh : 3 ≤ h)
       have e : 24000 * h * 16 ^ h = 4 * (6000 * h * 16 ^ h) := by ring
       omega
     omega
+  have hcr : 14 * (q + 2) * k * k ≤ n := by
+    have e : 14 * (q + 2) * k * k = (56 * h + 28) * 16 ^ h := by rw [mul_assoc, hkk, hq]; ring
+    rw [e]; exact hc _ (by omega)
   have hph : 8 * (2 * h + 1) * k * q * k ≤ n := by
     have e : 8 * (2 * h + 1) * k * q * k = (64 * h ^ 2 + 32 * h) * 16 ^ h := by rw [← hkk, hq]; ring
     rw [e]; exact hc _ (by omega)
@@ -144,7 +146,7 @@ theorem optimalLength_le_hier4 {n h : ℕ} [NeZero n] (hh : 3 ≤ h)
     rw [hk]; exact (Nat.even_pow.2 ⟨by decide, by omega⟩)
   have hqe : Even q := ⟨h * 2, by rw [hq]; ring⟩
   have := optimalLength_le_port_lanes (h := h) (Hier.sys 4 h (by norm_num) (by omega)) hsys rfl
-    (by omega) hke hqe (by omega) hqk hk64 hl hlo hlo2 hph hhop h8 hσX B
+    (by omega) hke hqe (by omega) hqk hk64 hl hlo hlo2 hph hhop hcr h8 hσX B
   exact this
 
 end SlidingPuzzle.Port

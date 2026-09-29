@@ -73,11 +73,13 @@ theorem pXfer_linv {G : PG k q} (hL : PLInv L s σ' σ0 F0 G) {pt : Pt} {c : Sq 
   · have hc' := pcost_append L hL (.xfer pt c)
     have hL' := hL.cost
     show σ0.totalCost s σ' (G.evs ++ [.xfer pt c]) + (G.σ.step s (.xfer pt c)).pot L s ≤
-      σ0.pot L s + hopKc k q σ' * G.nh + hopKi k s σ' * G.ni + xferK k s σ' * (G.nx + 1) +
+      σ0.pot L s + hopKc k σ' * G.nh + 7 * (q + 2) * G.ncr + hopKi k s σ' * G.ni +
+        xferK k s σ' * (G.nx + 1) +
         (k * s) * (∑ Q, ∑ x, G.B Q x) + G.jc
     rw [hc', pot_xfer]
     have : G.σ.cost s σ' (.xfer pt c) = xferK k s σ' := rfl
-    rw [this, mul_add, mul_one]
+    have e : xferK k s σ' * (G.nx + 1) = xferK k s σ' * G.nx + xferK k s σ' := by ring
+    rw [this, e]
     omega
 
 theorem pLeg_linv {G : PG k q} (hL : PLInv L s σ' σ0 F0 G) {Z y : Sq k} {p : Part} {z : Sq k}
@@ -244,7 +246,8 @@ theorem pLeg_linv {G : PG k q} (hL : PLInv L s σ' σ0 F0 G) {Z y : Sq k} {p : P
   · have hc' := pcost_append L hL (.leg Z y p z)
     have hL' := hL.cost
     show σ0.totalCost s σ' (G.evs ++ [.leg Z y p z]) + (G.σ.step s (.leg Z y p z)).pot L s ≤
-      σ0.pot L s + hopKc k q σ' * G.nh + hopKi k s σ' * G.ni + xferK k s σ' * G.nx +
+      σ0.pot L s + hopKc k σ' * G.nh + 7 * (q + 2) * G.ncr + hopKi k s σ' * G.ni +
+        xferK k s σ' * G.nx +
         (k * s) * (∑ Q, ∑ x, G.B Q x) + (G.jc + G.σ.cost s σ' (.leg Z y p z))
     rw [hc', pot_leg]
     omega

@@ -17,6 +17,17 @@ theorem tcnt_cons {w D : Sq k} (h : w ≠ D) :
     tcnt L w D = tcnt L (L.nxt w D) D + (if turning L (L.stage w D).1 D then 1 else 0) := by
   unfold tcnt; rw [nodes_cons L h, List.countP_cons]; simp
 
+/-- Blocks travelled by the stages of the route from `w` to `D`. -/
+def rcross (w D : Sq k) : ℕ :=
+  ((L.nodes w D).map fun u => LaneSys.pdist (L.stage u D).1.2.t.val (L.stage u D).2.val).sum
+
+theorem rcross_self (D : Sq k) : rcross L D D = 0 := by unfold rcross; rw [nodes_self]; rfl
+
+theorem rcross_cons {w D : Sq k} (h : w ≠ D) :
+    rcross L w D = rcross L (L.nxt w D) D +
+      LaneSys.pdist (L.stage w D).1.2.t.val (L.stage w D).2.val := by
+  unfold rcross; rw [nodes_cons L h, List.map_cons, List.sum_cons]; ring
+
 /-- All placeholders. -/
 def sBt (G : PG k q) : ℕ := ∑ Q, ∑ x, G.B Q x
 
@@ -54,6 +65,7 @@ structure PGateInv (Nv : Sq k → Sq k → ℕ) (G0 G : PG k q) (w D : Sq k) : P
   nx : G.nx ≤ G0.nx + (if w = D then 0 else 2) + 2 * tcnt L w D
   ni : G.ni + G0.nis + sBt G0 ≤ G0.ni + G.nis + sBt G
   nt : G.nt ≤ G0.nt + tcnt L w D
+  ncr : G.ncr = G0.ncr + rcross L w D
 
 theorem pGate_ins_prefix (G : PG k q) (u D : Sq k) : G.ins <+: (pGate L s τ G u D).ins := by
   unfold pGate; split_ifs <;> (rw [pStep_ins]; exact List.prefix_append _ _)
@@ -76,7 +88,7 @@ theorem pGates_inv (Nv : Sq k → Sq k → ℕ) (hK : CapOK L σ0 Nv) {G0 : PG k
     rw [pGates_self]
     refine ⟨hL, hb, fun h => absurd rfl h, by simpa using hI, hD, hB, fun _ _ _ => rfl,
       fun Z => le_rfl, rfl, rfl, rfl, by rw [nodes_self]; rfl, rfl, rfl, List.prefix_refl _,
-      by simp, le_rfl, by simp⟩
+      by simp, le_rfl, by simp, by rw [rcross_self]; rfl⟩
   | succ r ih =>
     intro hav hpre
     have hwD : w ≠ D := fun e => by rw [e, srank_self] at hr; omega
@@ -110,7 +122,7 @@ theorem pGates_inv (Nv : Sq k → Sq k → ℕ) (hK : CapOK L σ0 Nv) {G0 : PG k
       pStage_dirty L td τ hwD ((pAlign_same L s G1 (dport L w D)).dirty L I1.dirty)
     obtain ⟨o1, o2, o3, o4, o5⟩ := pStep_other L s τ G1 w D kd y sp
     refine ⟨O.lin, O.blank, fun _ => O.bp, ?_, hdirty, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
-      ?_, ?_⟩
+      ?_, ?_, ?_⟩
     · rw [if_neg hwD, ← hpA]; exact O.ident
     · -- placeholders
       intro v x
@@ -177,6 +189,7 @@ theorem pGates_inv (Nv : Sq k → Sq k → ℕ) (hK : CapOK L σ0 Nv) {G0 : PG k
       have h2 := I1.nt
       rw [tcnt_cons L hwD]
       omega
+    · rw [O.ncr, I1.ncr, rcross_cons L hwD]; ring
 
 theorem act_of_nodes' (D : Sq k) : ∀ w u, u ∈ L.nodes (L.nxt w D) D → w ≠ D → L.Act u D :=
   act_of_nodes L D
@@ -200,6 +213,7 @@ structure PServeInv (Nv : Sq k → Sq k → ℕ) (G0 G : PG k q) (S D : Sq k) : 
   nx : G.nx ≤ G0.nx + 2 + 2 * tcnt L S D
   ni : G.ni + G0.nis + sBt G0 ≤ G0.ni + G.nis + sBt G + 1
   nt : G.nt ≤ G0.nt + tcnt L S D
+  ncr : G.ncr = G0.ncr + rcross L S D
 
 include td in
 theorem pServe_inv (Nv : Sq k → Sq k → ℕ) (hK : CapOK L σ0 Nv) {G0 : PG k q}
@@ -225,7 +239,7 @@ theorem pServe_inv (Nv : Sq k → Sq k → ℕ) (hK : CapOK L σ0 Nv) {G0 : PG k
   have hdirty : PDirtyInv L s (pStep L s τ G1 S D .sch D .tl) :=
     pStage_dirty L td τ hSD ((pAlign_same L s G1 (dport L S D)).dirty L I1.dirty)
   obtain ⟨o1, o2, o3, o4, o5⟩ := pStep_other L s τ G1 S D .sch D .tl
-  refine ⟨O.lin, O.blank, ?_, hdirty, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨O.lin, O.blank, ?_, hdirty, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · have := O.ident
     simpa [pendA] using this
   · intro v x
@@ -280,6 +294,7 @@ theorem pServe_inv (Nv : Sq k → Sq k → ℕ) (hK : CapOK L σ0 Nv) {G0 : PG k
     have h2 := I1.nt
     rw [tcnt_cons L hSD]
     omega
+  · rw [O.ncr, I1.ncr, rcross_cons L hSD]; ring
 
 end gates
 

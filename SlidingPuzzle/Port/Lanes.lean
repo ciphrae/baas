@@ -8,7 +8,7 @@ import SlidingPuzzle.Tree.FinalLog
 
 Parberry's prefix reduces the side `n` to `k·(n/k)`, where the port algorithm runs. For a
 tight lane system of depth `h`, the cost is `1040 k² (n/k)³` once `n` exceeds `k²` times
-`8q`, `16λ`, `8(2h+1)q` and `2h·hopKc`, and `σ²` exceeds the reserve of a square. -/
+`8q`, `16λ`, `14(q+2)`, `8(2h+1)q` and `2h·hopKc`, and `σ²` exceeds the reserve of a square. -/
 set_option maxRecDepth 4096
 
 namespace SlidingPuzzle.Port
@@ -58,7 +58,8 @@ theorem optimalLength_le_port_lanes {n k q h σ : ℕ} [NeZero n] (L : LaneSys k
     (hd : L.depth = h) (hh : 1 ≤ h) (hke : Even k) (hqe : Even q) (hq4 : 4 ≤ q) (hqk : q ≤ k)
     (hk : 64 ≤ k) (hl : 64 ≤ GroupedOrder.lamN n)
     (hlo : 8 * k * q * k ≤ n) (hlo2 : 16 * k * GroupedOrder.lamN n * k ≤ n)
-    (hph : 8 * (2 * h + 1) * k * q * k ≤ n) (hhop : 2 * h * hopKc k q σ * k ≤ n)
+    (hph : 8 * (2 * h + 1) * k * q * k ≤ n) (hhop : 2 * h * hopKc k σ * k ≤ n)
+    (hcr : 14 * (q + 2) * k * k ≤ n)
     (h8 : 8 ≤ σ)
     (hσ : 2 * ((2 * (n / k) + 2 * k + (15 * GroupedOrder.lamN n + 1) * k) * (2 * k) + 4 * k * q)
       + 2 ≤ σ ^ 2)
@@ -72,7 +73,8 @@ theorem optimalLength_le_port_lanes {n k q h σ : ℕ} [NeZero n] (L : LaneSys k
   have hsq : 8 * k * q ≤ s := hdiv hlo
   have hsl : 16 * k * GroupedOrder.lamN n ≤ s := hdiv hlo2
   have hsph : 8 * (2 * h + 1) * k * q ≤ s := hdiv hph
-  have hshop : 2 * h * hopKc k q σ ≤ s := hdiv hhop
+  have hshop : 2 * h * hopKc k σ ≤ s := hdiv hhop
+  have hscr : 14 * (q + 2) * k ≤ s := hdiv hcr
   have hn' : k * s ≤ n := Nat.mul_div_le n k
   have hks : 1024 * k ≤ s := by
     have : 1024 * k ≤ 16 * k * GroupedOrder.lamN n := by
@@ -83,8 +85,8 @@ theorem optimalLength_le_port_lanes {n k q h σ : ℕ} [NeZero n] (L : LaneSys k
   have hdim : TDims (k * s) k s q := by
     refine ⟨⟨by omega, hke, by omega, rfl, by omega⟩, by omega, hqe, hqk⟩
   have hfitσ : 2 * σ + 2 * k + 8 ≤ s := by
-    have h1 : 2 * σ + 2 * k + 8 ≤ hopKc k q σ := by unfold hopKc; omega
-    have h2 : hopKc k q σ ≤ 2 * h * hopKc k q σ := Nat.le_mul_of_pos_left _ (by omega)
+    have h1 : 2 * σ + 2 * k + 8 ≤ hopKc k σ := by unfold hopKc; omega
+    have h2 : hopKc k σ ≤ 2 * h * hopKc k σ := Nat.le_mul_of_pos_left _ (by omega)
     omega
   have pd : PDims (k * s) k s q σ := ⟨hdim, by omega, hfitσ⟩
   have hlam_le : GroupedOrder.lamN (k * s) ≤ GroupedOrder.lamN n := lamN_mono hn'
@@ -125,7 +127,7 @@ theorem optimalLength_le_port_lanes {n k q h σ : ℕ} [NeZero n] (L : LaneSys k
     (la := GroupedOrder.lamN (k * s)) L pd (by omega) hσ2 hfit hcap hev.1 hev.2 B
   have hbud := port_budget k q s h (GroupedOrder.lamN (k * s)) σ (laneCells L s)
     (∑ v, needAt L s (GroupedOrder.lamN (k * s)) v) (∑ Q, resv L (k * s) s Q)
-    hk hl' hsq h16 (by omega) hh hshop hsph (laneCells_bound L) (total_need_le L _)
+    hk hl' hsq h16 (by omega) hh hshop hscr hsph (laneCells_bound L) (total_need_le L _)
     (total_resv_le L hdim)
   have hpb : portBound L (k * s) s σ ≤ 520 * (k ^ 2 * s ^ 3) := by
     unfold portBound

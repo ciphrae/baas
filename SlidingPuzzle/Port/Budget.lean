@@ -3,7 +3,8 @@ import SlidingPuzzle.Tree.FineLog
 
 /-! # The port bound is a constant times `k² s³`
 
-Besides the tree constraints `8kq ≤ s` and `16kλ ≤ s`, the depth enters only through
+Besides the tree constraints `8kq ≤ s` and `16kλ ≤ s`, and `14(q+2)k ≤ s` for the lane
+crossings (charged by distance, `2k` per tile), the depth enters only through
 `2d·hopKc ≤ s` (the cheap hops of a tile) and `8(2d+1)kq ≤ s` (the placeholders). -/
 namespace SlidingPuzzle.Port
 open Finset
@@ -88,7 +89,7 @@ end budget
 
 theorem port_budget (k q s d lam σ lc nd rv : ℕ)
     (hk : 64 ≤ k) (hlam : 64 ≤ lam) (hkq : 8 * k * q ≤ s) (hkl : 16 * k * lam ≤ s)
-    (hq : 1 ≤ q) (hd : 1 ≤ d) (hhop : 2 * d * hopKc k q σ ≤ s)
+    (hq : 1 ≤ q) (hd : 1 ≤ d) (hhop : 2 * d * hopKc k σ ≤ s) (hcr : 14 * (q + 2) * k ≤ s)
     (hph : 8 * (2 * d + 1) * k * q ≤ s)
     (hlc : lc ≤ 2 * k ^ 2 * q * s)
     (hnd : nd ≤ 4 * k ^ 2 * q * s + (14 + 30 * lam) * k ^ 3 * q)
@@ -131,17 +132,17 @@ theorem port_budget (k q s d lam σ lc nd rv : ℕ)
   have g7 : s ≤ k * s := Nat.le_mul_of_pos_left _ (by omega)
   -- the per-event budgets
   have hσ : 30 * σ ≤ s := by
-    have h1 : 30 * σ ≤ hopKc k q σ := by unfold hopKc; omega
-    have h2 : hopKc k q σ ≤ 2 * d * hopKc k q σ :=
+    have h1 : 30 * σ ≤ hopKc k σ := by unfold hopKc; omega
+    have h2 : hopKc k σ ≤ 2 * d * hopKc k σ :=
       Nat.le_mul_of_pos_left _ (by omega)
     omega
   have hKi : hopKi k s σ ≤ 13 * s := by unfold hopKi; omega
   have hKx : xferK k s σ ≤ 33 * s := by unfold xferK; omega
   have hA : legA k s σ ≤ 4 * s := by unfold legA; omega
   -- the terms
-  have t1 : hopKc k q σ * (2 * d * (k * s) ^ 2) ≤ k ^ 2 * s ^ 3 := by
+  have t1 : hopKc k σ * (2 * d * (k * s) ^ 2) ≤ k ^ 2 * s ^ 3 := by
     have := Nat.mul_le_mul_right (k ^ 2 * s ^ 2) hhop
-    calc hopKc k q σ * (2 * d * (k * s) ^ 2) = 2 * d * hopKc k q σ * (k ^ 2 * s ^ 2) := by ring
+    calc hopKc k σ * (2 * d * (k * s) ^ 2) = 2 * d * hopKc k σ * (k ^ 2 * s ^ 2) := by ring
       _ ≤ s * (k ^ 2 * s ^ 2) := this
       _ = _ := by ring
   have t2 : hopKi k s σ * (2 * (k * s) ^ 2 + (2 * d + 1) * nd) ≤ 27 * (k ^ 2 * s ^ 3) := by
@@ -210,6 +211,11 @@ theorem port_budget (k q s d lam σ lc nd rv : ℕ)
         _ = _ := by ring
     omega
   have hsmall : 2 * (k * s) + 2 * s ≤ k ^ 2 * s ^ 3 := by omega
+  have t9 : 7 * (q + 2) * (2 * k * (k * s) ^ 2) ≤ k ^ 2 * s ^ 3 := by
+    have := Nat.mul_le_mul_right (k ^ 2 * s ^ 2) hcr
+    calc 7 * (q + 2) * (2 * k * (k * s) ^ 2) = 14 * (q + 2) * k * (k ^ 2 * s ^ 2) := by ring
+      _ ≤ s * (k ^ 2 * s ^ 2) := this
+      _ = _ := by ring
   unfold prunCost
   omega
 

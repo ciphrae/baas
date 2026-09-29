@@ -94,7 +94,7 @@ theorem land_any (pd : PDims n k s q σ) (h3 : 3 ≤ σ) (B : Board n) (l : Ln k
         (∀ x, ¬ InBoxOf s σ (land l) (lport l) x → x ≠ d →
           (∀ r, r ≤ lposP k s l J → x ≠ lcell s l r) → C x = B x)) ∧
       KeepK (rkey L s σ pd.hd) B C {B (lcell s l 0)} ∧
-      p.inefficientMoves ≤ 2 * σ + 14 * k + 35 + 7 * (q + 2) * k +
+      p.inefficientMoves ≤ 2 * σ + 14 * k + 35 + 7 * (q + 2) * LaneSys.pdist l.2.t.val J.val +
         ((Finset.range (lposP k s l J + 1)).filter fun r =>
           ¬ lgood l (classOf pd.hd (B (lcell s l r)))).card := by
   obtain ⟨a, H⟩ := l
@@ -103,7 +103,7 @@ theorem land_any (pd : PDims n k s q σ) (h3 : 3 ≤ σ) (B : Board n) (l : Ln k
     have hpos := blen_pos_of_in L hJ
     refine ⟨C, p, h1, h2, ⟨dropR s H, rkey_dropR L pd H hpos, h3', h4⟩, h5, ?_⟩
     simp only [lcell, lposP, lgood, Bool.false_eq_true, if_false] at h6 ⊢
-    have : 0 ≤ 7 * (q + 2) * k := Nat.zero_le _
+    have : 0 ≤ 7 * (q + 2) * LaneSys.pdist H.t.val J.val := Nat.zero_le _
     omega
   · obtain ⟨C, p, h1, h2, h3', h4, h5, h6⟩ := landC L pd h3 B hJ hbl
     have hpos := blen_pos_of_in L hJ

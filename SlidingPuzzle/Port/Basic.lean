@@ -154,9 +154,12 @@ end PState
 
 /-! ## Budgets -/
 
-/-- The fixed part of a cheap hop: landing from the port, crossings of row groups,
-insertion by a three-cycle in the port's corner. -/
-def hopKc (k q σ : ℕ) : ℕ := 30 * σ + 20 * k * (q + 2) + 1200 * k + 3000
+/-- The fixed part of a cheap hop: landing from the port, insertion by a three-cycle in the
+port's corner. -/
+def hopKc (k σ : ℕ) : ℕ := 30 * σ + 1200 * k + 3000
+
+/-- The crossings of row groups by a hop along `l` from block `J`: per block travelled. -/
+def crossK (q : ℕ) (l : Ln k q) (J : Fin k) : ℕ := 7 * (q + 2) * LaneSys.pdist l.2.t.val J.val
 
 /-- The extra part of an importing hop: a three-cycle in the whole square. -/
 def hopKi (k s σ : ℕ) : ℕ := 10 * s + 30 * σ + 1200 * k + 2000
@@ -171,7 +174,7 @@ namespace PState
 
 /-- Inefficiency budgets. -/
 def cost (s σ' : ℕ) (σ : PState k q) : PEvent k q → ℕ
-  | .hop l J _ m => hopKc k q σ' + σ.ljunk l (lposP k s l J) +
+  | .hop l J _ m => hopKc k σ' + crossK q l J + σ.ljunk l (lposP k s l J) +
       (match m with | .cheap => 0 | .imp _ _ => hopKi k s σ')
   | .xfer _ _ => xferK k s σ'
   | .leg Z _ _ _ => legK k s σ' (sqDist σ.blank Z)

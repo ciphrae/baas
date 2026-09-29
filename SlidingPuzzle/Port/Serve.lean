@@ -154,18 +154,19 @@ structure XSame (G G' : PG k q) : Prop where
   wt : G'.wt = G.wt
   blank : G'.σ.blank = G.σ.blank
   lane : G'.σ.lane = G.σ.lane
+  ncr : G'.ncr = G.ncr
 
 theorem XSame.refl (G : PG k q) : XSame G G :=
-  ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+  ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
 theorem XSame.pX (G : PG k q) (pt : Pt) : XSame G (pX L s G pt) :=
-  ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+  ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
 theorem XSame.trans {G G' G'' : PG k q} (h : XSame G G') (h' : XSame G' G'') : XSame G G'' :=
   ⟨h'.ins.trans h.ins, h'.sched.trans h.sched, h'.stock.trans h.stock, h'.free.trans h.free,
     h'.B.trans h.B, h'.dA.trans h.dA, h'.served.trans h.served, h'.sent.trans h.sent,
     h'.nh.trans h.nh, h'.ni.trans h.ni, h'.nt.trans h.nt, h'.nis.trans h.nis, h'.jc.trans h.jc,
-    h'.wt.trans h.wt, h'.blank.trans h.blank, h'.lane.trans h.lane⟩
+    h'.wt.trans h.wt, h'.blank.trans h.blank, h'.lane.trans h.lane, h'.ncr.trans h.ncr⟩
 
 theorem XSame.stk {G G' : PG k q} (h : XSame G G') : G'.stk = G.stk := by
   funext Q z; unfold PG.stk; rw [h.stock]
