@@ -163,7 +163,7 @@ theorem ins_any (pd : PDims n k s q σ) (h4 : 4 ≤ σ) (B : Board n) (l : Ln k 
     ∃ C : Board n, ∃ p : Path B C, ∃ T : Tile n,
       C (blank B) = T ∧ T.val ≠ 0 ∧ classOf pd.hd T = y ∧
       InBoxOf s σ S (lport l) (blank C) ∧
-      (∀ x, rkey L s σ pd.hd x = none → x ≠ blank B → C x = B x) ∧
+      (∀ x, x ≠ blank B → (∀ p : Part, rkey L s σ pd.hd x ≠ some (S, p)) → C x = B x) ∧
       KeepKey L pd.hd B C {T} ∧ key L pd.hd (position B T) = some S ∧
       (∀ Q pt z, pcOf L pd C Q pt z = PState.srcPc (pcOf L pd B) S (lport l) y m Q pt z) ∧
       p.inefficientMoves ≤ insK k q s σ m := by
@@ -175,7 +175,7 @@ theorem ins_any (pd : PDims n k s q σ) (h4 : 4 ≤ σ) (B : Board n) (l : Ln k 
     obtain ⟨C, p, hCv, hbC, hCx, K, hi⟩ := ins_cheap L pd h4 B l S ho hv hvk htk
     have hpB : position B (B t) = t := by simp [position]
     have hpC : position C (B t) = blank B := position_eq_of_apply hCv
-    refine ⟨C, p, B t, hCv, ht0, htc, hbC, fun x hx hxv => hCx x hxv (by rw [hx]; simp),
+    refine ⟨C, p, B t, hCv, ht0, htc, hbC, fun x hxv hx => hCx x hxv (hx _),
       keepKey_of_keepK L pd.hd K, by rw [hpB]; exact key_of_rkey L pd.hd htk, ?_, hi⟩
     intro Q pt' z
     have e := kcount_move1 (rkey L s σ pd.hd) pd.hd K ht0 (some (Q, some pt')) z
@@ -212,8 +212,8 @@ theorem ins_any (pd : PDims n k s q σ) (h4 : 4 ≤ σ) (B : Board n) (l : Ln k 
       · exact K' t h0 (by simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at ht ⊢
                           exact ⟨ht, e⟩)
     refine ⟨C, p', B ty, hCv, hty0, htyc, hbC,
-      fun x hx hxv => hCx x hxv (fun e => by rw [e] at hx; exact absurd (hx.symm.trans htyk) (by simp))
-        (by rw [hx]; simp), KK, by rw [hpB1]; exact key_of_rkey L pd.hd htyk, ?_, hi⟩
+      fun x hxv hx => hCx x hxv (fun e => hx p (by rw [e]; exact htyk)) (hx _), KK,
+      by rw [hpB1]; exact key_of_rkey L pd.hd htyk, ?_, hi⟩
     intro Q pt' z'
     have e := kcount_move2 (rkey L s σ pd.hd) pd.hd K hTZ hty0 htz0 (some (Q, some pt')) z'
     rw [hpB1, hpB2, hpC1, hpC2, htyk, htzk, hvk, htyc, htzc] at e
