@@ -85,3 +85,54 @@ that does not grow with `h` as well.
    ports (`RunGhost`, `RunServe`, `RunInv`, `RunLocal`, `RunRank`, `Preload`).
 4. Accounting: a new `runCost` with `hopK_src`, `hopK_gw`, and FineLog/LamLog with a
    depth rule chosen for the new balance.
+
+## Protocol (as implemented in `SlidingPuzzle/Port/`)
+
+Square-local coordinates `(ro, co)`; lanes as in `Tree` except the column insertion
+offsets (`loff`): `s - 1 - q` (lanes after the landing band) and `s - 1 - k` (before),
+so a column hop inserts on the row where the lane's head is dropped.
+
+**Ports.** Three per square, keyed by the corner: `TL` serves row lanes with
+`side = false` and column lanes with `side = false`, `TR` row lanes with `side = true`,
+`BL` column lanes with `side = true`. Each port is a box of side `σ` plus its *line*:
+
+| port | line (drop and insertion cells) | box |
+| --- | --- | --- |
+| `TR` | column `s - 1`, rows `< q` | rows `[k+1, k+1+σ)`, cols `[s-1-σ, s-1)` |
+| `TL` | column `k`, rows `< q`; row `k`, cols `< q` | rows `[k+1, k+1+σ)`, cols `[k+1, k+1+σ)` |
+| `BL` | row `s - 1`, cols `< q` | rows `[s-1-σ, s-1)`, cols `[k+1, k+1+σ)` |
+
+The port's cells are its box and the *region* cells of its line. The lane head is
+dropped on the line by a jump (length `k + 1` for `TL`, a move for `TR`, `q + 1` for `BL`).
+The box is reached from the line by a jump of column (row) offset one. A cheap
+three-cycle is staged at the square's corner, in the box `[0, k+1+σ)²` or its reflection.
+The reservoir's boundary ring stays out of the boxes.
+
+**Abstract state.** `PState` = the `Tree` lanes and region counts `cnt` (per square,
+ports included) + exact port counts `pc Q pt y` + the blank's square and port `bp`
+(the blank is always parked in a port box).
+
+**Events.**
+- `hop l J y md`: cheap landing from the port of `l` at `land l` (the head goes into that
+  port), lane walk, insertion at the source. `md = cheap`: `y` from the source's port of `l`,
+  cost `O(σ + k + q)` + junk. `md = imp pt z`: `y` from part `pt` (main or another
+  port) of the source, via a square-box three-cycle staged at the corner, evicting `z` from
+  the port of `l` into `pt`; cost `+ 10 s + O(σ + k)`. The blank ends in the source's port of `l`.
+- `xfer Q pt1 pt2 c`: blank from port `pt1` to port `pt2` of `Q`, a class-`c` tile goes
+  from `pt2` to `pt1` (jump in, box cycle, jump back, jump across). Cost `O(s)`.
+- `leg E Z y pt z`: relocation between aligned squares, same port kind; a class-`y` tile
+  from part `pt` of `Z` goes into `E`'s port, `z` is evicted from `Z`'s port into `pt`.
+
+**Ghost invariants (new).** Surplus: `D Q pt z = stock Q z` if `z ≠ Q`, the next hop of
+`z` from `Q` stays on the axis it arrived on, and `pt` is its port; else `0`.
+- `StockIn`: `stock Q x ≤ pc Q (port of stage Q x) x` for same-axis `x`. It is preserved
+  because a tile only leaves a port when `pc > D` for its class (or it is the stock tile being
+  used), and a clean head arrives in the port of its next hop (same axis, hence same side,
+  by `hop_ge`/`hop_le`).
+- Capacity: `σ² > Σ_x (Nv Q x + [Act Q x]) + 1`, so a port holding the blank or full always
+  has a surplus class, since `stock ≤ Nv + 1` from `Ident` and `BInv`.
+
+Consequences: a same-axis gateway always has its stock in the port (cheap), and imports
+happen only at sources, turns and placeholders without port surplus. Transfers happen at
+most at the destination (after legs) and at the turn. So the expensive work per serve is
+`O(s)`, and each of the `≤ 2h` hops costs `O(σ + k + q)`.
