@@ -92,18 +92,20 @@ theorem optimalLength_le_port_residual {n k q σ la : ℕ} [NeZero n] (L : LaneS
   have h := optimalLength_le_prefix_residual_solution B (n - k * (n / k)) hdn C p hC A hA qpath hq'
   omega
 
-/-- The port bound for a tight lane system of depth `h`: `300 k² (n/k)³` plus the cheap hops. -/
+/-- The port bound for a tight lane system of depth `h`: `190 k² (n/k)³ + 780 k³ q (n/k)²` plus
+the cheap hops. -/
 theorem optimalLength_le_port_lanes {n k q h σ : ℕ} [NeZero n] (L : LaneSys k q) (hT : L.Tight)
     (hd : L.depth = h) (hh : 1 ≤ h) (hke : Even k) (hqe : Even q) (hq2 : 2 ≤ q) (hqk : q ≤ k)
     (hk : 64 ≤ k) (hl : 64 ≤ GroupedOrder.lamN n)
     (hlo : 8 * k * q * k ≤ n) (hlo2 : 16 * k * GroupedOrder.lamN n * k ≤ n)
-    (hhk : 2 * h + 1 ≤ k) (hcr : 7 * (q + 2) * k * k ≤ n)
+    (hhk : 2 * h + 1 ≤ k)
     (h9 : 9 * σ * k ≤ n) (h8 : 8 ≤ σ)
     (hσ : 2 * ((2 * (n / k) + 2 * k + (15 * GroupedOrder.lamN n + 1) * k) * (2 * k) + 4 * k * q)
       + 2 ≤ σ ^ 2)
     (B : ReachableBoard n) :
     optimalLength B ≤ manhattan B.val + 2 * ((15 * n ^ 2 + 3002 * n + 1) * k) +
-      2 * (300 * (k ^ 2 * (n / k) ^ 3) + hopKc k σ * (2 * h * (k * (n / k)) ^ 2)) := by
+      2 * (190 * (k ^ 2 * (n / k) ^ 3) + 780 * (k ^ 3 * q * (n / k) ^ 2) +
+        hopKc k σ * (2 * h * (k * (n / k)) ^ 2)) := by
   set s := n / k with hs
   have hk0 : 0 < k := by omega
   have hdiv : ∀ {a : ℕ}, a * k ≤ n → a ≤ s := fun h => by
@@ -114,10 +116,6 @@ theorem optimalLength_le_port_lanes {n k q h σ : ℕ} [NeZero n] (L : LaneSys k
     have := Nat.mul_le_mul_left (8 * q) hhk
     have e : 8 * q * (2 * h + 1) = 8 * (2 * h + 1) * q := by ring
     have e2 : 8 * q * k = 8 * k * q := by ring
-    omega
-  have hscr : 14 * (q + 2) * k ≤ 2 * s := by
-    have := hdiv hcr
-    have e : 14 * (q + 2) * k = 2 * (7 * (q + 2) * k) := by ring
     omega
   have hs9 : 9 * σ ≤ s := hdiv h9
   have hn' : k * s ≤ n := Nat.mul_div_le n k
@@ -160,11 +158,12 @@ theorem optimalLength_le_port_lanes {n k q h σ : ℕ} [NeZero n] (L : LaneSys k
     omega
   have hres := optimalLength_le_port_residual (n := n) (k := k) (q := q) (σ := σ)
     (la := GroupedOrder.lamN (k * s)) L pd (by omega) hσ2 hfit hcap hev.1 hev.2 B
-  have hbud := port_budget2 k q s h (GroupedOrder.lamN (k * s)) σ (laneCells L s)
+  have hbud := port_budget3 k q s h (GroupedOrder.lamN (k * s)) σ (laneCells L s)
     (∑ v, needAt L s (GroupedOrder.lamN (k * s)) v) (∑ Q, resv L (k * s) s Q)
-    (by omega) hl' hsq h16 (by omega) hscr hsph hs9 (laneCells_bound L) (total_need_le L _)
+    (by omega) hl' hsq h16 (by omega) hsph hs9 (laneCells_bound L) (total_need_le L _)
     (total_resv_le L hdim)
-  have hpb : portBound L (k * s) s σ ≤ 300 * (k ^ 2 * s ^ 3) + hopKc k σ * (2 * h * (k * s) ^ 2) := by
+  have hpb : portBound L (k * s) s σ ≤ 190 * (k ^ 2 * s ^ 3) + 780 * (k ^ 3 * q * s ^ 2) +
+      hopKc k σ * (2 * h * (k * s) ^ 2) := by
     unfold portBound
     rw [hd]
     exact hbud
