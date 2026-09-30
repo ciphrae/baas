@@ -41,7 +41,7 @@ structure PHInv (c : PCtx k q) (G : PG k q) : Prop where
   binv : PBInv L G c.Nv
   free_lo : ∀ Z, c.fr0 Z + G.sent Z + (if c.σ0.blank = Z then 1 else 0) + psA G Z ≤
     pfr G Z + psB G Z + G.served Z + (if G.σ.blank = Z then 1 else 0)
-  jc : G.jc ≤ 3 * legA k c.s c.σ' * G.wt
+  jc : 8 * G.jc ≤ legA k c.s c.σ' * G.wt
   nh : G.nh ≤ 2 * L.depth * (∑ Z, G.served Z)
   sched_sum : (∑ Z, G.served Z) + (∑ S, ∑ D, G.sched S D) = c.S0
   nx : G.nx ≤ 4 * (∑ Z, G.served Z)
@@ -125,7 +125,7 @@ theorem phstep_serve {G : PG k q} (hL : PLInv L c.s c.σ' c.σ0 c.F0 G) (hH : PH
     · by_cases h4 : Z = S
       · subst h4; simp only [if_true, if_neg h3, if_neg (Ne.symm h3)] at h1 ⊢; omega
       · simp only [if_neg h3, if_neg h4, if_neg (Ne.symm h3), if_neg (Ne.symm h4)] at h1 ⊢; omega
-  · show (pServe L c.s τ G S D).jc ≤ 3 * legA k c.s c.σ' * (pServe L c.s τ G S D).wt
+  · show 8 * (pServe L c.s τ G S D).jc ≤ legA k c.s c.σ' * (pServe L c.s τ G S D).wt
     rw [I.jc, I.wt]; exact hH.jc
   · rw [hsum]
     show (pServe L c.s τ G S D).nh ≤ _
@@ -194,9 +194,10 @@ theorem phstep_reloc {G : PG k q} (hL : PLInv L c.s c.σ' c.σ0 c.F0 G) (hH : PH
     rw [hb] at h1
     simp only [@eq_comm _ E Q, @eq_comm _ Z Q] at h1 h2 ⊢
     omega
-  · show (pReloc L c.s c.σ' G E Z).jc ≤ 3 * legA k c.s c.σ' * (G.wt + relocWeight (HEvent.reloc E Z))
+  · show 8 * (pReloc L c.s c.σ' G E Z).jc ≤ legA k c.s c.σ' * (G.wt + relocWeight (HEvent.reloc E Z))
     have := hH.jc
-    nlinarith
+    rw [mul_add]
+    omega
   · show (pReloc L c.s c.σ' G E Z).nh ≤ 2 * L.depth * ∑ Q, (pReloc L c.s c.σ' G E Z).served Q
     rw [r.nh, r.served]; exact hH.nh
   · show (∑ Q, (pReloc L c.s c.σ' G E Z).served Q) +

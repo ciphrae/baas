@@ -148,12 +148,13 @@ theorem corner_facts' {E Z : Sq k} (c : ¬ (E.1 = Z.1 ∨ E.2 = Z.2)) :
       sqDist E (Z.1, E.2) + sqDist (Z.1, E.2) Z = sqDist E Z ∧ Z ≠ E :=
   corner_facts c
 
-/-- The cost scale of a leg. -/
-def legA (k s σ' : ℕ) : ℕ := s + 3 + 30 * σ' + 1200 * k
+/-- Eight times the cost of a relocation, per unit of relocation weight: the distance part
+of a leg costs `3(s+3)` per unit, the fixed part `30σ + 1200k` at most one eighth per unit
+(a relocation has weight at least `16` per leg). -/
+def legA (k s σ' : ℕ) : ℕ := 24 * (s + 3) + (30 * σ' + 1200 * k)
 
-theorem legK_le (k s σ' d : ℕ) : legK k s σ' d ≤ legA k s σ' * (40 + 21 * d) := by
-  unfold legK legA
-  nlinarith
+theorem legK_eq (k s σ' d : ℕ) : legK k s σ' d = (s + 3) * (40 + 21 * d) + (30 * σ' + 1200 * k) := by
+  unfold legK; ring
 
 section reloc
 
@@ -171,21 +172,18 @@ theorem pReloc_linv {G : PG k q} (hL : PLInv L s σ' σ0 F0 G) {E Z : Sq k} (hb 
     (hcap : ∀ Q pt, (∑ z, G.stk Q z) + 1 < psz σ0 Q pt) :
     PLInv L s σ' σ0 F0 (pReloc L s σ' G E Z) ∧ (∀ Q, pfr (pReloc L s σ' G E Z) Q +
       (if Q = Z then 1 else 0) = pfr G Q + (if Q = E then 1 else 0)) ∧
-      (pReloc L s σ' G E Z).jc ≤ G.jc + 3 * legA k s σ' * relocWeight (HEvent.reloc E Z) := by
+      8 * (pReloc L s σ' G E Z).jc ≤ 8 * G.jc + legA k s σ' * relocWeight (HEvent.reloc E Z) := by
   unfold pReloc
   split_ifs with c
   · rw [show relocWeight (HEvent.reloc E Z) = 16 + 7 * sqDist E Z by simp [relocWeight, c]]
     subst hb
     refine ⟨pLegF_linv L hL hEZ c (hf Z (Ne.symm hEZ)) (hcap Z _),
       pLegF_fr L G Z hEZ (hf Z (Ne.symm hEZ)), ?_⟩
-    rw [pLegF_jc]
-    have h1 := legK_le k s σ' (sqDist G.σ.blank Z)
-    have h2 : legA k s σ' * (40 + 21 * sqDist G.σ.blank Z) ≤
-        3 * legA k s σ' * (16 + 7 * sqDist G.σ.blank Z) := by
-      have := Nat.mul_le_mul_left (legA k s σ') (show 40 + 21 * sqDist G.σ.blank Z ≤
-        3 * (16 + 7 * sqDist G.σ.blank Z) by omega)
-      linarith
-    omega
+    rw [pLegF_jc, legK_eq]
+    unfold legA
+    generalize sqDist G.σ.blank Z = d
+    generalize 30 * σ' + 1200 * k = F
+    nlinarith
   · obtain ⟨h1, h2, h3, h4, h5, h6⟩ := corner_facts' c
     set C : Sq k := (Z.1, E.2)
     rw [show relocWeight (HEvent.reloc E Z) = 32 + 7 * sqDist E Z by simp [relocWeight, c]]
@@ -206,16 +204,12 @@ theorem pReloc_linv {G : PG k q} (hL : PLInv L s σ' σ0 F0 G) {E Z : Sq k} (hb 
       have g2 := pLegF_fr L (s := s) (σ' := σ') (pLegF L s σ' G C) Z (by rw [b1]; exact h2) hZ1 Q
       rw [b1] at g2
       omega
-    · rw [pLegF_jc, pLegF_jc, b1]
-      have k1 := legK_le k s σ' (sqDist G.σ.blank C)
-      have k2 := legK_le k s σ' (sqDist C Z)
-      have : legA k s σ' * (40 + 21 * sqDist G.σ.blank C) + legA k s σ' * (40 + 21 * sqDist C Z) ≤
-          3 * legA k s σ' * (32 + 7 * sqDist G.σ.blank Z) := by
-        rw [← mul_add]
-        have := Nat.mul_le_mul_left (legA k s σ') (show 40 + 21 * sqDist G.σ.blank C +
-          (40 + 21 * sqDist C Z) ≤ 3 * (32 + 7 * sqDist G.σ.blank Z) by omega)
-        linarith
-      omega
+    · rw [pLegF_jc, pLegF_jc, b1, legK_eq, legK_eq, ← h5]
+      unfold legA
+      generalize sqDist G.σ.blank C = d1
+      generalize sqDist C Z = d2
+      generalize 30 * σ' + 1200 * k = F
+      nlinarith
 
 end reloc
 

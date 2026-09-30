@@ -148,7 +148,7 @@ theorem sum_Bw_le (B dA c : Sq k → Sq k → ℕ) (x : Sq k)
 def prunCost (n k q s σ' depth lc nd W : ℕ) : ℕ :=
   lc * (k * s) + hopKc k σ' * (2 * depth * n ^ 2) + 7 * (q + 2) * (2 * k * n ^ 2) +
     hopKi k s σ' * (2 * n ^ 2 + (2 * depth + 1) * nd) + xferK k s σ' * (4 * n ^ 2) +
-    s * ((2 * k + 2 * depth) * nd) + 3 * legA k s σ' * W
+    s * ((2 * k + 2 * depth) * nd) + legA k s σ' * W / 8
 
 /-- The bounds at the end of the run. -/
 theorem pouter_final {n : ℕ} (c : PCtx k q) (Gf : PG k q)
@@ -161,7 +161,7 @@ theorem pouter_final {n : ℕ} (c : PCtx k q) (Gf : PG k q)
         7 * (q + 2) * (2 * k * n ^ 2) +
         hopKi k c.s c.σ' * (2 * n ^ 2 + (2 * L.depth + 1) * ∑ v, need v) +
         xferK k c.s c.σ' * (4 * n ^ 2) +
-        c.s * ((2 * k + 2 * L.depth) * ∑ v, need v) + 3 * legA k c.s c.σ' * W ∧
+        c.s * ((2 * k + 2 * L.depth) * ∑ v, need v) + legA k c.s c.σ' * W / 8 ∧
       (c.σ0.run c.s Gf.evs).offCount ≤ (∑ v, need v) + c.F0 := by
   have hsch0 : ∀ S D, Gf.sched S D = 0 := by
     intro S D; rw [hOf.sched]; simp
@@ -217,8 +217,11 @@ theorem pouter_final {n : ℕ} (c : PCtx k q) (Gf : PG k q)
             rw [mul_sum]; exact sum_congr rfl fun x _ => by ring
         _ ≤ _ := Nat.mul_le_mul_left _ (sum_le_sum fun v _ => hNv v)
     have h6 := Nat.mul_le_mul_left c.s hBw
-    have h7 : Gf.jc ≤ 3 * legA k c.s c.σ' * W :=
-      hOf.hin.jc.trans (Nat.mul_le_mul_left _ (hOf.wt.trans hW))
+    have h7 : Gf.jc ≤ legA k c.s c.σ' * W / 8 := by
+      rw [Nat.le_div_iff_mul_le (by norm_num)]
+      have := hOf.hin.jc
+      have := Nat.mul_le_mul_left (legA k c.s c.σ') (hOf.wt.trans hW)
+      linarith
     have := Nat.zero_le (Gf.σ.pot L c.s)
     omega
   · rw [← hOf.lin.run_eq]

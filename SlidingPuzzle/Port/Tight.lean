@@ -1,5 +1,6 @@
 import SlidingPuzzle.Tree.ReserveAccounting
 import SlidingPuzzle.Tree.Hier
+import SlidingPuzzle.Tree.HierMix
 
 /-! # Tight lane systems
 
@@ -98,5 +99,62 @@ theorem tight (hb : 2 ≤ b) (hh : 0 < h) : (sys b h hb hh).Tight := by
     _ ≤ 2 * b ^ h := by have := geom_sum_le hb h; omega
 
 end Hier
+
+namespace HierMix
+
+variable {B : ℕ → ℕ} {h : ℕ}
+
+theorem level_sum_tight (hB : ∀ ℓ, 2 ≤ B ℓ) (t : Fin (sz B h 0)) (ℓ : Fin h) (side : Bool) :
+    ∑ i : Fin (B ℓ), len B h (mk B h ℓ ℓ.isLt i i.isLt) t side ≤
+      (B ℓ - 1) * sz B h (ℓ.val + 1) := by
+  set m := sz B h (ℓ.val + 1)
+  have hm : 0 < m := sz_pos hB _
+  apply Hier.sum_le_of_unique _ (fun i : Fin (B ℓ) => t.val % (B ℓ * m) =
+    (if side then i.val * m + (m - 1) else i.val * m)) ((B ℓ - 1) * m)
+  · intro i j hi hj
+    apply Fin.ext
+    have e := hi.symm.trans hj
+    exact Nat.eq_of_mul_eq_mul_right hm (show i.val * m = j.val * m by split_ifs at e <;> omega)
+  · intro i
+    have hi := i.isLt
+    simp only [len, chi_mk, csz_mk, bra_mk]
+    cases side
+    · simp only [Bool.false_eq_true, if_false]
+      split_ifs with h1
+      · exact Nat.mul_le_mul_right _ (by omega)
+      · exact Nat.zero_le _
+    · simp only [if_true]
+      split_ifs with h1
+      · exact Nat.mul_le_mul_right _ (by omega)
+      · exact Nat.zero_le _
+
+theorem telescope (hB : ∀ ℓ, 2 ≤ B ℓ) :
+    ∀ c, c ≤ h → ∑ ℓ ∈ range c, (B ℓ - 1) * sz B h (ℓ + 1) + sz B h c = sz B h 0
+  | 0, _ => by simp
+  | c + 1, hc => by
+    rw [sum_range_succ]
+    have ih := telescope hB c (by omega)
+    have e := sz_succ B h (show c < h by omega)
+    have := hB c
+    have e2 : (B c - 1) * sz B h (c + 1) + sz B h (c + 1) = B c * sz B h (c + 1) := by
+      obtain ⟨d, hd⟩ : ∃ d, B c = d + 1 := ⟨B c - 1, by omega⟩
+      rw [hd, Nat.add_sub_cancel]; ring
+    omega
+
+theorem tight (hB : ∀ ℓ, 2 ≤ B ℓ) (hh : 0 < h) : (sys B h hB hh).Tight := by
+  intro t
+  show ∑ o, ∑ side, len B h o t side ≤ 2 * sz B h 0
+  rw [sum_offsets]
+  calc ∑ ℓ : Fin h, ∑ i : Fin (B ℓ), ∑ side, len B h (mk B h ℓ ℓ.isLt i i.isLt) t side
+      = ∑ ℓ : Fin h, ∑ side, ∑ i : Fin (B ℓ), len B h (mk B h ℓ ℓ.isLt i i.isLt) t side := by
+        refine sum_congr rfl fun ℓ _ => sum_comm
+    _ ≤ ∑ ℓ : Fin h, ∑ _side : Bool, (B ℓ - 1) * sz B h (ℓ.val + 1) :=
+        sum_le_sum fun ℓ _ => sum_le_sum fun side _ => level_sum_tight hB t ℓ side
+    _ = 2 * ∑ ℓ ∈ range h, (B ℓ - 1) * sz B h (ℓ + 1) := by
+        simp only [sum_const, card_univ, Fintype.card_bool, smul_eq_mul]
+        rw [← mul_sum, Fin.sum_univ_eq_sum_range (fun ℓ => (B ℓ - 1) * sz B h (ℓ + 1))]
+    _ ≤ 2 * sz B h 0 := by have := telescope hB h le_rfl; omega
+
+end HierMix
 
 end SlidingPuzzle.Tree
