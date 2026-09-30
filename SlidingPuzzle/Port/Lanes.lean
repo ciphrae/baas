@@ -92,35 +92,39 @@ theorem optimalLength_le_port_residual {n k q σ la : ℕ} [NeZero n] (L : LaneS
   have h := optimalLength_le_prefix_residual_solution B (n - k * (n / k)) hdn C p hC A hA qpath hq'
   omega
 
-/-- The port bound for a tight lane system of depth `h`: `290 k² (n/k)³` plus the cheap hops. -/
+/-- The port bound for a tight lane system of depth `h`: `362 k² (n/k)³` plus the cheap hops. -/
 theorem optimalLength_le_port_lanes {n k q h σ : ℕ} [NeZero n] (L : LaneSys k q) (hT : L.Tight)
     (hd : L.depth = h) (hh : 1 ≤ h) (hke : Even k) (hqe : Even q) (hq2 : 2 ≤ q) (hqk : q ≤ k)
-    (hk : 128 ≤ k) (hl : 72 ≤ GroupedOrder.lamN n)
-    (hlo : 16 * k * q * k ≤ n) (hlo2 : 16 * k * GroupedOrder.lamN n * k ≤ n)
-    (hph : 128 * (2 * h + 1) * q * k ≤ n) (hcr : 14 * (q + 2) * k * k ≤ n)
+    (hk : 64 ≤ k) (hl : 64 ≤ GroupedOrder.lamN n)
+    (hlo : 8 * k * q * k ≤ n) (hlo2 : 16 * k * GroupedOrder.lamN n * k ≤ n)
+    (hhk : 2 * h + 1 ≤ k) (hcr : 7 * (q + 2) * k * k ≤ n)
     (h9 : 9 * σ * k ≤ n) (h8 : 8 ≤ σ)
     (hσ : 2 * ((2 * (n / k) + 2 * k + (15 * GroupedOrder.lamN n + 1) * k) * (2 * k) + 4 * k * q)
       + 2 ≤ σ ^ 2)
     (B : ReachableBoard n) :
     optimalLength B ≤ manhattan B.val + 2 * ((15 * n ^ 2 + 3002 * n + 1) * k) +
-      2 * (290 * (k ^ 2 * (n / k) ^ 3) + hopKc k σ * (2 * h * (k * (n / k)) ^ 2)) := by
+      2 * (362 * (k ^ 2 * (n / k) ^ 3) + hopKc k σ * (2 * h * (k * (n / k)) ^ 2)) := by
   set s := n / k with hs
   have hk0 : 0 < k := by omega
   have hdiv : ∀ {a : ℕ}, a * k ≤ n → a ≤ s := fun h => by
     rw [hs, Nat.le_div_iff_mul_le hk0]; exact h
-  have hsq32 : 16 * k * q ≤ s := hdiv hlo
-  have hsq : 8 * k * q ≤ s := by
-    have e : 16 * k * q = 2 * (8 * k * q) := by ring
-    omega
+  have hsq : 8 * k * q ≤ s := hdiv hlo
   have hsl : 16 * k * GroupedOrder.lamN n ≤ s := hdiv hlo2
-  have hsph : 128 * (2 * h + 1) * q ≤ s := hdiv hph
-  have hscr : 14 * (q + 2) * k ≤ s := hdiv hcr
+  have hsph : 8 * (2 * h + 1) * q ≤ s := by
+    have := Nat.mul_le_mul_left (8 * q) hhk
+    have e : 8 * q * (2 * h + 1) = 8 * (2 * h + 1) * q := by ring
+    have e2 : 8 * q * k = 8 * k * q := by ring
+    omega
+  have hscr : 14 * (q + 2) * k ≤ 2 * s := by
+    have := hdiv hcr
+    have e : 14 * (q + 2) * k = 2 * (7 * (q + 2) * k) := by ring
+    omega
   have hs9 : 9 * σ ≤ s := hdiv h9
   have hn' : k * s ≤ n := Nat.mul_div_le n k
-  have hks : 1152 * k ≤ s := by
-    have : 1152 * k ≤ 16 * k * GroupedOrder.lamN n := by
+  have hks : 1024 * k ≤ s := by
+    have : 1024 * k ≤ 16 * k * GroupedOrder.lamN n := by
       have := Nat.mul_le_mul_left (16 * k) hl
-      calc 1152 * k = 16 * k * 72 := by ring
+      calc 1024 * k = 16 * k * 64 := by ring
         _ ≤ _ := this
     omega
   have hdim : TDims (k * s) k s q := by
@@ -128,11 +132,12 @@ theorem optimalLength_le_port_lanes {n k q h σ : ℕ} [NeZero n] (L : LaneSys k
   have hfitσ : 2 * σ + 2 * k + 8 ≤ s := by omega
   have pd : PDims (k * s) k s q σ := ⟨hdim, by omega, hfitσ⟩
   have hlam_le : GroupedOrder.lamN (k * s) ≤ GroupedOrder.lamN n := lamN_mono hn'
-  have hks23 : 2 ^ 23 ≤ k * s := by
-    have h1 : 128 * (1152 * 128) ≤ k * s := Nat.mul_le_mul hk (le_trans (by omega) hks)
-    calc 2 ^ 23 ≤ 128 * (1152 * 128) := by norm_num
+  have hks22 : 2 ^ 21 ≤ k * s := by
+    have h1 : 64 * (1024 * 64) ≤ k * s := Nat.mul_le_mul hk (le_trans (by omega) hks)
+    calc 2 ^ 21 ≤ 64 * (1024 * 64) := by norm_num
       _ ≤ _ := h1
-  have hl' : 72 ≤ GroupedOrder.lamN (k * s) := lam_ge hks23
+  have hl' : 64 ≤ GroupedOrder.lamN (k * s) :=
+    le_trans (by norm_num) (lamN_ge_of_pow hks22)
   have h16 : 16 * k * GroupedOrder.lamN (k * s) ≤ s :=
     le_trans (Nat.mul_le_mul_left _ hlam_le) hsl
   have : NeZero (k * s) := ⟨Nat.mul_ne_zero (by omega) (by omega)⟩
@@ -157,9 +162,9 @@ theorem optimalLength_le_port_lanes {n k q h σ : ℕ} [NeZero n] (L : LaneSys k
     (la := GroupedOrder.lamN (k * s)) L pd (by omega) hσ2 hfit hcap hev.1 hev.2 B
   have hbud := port_budget2 k q s h (GroupedOrder.lamN (k * s)) σ (laneCells L s)
     (∑ v, needAt L s (GroupedOrder.lamN (k * s)) v) (∑ Q, resv L (k * s) s Q)
-    (by omega) hl' hsq32 h16 (by omega) hscr hsph hs9 (laneCells_bound L) (total_need_le L _)
+    (by omega) hl' hsq h16 (by omega) hscr hsph hs9 (laneCells_bound L) (total_need_le L _)
     (total_resv_le L hdim)
-  have hpb : portBound L (k * s) s σ ≤ 290 * (k ^ 2 * s ^ 3) + hopKc k σ * (2 * h * (k * s) ^ 2) := by
+  have hpb : portBound L (k * s) s σ ≤ 362 * (k ^ 2 * s ^ 3) + hopKc k σ * (2 * h * (k * s) ^ 2) := by
     unfold portBound
     rw [hd]
     exact hbud

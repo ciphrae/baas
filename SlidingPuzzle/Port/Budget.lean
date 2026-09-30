@@ -50,6 +50,18 @@ theorem ph_le (hph : 128 * (2 * d + 1) * q ≤ s) (hnd6 : nd ≤ 6 * (k ^ 2 * q 
   have e2 : k ^ 2 * s ^ 2 * s = k ^ 2 * s ^ 3 := by ring
   omega
 
+/-- The placeholder product with the weaker constraint `8 (2d+1) q ≤ s`. -/
+theorem ph_le8 (hph : 8 * (2 * d + 1) * q ≤ s) (hnd6 : nd ≤ 6 * (k ^ 2 * q * s)) :
+    4 * (s * ((2 * d + 1) * nd)) ≤ 3 * (k ^ 2 * s ^ 3) := by
+  have h1 : (2 * d + 1) * nd ≤ (2 * d + 1) * (6 * (k ^ 2 * q * s)) := Nat.mul_le_mul_left _ hnd6
+  have h3 := Nat.mul_le_mul_left (k ^ 2 * s ^ 2) hph
+  have h4 : 4 * (s * ((2 * d + 1) * nd)) ≤ 4 * (s * ((2 * d + 1) * (6 * (k ^ 2 * q * s)))) :=
+    Nat.mul_le_mul_left _ (Nat.mul_le_mul_left _ h1)
+  have e : 4 * (s * ((2 * d + 1) * (6 * (k ^ 2 * q * s)))) =
+      3 * (k ^ 2 * s ^ 2 * (8 * (2 * d + 1) * q)) := by ring
+  have e2 : k ^ 2 * s ^ 2 * s = k ^ 2 * s ^ 3 := by ring
+  omega
+
 /-- The relocation weight. -/
 theorem relocW_le (hk : 64 ≤ k) (hkq : 8 * k * q ≤ s) (hks : 1024 * k ≤ s) (hs : 65536 ≤ s)
     (hlc : lc ≤ 2 * k ^ 2 * q * s) : relocW k s lc ≤ 21 * (k ^ 2 * s ^ 2) := by
@@ -124,10 +136,10 @@ theorem relocW_le2 {k q s lc : ℕ} (hk : 64 ≤ k) (hkq : 16 * k * q ≤ s) (hk
   omega
 
 
-/-- The port bound, apart from the cheap hops, is at most `290 k² s³`. -/
+/-- The port bound, apart from the cheap hops, is at most `362 k² s³`. -/
 theorem port_budget2 (k q s d lam σ lc nd rv : ℕ)
-    (hk : 64 ≤ k) (hlam : 72 ≤ lam) (hkq : 16 * k * q ≤ s) (hkl : 16 * k * lam ≤ s)
-    (hq : 1 ≤ q) (hcr : 14 * (q + 2) * k ≤ s) (hph : 128 * (2 * d + 1) * q ≤ s)
+    (hk : 64 ≤ k) (hlam : 64 ≤ lam) (hkq : 8 * k * q ≤ s) (hkl : 16 * k * lam ≤ s)
+    (hq : 1 ≤ q) (hcr : 14 * (q + 2) * k ≤ 2 * s) (hph : 8 * (2 * d + 1) * q ≤ s)
     (h9 : 9 * σ ≤ s)
     (hlc : lc ≤ 2 * k ^ 2 * q * s)
     (hnd : nd ≤ 4 * k ^ 2 * q * s + (14 + 30 * lam) * k ^ 3 * q)
@@ -137,26 +149,26 @@ theorem port_budget2 (k q s d lam σ lc nd rv : ℕ)
       (26 * (k * s) * ((lc + (nd + (rv + lc))) + 2 * (k * s) + 5) +
         (k ^ 2 * (5 * s ^ 3 + 1509 * s ^ 2 + 1505 * s + 4796) +
           9354 * k ^ 2 * (k * s))) / 2 ≤
-      290 * (k ^ 2 * s ^ 3) + hopKc k σ * (2 * d * (k * s) ^ 2) := by
-  have hks : 1152 * k ≤ s := by
-    have : 1152 * k ≤ 16 * k * lam := by
+      362 * (k ^ 2 * s ^ 3) + hopKc k σ * (2 * d * (k * s) ^ 2) := by
+  have hks : 1024 * k ≤ s := by
+    have : 1024 * k ≤ 16 * k * lam := by
       have := Nat.mul_le_mul_left (16 * k) hlam
-      calc 1152 * k = 16 * k * 72 := by ring
+      calc 1024 * k = 16 * k * 64 := by ring
         _ ≤ _ := this
     omega
-  have hs : 73728 ≤ s := by omega
-  obtain ⟨hnd6, hrv9⟩ := needs_le hk hkl (by omega) hq (by omega) hnd hrv
-  have hZ := ph_le (k := k) (d := d) hph hnd6
-  have hW := relocW_le2 hk hkq (by omega) hlc
+  have hs : 65536 ≤ s := by omega
+  obtain ⟨hnd6, hrv9⟩ := needs_le hk hkl hks hq hs hnd hrv
+  have hZ := ph_le8 (k := k) (d := d) hph hnd6
+  have hW := relocW_le hk hkq hks hs hlc
   -- monomials against `U = k² s³`
-  have hY32 : 16 * (k * s * (k ^ 2 * q * s)) ≤ k ^ 2 * s ^ 3 := by
+  have hY8 : 8 * (k * s * (k ^ 2 * q * s)) ≤ k ^ 2 * s ^ 3 := by
     have := Nat.mul_le_mul_left (k ^ 2 * s ^ 2) hkq
-    calc 16 * (k * s * (k ^ 2 * q * s)) = k ^ 2 * s ^ 2 * (16 * k * q) := by ring
+    calc 8 * (k * s * (k ^ 2 * q * s)) = k ^ 2 * s ^ 2 * (8 * k * q) := by ring
       _ ≤ k ^ 2 * s ^ 2 * s := this
       _ = _ := by ring
-  have g5 : 73728 * (k ^ 2 * s ^ 2) ≤ k ^ 2 * s ^ 3 := by
+  have g5 : 65536 * (k ^ 2 * s ^ 2) ≤ k ^ 2 * s ^ 3 := by
     have := Nat.mul_le_mul_left (k ^ 2 * s ^ 2) hs
-    calc 73728 * (k ^ 2 * s ^ 2) = k ^ 2 * s ^ 2 * 73728 := by ring
+    calc 65536 * (k ^ 2 * s ^ 2) = k ^ 2 * s ^ 2 * 65536 := by ring
       _ ≤ k ^ 2 * s ^ 2 * s := this
       _ = _ := by ring
   have g6 : k * s ≤ k ^ 2 * s ^ 2 := by
@@ -169,7 +181,7 @@ theorem port_budget2 (k q s d lam σ lc nd rv : ℕ)
   have hKx : xferK k s σ ≤ 35 * s := by unfold xferK; omega
   have hA : legA k s σ ≤ 29 * s := by unfold legA; omega
   -- the terms
-  have t2 : hopKi k s σ * (2 * (k * s) ^ 2 + (2 * d + 1) * nd) ≤ 31 * (k ^ 2 * s ^ 3) := by
+  have t2 : hopKi k s σ * (2 * (k * s) ^ 2 + (2 * d + 1) * nd) ≤ 42 * (k ^ 2 * s ^ 3) := by
     have h1 := Nat.mul_le_mul_right (2 * (k * s) ^ 2 + (2 * d + 1) * nd) hKi
     have e : 15 * s * (2 * (k * s) ^ 2 + (2 * d + 1) * nd) =
         30 * (k ^ 2 * s ^ 3) + 15 * (s * ((2 * d + 1) * nd)) := by ring
@@ -178,29 +190,29 @@ theorem port_budget2 (k q s d lam σ lc nd rv : ℕ)
     have := Nat.mul_le_mul_right (4 * (k * s) ^ 2) hKx
     have e : 35 * s * (4 * (k * s) ^ 2) = 140 * (k ^ 2 * s ^ 3) := by ring
     omega
-  have t4 : s * ((2 * k + 2 * d) * nd) ≤ k ^ 2 * s ^ 3 := by
+  have t4 : s * ((2 * k + 2 * d) * nd) ≤ 3 * (k ^ 2 * s ^ 3) := by
     have a1 : k * s * nd ≤ k * s * (6 * (k ^ 2 * q * s)) := Nat.mul_le_mul_left _ hnd6
     have a2 : 2 * d * nd ≤ (2 * d + 1) * nd := Nat.mul_le_mul_right _ (by omega)
     have a3 := Nat.mul_le_mul_left s a2
     have e : s * ((2 * k + 2 * d) * nd) = 2 * (k * s * nd) + s * (2 * d * nd) := by ring
     have e2 : k * s * (6 * (k ^ 2 * q * s)) = 6 * (k * s * (k ^ 2 * q * s)) := by ring
     omega
-  have t5 : legA k s σ * relocW k s lc / 8 ≤ 66 * (k ^ 2 * s ^ 3) := by
+  have t5 : legA k s σ * relocW k s lc / 8 ≤ 77 * (k ^ 2 * s ^ 3) := by
     apply Nat.div_le_of_le_mul
     have := Nat.mul_le_mul hA hW
-    have e : 29 * s * (18 * (k ^ 2 * s ^ 2)) = 522 * (k ^ 2 * s ^ 3) := by ring
+    have e : 29 * s * (21 * (k ^ 2 * s ^ 2)) = 609 * (k ^ 2 * s ^ 3) := by ring
     omega
   have t6 : lc * (k * s) ≤ k ^ 2 * s ^ 3 := by
     have := Nat.mul_le_mul_right (k * s) hlc
     have e : 2 * k ^ 2 * q * s * (k * s) = 2 * (k * s * (k ^ 2 * q * s)) := by ring
     omega
-  have t7 : 52 * (k * s) * rv ≤ 30 * (k ^ 2 * s ^ 3) := by
+  have t7 : 52 * (k * s) * rv ≤ 59 * (k ^ 2 * s ^ 3) := by
     have := Nat.mul_le_mul_left (52 * (k * s)) hrv9
     have e : 52 * (k * s) * (9 * (k ^ 2 * q * s)) = 468 * (k * s * (k ^ 2 * q * s)) := by ring
     omega
   have t8 : (26 * (k * s) * ((lc + (nd + (rv + lc))) + 2 * (k * s) + 5) +
       (k ^ 2 * (5 * s ^ 3 + 1509 * s ^ 2 + 1505 * s + 4796) + 9354 * k ^ 2 * (k * s))) / 2 ≤
-      18 * (k ^ 2 * s ^ 3) := by
+      34 * (k ^ 2 * s ^ 3) := by
     apply Nat.div_le_of_le_mul
     have hlc' : lc ≤ 2 * (k ^ 2 * q * s) := by
       have e : 2 * k ^ 2 * q * s = 2 * (k ^ 2 * q * s) := by ring
@@ -220,17 +232,17 @@ theorem port_budget2 (k q s d lam σ lc nd rv : ℕ)
       calc k ^ 2 * (5 * s ^ 3 + 1509 * s ^ 2 + 1505 * s + 4796) ≤
             k ^ 2 * (5 * s ^ 3 + 1510 * s ^ 2) := Nat.mul_le_mul_left _ (by omega)
         _ = _ := by ring
-    have g4 : 9354 * k ^ 2 * (k * s) ≤ 9 * (k ^ 2 * s ^ 2) := by
-      have a : 9354 * k ≤ 9 * s := by omega
+    have g4 : 9354 * k ^ 2 * (k * s) ≤ 10 * (k ^ 2 * s ^ 2) := by
+      have a : 9354 * k ≤ 10 * s := by omega
       calc 9354 * k ^ 2 * (k * s) = k ^ 2 * s * (9354 * k) := by ring
-        _ ≤ k ^ 2 * s * (9 * s) := Nat.mul_le_mul_left _ a
+        _ ≤ k ^ 2 * s * (10 * s) := Nat.mul_le_mul_left _ a
         _ = _ := by ring
     omega
   have hsmall : 2 * (k * s) + 2 * s ≤ k ^ 2 * s ^ 3 := by omega
-  have t9 : 7 * (q + 2) * (2 * k * (k * s) ^ 2) ≤ k ^ 2 * s ^ 3 := by
+  have t9 : 7 * (q + 2) * (2 * k * (k * s) ^ 2) ≤ 2 * (k ^ 2 * s ^ 3) := by
     have := Nat.mul_le_mul_right (k ^ 2 * s ^ 2) hcr
     calc 7 * (q + 2) * (2 * k * (k * s) ^ 2) = 14 * (q + 2) * k * (k ^ 2 * s ^ 2) := by ring
-      _ ≤ s * (k ^ 2 * s ^ 2) := this
+      _ ≤ 2 * s * (k ^ 2 * s ^ 2) := this
       _ = _ := by ring
   unfold prunCost
   omega
