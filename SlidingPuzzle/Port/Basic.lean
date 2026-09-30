@@ -156,7 +156,7 @@ end PState
 
 /-- The fixed part of a cheap hop: landing from the port, insertion by a three-cycle in the
 port's corner. -/
-def hopKc (k σ : ℕ) : ℕ := 30 * σ + 1200 * k + 3000
+def hopKc (k σ : ℕ) : ℕ := 12 * σ + 526 * k + 1535
 
 /-- The crossings of row groups by a hop along `l` from block `J`: per block travelled. -/
 def crossK (q : ℕ) (l : Ln k q) (J : Fin k) : ℕ := 7 * (q + 2) * LaneSys.pdist l.2.t.val J.val
