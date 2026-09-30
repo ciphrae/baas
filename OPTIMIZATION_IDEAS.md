@@ -1,10 +1,25 @@
 # Open improvements
 
-**Update (ports).** The headline is now `OPT(B) ≤ M(B) + (29·ln n + 4900·√(ln n))·n^(5/2)
-≤ M(B) + 1260·n^(5/2)·ln n` for `n ≥ 2²³` (`Port.port_optimalLength_le`,
-`Port.port_approximation_uniform`), which removes the factor `h` from the hops (see
-`research/exponent/PORTS_PLAN.md`). The main remaining lever there is the gateway
-fetch cost `O(σ)` per hop. The notes below concern the tree bound.
+**Update (ports).** The headline is now `OPT(B) ≤ M(B) + 3500·n^(5/2)·ln n / ln ln n`
+for `n ≥ 2²³` and `242·n^(5/2)·ln n / ln ln n` for `n ≥ 2^(2^60)`
+(`Port.port_loglog_uniform`, `Port.port_loglog`): wide grids with branching
+`2⌊√(log₂ n)⌋`. For practical `n` the sharper bound is
+`(29·ln n + 4900·√(ln n))·n^(5/2) ≤ 1260·n^(5/2)·ln n` (`Port.port_optimalLength_le`,
+`Port.port_approximation_uniform`), where `4900·√(ln n)` dominates up to
+`ln n ≈ 28000`. The levers there:
+
+- *Transfers* (`xferK ≈ 23s`, up to `4` per serve, `92` of the `172k²s³`): each is three
+  jumps of length `≈ s`. A single jump would do if the tile on the landing cell of the
+  other port were known to be surplus; legs that choose their port kind would save
+  the alignment at the destination.
+- *The lane term* `848k³qs²` (`106` of the `278` at `8kq = s`): preload `416`,
+  cleanup `234`, legs `90`.
+- *The residence window* `16kλ ≤ s`: `√(16λ)` is the factor `4.125·√λ` in front of
+  `278`.
+- *Wide grids* beyond `ln ln n`: the balance of `241·h` against `556√(2(8q+16λ))` is
+  optimal at `b ≈ ln n / (ln ln n)²`, giving the asymptotic constant `≈ 121`.
+
+The notes below concern the tree bound.
 
 The certified bound is **`OPT(B) ≤ M(B) + (97·ln n + 2670)·√(ln n)·n^(5/2)`**, hence
 `245·n^(5/2)·(ln n)^(3/2)`, for `n ≥ 2²³` (`Tree.tree_lam_approximation`,

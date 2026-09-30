@@ -1,14 +1,22 @@
 # BAAS: Better Approximation Algorithms for Sliding puzzles
 
 A Lean 4 / mathlib proof that Manhattan distance approximates the optimal
-solution length of the `n × n` sliding puzzle within `O(n^(5/2) ln n)`.
+solution length of the `n × n` sliding puzzle within `O(n^(5/2) ln n / ln ln n)`.
 This improves the error `O(n^(11/4))` of Proposition 9 in Zhixian Zhong,
 *Additive Approximation Algorithms for Sliding Puzzle* (2023), §5.2
 (`zhong2023_additive-approximation-sliding-puzzle.pdf`, printed p. 145).
 
 For every reachable board `B` of side `n ≥ 2²³ ≈ 8.4·10⁶`
-(`SlidingPuzzle.Port.port_optimalLength_le`,
-[`Port/Asymp.lean`](SlidingPuzzle/Port/Asymp.lean)),
+(`SlidingPuzzle.Port.port_loglog_uniform`,
+[`Port/LogLog.lean`](SlidingPuzzle/Port/LogLog.lean)),
+
+```text
+OPT(B) ≤ Manhattan(B) + 3500·n^(5/2)·ln n / ln ln n,
+```
+
+and the constant is `242` for `n ≥ 2^(2^60)` (`Port.port_loglog`). For sizes of
+practical interest the sharper form is (`Port.port_optimalLength_le`,
+[`Port/Asymp.lean`](SlidingPuzzle/Port/Asymp.lean), `n ≥ 2²³`)
 
 ```text
 OPT(B) ≤ Manhattan(B) + (29·ln n + 4900·√(ln n))·n^(5/2)
@@ -23,11 +31,13 @@ OPT(B) ≤ Manhattan(B) + (29·ln n + 4900·√(ln n))·n^(5/2)
 Hence, over the reachable orbit of the standard `n × n` target,
 
 ```text
-average optimal solution length = (2/3)*n³ + O(n^(5/2) ln n)
-God's number                    =       n³ + O(n^(5/2) ln n)
+average optimal solution length = (2/3)*n³ + O(n^(5/2) ln n / ln ln n)
+God's number                    =       n³ + O(n^(5/2) ln n / ln ln n)
 ```
 
-(`Port.port_average_optimal_length`, `Port.port_gods_number`).
+(`Port.port_average_optimal_length_loglog`, `Port.port_gods_number_loglog`; the
+`O(n^(5/2) ln n)` forms are `Port.port_average_optimal_length`,
+`Port.port_gods_number`).
 
 The ports algorithm refines an earlier *tree* algorithm, which is also fully
 proved and gives the error `O(n^(5/2) (ln n)^(3/2))`: for `n ≥ 2²³`
@@ -103,7 +113,7 @@ All main results depend only on `propext`, `Classical.choice` and `Quot.sound`.
 | `SlidingPuzzle/Port/Basic`, `Layout`, `Prim`, `Hop`, `Land*`, `Xfer`, `Leg*`, `Ins*` | Ports: boxes at the lane ends, the event costs, and the simulated hops, transfers and legs |
 | `SlidingPuzzle/Port/Ghost*`, `Serve*`, `Turns`, `Reloc`, `Inv`, `Tight` | The ghost state, serves, placeholders with weights `pdist + 1`, relocations, the cost invariant |
 | `SlidingPuzzle/Port/RunMain`, `Final`, `Board`, `Transport`, `Budget`, `Lanes` | The run on side `k*s`, its cost `172k²s³ + 848k³qs² + O(h k² s² σ)` |
-| `SlidingPuzzle/Port/Fine`, `Grid4`, `Asymp`, `AsympDeep`, `Stats` | Grid choice, the final theorems, statistics |
+| `SlidingPuzzle/Port/Fine`, `Grid4`, `Asymp`, `AsympDeep`, `LogLog`, `Stats` | Grid choice, the final theorems, statistics |
 | `research/exponent/TREE_PLAN.md` | Design of the tree algorithm and map of its proof |
 | `research/exponent/PORTS_PLAN.md` | Design of the ports refinement |
 
@@ -199,6 +209,16 @@ port on its side and the next hop inserts from that port, at cost
 between ports pay `O(s)`, so the leading cost `172k²s³ + 848k³qs²` does not grow
 with `h` (`Port.port_budget4`); the hops add only `O(h·k²s²·σ)`. With
 `k ≈ √(n/λ)` the error is `O(n^(5/2) ln n)`.
+
+*Wide grids* (`Port/LogLog`). Since a hop no longer pays `s`, the branching `b`
+need not stay near `73`: any hierarchy with `8qk² ≤ n` and `16λk² ≤ n` gives
+`278k²s³` plus the hops (`port_le_budget_wide`). With `m` levels of branching
+`b = 2⌊√(log₂ n)⌋` and a free last level `d ∈ [b, b²)`, chosen maximal
+(`exists_wide`), the grid is within a factor `2` of `(8q + 16λ)k² = n`, the depth
+is at most `ln n / (2 ln b) ≤ ln n / ln ln n` and `q < hb + b² = O((ln n)^(3/2))`.
+The hops then cost `241·(ln n / ln ln n)·n^(5/2)` and the rest
+`O((ln n)^(3/4)·n^(5/2))`. Below `n = 2^(2^60)` the bound of `port_optimalLength_le`
+is already within `3500·n^(5/2)·ln n / ln ln n` (`small_coef`).
 
 [`PROOF_NOTES.md`](PROOF_NOTES.md) relates the construction to the paper and
 lists the certified estimates. [`research/exponent/TREE_PLAN.md`](research/exponent/TREE_PLAN.md)

@@ -3,7 +3,13 @@ import SlidingPuzzle
 /-! Axiom audit. Each result below should depend only on `propext`,
 `Classical.choice` and `Quot.sound`. Run with `lake env lean Checks/Axioms.lean`. -/
 
--- Main results: error n^(5/2) ln n (ports)
+-- Main results: error n^(5/2) ln n / ln ln n (ports on wide grids)
+#print axioms SlidingPuzzle.Port.port_loglog
+#print axioms SlidingPuzzle.Port.port_loglog_uniform
+#print axioms SlidingPuzzle.Port.port_average_optimal_length_loglog
+#print axioms SlidingPuzzle.Port.port_gods_number_loglog
+
+-- Error n^(5/2) ln n (ports, lane budget 2λ)
 #print axioms SlidingPuzzle.Port.port_optimalLength_le
 #print axioms SlidingPuzzle.Port.port_optimalLength_le_deep
 #print axioms SlidingPuzzle.Port.port_approximation_uniform

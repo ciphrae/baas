@@ -22,7 +22,7 @@ squares) are in git history.
 
 `Hub/AsympStats.lean` reduces both conclusions to a boardwise bound
 `OPT(B) ≤ M(B) + C*f(n)` (`UniformApproximationWith f`, for any error scale
-`f ≥ n²`; here `f(n) = n^(5/2) (ln n)^(3/2)`, `Tree/Stats.lean`) plus `O(n²)`
+`f ≥ n²`; here `f(n) = n^(5/2) ln n / ln ln n`, `Port/Stats.lean`) plus `O(n²)`
 estimates for the orbit mean and maximum of `M`. The paper cites Parberry for
 the latter; here they are proved (`Bridge/Statistics.lean`, using the `Zhong`
 library): each nonblank tile is uniformly distributed over the orbit, giving
@@ -199,6 +199,16 @@ differences from the paper's scheme:
   `(29 ln n + 4900 √(ln n))·n^(5/2) ≤ 1260·n^(5/2)·ln n` for `n ≥ 2²³`
   (`port_optimalLength_le`, `port_approximation_uniform`); a deeper grid
   (`Port/Grid4.lean`) gives `(87 ln n + 3600 √(ln n) + 21200/√(ln n))·n^(5/2)`.
+- Wide grids (`Port/LogLog.lean`): without the lane budget `q ≤ 2λ` the bound is
+  `278k²s³ + hopKc·2h(ks)²` whenever `8qk² ≤ n` and `16λk² ≤ n`
+  (`port_le_budget_wide`). The grid of `m` levels of branching `b = 2⌊√(log₂ n)⌋`
+  and a maximal free level `d ∈ [b, b²)` (`exists_wide`, `wideF`) has
+  `n < 2(8q + 16λ)k²`, `8b^(2h+1) ≤ n` and `q < hb + b²`. So `h·ln ln n ≤ ln n`,
+  `2(8q + 16λ) ≤ (ln n)^(3/2)` and the error is at most
+  `(1 + 556 (ln n)^(3/4) + 240.96 h)·n^(5/2) ≤ 242·n^(5/2)·ln n / ln ln n` for
+  `n ≥ 2^(2^60)` (`port_loglog`). Below that, `(29 ln n + 4900 √(ln n))` is at most
+  `3500 ln n / ln ln n` (`small_coef`, three ranges of `ln ln n`), hence
+  `3500·n^(5/2)·ln n / ln ln n` for `n ≥ 2²³` (`port_loglog_uniform`).
 
 These are certified upper bounds, not claims of optimality.
 [OPTIMIZATION_IDEAS.md](OPTIMIZATION_IDEAS.md) lists the remaining improvements.
