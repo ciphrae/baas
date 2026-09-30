@@ -3,7 +3,14 @@ import SlidingPuzzle
 /-! Axiom audit. Each result below should depend only on `propext`,
 `Classical.choice` and `Quot.sound`. Run with `lake env lean Checks/Axioms.lean`. -/
 
--- Main results: error n^(5/2) (ln n)^(3/2)
+-- Main results: error n^(5/2) ln n (ports)
+#print axioms SlidingPuzzle.Port.port_optimalLength_le
+#print axioms SlidingPuzzle.Port.port_optimalLength_le_deep
+#print axioms SlidingPuzzle.Port.port_approximation_uniform
+#print axioms SlidingPuzzle.Port.port_average_optimal_length
+#print axioms SlidingPuzzle.Port.port_gods_number
+
+-- Tree results: error n^(5/2) (ln n)^(3/2)
 #print axioms SlidingPuzzle.Tree.tree_lam_approximation
 #print axioms SlidingPuzzle.Tree.tree_lam_approximation_uniform
 #print axioms SlidingPuzzle.Tree.tree_log_average_optimal_length

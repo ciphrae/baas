@@ -1,32 +1,46 @@
 # BAAS: Better Approximation Algorithms for Sliding puzzles
 
 A Lean 4 / mathlib proof that Manhattan distance approximates the optimal
-solution length of the `n × n` sliding puzzle within `O(n^(5/2) (ln n)^(3/2))`.
+solution length of the `n × n` sliding puzzle within `O(n^(5/2) ln n)`.
 This improves the error `O(n^(11/4))` of Proposition 9 in Zhixian Zhong,
 *Additive Approximation Algorithms for Sliding Puzzle* (2023), §5.2
 (`zhong2023_additive-approximation-sliding-puzzle.pdf`, printed p. 145).
 
 For every reachable board `B` of side `n ≥ 2²³ ≈ 8.4·10⁶`
-(`SlidingPuzzle.Tree.tree_lam_approximation`,
-[`Tree/LamLog.lean`](SlidingPuzzle/Tree/LamLog.lean)),
+(`SlidingPuzzle.Port.port_optimalLength_le`,
+[`Port/Asymp.lean`](SlidingPuzzle/Port/Asymp.lean)),
 
 ```text
-OPT(B) ≤ Manhattan(B) + (97·ln n + 2670)·√(ln n)·n^(5/2)
-       ≤ Manhattan(B) + 245·n^(5/2)·(ln n)^(3/2)
+OPT(B) ≤ Manhattan(B) + (29·ln n + 4900·√(ln n))·n^(5/2)
+       ≤ Manhattan(B) + 1260·n^(5/2)·ln n
 ```
 
-(the second line is `Tree.tree_lam_approximation_uniform`).
+(the second line is `Port.port_approximation_uniform` in
+[`Port/Stats.lean`](SlidingPuzzle/Port/Stats.lean)). A second grid gives
+`(87·ln n + 3600·√(ln n) + 21200/√(ln n))·n^(5/2)`, smaller for large `n`
+(`Port.port_optimalLength_le_deep`, [`Port/AsympDeep.lean`](SlidingPuzzle/Port/AsympDeep.lean)).
 
 Hence, over the reachable orbit of the standard `n × n` target,
 
 ```text
-average optimal solution length = (2/3)*n³ + O(n^(5/2) (ln n)^(3/2))
-God's number                    =       n³ + O(n^(5/2) (ln n)^(3/2))
+average optimal solution length = (2/3)*n³ + O(n^(5/2) ln n)
+God's number                    =       n³ + O(n^(5/2) ln n)
 ```
 
-(`Tree.tree_log_average_optimal_length`, `Tree.tree_log_gods_number` in
-[`Tree/Stats.lean`](SlidingPuzzle/Tree/Stats.lean)). The leading constant is
-`97`; the constant `245` holds uniformly from `2²³` on.
+(`Port.port_average_optimal_length`, `Port.port_gods_number`).
+
+The ports algorithm refines an earlier *tree* algorithm, which is also fully
+proved and gives the error `O(n^(5/2) (ln n)^(3/2))`: for `n ≥ 2²³`
+(`Tree.tree_lam_approximation`, `Tree.tree_lam_approximation_uniform`,
+[`Tree/LamLog.lean`](SlidingPuzzle/Tree/LamLog.lean)),
+
+```text
+OPT(B) ≤ Manhattan(B) + (97·ln n + 2670)·√(ln n)·n^(5/2)
+       ≤ Manhattan(B) + 245·n^(5/2)·(ln n)^(3/2),
+```
+
+with statistics `Tree.tree_log_average_optimal_length` and
+`Tree.tree_log_gods_number` ([`Tree/Stats.lean`](SlidingPuzzle/Tree/Stats.lean)).
 
 The algorithm routes tiles through a hierarchy of `h` lane levels. At a fixed
 depth `h ≥ 1` (`Tree.tree_uniform_approximation_explicit`,
@@ -86,7 +100,12 @@ All main results depend only on `propext`, `Classical.choice` and `Quot.sound`.
 | `SlidingPuzzle/Tree/*Accounting`, `Feasibility`, `Final`, `FineLog`, `FinalLog` | The cost bounds `50(h+3)k²s³` and `(48h+142)k²s³` and the conditions on `k`, `q`, `s` |
 | `SlidingPuzzle/Tree/LamGrid`, `LamLog`, `MixGrid`, `GridChoice`, `Stats` | Grid choice, the final theorems, statistics |
 | `Zhong/` | Word-level puzzle library in the paper's conventions: reachability criterion, orbit statistics, move words |
+| `SlidingPuzzle/Port/Basic`, `Layout`, `Prim`, `Hop`, `Land*`, `Xfer`, `Leg*`, `Ins*` | Ports: boxes at the lane ends, the event costs, and the simulated hops, transfers and legs |
+| `SlidingPuzzle/Port/Ghost*`, `Serve*`, `Turns`, `Reloc`, `Inv`, `Tight` | The ghost state, serves, placeholders with weights `pdist + 1`, relocations, the cost invariant |
+| `SlidingPuzzle/Port/RunMain`, `Final`, `Board`, `Transport`, `Budget`, `Lanes` | The run on side `k*s`, its cost `172k²s³ + 848k³qs² + O(h k² s² σ)` |
+| `SlidingPuzzle/Port/Fine`, `Grid4`, `Asymp`, `AsympDeep`, `Stats` | Grid choice, the final theorems, statistics |
 | `research/exponent/TREE_PLAN.md` | Design of the tree algorithm and map of its proof |
+| `research/exponent/PORTS_PLAN.md` | Design of the ports refinement |
 
 ## Proof outline
 
@@ -170,6 +189,16 @@ with `48h + 142 ≤ 5.6075·ln n + 150.6`, `λ ≤ 4.3281·ln n + 3` this is at 
 *Fixed depth* (`MixGrid`). With `s ≈ 8h·b·k`, `b` the largest even number such
 that `8h·b^(2h+1) ≤ n` and `j` the largest such that `8qk² ≤ n`,
 `n³/k ≤ 1.012·√(8h)·n^(5/2+1/(4h+2))`.
+
+*Ports* (`Port/`). In the tree algorithm every hop pays `≈ 20s`, fetching the
+inserted tile from anywhere in the square, and a tile makes `2h` hops, so the
+error carries a factor `h ≈ ln n`. The ports algorithm keeps small boxes of side
+`σ = O(√(qs))` at the lane ends. A tile that lands at a gateway drops into the
+port on its side and the next hop inserts from that port, at cost
+`O(σ + k + q·pdist)` instead of `O(s)`. Only the source insertion and the transfers
+between ports pay `O(s)`, so the leading cost `172k²s³ + 848k³qs²` does not grow
+with `h` (`Port.port_budget4`); the hops add only `O(h·k²s²·σ)`. With
+`k ≈ √(n/λ)` the error is `O(n^(5/2) ln n)`.
 
 [`PROOF_NOTES.md`](PROOF_NOTES.md) relates the construction to the paper and
 lists the certified estimates. [`research/exponent/TREE_PLAN.md`](research/exponent/TREE_PLAN.md)

@@ -193,5 +193,12 @@ differences from the paper's scheme:
   `λ ≤ 4.3281·ln n + 3`; with the depths `1` and `2` bounded apart,
   `245·n^(5/2)·(ln n)^(3/2)`.
 
+- Ports (`Port/`): ports of side `σ ≤ √(13n)` at the lane ends make gateway hops
+  cost `O(σ + k + q·pdist)`, and the budget is `172k²s³ + 848k³qs² + hopKc·2h(ks)²`
+  (`port_budget4`). With the tree grid (`Port/Fine.lean`) the error is at most
+  `(29 ln n + 4900 √(ln n))·n^(5/2) ≤ 1260·n^(5/2)·ln n` for `n ≥ 2²³`
+  (`port_optimalLength_le`, `port_approximation_uniform`); a deeper grid
+  (`Port/Grid4.lean`) gives `(87 ln n + 3600 √(ln n) + 21200/√(ln n))·n^(5/2)`.
+
 These are certified upper bounds, not claims of optimality.
 [OPTIMIZATION_IDEAS.md](OPTIMIZATION_IDEAS.md) lists the remaining improvements.

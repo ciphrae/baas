@@ -1,5 +1,11 @@
 # Open improvements
 
+**Update (ports).** The headline is now `OPT(B) ≤ M(B) + (29·ln n + 4900·√(ln n))·n^(5/2)
+≤ M(B) + 1260·n^(5/2)·ln n` for `n ≥ 2²³` (`Port.port_optimalLength_le`,
+`Port.port_approximation_uniform`), which removes the factor `h` from the hops (see
+`research/exponent/PORTS_PLAN.md`). The main remaining lever there is the gateway
+fetch cost `O(σ)` per hop. The notes below concern the tree bound.
+
 The certified bound is **`OPT(B) ≤ M(B) + (97·ln n + 2670)·√(ln n)·n^(5/2)`**, hence
 `245·n^(5/2)·(ln n)^(3/2)`, for `n ≥ 2²³` (`Tree.tree_lam_approximation`,
 `Tree.tree_lam_approximation_uniform`). At a fixed depth `h` the bound is

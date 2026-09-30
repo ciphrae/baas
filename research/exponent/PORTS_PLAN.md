@@ -1,5 +1,9 @@
 # Ports: gateway hops that do not pay `s`
 
+**Status: done.** Proved in `SlidingPuzzle/Port/`: `port_optimalLength_le`
+(`(29 ln n + 4900 √(ln n))·n^(5/2)` for `n ≥ 2²³`), `port_approximation_uniform`
+(`1260·n^(5/2)·ln n`) and the statistics in `Port/Stats.lean`.
+
 Goal: remove the factor `h` from the per-tile transport cost, taking the error from
 `n^(5/2) (ln n)^(3/2)` to `n^(5/2) ln n` (and close to `n^(5/2) √(ln n)` for all
 practical `n`). Model: [`model/ports_model.py`](model/ports_model.py) on top of
