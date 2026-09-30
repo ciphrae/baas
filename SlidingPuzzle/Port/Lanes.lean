@@ -92,7 +92,7 @@ theorem optimalLength_le_port_residual {n k q σ la : ℕ} [NeZero n] (L : LaneS
   have h := optimalLength_le_prefix_residual_solution B (n - k * (n / k)) hdn C p hC A hA qpath hq'
   omega
 
-/-- The port bound for a tight lane system of depth `h`: `190 k² (n/k)³ + 780 k³ q (n/k)²` plus
+/-- The port bound for a tight lane system of depth `h`: `172 k² (n/k)³ + 848 k³ q (n/k)²` plus
 the cheap hops. -/
 theorem optimalLength_le_port_lanes {n k q h σ : ℕ} [NeZero n] (L : LaneSys k q) (hT : L.Tight)
     (hd : L.depth = h) (hh : 1 ≤ h) (hke : Even k) (hqe : Even q) (hq2 : 2 ≤ q) (hqk : q ≤ k)
@@ -104,7 +104,7 @@ theorem optimalLength_le_port_lanes {n k q h σ : ℕ} [NeZero n] (L : LaneSys k
       + 2 ≤ σ ^ 2)
     (B : ReachableBoard n) :
     optimalLength B ≤ manhattan B.val + 2 * ((15 * n ^ 2 + 3002 * n + 1) * k) +
-      2 * (190 * (k ^ 2 * (n / k) ^ 3) + 780 * (k ^ 3 * q * (n / k) ^ 2) +
+      2 * (172 * (k ^ 2 * (n / k) ^ 3) + 848 * (k ^ 3 * q * (n / k) ^ 2) +
         hopKc k σ * (2 * h * (k * (n / k)) ^ 2)) := by
   set s := n / k with hs
   have hk0 : 0 < k := by omega
@@ -158,11 +158,11 @@ theorem optimalLength_le_port_lanes {n k q h σ : ℕ} [NeZero n] (L : LaneSys k
     omega
   have hres := optimalLength_le_port_residual (n := n) (k := k) (q := q) (σ := σ)
     (la := GroupedOrder.lamN (k * s)) L pd (by omega) hσ2 hfit hcap hev.1 hev.2 B
-  have hbud := port_budget3 k q s h (GroupedOrder.lamN (k * s)) σ (laneCells L s)
+  have hbud := port_budget4 k q s h (GroupedOrder.lamN (k * s)) σ (laneCells L s)
     (∑ v, needAt L s (GroupedOrder.lamN (k * s)) v) (∑ Q, resv L (k * s) s Q)
-    (by omega) hl' hsq h16 (by omega) hsph hs9 (laneCells_bound L) (total_need_le L _)
+    (by omega) hl' hsq h16 (by omega) hhk hs9 (laneCells_bound L) (total_need_le L _)
     (total_resv_le L hdim)
-  have hpb : portBound L (k * s) s σ ≤ 190 * (k ^ 2 * s ^ 3) + 780 * (k ^ 3 * q * s ^ 2) +
+  have hpb : portBound L (k * s) s σ ≤ 172 * (k ^ 2 * s ^ 3) + 848 * (k ^ 3 * q * s ^ 2) +
       hopKc k σ * (2 * h * (k * s) ^ 2) := by
     unfold portBound
     rw [hd]

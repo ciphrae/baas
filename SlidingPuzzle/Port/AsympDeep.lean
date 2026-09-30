@@ -3,7 +3,7 @@ import SlidingPuzzle.Port.Asymp
 
 /-! # The port algorithm on the deep grid
 
-`OPT(B) ≤ M(B) + (87 ln n + 3900 √(ln n) + 19500 / √(ln n)) n^(5/2)` for `n ≥ 2²³`. -/
+`OPT(B) ≤ M(B) + (87 ln n + 3600 √(ln n) + 21200 / √(ln n)) n^(5/2)` for `n ≥ 2²³`. -/
 namespace SlidingPuzzle.Port
 open Finset
 open SlidingPuzzle
@@ -58,12 +58,12 @@ theorem deep_depth_log {n m : ℕ} (hl : 72 ≤ GroupedOrder.lamN n)
 theorem deep_coef (L t S mr qr w : ℝ) (ht : t ^ 2 = L) (ht0 : 3.99 ≤ t)
     (hSU : S ≤ 2.1261 * t) (hSD : 2.0803 * t ≤ S) (hD : 2.7725 * mr ≤ L - 13.97) (hm0 : 0 ≤ mr)
     (hq : qr ≤ 6 * mr + 128) (hw : w * S = qr) (hw0 : 0 ≤ w) :
-    1 + 1615 * S + 414.38 * w + 240.96 * (mr + 1) ≤ 87 * L + 3900 * t + 19500 / t := by
+    1 + 1462 * S + 450.5 * w + 240.96 * (mr + 1) ≤ 87 * L + 3600 * t + 21200 / t := by
   have htp : 0 < t := by linarith
   set u := 1 / t with hu
   have hu0 : 0 < u := by positivity
   have htu : t * u = 1 := by rw [hu]; field_simp
-  have h19 : 19500 / t = 19500 * u := by rw [hu]; ring
+  have h19 : 21200 / t = 21200 * u := by rw [hu]; ring
   rw [h19]
   -- `2.7725 m u ≤ t - 13.97 u`
   have h1 : 2.7725 * (mr * u) ≤ t - 13.97 * u := by
@@ -82,16 +82,16 @@ theorem deep_coef (L t S mr qr w : ℝ) (ht : t ^ 2 = L) (ht0 : 3.99 ≤ t)
       rw [this, htu, mul_one]
     linarith
   have h3 : 240.96 * (mr + 1) ≤ 86.92 * L - 973 := by linarith
-  have h4 : 1615 * S ≤ 3433.7 * t := by linarith
+  have h4 : 1462 * S ≤ 3108.5 * t := by linarith
   have h5 : 0 ≤ mr * u := by positivity
   have h6 : t ≤ L := by nlinarith
   nlinarith
 
 set_option maxHeartbeats 2000000 in
-/-- **`OPT(B) ≤ M(B) + (87 ln n + 3900 √(ln n) + 19500/√(ln n)) n^(5/2)`** for `n ≥ 2²³`. -/
+/-- **`OPT(B) ≤ M(B) + (87 ln n + 3600 √(ln n) + 21200/√(ln n)) n^(5/2)`** for `n ≥ 2²³`. -/
 theorem port_optimalLength_le_deep {n : ℕ} [NeZero n] (hn : 2 ^ 23 ≤ n) (B : ReachableBoard n) :
     (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) +
-      (87 * Real.log n + 3900 * Real.sqrt (Real.log n) + 19500 / Real.sqrt (Real.log n)) *
+      (87 * Real.log n + 3600 * Real.sqrt (Real.log n) + 21200 / Real.sqrt (Real.log n)) *
         (n : ℝ) ^ ((5 : ℝ) / 2) := by
   obtain ⟨m, K, q, σ, hPm, hlo, hround, hK64, hq128, hσ, hnat⟩ := port_deep hn B
   set lam := GroupedOrder.lamN n with hlam
@@ -139,7 +139,7 @@ theorem port_optimalLength_le_deep {n : ℕ} [NeZero n] (hn : 2 ^ 23 ≤ n) (B :
   -- the natural bound, cast
   have hcast : (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) +
       2 * ((15 * nr ^ 2 + 3002 * nr + 1) * Kr) +
-      2 * (190 * (Kr ^ 2 * s ^ 3) + 780 * (Kr ^ 3 * qr * s ^ 2) +
+      2 * (172 * (Kr ^ 2 * s ^ 3) + 848 * (Kr ^ 3 * qr * s ^ 2) +
         (12 * sr + 526 * Kr + 1535) * (2 * (mr + 1) * (Kr * s) ^ 2)) := by
     have := (Nat.cast_le (α := ℝ)).2 hnat
     unfold hopKc at this
@@ -241,13 +241,13 @@ theorem port_optimalLength_le_deep {n : ℕ} [NeZero n] (hn : 2 ^ 23 ≤ n) (B :
           exact Real.sqrt_le_sqrt (by norm_num)
       _ = Real.sqrt (4.328 * L) := (Real.sqrt_mul (by norm_num) _).symm
       _ ≤ Real.sqrt lr := Real.sqrt_le_sqrt h1
-  -- `780 K³ q s² ≤ 207.19 (q / √λ) P`
+  -- `848 K³ q s² ≤ 225.25 (q / √λ) P`
   have hslp : 0 < Real.sqrt lr := Real.sqrt_pos.2 hlr0
   have hsqlr : Real.sqrt lr * Real.sqrt lr = lr := Real.mul_self_sqrt hlr0.le
   set w := qr / Real.sqrt lr with hw
   have hqw : qr = w * Real.sqrt lr := by rw [hw]; field_simp
   have hw0 : 0 ≤ w := by positivity
-  have hlane : 780 * (Kr ^ 3 * qr * s ^ 2) ≤ 207.19 * w * P := by
+  have hlane : 848 * (Kr ^ 3 * qr * s ^ 2) ≤ 225.25 * w * P := by
     have h1 : 16 * lr * (Kr ^ 3 * qr * s ^ 2) ≤ qr * (4.25 * Real.sqrt lr * P) :=
       le_trans hV (mul_le_mul_of_nonneg_left hmain hq0)
     have h2 : Real.sqrt lr * (16 * Real.sqrt lr * (Kr ^ 3 * qr * s ^ 2)) ≤
@@ -264,17 +264,17 @@ theorem port_optimalLength_le_deep {n : ℕ} [NeZero n] (hn : 2 ^ 23 ≤ n) (B :
     have : 0 ≤ w * P := by positivity
     linarith
   -- `q / √λ ≤ 1.0402 t + 47 / t`
-  have hcoef : 1 + 1615 * Real.sqrt lr + 414.38 * w + 240.96 * (mr + 1) ≤
-      87 * L + 3900 * t + 19500 / t := by
+  have hcoef : 1 + 1462 * Real.sqrt lr + 450.5 * w + 240.96 * (mr + 1) ≤
+      87 * L + 3600 * t + 21200 / t := by
     have hD' : 2.7725 * mr ≤ L - 13.97 := by linarith
     have hwS : w * Real.sqrt lr = qr := by rw [hqw]
     exact deep_coef L t (Real.sqrt lr) mr qr w ht2 ht0 hlrU hlrD hD' hm0 hq128R hwS.symm.symm hw0
   have hsum : (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) +
-      (1 + 1615 * Real.sqrt lr + 414.38 * w + 240.96 * (mr + 1)) * P := by
-    have a1 : 380 * (Kr ^ 2 * s ^ 3) ≤ 380 * (4.25 * Real.sqrt lr * P) :=
+      (1 + 1462 * Real.sqrt lr + 450.5 * w + 240.96 * (mr + 1)) * P := by
+    have a1 : 344 * (Kr ^ 2 * s ^ 3) ≤ 344 * (4.25 * Real.sqrt lr * P) :=
       mul_le_mul_of_nonneg_left hmain (by norm_num)
-    have e : (1 + 1615 * Real.sqrt lr + 414.38 * w + 240.96 * (mr + 1)) * P =
-        P + 380 * (4.25 * Real.sqrt lr * P) + 2 * (207.19 * w * P) + 2 * (120.48 * (mr + 1) * P) := by
+    have e : (1 + 1462 * Real.sqrt lr + 450.5 * w + 240.96 * (mr + 1)) * P =
+        P + 344 * (4.25 * Real.sqrt lr * P) + 2 * (225.25 * w * P) + 2 * (120.48 * (mr + 1) * P) := by
       ring
     rw [e]
     linarith only [hcast, hpre, a1, hlane, hhop]

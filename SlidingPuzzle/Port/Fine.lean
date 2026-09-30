@@ -117,8 +117,8 @@ theorem port_le_budgetq {n h : ℕ} [NeZero n] (hn : 2 ^ 23 ≤ n) (B : ℕ → 
     (hlo : 16 * GroupedOrder.lamN n * HierMix.sz B h 0 ^ 2 ≤ n) (Bd : ReachableBoard n) :
     optimalLength Bd ≤ manhattan Bd.val +
       2 * ((15 * n ^ 2 + 3002 * n + 1) * HierMix.sz B h 0) +
-      2 * (190 * (HierMix.sz B h 0 ^ 2 * (n / HierMix.sz B h 0) ^ 3) +
-        780 * (HierMix.sz B h 0 ^ 3 * HierMix.nq B h * (n / HierMix.sz B h 0) ^ 2) +
+      2 * (172 * (HierMix.sz B h 0 ^ 2 * (n / HierMix.sz B h 0) ^ 3) +
+        848 * (HierMix.sz B h 0 ^ 3 * HierMix.nq B h * (n / HierMix.sz B h 0) ^ 2) +
         hopKc (HierMix.sz B h 0) (portSide n (HierMix.sz B h 0) (HierMix.nq B h)
           (GroupedOrder.lamN n)) *
           (2 * h * (HierMix.sz B h 0 * (n / HierMix.sz B h 0)) ^ 2)) := by
@@ -158,7 +158,7 @@ theorem port_le_budgetq {n h : ℕ} [NeZero n] (hn : 2 ^ 23 ≤ n) (B : ℕ → 
     hh hke hqe hq2 hqK hK (by omega) hlo8 hK2 hhk h9' h8
     (by unfold resX at hσ; exact hσ) Bd
 
-/-- The port bound for any mixed hierarchy within the lane budget `2λ`: `288 K² (n/K)³`. -/
+/-- The port bound for any mixed hierarchy within the lane budget `2λ`: `278 K² (n/K)³`. -/
 theorem port_le_budget {n h : ℕ} [NeZero n] (hn : 2 ^ 23 ≤ n) (B : ℕ → ℕ)
     (hB : ∀ ℓ, 2 ≤ B ℓ) (hh : 1 ≤ h)
     (hke : Even (HierMix.sz B h 0)) (hqe : Even (HierMix.nq B h))
@@ -166,7 +166,7 @@ theorem port_le_budget {n h : ℕ} [NeZero n] (hn : 2 ^ 23 ≤ n) (B : ℕ → �
     (hlo : 16 * GroupedOrder.lamN n * HierMix.sz B h 0 ^ 2 ≤ n) (Bd : ReachableBoard n) :
     optimalLength Bd ≤ manhattan Bd.val +
       2 * ((15 * n ^ 2 + 3002 * n + 1) * HierMix.sz B h 0) +
-      2 * (288 * (HierMix.sz B h 0 ^ 2 * (n / HierMix.sz B h 0) ^ 3) +
+      2 * (278 * (HierMix.sz B h 0 ^ 2 * (n / HierMix.sz B h 0) ^ 3) +
         hopKc (HierMix.sz B h 0) (portSide n (HierMix.sz B h 0) (HierMix.nq B h)
           (GroupedOrder.lamN n)) *
           (2 * h * (HierMix.sz B h 0 * (n / HierMix.sz B h 0)) ^ 2)) := by
@@ -182,10 +182,10 @@ theorem port_le_budget {n h : ℕ} [NeZero n] (hn : 2 ^ 23 ≤ n) (B : ℕ → �
       _ ≤ 8 * (2 * GroupedOrder.lamN n) * K ^ 2 := this
       _ = 16 * GroupedOrder.lamN n * K ^ 2 := by ring
       _ ≤ n := hlo
-  have hV : 8 * (780 * (K ^ 3 * q * s ^ 2)) ≤ 780 * (K ^ 2 * s ^ 3) := by
-    have := Nat.mul_le_mul_left (780 * (K ^ 2 * s ^ 2)) h8
-    calc 8 * (780 * (K ^ 3 * q * s ^ 2)) = 780 * (K ^ 2 * s ^ 2) * (8 * K * q) := by ring
-      _ ≤ 780 * (K ^ 2 * s ^ 2) * s := this
+  have hV : 8 * (848 * (K ^ 3 * q * s ^ 2)) ≤ 848 * (K ^ 2 * s ^ 3) := by
+    have := Nat.mul_le_mul_left (848 * (K ^ 2 * s ^ 2)) h8
+    calc 8 * (848 * (K ^ 3 * q * s ^ 2)) = 848 * (K ^ 2 * s ^ 2) * (8 * K * q) := by ring
+      _ ≤ 848 * (K ^ 2 * s ^ 2) * s := this
       _ = _ := by ring
   omega
 
@@ -196,7 +196,7 @@ theorem port_fine {n : ℕ} [NeZero n] (hn : 2 ^ 23 ≤ n) (Bd : ReachableBoard 
       16 * GroupedOrder.lamN n * K ^ 2 ≤ n ∧ 64 * n < 1089 * GroupedOrder.lamN n * K ^ 2 ∧
       ∃ σ : ℕ, σ * σ ≤ 13 * n ∧
       optimalLength Bd ≤ manhattan Bd.val + 2 * ((15 * n ^ 2 + 3002 * n + 1) * K) +
-        2 * (288 * (K ^ 2 * (n / K) ^ 3) + hopKc K σ * (2 * h * (K * (n / K)) ^ 2)) := by
+        2 * (278 * (K ^ 2 * (n / K) ^ 3) + hopKc K σ * (2 * h * (K * (n / K)) ^ 2)) := by
   obtain ⟨h, b, j, hh, hbe, hb8, hj, hbud, hlo, hhi, h73, htwo⟩ := exists_lam_grid hn
   set lam := GroupedOrder.lamN n with hlam
   have hl72 : 72 ≤ lam := lam_ge hn

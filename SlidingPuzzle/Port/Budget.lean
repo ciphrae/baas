@@ -144,6 +144,15 @@ theorem event_le {k s σ : ℕ} (h9 : 9 * σ ≤ s) (hks : 1024 * k ≤ s) (hs :
   · unfold xferK; omega
   · unfold legA; omega
 
+set_option maxRecDepth 8000 in
+theorem event_le2 {k s σ : ℕ} (h9 : 9 * σ ≤ s) (hks : 1024 * k ≤ s) (hs : 65536 ≤ s) :
+    10 * hopKi k s σ ≤ 121 * s ∧ legA k s σ ≤ 24 * s := by
+  refine ⟨?_, ?_⟩
+  · unfold hopKi; linarith
+  · unfold legA
+    have : 6 * σ + 600 * k + 3053 ≤ 19 * s := by linarith
+    rw [Nat.sub_eq_zero_of_le this]; omega
+
 /-- The port bound, apart from the cheap hops, is at most `300 k² s³`. -/
 theorem port_budget2 (k q s d lam σ lc nd rv : ℕ)
     (hk : 64 ≤ k) (hlam : 64 ≤ lam) (hkq : 8 * k * q ≤ s) (hkl : 16 * k * lam ≤ s)
@@ -415,6 +424,148 @@ theorem port_budget3 (k q s d lam σ lc nd rv : ℕ)
       nlinarith
     omega
   unfold prunCost
+  omega
+
+/-- The port bound, apart from the cheap hops: `172 k² s³ + 848 k³ q s²`. -/
+theorem port_budget4 (k q s d lam σ lc nd rv : ℕ)
+    (hk : 64 ≤ k) (hlam : 64 ≤ lam) (hkq : 8 * k * q ≤ s) (hkl : 16 * k * lam ≤ s)
+    (hq : 1 ≤ q) (hhk : 2 * d + 1 ≤ k)
+    (h9 : 9 * σ ≤ s)
+    (hlc : lc ≤ 2 * k ^ 2 * q * s)
+    (hnd : nd ≤ 4 * k ^ 2 * q * s + (14 + 30 * lam) * k ^ 3 * q)
+    (hrv : rv ≤ 6 * k ^ 2 * q * s + (14 + 30 * lam) * k ^ 3 * q + 6 * k ^ 2) :
+    2 * (k * s) + 2 * s + 52 * (k * s) * rv +
+      prunCost (k * s) k q s σ d lc nd (relocW k s lc) +
+      (26 * (k * s) * ((lc + (nd + (rv + lc))) + 2 * (k * s) + 5) +
+        (k ^ 2 * (5 * s ^ 3 + 1509 * s ^ 2 + 1505 * s + 4796) +
+          9354 * k ^ 2 * (k * s))) / 2 ≤
+      172 * (k ^ 2 * s ^ 3) + 848 * (k ^ 3 * q * s ^ 2) + hopKc k σ * (2 * d * (k * s) ^ 2) := by
+  have hks : 1024 * k ≤ s := by
+    have : 1024 * k ≤ 16 * k * lam := by
+      have := Nat.mul_le_mul_left (16 * k) hlam
+      calc 1024 * k = 16 * k * 64 := by ring
+        _ ≤ _ := this
+    omega
+  have hs : 65536 ≤ s := by omega
+  -- the needs, against `Y = k² q s`
+  have hlk : (14 + 30 * lam) * k ≤ 2 * s := by
+    have e : (14 + 30 * lam) * k = 14 * k + 30 * (k * lam) := by ring
+    have e2 : 16 * k * lam = 16 * (k * lam) := by ring
+    omega
+  have hlk3 : (14 + 30 * lam) * k ^ 3 * q ≤ 2 * (k ^ 2 * q * s) := by
+    have := Nat.mul_le_mul_right (k ^ 2 * q) hlk
+    calc (14 + 30 * lam) * k ^ 3 * q = (14 + 30 * lam) * k * (k ^ 2 * q) := by ring
+      _ ≤ 2 * s * (k ^ 2 * q) := this
+      _ = _ := by ring
+  have e4 : 4 * k ^ 2 * q * s = 4 * (k ^ 2 * q * s) := by ring
+  have e6 : 6 * k ^ 2 * q * s = 6 * (k ^ 2 * q * s) := by ring
+  have e2' : 2 * k ^ 2 * q * s = 2 * (k ^ 2 * q * s) := by ring
+  have hnd6 : nd ≤ 6 * (k ^ 2 * q * s) := by omega
+  have hk6 : 6 * k ^ 2 ≤ k ^ 2 * q * s := by
+    have : 6 ≤ q * s := by nlinarith
+    calc 6 * k ^ 2 ≤ q * s * k ^ 2 := Nat.mul_le_mul_right _ this
+      _ = _ := by ring
+  -- the placeholder product `(2d+1) nd ≤ 6 k³ q s`
+  have hZ : s * ((2 * d + 1) * nd) ≤ 6 * (k ^ 3 * q * s ^ 2) := by
+    have a := Nat.mul_le_mul hhk hnd6
+    have := Nat.mul_le_mul_left s a
+    calc s * ((2 * d + 1) * nd) ≤ s * (k * (6 * (k ^ 2 * q * s))) := this
+      _ = _ := by ring
+  have hW := relocW_le3 (q := q) hk hks hlc
+  -- monomials: `V = k³ q s²`
+  have eV : k * s * (k ^ 2 * q * s) = k ^ 3 * q * s ^ 2 := by ring
+  have g5 : 65536 * (k ^ 2 * s ^ 2) ≤ k ^ 2 * s ^ 3 := by
+    have := Nat.mul_le_mul_left (k ^ 2 * s ^ 2) hs
+    calc 65536 * (k ^ 2 * s ^ 2) = k ^ 2 * s ^ 2 * 65536 := by ring
+      _ ≤ k ^ 2 * s ^ 2 * s := this
+      _ = _ := by ring
+  have g6 : k * s ≤ k ^ 2 * s ^ 2 := by
+    have := Nat.le_mul_self (k * s)
+    have e : k ^ 2 * s ^ 2 = k * s * (k * s) := by ring
+    omega
+  have g7 : s ≤ k * s := Nat.le_mul_of_pos_left _ (by omega)
+  have gks : 64 * (k * s * (k ^ 2)) ≤ k ^ 2 * s ^ 2 := by
+    have := Nat.mul_le_mul_left (k ^ 2 * s) (show 64 * k ≤ s by omega)
+    calc 64 * (k * s * k ^ 2) = k ^ 2 * s * (64 * k) := by ring
+      _ ≤ k ^ 2 * s * s := this
+      _ = _ := by ring
+  obtain ⟨-, hKx, -⟩ := event_le (k := k) h9 hks hs
+  obtain ⟨hKi, hA⟩ := event_le2 (k := k) h9 hks hs
+  -- the terms
+  have t2 : 10 * (hopKi k s σ * (2 * (k * s) ^ 2 + (2 * d + 1) * nd)) ≤
+      242 * (k ^ 2 * s ^ 3) + 726 * (k ^ 3 * q * s ^ 2) := by
+    have h1 := Nat.mul_le_mul_right (2 * (k * s) ^ 2 + (2 * d + 1) * nd) hKi
+    have e : 121 * s * (2 * (k * s) ^ 2 + (2 * d + 1) * nd) =
+        242 * (k ^ 2 * s ^ 3) + 121 * (s * ((2 * d + 1) * nd)) := by ring
+    have e2 : 10 * hopKi k s σ * (2 * (k * s) ^ 2 + (2 * d + 1) * nd) =
+        10 * (hopKi k s σ * (2 * (k * s) ^ 2 + (2 * d + 1) * nd)) := by ring
+    omega
+  have t3 : xferK k s σ * (4 * (k * s) ^ 2) ≤ 92 * (k ^ 2 * s ^ 3) := by
+    have := Nat.mul_le_mul_right (4 * (k * s) ^ 2) hKx
+    have e : 23 * s * (4 * (k * s) ^ 2) = 92 * (k ^ 2 * s ^ 3) := by ring
+    omega
+  have t4 : s * ((2 * k + 2 * d) * nd) ≤ 18 * (k ^ 3 * q * s ^ 2) := by
+    have a1 : k * s * nd ≤ k * s * (6 * (k ^ 2 * q * s)) := Nat.mul_le_mul_left _ hnd6
+    have a2 : 2 * d * nd ≤ (2 * d + 1) * nd := Nat.mul_le_mul_right _ (by omega)
+    have a3 := Nat.mul_le_mul_left s a2
+    have e : s * ((2 * k + 2 * d) * nd) = 2 * (k * s * nd) + s * (2 * d * nd) := by ring
+    have e2 : k * s * (6 * (k ^ 2 * q * s)) = 6 * (k ^ 3 * q * s ^ 2) := by ring
+    omega
+  have t5 : legA k s σ * relocW k s lc / 8 ≤ 47 * (k ^ 2 * s ^ 3) + 90 * (k ^ 3 * q * s ^ 2) := by
+    apply Nat.div_le_of_le_mul
+    have h1 := Nat.mul_le_mul hA hW
+    have e : 24 * s * (993 * (k ^ 2 * s ^ 2) + 1920 * (k ^ 3 * q * s)) =
+        23832 * (k ^ 2 * s ^ 3) + 46080 * (k ^ 3 * q * s ^ 2) := by ring
+    have e2 : legA k s σ * (64 * relocW k s lc) = 64 * (legA k s σ * relocW k s lc) := by ring
+    omega
+  have t6 : lc * (k * s) ≤ 2 * (k ^ 3 * q * s ^ 2) := by
+    have := Nat.mul_le_mul_right (k * s) hlc
+    have e : 2 * k ^ 2 * q * s * (k * s) = 2 * (k ^ 3 * q * s ^ 2) := by ring
+    omega
+  have t7 : 52 * (k * s) * rv ≤ (k ^ 2 * s ^ 3) + 416 * (k ^ 3 * q * s ^ 2) := by
+    have h1 : rv ≤ 8 * (k ^ 2 * q * s) + 6 * k ^ 2 := by omega
+    have := Nat.mul_le_mul_left (52 * (k * s)) h1
+    have e : 52 * (k * s) * (8 * (k ^ 2 * q * s) + 6 * k ^ 2) =
+        416 * (k ^ 3 * q * s ^ 2) + 312 * (k * s * k ^ 2) := by ring
+    omega
+  have t8 : (26 * (k * s) * ((lc + (nd + (rv + lc))) + 2 * (k * s) + 5) +
+      (k ^ 2 * (5 * s ^ 3 + 1509 * s ^ 2 + 1505 * s + 4796) + 9354 * k ^ 2 * (k * s))) / 2 ≤
+      4 * (k ^ 2 * s ^ 3) + 234 * (k ^ 3 * q * s ^ 2) := by
+    apply Nat.div_le_of_le_mul
+    have g1 : lc + (nd + (rv + lc)) ≤ 18 * (k ^ 2 * q * s) + 6 * k ^ 2 := by omega
+    have g2 : 26 * (k * s) * ((lc + (nd + (rv + lc))) + 2 * (k * s) + 5) ≤
+        26 * (k * s) * (18 * (k ^ 2 * q * s) + 6 * k ^ 2 + 2 * (k * s) + 5) :=
+      Nat.mul_le_mul_left _ (by omega)
+    have e3 : 26 * (k * s) * (18 * (k ^ 2 * q * s) + 6 * k ^ 2 + 2 * (k * s) + 5) =
+        468 * (k ^ 3 * q * s ^ 2) + 156 * (k * s * k ^ 2) + 52 * (k ^ 2 * s ^ 2) + 130 * (k * s) := by
+      ring
+    have g3 : k ^ 2 * (5 * s ^ 3 + 1509 * s ^ 2 + 1505 * s + 4796) ≤ 5 * (k ^ 2 * s ^ 3) +
+        1510 * (k ^ 2 * s ^ 2) := by
+      have a : 1505 * s + 4796 ≤ s ^ 2 := by
+        have := Nat.mul_le_mul_right s hs
+        have e : s ^ 2 = s * s := by ring
+        omega
+      calc k ^ 2 * (5 * s ^ 3 + 1509 * s ^ 2 + 1505 * s + 4796) ≤
+            k ^ 2 * (5 * s ^ 3 + 1510 * s ^ 2) := Nat.mul_le_mul_left _ (by omega)
+        _ = _ := by ring
+    have g4 : 9354 * k ^ 2 * (k * s) ≤ 10 * (k ^ 2 * s ^ 2) := by
+      have a : 9354 * k ≤ 10 * s := by omega
+      calc 9354 * k ^ 2 * (k * s) = k ^ 2 * s * (9354 * k) := by ring
+        _ ≤ k ^ 2 * s * (10 * s) := Nat.mul_le_mul_left _ a
+        _ = _ := by ring
+    omega
+  have hsmall : 2 * (k * s) + 2 * s ≤ k ^ 2 * s ^ 3 := by omega
+  have t9 : 7 * (q + 2) * (2 * k * (k * s) ^ 2) ≤ (k ^ 2 * s ^ 3) + 14 * (k ^ 3 * q * s ^ 2) := by
+    have e : 7 * (q + 2) * (2 * k * (k * s) ^ 2) = 14 * (k ^ 3 * q * s ^ 2) +
+        28 * (k * s * (k ^ 2)) * s := by ring
+    have : 28 * (k * s * k ^ 2) * s ≤ k ^ 2 * s ^ 3 := by
+      have := Nat.mul_le_mul_right s gks
+      have e2 : k ^ 2 * s ^ 2 * s = k ^ 2 * s ^ 3 := by ring
+      nlinarith
+    omega
+  unfold prunCost
+  have : 10 * (hopKi k s σ * (2 * (k * s) ^ 2 + (2 * d + 1) * nd)) =
+      10 * (hopKi k s σ * (2 * (k * s) ^ 2 + (2 * d + 1) * nd)) := rfl
   omega
 
 end SlidingPuzzle.Port

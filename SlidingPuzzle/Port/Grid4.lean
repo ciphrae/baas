@@ -2,7 +2,7 @@ import SlidingPuzzle.Port.Fine
 
 /-! # A deep grid for the ports
 
-The lane budget `q` enters the port bound only through `780 K³ q (n/K)²`, so a deep
+The lane budget `q` enters the port bound only through `848 K³ q (n/K)²`, so a deep
 hierarchy with small branching pays off: `m` levels of branching `4` or `6` (the mixed grid),
 then a free level of even branching `d ≥ 32`, the largest with `16 λ K² ≤ n`. Then
 `q = 4m + 2j + d ≤ 6m + 128`, and the grid rounds by at most `17/16`. -/
@@ -21,7 +21,7 @@ theorem port_deep {n : ℕ} [NeZero n] (hn : 2 ^ 23 ≤ n) (Bd : ReachableBoard 
       16 * GroupedOrder.lamN n * K ^ 2 ≤ n ∧ 64 * n < 1156 * GroupedOrder.lamN n * K ^ 2 ∧
       64 ≤ K ∧ q ≤ 6 * m + 128 ∧ σ * σ ≤ 13 * n ∧
       optimalLength Bd ≤ manhattan Bd.val + 2 * ((15 * n ^ 2 + 3002 * n + 1) * K) +
-        2 * (190 * (K ^ 2 * (n / K) ^ 3) + 780 * (K ^ 3 * q * (n / K) ^ 2) +
+        2 * (172 * (K ^ 2 * (n / K) ^ 3) + 848 * (K ^ 3 * q * (n / K) ^ 2) +
           hopKc K σ * (2 * (m + 1) * (K * (n / K)) ^ 2)) := by
   set lam := GroupedOrder.lamN n with hlam
   have hl72 : 72 ≤ lam := lam_ge hn
