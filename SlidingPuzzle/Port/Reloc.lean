@@ -149,11 +149,12 @@ theorem corner_facts' {E Z : Sq k} (c : ¬ (E.1 = Z.1 ∨ E.2 = Z.2)) :
   corner_facts c
 
 /-- Eight times the cost of a relocation, per unit of relocation weight: the distance part
-of a leg costs `3(s+3)` per unit, the fixed part `30σ + 1200k` at most one eighth per unit
-(a relocation has weight at least `16` per leg). -/
-def legA (k s σ' : ℕ) : ℕ := 24 * (s + 3) + (30 * σ' + 1200 * k)
+of a leg costs `3s` per unit, the fixed part at most one eighth per unit (a relocation has
+weight at least `16` per leg). -/
+def legA (k s σ' : ℕ) : ℕ := 24 * s + (6 * σ' + 600 * k + 3053)
 
-theorem legK_eq (k s σ' d : ℕ) : legK k s σ' d = (s + 3) * (40 + 21 * d) + (30 * σ' + 1200 * k) := by
+theorem legK_eq (k s σ' d : ℕ) :
+    legK k s σ' d = 21 * d * s + 10 * s + (12 * σ' + 1200 * k + 6105) := by
   unfold legK; ring
 
 section reloc
@@ -182,7 +183,6 @@ theorem pReloc_linv {G : PG k q} (hL : PLInv L s σ' σ0 F0 G) {E Z : Sq k} (hb 
     rw [pLegF_jc, legK_eq]
     unfold legA
     generalize sqDist G.σ.blank Z = d
-    generalize 30 * σ' + 1200 * k = F
     nlinarith
   · obtain ⟨h1, h2, h3, h4, h5, h6⟩ := corner_facts' c
     set C : Sq k := (Z.1, E.2)
@@ -208,7 +208,6 @@ theorem pReloc_linv {G : PG k q} (hL : PLInv L s σ' σ0 F0 G) {E Z : Sq k} (hb 
       unfold legA
       generalize sqDist G.σ.blank C = d1
       generalize sqDist C Z = d2
-      generalize 30 * σ' + 1200 * k = F
       nlinarith
 
 end reloc

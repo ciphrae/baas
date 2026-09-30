@@ -117,7 +117,7 @@ theorem port_le_budget {n h : ℕ} [NeZero n] (hn : 2 ^ 23 ≤ n) (B : ℕ → �
     (hlo : 16 * GroupedOrder.lamN n * HierMix.sz B h 0 ^ 2 ≤ n) (Bd : ReachableBoard n) :
     optimalLength Bd ≤ manhattan Bd.val +
       2 * ((15 * n ^ 2 + 3002 * n + 1) * HierMix.sz B h 0) +
-      2 * (362 * (HierMix.sz B h 0 ^ 2 * (n / HierMix.sz B h 0) ^ 3) +
+      2 * (300 * (HierMix.sz B h 0 ^ 2 * (n / HierMix.sz B h 0) ^ 3) +
         hopKc (HierMix.sz B h 0) (portSide n (HierMix.sz B h 0) (HierMix.nq B h)
           (GroupedOrder.lamN n)) *
           (2 * h * (HierMix.sz B h 0 * (n / HierMix.sz B h 0)) ^ 2)) := by
@@ -164,7 +164,7 @@ theorem port_fine {n : ℕ} [NeZero n] (hn : 2 ^ 23 ≤ n) (Bd : ReachableBoard 
       16 * GroupedOrder.lamN n * K ^ 2 ≤ n ∧ 64 * n < 1089 * GroupedOrder.lamN n * K ^ 2 ∧
       ∃ σ : ℕ, σ * σ ≤ 13 * n ∧
       optimalLength Bd ≤ manhattan Bd.val + 2 * ((15 * n ^ 2 + 3002 * n + 1) * K) +
-        2 * (362 * (K ^ 2 * (n / K) ^ 3) + hopKc K σ * (2 * h * (K * (n / K)) ^ 2)) := by
+        2 * (300 * (K ^ 2 * (n / K) ^ 3) + hopKc K σ * (2 * h * (K * (n / K)) ^ 2)) := by
   obtain ⟨h, b, j, hh, hbe, hb8, hj, hbud, hlo, hhi, h73, htwo⟩ := exists_lam_grid hn
   set lam := GroupedOrder.lamN n with hlam
   have hl72 : 72 ≤ lam := lam_ge hn

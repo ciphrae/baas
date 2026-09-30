@@ -162,13 +162,13 @@ def hopKc (k σ : ℕ) : ℕ := 30 * σ + 1200 * k + 3000
 def crossK (q : ℕ) (l : Ln k q) (J : Fin k) : ℕ := 7 * (q + 2) * LaneSys.pdist l.2.t.val J.val
 
 /-- The extra part of an importing hop: a three-cycle in the whole square. -/
-def hopKi (k s σ : ℕ) : ℕ := 10 * s + 30 * σ + 1200 * k + 2000
+def hopKi (k s σ : ℕ) : ℕ := 10 * s + 10 * σ + 882 * k + 2500
 
 /-- A transfer between two ports of a square. -/
-def xferK (k s σ : ℕ) : ℕ := 30 * s + 30 * σ + 1200 * k + 2000
+def xferK (k s σ : ℕ) : ℕ := 21 * (s + 1) + 12 * σ + 600 * k + 2000
 
 /-- A leg between aligned squares at distance `d`. -/
-def legK (k s σ d : ℕ) : ℕ := (s + 3) * (40 + 21 * d) + 30 * σ + 1200 * k
+def legK (k s σ d : ℕ) : ℕ := 21 * (d * s + 5) + 10 * s + 12 * σ + 1200 * k + 6000
 
 namespace PState
 

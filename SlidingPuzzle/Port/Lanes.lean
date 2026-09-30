@@ -92,7 +92,7 @@ theorem optimalLength_le_port_residual {n k q σ la : ℕ} [NeZero n] (L : LaneS
   have h := optimalLength_le_prefix_residual_solution B (n - k * (n / k)) hdn C p hC A hA qpath hq'
   omega
 
-/-- The port bound for a tight lane system of depth `h`: `362 k² (n/k)³` plus the cheap hops. -/
+/-- The port bound for a tight lane system of depth `h`: `300 k² (n/k)³` plus the cheap hops. -/
 theorem optimalLength_le_port_lanes {n k q h σ : ℕ} [NeZero n] (L : LaneSys k q) (hT : L.Tight)
     (hd : L.depth = h) (hh : 1 ≤ h) (hke : Even k) (hqe : Even q) (hq2 : 2 ≤ q) (hqk : q ≤ k)
     (hk : 64 ≤ k) (hl : 64 ≤ GroupedOrder.lamN n)
@@ -103,7 +103,7 @@ theorem optimalLength_le_port_lanes {n k q h σ : ℕ} [NeZero n] (L : LaneSys k
       + 2 ≤ σ ^ 2)
     (B : ReachableBoard n) :
     optimalLength B ≤ manhattan B.val + 2 * ((15 * n ^ 2 + 3002 * n + 1) * k) +
-      2 * (362 * (k ^ 2 * (n / k) ^ 3) + hopKc k σ * (2 * h * (k * (n / k)) ^ 2)) := by
+      2 * (300 * (k ^ 2 * (n / k) ^ 3) + hopKc k σ * (2 * h * (k * (n / k)) ^ 2)) := by
   set s := n / k with hs
   have hk0 : 0 < k := by omega
   have hdiv : ∀ {a : ℕ}, a * k ≤ n → a ≤ s := fun h => by
@@ -164,7 +164,7 @@ theorem optimalLength_le_port_lanes {n k q h σ : ℕ} [NeZero n] (L : LaneSys k
     (∑ v, needAt L s (GroupedOrder.lamN (k * s)) v) (∑ Q, resv L (k * s) s Q)
     (by omega) hl' hsq h16 (by omega) hscr hsph hs9 (laneCells_bound L) (total_need_le L _)
     (total_resv_le L hdim)
-  have hpb : portBound L (k * s) s σ ≤ 362 * (k ^ 2 * s ^ 3) + hopKc k σ * (2 * h * (k * s) ^ 2) := by
+  have hpb : portBound L (k * s) s σ ≤ 300 * (k ^ 2 * s ^ 3) + hopKc k σ * (2 * h * (k * s) ^ 2) := by
     unfold portBound
     rw [hd]
     exact hbud

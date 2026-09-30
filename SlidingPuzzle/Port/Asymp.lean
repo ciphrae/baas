@@ -1,8 +1,8 @@
 import SlidingPuzzle.Port.Fine
 
-/-! # The port algorithm: error `(69 ln n + 6400 √(ln n)) n^(5/2)`
+/-! # The port algorithm: error `(69 ln n + 5300 √(ln n)) n^(5/2)`
 
-From `port_fine`: the grid part costs `724 K² (n/K)³ ≤ 724 (33/8) √λ n^(5/2)`, the cheap
+From `port_fine`: the grid part costs `600 K² (n/K)³ ≤ 600 (33/8) √λ n^(5/2)`, the cheap
 hops `4 h hopKc n²` with `hopKc ≤ 147 √n` (ports of side `σ ≤ √(13 n)`) and depth
 `h ≤ (ln n + 1.52)/8.56`. -/
 namespace SlidingPuzzle.Port
@@ -10,10 +10,10 @@ open Finset
 open SlidingPuzzle
 open SlidingPuzzle.Tree
 
-/-- **`OPT(B) ≤ M(B) + (69 ln n + 6400 √(ln n)) n^(5/2)`** for `n ≥ 2²³`. -/
+/-- **`OPT(B) ≤ M(B) + (69 ln n + 5300 √(ln n)) n^(5/2)`** for `n ≥ 2²³`. -/
 theorem port_optimalLength_le {n : ℕ} [NeZero n] (hn : 2 ^ 23 ≤ n) (B : ReachableBoard n) :
     (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) +
-      (69 * Real.log n + 6400 * Real.sqrt (Real.log n)) * (n : ℝ) ^ ((5 : ℝ) / 2) := by
+      (69 * Real.log n + 5300 * Real.sqrt (Real.log n)) * (n : ℝ) ^ ((5 : ℝ) / 2) := by
   obtain ⟨h, K, hh, h73, -, hK64, hlo, hhi, σ, hσ, hnat⟩ := port_fine hn B
   set lam := GroupedOrder.lamN n with hlam
   have hl72 : 72 ≤ lam := lam_ge hn
@@ -40,7 +40,7 @@ theorem port_optimalLength_le {n : ℕ} [NeZero n] (hn : 2 ^ 23 ≤ n) (B : Reac
   -- the natural bound, cast
   have hcast : (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) +
       2 * ((15 * nr ^ 2 + 3002 * nr + 1) * Kr) +
-      2 * (362 * (Kr ^ 2 * ((n / K : ℕ) : ℝ) ^ 3) +
+      2 * (300 * (Kr ^ 2 * ((n / K : ℕ) : ℝ) ^ 3) +
         (30 * sr + 1200 * Kr + 3000) * (2 * hr * (Kr * ((n / K : ℕ) : ℝ)) ^ 2)) := by
     have := (Nat.cast_le (α := ℝ)).2 hnat
     unfold hopKc at this
@@ -137,13 +137,13 @@ theorem port_optimalLength_le {n : ℕ} [NeZero n] (hn : 2 ^ 23 ≤ n) (B : Reac
     rw [show (3.99 : ℝ) = Real.sqrt (3.99 ^ 2) from (Real.sqrt_sq (by norm_num)).symm]
     exact Real.sqrt_le_sqrt (by linarith)
   have hhL : 586.84 * hr ≤ 68.56 * L + 104.2 := by linarith
-  have hcoef : 1 + 2 * 362 * (33 / 8) * Real.sqrt lr + 2 * 293.42 * hr ≤
-      69 * L + 6400 * Real.sqrt L := by linarith
+  have hcoef : 1 + 2 * 300 * (33 / 8) * Real.sqrt lr + 2 * 293.42 * hr ≤
+      69 * L + 5300 * Real.sqrt L := by linarith
   calc (optimalLength B : ℝ) ≤ _ := hcast
-    _ ≤ (manhattan B.val : ℝ) + (1 + 2 * 362 * (33 / 8) * Real.sqrt lr + 2 * 293.42 * hr) * P := by
+    _ ≤ (manhattan B.val : ℝ) + (1 + 2 * 300 * (33 / 8) * Real.sqrt lr + 2 * 293.42 * hr) * P := by
         have e : (Kr * m) = Kr * m := rfl
         linarith
-    _ ≤ (manhattan B.val : ℝ) + (69 * L + 6400 * Real.sqrt L) * P := by
+    _ ≤ (manhattan B.val : ℝ) + (69 * L + 5300 * Real.sqrt L) * P := by
         have := mul_le_mul_of_nonneg_right hcoef hP0
         linarith
 
