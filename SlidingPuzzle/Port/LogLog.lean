@@ -516,7 +516,7 @@ theorem port_loglog {n : ℕ} [NeZero n] (hn : 2 ^ (2 ^ 60) ≤ n) (Bd : Reachab
       242 * (n : ℝ) ^ ((5 : ℝ) / 2) * Real.log n / Real.log (Real.log n) :=
   port_loglog_log (log_ge_of_pow_le _ le_rfl hn) Bd
 
-/-! ## Uniformly from `2²³` -/
+/-! ## Helpers for the uniform bounds (`Port/Uniform.lean`) -/
 
 /-- `t e^(-t/2)` decreases for `t ≥ 2`: `t E_a ≤ a e^(t/2)` if `a ≤ t` and `E_a ≤ e^(a/2)`. -/
 theorem mul_le_exp_half {a Ea t : ℝ} (ha : 2 ≤ a) (hat : a ≤ t) (hEa : 0 < Ea)
@@ -534,109 +534,5 @@ theorem mul_le_exp_half {a Ea t : ℝ} (ha : 2 ≤ a) (hat : a ≤ t) (hEa : 0 <
 theorem exp_one_pow_ge (k : ℕ) : (2.7182818283 : ℝ) ^ k ≤ Real.exp k := by
   rw [← Real.exp_one_pow]
   exact pow_le_pow_left₀ (by norm_num) Real.exp_one_gt_d9.le k
-
-/-- `29 L + 4900 √L ≤ 3500 L / ln L` for `15.94 ≤ L` and `ln L ≤ 42`. -/
-theorem small_coef {L : ℝ} (hL : 797 / 50 ≤ L) (ht : Real.log L ≤ 42) :
-    29 * L + 4900 * Real.sqrt L ≤ 3500 * L / Real.log L := by
-  have hL0 : 0 < L := by linarith
-  set t := Real.log L with htd
-  set r := Real.sqrt L with hrd
-  have hr : r = Real.exp (t / 2) := by
-    have e : L = Real.exp (t / 2) ^ 2 := by
-      rw [← Real.exp_nat_mul]; push_cast
-      rw [show (2 : ℝ) * (t / 2) = t by ring, htd, Real.exp_log hL0]
-    rw [hrd, e, Real.sqrt_sq (Real.exp_pos _).le]
-  have hr0 : 0 < r := by rw [hr]; exact Real.exp_pos _
-  have hLr : L = r * r := by rw [hrd, Real.mul_self_sqrt hL0.le]
-  have h11lo : (2.7182818283 : ℝ) ^ 11 ≤ Real.exp 11 := by
-    have := exp_one_pow_ge 11; push_cast at this; exact this
-  have h3lo : (20.0855 : ℝ) ≤ Real.exp 3 := by
-    have := exp_one_pow_ge 3; push_cast at this; norm_num at this; linarith
-  -- `t ≥ 2.75`
-  have ht0 : 2.75 ≤ t := by
-    rw [htd, Real.le_log_iff_exp_le hL0]
-    have h11 : Real.exp 11 ≤ (2.7182818286 : ℝ) ^ 11 := by
-      rw [show (11 : ℝ) = ((11 : ℕ) : ℝ) by norm_num, ← Real.exp_one_pow]
-      exact pow_le_pow_left₀ (Real.exp_pos 1).le Real.exp_one_lt_d9.le 11
-    have e : Real.exp 2.75 ^ 4 = Real.exp 11 := by
-      rw [← Real.exp_nat_mul]; norm_num
-    have : Real.exp 2.75 ^ 4 ≤ (797 / 50 : ℝ) ^ 4 := by rw [e]; norm_num at h11 ⊢; linarith
-    have := (pow_le_pow_iff_left₀ (Real.exp_pos _).le (by norm_num) (by norm_num)).1 this
-    linarith
-  -- `t ≤ c r` on three ranges
-  have key : 29 * r * t + 4900 * t ≤ 3500 * r := by
-    rcases le_or_gt t 3 with hA | hA
-    · have hE : (3.955 : ℝ) ≤ Real.exp (2.75 / 2) := by
-        have e : Real.exp (2.75 / 2) ^ 8 = Real.exp 11 := by rw [← Real.exp_nat_mul]; norm_num
-        have : (3.955 : ℝ) ^ 8 ≤ Real.exp (2.75 / 2) ^ 8 := by
-          rw [e]; norm_num at h11lo ⊢; linarith
-        exact (pow_le_pow_iff_left₀ (by norm_num) (Real.exp_pos _).le (by norm_num)).1 this
-      have := mul_le_exp_half (by norm_num) ht0 (by norm_num) hE
-      rw [← hr] at this
-      have h2 : r * t ≤ r * 3 := mul_le_mul_of_nonneg_left hA hr0.le
-      nlinarith
-    rcases le_or_gt t 6 with hB | hB
-    · have hE : (4.4816 : ℝ) ≤ Real.exp (3 / 2) := by
-        have e : Real.exp (3 / 2) ^ 2 = Real.exp 3 := by rw [← Real.exp_nat_mul]; norm_num
-        have : (4.4816 : ℝ) ^ 2 ≤ Real.exp (3 / 2) ^ 2 := by rw [e]; norm_num; linarith
-        exact (pow_le_pow_iff_left₀ (by norm_num) (Real.exp_pos _).le (by norm_num)).1 this
-      have := mul_le_exp_half (by norm_num) hA.le (by norm_num) hE
-      rw [← hr] at this
-      have h2 : r * t ≤ r * 6 := mul_le_mul_of_nonneg_left hB hr0.le
-      nlinarith
-    · have hE : (20.0855 : ℝ) ≤ Real.exp (6 / 2) := by rw [show (6 : ℝ) / 2 = 3 by norm_num]; exact h3lo
-      have := mul_le_exp_half (by norm_num) hB.le (by norm_num) hE
-      rw [← hr] at this
-      have h2 : r * t ≤ r * 42 := mul_le_mul_of_nonneg_left ht hr0.le
-      nlinarith
-  have htpos : 0 < t := by linarith
-  rw [le_div_iff₀ htpos, hLr]
-  have := mul_le_mul_of_nonneg_left key hr0.le
-  nlinarith
-
-/-- **`OPT(B) ≤ M(B) + 3500 n^(5/2) ln n / ln ln n`** for `n ≥ 2²³`: `port_loglog` for
-`log₂ n ≥ 2⁶⁰`, `port_optimalLength_le` below. -/
-theorem port_loglog_uniform {n : ℕ} [NeZero n] (hn : 2 ^ 23 ≤ n) (Bd : ReachableBoard n) :
-    (optimalLength Bd : ℝ) ≤ (manhattan Bd.val : ℝ) +
-      3500 * (n : ℝ) ^ ((5 : ℝ) / 2) * Real.log n / Real.log (Real.log n) := by
-  have hL := log_ge_of_pow23 hn
-  set L := Real.log n with hLd
-  have hL0 : 0 < L := by linarith
-  have ht0 : 0 < Real.log L := Real.log_pos (by linarith)
-  set P : ℝ := (n : ℝ) ^ ((5 : ℝ) / 2) with hP
-  have hP0 : 0 ≤ P := by positivity
-  have hX : 0 ≤ P * L / Real.log L := by positivity
-  by_cases hE : 2 ^ 60 ≤ Nat.log 2 n
-  · have h := port_loglog_log hE Bd
-    rw [← hLd, ← hP] at h
-    have e1 : 242 * P * L / Real.log L = 242 * (P * L / Real.log L) := by ring
-    have e2 : 3500 * P * L / Real.log L = 3500 * (P * L / Real.log L) := by ring
-    rw [e1] at h; rw [e2]
-    linarith
-  · push Not at hE
-    set E := Nat.log 2 n with hEd
-    have hnE : n < 2 ^ (E + 1) := Nat.lt_pow_succ_log_self (by norm_num) n
-    have hE1 : ((E : ℝ) + 1) ≤ 2 ^ 60 := by exact_mod_cast (show E + 1 ≤ 2 ^ 60 by omega)
-    have hn0 : (0 : ℝ) < n := by exact_mod_cast (show 0 < n by omega)
-    have hLE : L ≤ ((E : ℝ) + 1) * Real.log 2 := by
-      have : (n : ℝ) ≤ ((2 : ℝ) ^ (E + 1)) := by exact_mod_cast hnE.le
-      have := Real.log_le_log hn0 this
-      rw [Real.log_pow] at this; push_cast at this; exact this
-    have ht : Real.log L ≤ 42 := by
-      rw [Real.log_le_iff_le_exp hL0]
-      have h42 := exp_one_pow_ge 42
-      push_cast at h42
-      have hl2 := Real.log_two_lt_d9
-      have : ((E : ℝ) + 1) * Real.log 2 ≤ 2 ^ 60 * 0.6931471808 :=
-        mul_le_mul hE1 hl2.le (Real.log_nonneg (by norm_num)) (by positivity)
-      norm_num at h42 this
-      linarith
-    have hc := small_coef hL ht
-    have h := port_optimalLength_le hn Bd
-    rw [← hLd, ← hP] at h
-    have := mul_le_mul_of_nonneg_right hc hP0
-    have e : 3500 * P * L / Real.log L = 3500 * L / Real.log L * P := by ring
-    rw [e]
-    linarith
 
 end SlidingPuzzle.Port

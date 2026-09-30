@@ -1,6 +1,6 @@
 import SlidingPuzzle.Port.Asymp
 import SlidingPuzzle.Port.AsympDeep
-import SlidingPuzzle.Port.LogLog
+import SlidingPuzzle.Port.Uniform
 import SlidingPuzzle.Tree.Stats
 
 /-! # Orbit statistics with error `O(n^(5/2) ln n / ln ln n)`
@@ -15,29 +15,6 @@ open Filter Asymptotics
 namespace SlidingPuzzle.Port
 
 open SlidingPuzzle SlidingPuzzle.Hub SlidingPuzzle.Tree
-
-/-- **`OPT(B) ≤ M(B) + 1260 n^(5/2) ln n`** for `n ≥ 2²³`. -/
-theorem port_approximation_uniform {n : ℕ} [NeZero n] (hn : 2 ^ 23 ≤ n) (B : ReachableBoard n) :
-    (optimalLength B : ℝ) ≤ (manhattan B.val : ℝ) + 1260 * (n : ℝ) ^ ((5 : ℝ) / 2) * Real.log n := by
-  have h := port_optimalLength_le hn B
-  have hL := log_ge_of_pow23 hn
-  have hs : Real.sqrt (Real.log n) ≤ Real.log n / 3.99 := by
-    have h1 : (3.99 : ℝ) ≤ Real.sqrt (Real.log n) := by
-      rw [show (3.99 : ℝ) = Real.sqrt (3.99 ^ 2) from (Real.sqrt_sq (by norm_num)).symm]
-      exact Real.sqrt_le_sqrt (by linarith)
-    rw [le_div_iff₀ (by norm_num)]
-    have e := Real.mul_self_sqrt (show (0 : ℝ) ≤ Real.log n by linarith)
-    nlinarith
-  have hc : 29 * Real.log n + 4900 * Real.sqrt (Real.log n) ≤ 1260 * Real.log n := by
-    have h1 := mul_le_mul_of_nonneg_left hs (by norm_num : (0 : ℝ) ≤ 4900)
-    have h2 : 4900 * (Real.log n / 3.99) ≤ 1231 * Real.log n := by
-      rw [mul_div_assoc']
-      rw [div_le_iff₀ (by norm_num)]
-      nlinarith
-    linarith
-  have hP : (0 : ℝ) ≤ (n : ℝ) ^ ((5 : ℝ) / 2) := by positivity
-  have := mul_le_mul_of_nonneg_right hc hP
-  linarith
 
 /-- The error scale `n^(5/2) ln n`. -/
 noncomputable def lnError (n : ℕ) : ℝ := (n : ℝ) ^ ((5 : ℝ) / 2) * Real.log n
@@ -57,7 +34,7 @@ theorem sq_le_lnError_eventually : ∀ᶠ n : ℕ in atTop, (n : ℝ) ^ 2 ≤ ln
   nlinarith [Real.rpow_nonneg (show (0 : ℝ) ≤ n by positivity) ((5 : ℝ) / 2)]
 
 theorem port_uniform_approximation_with : UniformApproximationWith lnError :=
-  ⟨1260, by norm_num, 2 ^ 23, fun n hn hn2 =>
+  ⟨940, by norm_num, 2 ^ 23, fun n hn hn2 =>
     letI : NeZero n := ⟨by omega⟩
     fun B => by
       have := port_approximation_uniform hn B
@@ -103,13 +80,13 @@ theorem sq_le_llError_eventually : ∀ᶠ n : ℕ in atTop, (n : ℝ) ^ 2 ≤ ll
   linarith
 
 theorem port_loglog_approximation_with : UniformApproximationWith llError :=
-  ⟨3500, by norm_num, 2 ^ 23, fun n hn hn2 =>
+  ⟨2700, by norm_num, 2 ^ 23, fun n hn hn2 =>
     letI : NeZero n := ⟨by omega⟩
     fun B => by
       have := port_loglog_uniform hn B
       unfold llError
-      have e : 3500 * ((n : ℝ) ^ ((5 : ℝ) / 2) * Real.log n / Real.log (Real.log n)) =
-          3500 * (n : ℝ) ^ ((5 : ℝ) / 2) * Real.log n / Real.log (Real.log n) := by ring
+      have e : 2700 * ((n : ℝ) ^ ((5 : ℝ) / 2) * Real.log n / Real.log (Real.log n)) =
+          2700 * (n : ℝ) ^ ((5 : ℝ) / 2) * Real.log n / Real.log (Real.log n) := by ring
       rw [e]; exact this⟩
 
 /-- The average optimal solution length is `(2/3)n³ + O(n^(5/2) ln n / ln ln n)`. -/

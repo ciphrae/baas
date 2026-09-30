@@ -1,12 +1,13 @@
 # Open improvements
 
-**Update (ports).** The headline is now `OPT(B) ≤ M(B) + 3500·n^(5/2)·ln n / ln ln n`
-for `n ≥ 2²³` and `242·n^(5/2)·ln n / ln ln n` for `n ≥ 2^(2^60)`
-(`Port.port_loglog_uniform`, `Port.port_loglog`): wide grids with branching
-`2⌊√(log₂ n)⌋`. For practical `n` the sharper bound is
-`(29·ln n + 4900·√(ln n))·n^(5/2) ≤ 1260·n^(5/2)·ln n` (`Port.port_optimalLength_le`,
-`Port.port_approximation_uniform`), where `4900·√(ln n)` dominates up to
-`ln n ≈ 28000`. The levers there:
+**Update (ports).** The headline is now `OPT(B) ≤ M(B) + 2700·n^(5/2)·ln n / ln ln n`
+and `OPT(B) ≤ M(B) + 940·n^(5/2)·ln n` for `n ≥ 2²³`, and
+`242·n^(5/2)·ln n / ln ln n` for `n ≥ 2^(2^60)` (`Port.port_loglog_uniform`,
+`Port.port_approximation_uniform`, `Port.port_loglog`). The uniform constants are set
+near `n = 2²³`, where the grid of free level `≥ 16` has coefficient
+`≈ 8√λ·1.1·(172 + 53q/λ)`: `172k²s³` is the lever. A model with the best grid for each
+`n` (any branching, exact rounding) gives about `840·ln n` at `2²³`, so the grid itself
+has little left. The levers:
 
 - *Transfers* (`xferK ≈ 23s`, up to `4` per serve, `92` of the `172k²s³`): each is three
   jumps of length `≈ s`. A single jump would do if the tile on the landing cell of the

@@ -196,8 +196,7 @@ differences from the paper's scheme:
 - Ports (`Port/`): ports of side `σ ≤ √(13n)` at the lane ends make gateway hops
   cost `O(σ + k + q·pdist)`, and the budget is `172k²s³ + 848k³qs² + hopKc·2h(ks)²`
   (`port_budget4`). With the tree grid (`Port/Fine.lean`) the error is at most
-  `(29 ln n + 4900 √(ln n))·n^(5/2) ≤ 1260·n^(5/2)·ln n` for `n ≥ 2²³`
-  (`port_optimalLength_le`, `port_approximation_uniform`); a deeper grid
+  `(29 ln n + 4900 √(ln n))·n^(5/2)` for `n ≥ 2²³` (`port_optimalLength_le`); a deeper grid
   (`Port/Grid4.lean`) gives `(87 ln n + 3600 √(ln n) + 21200/√(ln n))·n^(5/2)`.
 - Wide grids (`Port/LogLog.lean`): without the lane budget `q ≤ 2λ` the bound is
   `278k²s³ + hopKc·2h(ks)²` whenever `8qk² ≤ n` and `16λk² ≤ n`
@@ -206,9 +205,18 @@ differences from the paper's scheme:
   `n < 2(8q + 16λ)k²`, `8b^(2h+1) ≤ n` and `q < hb + b²`. So `h·ln ln n ≤ ln n`,
   `2(8q + 16λ) ≤ (ln n)^(3/2)` and the error is at most
   `(1 + 556 (ln n)^(3/4) + 240.96 h)·n^(5/2) ≤ 242·n^(5/2)·ln n / ln ln n` for
-  `n ≥ 2^(2^60)` (`port_loglog`). Below that, `(29 ln n + 4900 √(ln n))` is at most
-  `3500 ln n / ln ln n` (`small_coef`, three ranges of `ln ln n`), hence
-  `3500·n^(5/2)·ln n / ln ln n` for `n ≥ 2²³` (`port_loglog_uniform`).
+  `n ≥ 2^(2^60)` (`port_loglog`).
+- Uniform constants (`Port/Grid16.lean`, `Port/Uniform.lean`): the grid of `m ≥ 1` levels
+  of branching `4`/`6` and a free level `d ≥ 16`, `d ≤ 42`, with exact rounding
+  `n < 16λ(P(d+2))²`, gives the coefficient `1 + 8√λ(1+2/d)(172 + 53q/λ) + 240.96(m+1)`,
+  `q ≤ 6m + d` (`port_coef16`). Convexity in `d` (`conv_d`) reduces each
+  `⌊log₂ n⌋ ∈ [23, 60]` to a numeric check (`coef16_small`, worst `931.9 ln n` at
+  `⌊log₂ n⌋ = 23` and `2660 ln n / ln ln n` at `26`); beyond,
+  `c ≤ 3743.5√L + 86.92L + 2932/√L` (`gen16`, `depth16_log`). Hence
+  `940·n^(5/2)·ln n` (`port_approximation_uniform`) and, with
+  `(29 ln n + 4900√(ln n)) ≤ 2700 ln n / ln ln n` on `4.2 ≤ ln ln n ≤ 42` (`mid_coef`)
+  and `port_loglog`, `2700·n^(5/2)·ln n / ln ln n` (`port_loglog_uniform`), both for
+  `n ≥ 2²³`.
 
 These are certified upper bounds, not claims of optimality.
 [OPTIMIZATION_IDEAS.md](OPTIMIZATION_IDEAS.md) lists the remaining improvements.

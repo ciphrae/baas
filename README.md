@@ -7,26 +7,24 @@ This improves the error `O(n^(11/4))` of Proposition 9 in Zhixian Zhong,
 (`zhong2023_additive-approximation-sliding-puzzle.pdf`, printed p. 145).
 
 For every reachable board `B` of side `n ≥ 2²³ ≈ 8.4·10⁶`
-(`SlidingPuzzle.Port.port_loglog_uniform`,
-[`Port/LogLog.lean`](SlidingPuzzle/Port/LogLog.lean)),
+(`SlidingPuzzle.Port.port_approximation_uniform`, `Port.port_loglog_uniform`,
+[`Port/Uniform.lean`](SlidingPuzzle/Port/Uniform.lean)),
 
 ```text
-OPT(B) ≤ Manhattan(B) + 3500·n^(5/2)·ln n / ln ln n,
+OPT(B) ≤ Manhattan(B) + 940·n^(5/2)·ln n,
+OPT(B) ≤ Manhattan(B) + 2700·n^(5/2)·ln n / ln ln n,
 ```
 
-and the constant is `242` for `n ≥ 2^(2^60)` (`Port.port_loglog`). For sizes of
-practical interest the sharper form is (`Port.port_optimalLength_le`,
-[`Port/Asymp.lean`](SlidingPuzzle/Port/Asymp.lean), `n ≥ 2²³`)
+and the constant of the second line is `242` for `n ≥ 2^(2^60)` (`Port.port_loglog`,
+[`Port/LogLog.lean`](SlidingPuzzle/Port/LogLog.lean)). Closed forms in `ln n` are
+(`Port.port_optimalLength_le`, [`Port/Asymp.lean`](SlidingPuzzle/Port/Asymp.lean), and
+`Port.port_optimalLength_le_deep`, [`Port/AsympDeep.lean`](SlidingPuzzle/Port/AsympDeep.lean),
+`n ≥ 2²³`)
 
 ```text
 OPT(B) ≤ Manhattan(B) + (29·ln n + 4900·√(ln n))·n^(5/2)
-       ≤ Manhattan(B) + 1260·n^(5/2)·ln n
+OPT(B) ≤ Manhattan(B) + (87·ln n + 3600·√(ln n) + 21200/√(ln n))·n^(5/2)
 ```
-
-(the second line is `Port.port_approximation_uniform` in
-[`Port/Stats.lean`](SlidingPuzzle/Port/Stats.lean)). A second grid gives
-`(87·ln n + 3600·√(ln n) + 21200/√(ln n))·n^(5/2)`, smaller for large `n`
-(`Port.port_optimalLength_le_deep`, [`Port/AsympDeep.lean`](SlidingPuzzle/Port/AsympDeep.lean)).
 
 Hence, over the reachable orbit of the standard `n × n` target,
 
@@ -217,8 +215,15 @@ need not stay near `73`: any hierarchy with `8qk² ≤ n` and `16λk² ≤ n` gi
 (`exists_wide`), the grid is within a factor `2` of `(8q + 16λ)k² = n`, the depth
 is at most `ln n / (2 ln b) ≤ ln n / ln ln n` and `q < hb + b² = O((ln n)^(3/2))`.
 The hops then cost `241·(ln n / ln ln n)·n^(5/2)` and the rest
-`O((ln n)^(3/4)·n^(5/2))`. Below `n = 2^(2^60)` the bound of `port_optimalLength_le`
-is already within `3500·n^(5/2)·ln n / ln ln n` (`small_coef`).
+`O((ln n)^(3/4)·n^(5/2))`.
+
+*Uniform constants* (`Port/Grid16`, `Port/Uniform`). For practical `n` the lanes are
+better kept short: `q ≈ 0.3λ` instead of `2λ`, with branching `4` or `6` and a free
+last level `d ≥ 16`. Keeping the rounding exact (`n < 16λ(P(d+2))²`, `K = Pd`), the
+error coefficient is `1 + 8√λ(1 + 2/d)(172 + 53q/λ) + 240.96(m+1)` (`port_coef16`),
+convex in `d`. It is checked for each `⌊log₂ n⌋ ≤ 60` and bounded by
+`3743.5√L + 86.92L + 2932/√L` beyond; the old closed form covers
+`4.2 ≤ ln ln n ≤ 42`, and `port_loglog` the rest.
 
 [`PROOF_NOTES.md`](PROOF_NOTES.md) relates the construction to the paper and
 lists the certified estimates. [`research/exponent/TREE_PLAN.md`](research/exponent/TREE_PLAN.md)
